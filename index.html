@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>화성잇다</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    /* ── TOKENS ── */
+    :root {
+      --primary:   #2563EB;
+      --primary-bg:#EEF2FF;
+      --orange:    #F97316;
+      --orange-bg: #FFF7ED;
+      --green:     #16A34A;
+      --green-bg:  #DCFCE7;
+      --blue-dark: #1E40AF;
+      --bg:        #F5F6F8;
+      --white:     #FFFFFF;
+      --text:      #111827;
+      --text-sub:  #374151;
+      --text-muted:#9CA3AF;
+      --border:    #E5E7EB;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+      --r-sm:  8px;
+      --r-md:  12px;
+      --r-lg:  16px;
+      --r-pill:24px;
+    }
+
+    /* ── RESET ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
+      overscroll-behavior-y: contain;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+    /* ── PAGES ── */
+    .page { display: none; min-height: 100vh; padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+    .page.active { display: block; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px; z-index: 300;
+      background: var(--white); border-top: 1px solid var(--border);
+      display: flex; align-items: flex-end;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 3px; height: 60px;
+      color: var(--text-muted); font-size: 10px; font-weight: 600;
+      transition: color 0.14s;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item svg { width: 22px; height: 22px; }
+    /* 중앙 브랜드 버튼 */
+    .nav-brand {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-end; padding-bottom: 6px; height: 60px;
+      color: var(--text-muted); font-size: 10px; font-weight: 700;
+      position: relative;
+    }
+    .nav-brand-circle {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.4);
+      position: absolute; top: -14px;
+    }
+    .nav-brand-circle svg { width: 26px; height: 26px; }
+    .nav-brand-label { margin-top: 34px; font-size: 9px; color: var(--text-muted); }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px; background: var(--white);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+    }
+    .page-header-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .page-header-logo { height: 28px; }
+    .back-btn {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 15px; color: var(--text-sub); font-weight: 500;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-bar {
+      margin: 14px 16px; display: flex; align-items: center; gap: 10px;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--r-pill); padding: 11px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .search-bar input {
+      border: none; outline: none; flex: 1;
+      font-size: 14px; color: var(--text-muted);
+      background: transparent; font-family: inherit;
+    }
+
+    /* ── TOGGLE TABS ── */
+    .toggle-tabs {
+      display: flex; gap: 8px; padding: 0 16px 14px;
+    }
+    .ttab {
+      flex: 1; padding: 10px; border-radius: var(--r-md); text-align: center;
+      font-size: 14px; font-weight: 600; border: 1.5px solid var(--border);
+      background: var(--white); color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .ttab.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+
+    /* ── SECTION ── */
+    .section { padding: 20px 16px 0; }
+    .section-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .section-sub   { font-size: 13px; color: var(--text-muted); }
+    .section-link  { font-size: 13px; color: var(--primary); font-weight: 500; }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+    }
+    .badge-ongoing { background: var(--orange); color: #fff; }
+    .badge-upcoming{ background: #F3F4F6; color: var(--text-muted); }
+    .badge-soon    { background: var(--primary-bg); color: var(--primary); }
+
+    /* ── FESTIVAL CARD (홈) ── */
+    .festival-card-big {
+      background: var(--white); border-radius: var(--r-lg);
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      overflow: hidden; cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .festival-card-big:hover { box-shadow: var(--shadow-md); }
+    .fcb-img {
+      height: 160px; position: relative;
+    }
+    .fcb-badge { position: absolute; top: 12px; left: 12px; }
+    .fcb-body { padding: 14px 16px 16px; }
+    .fcb-date { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .fcb-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .fcb-loc  { font-size: 12px; color: var(--text-muted); }
+
+    /* 축제 이미지 placeholder */
+    .img-sunset  { background: linear-gradient(150deg,#FF7043,#8E44AD,#1A3A6B); }
+    .img-sea     { background: linear-gradient(150deg,#0EA5E9,#0369A1,#1E3A5F); }
+    .img-night   { background: linear-gradient(150deg,#1a1a3e,#2563EB,#7C3AED); }
+    .img-peace   { background: linear-gradient(150deg,#E0F2FE,#7DD3FC,#1E40AF); }
+    .img-dino    { background: linear-gradient(150deg,#D1FAE5,#6EE7B7,#065F46); }
+
+    /* ── PLACE 2-COL GRID (홈) ── */
+    .place-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .place-card-sm {
+      background: var(--white); border-radius: var(--r-md);
+      border: 1px solid var(--border); padding: 12px;
+      display: flex; flex-direction: column; gap: 8px; cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .place-card-sm:hover { box-shadow: var(--shadow-md); }
+    .place-card-sm-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .place-card-sm-addr { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+    /* ── PLACE LIST (관광·생활) ── */
+    .place-list { display: flex; flex-direction: column; }
+    .place-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; background: var(--white);
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      transition: background 0.1s;
+    }
+    .place-item:first-child { border-top: 1px solid var(--border); }
+    .place-item:hover { background: #FAFAFA; }
+
+    /* 아이콘 뱃지 */
+    .pi {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .pi-tourist  { background: #EEF2FF; border-radius: 10px; }
+    .pi-food     { background: #FFF7ED; border-radius: 50%; }
+    .pi-festival { background: var(--orange-bg); border-radius: 10px; }
+    .pi-currency { background: var(--green-bg); border-radius: 50%; font-size: 13px; font-weight: 800; color: var(--green); }
+    .pi-parking  { background: #DBEAFE; border-radius: 8px; font-size: 13px; font-weight: 800; color: var(--primary); }
+
+    .pi-content { flex: 1; min-width: 0; }
+    .pi-name {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 3px;
+    }
+    .currency-tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px;
+      background: var(--green-bg); color: var(--green); white-space: nowrap;
+    }
+    .pi-meta  { font-size: 12px; color: var(--text-muted); }
+    .pi-right { font-size: 12px; color: var(--text-muted); flex-shrink: 0; text-align: right; }
+
+    /* ── FESTIVAL 가로 스크롤 (관광) ── */
+    .festival-scroll {
+      display: flex; gap: 10px;
+      overflow-x: auto; padding: 0 16px 4px;
+      scrollbar-width: none;
+    }
+    .festival-scroll::-webkit-scrollbar { display: none; }
+    .festival-scroll-card {
+      flex-shrink: 0; width: 180px; background: var(--white);
+      border-radius: var(--r-md); border: 1px solid var(--border);
+      overflow: hidden; cursor: pointer; transition: box-shadow 0.15s;
+    }
+    .festival-scroll-card:hover { box-shadow: var(--shadow-md); }
+    .fsc-img { height: 100px; position: relative; }
+    .fsc-badge { position: absolute; top: 8px; left: 8px; }
+    .fsc-body { padding: 10px 12px 12px; }
+    .fsc-date  { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+    .fsc-title { font-size: 13px; font-weight: 700; color: var(--text); }
+
+    /* ── 테마 칩 ── */
+    .theme-chips {
+      display: flex; gap: 8px; overflow-x: auto; padding: 16px 16px 0;
+      scrollbar-width: none;
+    }
+    .theme-chips::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 7px 16px; border-radius: var(--r-pill); white-space: nowrap;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--white); color: var(--text-sub);
+      transition: all 0.14s;
+    }
+    .chip.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+
+    /* ── 축제 상세 ── */
+    #view-festival-detail { display: none; }
+    #view-festival-detail.active { display: block; }
+    .fd-img { height: 240px; position: relative; }
+    .fd-badge { position: absolute; top: 16px; left: 16px; }
+    .fd-body  { background: var(--white); padding: 20px 20px 0; }
+    .fd-title { font-size: 22px; font-weight: 900; color: var(--text); margin-bottom: 6px; }
+    .fd-desc  { font-size: 14px; color: var(--text-sub); line-height: 1.6; margin-bottom: 20px; }
+    .fd-info-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .fd-info-row  { display: flex; gap: 12px; align-items: flex-start; }
+    .fd-info-icon { width: 20px; flex-shrink: 0; font-size: 16px; margin-top: 1px; }
+    .fd-info-label{ font-size: 12px; color: var(--text-muted); margin-bottom: 2px; }
+    .fd-info-val  { font-size: 14px; color: var(--text-sub); font-weight: 500; }
+    .fd-info-link { font-size: 14px; color: var(--primary); font-weight: 500; }
+    .fd-nearby { display: flex; gap: 10px; padding: 0 20px 20px; background: var(--white); }
+    .fd-nearby-btn {
+      flex: 1; padding: 12px 8px; border-radius: var(--r-md); text-align: center;
+      font-size: 13px; font-weight: 600; color: var(--text-sub);
+      border: 1.5px solid var(--border); background: var(--white);
+      cursor: pointer; transition: background 0.1s;
+    }
+    .fd-nearby-btn:hover { background: var(--bg); }
+    .fd-nearby-btn .nb-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+    .fd-cta {
+      margin: 0; padding: 16px 20px calc(16px + env(safe-area-inset-bottom)) 20px;
+      background: var(--white); border-top: 1px solid var(--border);
+      position: sticky; bottom: calc(68px + env(safe-area-inset-bottom));
+    }
+    .fd-cta-btn {
+      width: 100%; padding: 14px; border-radius: var(--r-md);
+      background: var(--primary); color: var(--white);
+      font-size: 15px; font-weight: 700; cursor: pointer; text-align: center;
+    }
+
+    /* ── 캘린더 ── */
+    .calendar-nav {
+      display: flex; align-items: center; justify-content: center; gap: 20px;
+      padding: 14px 20px; background: var(--white); border-bottom: 1px solid var(--border);
+    }
+    .cal-month { font-size: 17px; font-weight: 700; }
+    .cal-arrow { font-size: 18px; color: var(--text-muted); padding: 4px 8px; }
+    .calendar-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 2px; padding: 12px 16px; background: var(--white);
+    }
+    .cal-day-hd { text-align: center; font-size: 11px; color: var(--text-muted); font-weight: 600; padding: 4px 0; }
+    .cal-day {
+      text-align: center; font-size: 13px; color: var(--text-sub);
+      padding: 6px 2px; border-radius: 6px; cursor: pointer; position: relative;
+    }
+    .cal-day.has-event::after {
+      content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+      width: 4px; height: 4px; border-radius: 50%; background: var(--orange);
+    }
+    .cal-day.today { background: var(--primary); color: #fff; font-weight: 700; border-radius: 50%; }
+    .cal-day.event-range { background: #FFF7ED; color: var(--orange); font-weight: 600; }
+
+    /* ── 생활 통계 ── */
+    .living-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 16px 0;
+    }
+    .stat-card {
+      background: var(--white); border-radius: var(--r-md);
+      border: 1px solid var(--border); padding: 16px;
+    }
+    .stat-val { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: -1px; }
+    .stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* 업종 아이콘 */
+    .category-icons {
+      display: flex; gap: 0; padding: 16px 0 0;
+      background: var(--white); border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-icon-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 8px; cursor: pointer; transition: background 0.1s;
+    }
+    .cat-icon-item:hover { background: var(--bg); }
+    .cat-icon-circle {
+      width: 50px; height: 50px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .ci-food    { background: #FEE2E2; }
+    .ci-cafe    { background: #EDE9FE; }
+    .ci-mart    { background: var(--green-bg); }
+    .ci-etc     { background: #F3F4F6; font-size: 16px; color: var(--text-muted); }
+    .cat-icon-label { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+
+    /* ── 주차장 배지 ── */
+    .park-badge {
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    }
+    .pb-free { background: var(--green-bg); color: var(--green); }
+    .pb-paid { background: #DBEAFE; color: var(--primary); }
+
+    /* ── MAP PAGE ── */
+    #page-map { position: relative; height: 100vh; padding-bottom: 0; overflow: hidden; }
+    #kakao-map { width: 100%; height: 100%; }
+
+    /* 필터 칩 (지도 상단) */
+    .map-chips {
+      position: absolute; top: 12px; left: 0; right: 0; z-index: 10;
+      display: flex; gap: 8px; padding: 0 16px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .map-chips::-webkit-scrollbar { display: none; }
+    .map-chips .chip {
+      box-shadow: var(--shadow-md); flex-shrink: 0;
+    }
+
+    /* 내 위치 버튼 */
+    #btn-mylocation {
+      position: absolute;
+      bottom: calc(68px + env(safe-area-inset-bottom) + 16px); right: 14px;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--white); border: 1px solid var(--border);
+      box-shadow: var(--shadow-md); font-size: 20px; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform 0.15s;
+    }
+    #btn-mylocation:active { transform: scale(0.93); }
+
+    /* 커스텀 마커 */
+    .cm-pin { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .cm-circle {
+      min-width: 30px; height: 30px; border-radius: 15px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; padding: 0 8px;
+      border: 2.5px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      transition: transform 0.15s; white-space: nowrap; color: #fff;
+    }
+    .cm-pin:hover .cm-circle { transform: scale(1.12); }
+    .cm-pin.selected .cm-circle { transform: scale(1.18); outline: 3px solid var(--primary); outline-offset: 1px; }
+    .cm-tail {
+      width: 0; height: 0; margin-top: -2px;
+      border-left: 5px solid transparent; border-right: 5px solid transparent;
+      border-top: 6px solid white;
+    }
+
+    /* 장소 슬라이드 카드 (지도 하단) */
+    .place-slide {
+      position: fixed; left: 50%; transform: translateX(-50%) translateY(100%);
+      bottom: calc(68px + env(safe-area-inset-bottom));
+      width: 100%; max-width: 480px;
+      background: var(--white); border-radius: 20px 20px 0 0;
+      z-index: 200; box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
+      transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+      max-height: 55vh; overflow: hidden;
+    }
+    .place-slide.open { transform: translateX(-50%) translateY(0); }
+    .slide-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 10px auto 0; }
+    .slide-inner { padding: 12px 20px 20px; overflow-y: auto; max-height: calc(55vh - 40px); }
+    .sl-cat { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+    .sl-name { font-size: 18px; font-weight: 900; color: var(--text); margin-bottom: 4px; }
+    .sl-addr { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .sl-date { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
+    .sl-desc { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 12px; }
+    .sl-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
+    .sl-tag  { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: var(--primary-bg); color: var(--primary); }
+    .sl-actions { display: flex; gap: 8px; }
+    .sl-btn {
+      flex: 1; padding: 11px 6px; border-radius: 10px; text-align: center;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      border: 1.5px solid var(--border); color: var(--text-sub);
+      background: var(--white); transition: background 0.1s;
+    }
+    .sl-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .sl-btn.primary:hover { background: #1D4ED8; }
+    .sl-close {
+      position: absolute; top: 16px; right: 16px; width: 28px; height: 28px;
+      border-radius: 50%; background: var(--bg); border: none; font-size: 14px;
+      color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+
+    /* 범례 */
+    .map-legend {
+      position: absolute; bottom: calc(68px + env(safe-area-inset-bottom) + 14px); left: 14px;
+      background: var(--white); border-radius: var(--r-sm);
+      padding: 10px 14px; box-shadow: var(--shadow-md); z-index: 10;
+      border: 1px solid var(--border);
+    }
+    .legend-row { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-sub); margin-bottom: 5px; }
+    .legend-row:last-child { margin-bottom: 0; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    /* dim overlay */
+    .dim { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .dim.show { opacity: 1; pointer-events: auto; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: calc(68px + env(safe-area-inset-bottom) + 14px); left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
+      padding: 10px 20px; border-radius: 24px; white-space: nowrap;
+      box-shadow: var(--shadow-md); z-index: 999;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     PAGE: 홈
+══════════════════════════════════ -->
+<div id="page-home" class="page active">
+
+  <!-- 헤더 -->
+  <div class="page-header">
+    <div class="page-header-title" style="font-size:20px;font-weight:900;color:var(--primary);">화성잇다</div>
+    <div style="font-size:11px;color:var(--text-muted);">화성특례시 통합 정보</div>
+  </div>
+
+  <!-- 검색바 -->
+  <div class="search-bar">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" placeholder="맛집, 축제, 가맹점, 주차장 검색" />
+  </div>
+
+  <!-- 관광/생활 토글 -->
+  <div class="toggle-tabs">
+    <button class="ttab active" onclick="switchHomeTab(this,'tourism')">관광</button>
+    <button class="ttab"        onclick="switchHomeTab(this,'living')">생활</button>
+  </div>
+
+  <!-- 관광 탭 콘텐츠 -->
+  <div id="home-tourism">
+
+    <div class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-title">이번 주 행사</div>
+          <div class="section-sub" style="margin-top:2px">이번 주 축제 · 맛집 · 주차</div>
+        </div>
+      </div>
+
+      <!-- 축제 카드 (big) -->
+      <div class="festival-card-big" onclick="go('tourism');showFestivalDetail(13)" style="margin-bottom:10px">
+        <div class="fcb-img img-sunset">
+          <span class="badge badge-ongoing fcb-badge">진행중</span>
+        </div>
+        <div class="fcb-body">
+          <div class="fcb-date">8.23 ~ 8.25 · 제부도 일원</div>
+          <div class="fcb-title">제부도 해양 페스타</div>
+        </div>
+      </div>
+
+      <!-- 맛집 2×2 그리드 -->
+      <div class="place-grid" style="margin-bottom:10px">
+        <div class="place-card-sm" onclick="goMapCat('restaurant')">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pi pi-food">🍽</div>
+            <div>
+              <div class="place-card-sm-name">신서해 회집</div>
+              <div class="place-card-sm-addr">서신면 궁평항로 1159</div>
+            </div>
+          </div>
+        </div>
+        <div class="place-card-sm" onclick="goMapCat('restaurant')">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pi pi-food">🍽</div>
+            <div>
+              <div class="place-card-sm-name">석정</div>
+              <div class="place-card-sm-addr">서신면 궁평항로 1207</div>
+            </div>
+          </div>
+        </div>
+        <div class="place-card-sm" onclick="goMapCat('restaurant')">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pi pi-food">☕</div>
+            <div>
+              <div class="place-card-sm-name">카페 반월</div>
+              <div class="place-card-sm-addr">반월동 590-14</div>
+            </div>
+          </div>
+        </div>
+        <div class="place-card-sm" onclick="goMapCat('restaurant')">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pi pi-food">☕</div>
+            <div>
+              <div class="place-card-sm-name">궁평항전망대카페</div>
+              <div class="place-card-sm-addr">우정읍 궁평항로</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 주차장 카드 -->
+      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
+        <div class="pi pi-parking">P</div>
+        <div style="flex:1">
+          <div class="place-card-sm-name">궁평항 공영주차장</div>
+          <div class="place-card-sm-addr">화성시 서신면 궁평리</div>
+        </div>
+        <span class="park-badge pb-free">무료</span>
+      </div>
+    </div>
+
+    <div class="section" style="padding-bottom:24px">
+      <div class="section-header"><div class="section-title">생활 정보</div></div>
+      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:10px" onclick="goMapCat('localcurrency')">
+        <div class="pi pi-currency">₩</div>
+        <div>
+          <div class="place-card-sm-name">희망화성지역화폐 가맹점</div>
+          <div class="place-card-sm-addr">근처 가맹점 128곳</div>
+        </div>
+      </div>
+      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
+        <div class="pi pi-parking">P</div>
+        <div>
+          <div class="place-card-sm-name">주차장 정보</div>
+          <div class="place-card-sm-addr">동탄 · 향남 · 남양</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 생활 탭 콘텐츠 -->
+  <div id="home-living" style="display:none">
+    <div class="living-stats" style="margin-top:4px">
+      <div class="stat-card">
+        <div class="stat-val">128</div>
+        <div class="stat-lbl">근처 가맹점</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val">14</div>
+        <div class="stat-lbl">이용 가능 주차장</div>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="category-icons">
+        <div class="cat-icon-item" onclick="go('living')">
+          <div class="cat-icon-circle ci-food">🍴</div>
+          <span class="cat-icon-label">음식점</span>
+        </div>
+        <div class="cat-icon-item" onclick="go('living')">
+          <div class="cat-icon-circle ci-cafe">☕</div>
+          <span class="cat-icon-label">카페</span>
+        </div>
+        <div class="cat-icon-item" onclick="go('living')">
+          <div class="cat-icon-circle ci-mart">🛒</div>
+          <span class="cat-icon-label">마트</span>
+        </div>
+        <div class="cat-icon-item" onclick="go('living')">
+          <div class="cat-icon-circle ci-etc">···</div>
+          <span class="cat-icon-label">기타</span>
+        </div>
+      </div>
+    </div>
+    <div class="section" style="padding-bottom:24px">
+      <div class="section-header" style="margin-top:20px"><div class="section-title">희망화성지역화폐 가맹점</div></div>
+      <div class="place-list">
+        <div class="place-item" onclick="goMapCat('localcurrency')"><div class="pi pi-currency">₩</div><div class="pi-content"><div class="pi-name">동탄 바지락칼국수</div><div class="pi-meta">동탄구 · 870m</div></div></div>
+        <div class="place-item" onclick="goMapCat('localcurrency')"><div class="pi pi-currency">₩</div><div class="pi-content"><div class="pi-name">동탄 반찬가게</div><div class="pi-meta">동탄구 · 200m</div></div></div>
+        <div class="place-item" onclick="goMapCat('localcurrency')"><div class="pi pi-currency">₩</div><div class="pi-content"><div class="pi-name">동탄 정육점</div><div class="pi-meta">동탄구 · 350m</div></div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /home -->
+
+
+<!-- ══════════════════════════════════
+     PAGE: 관광
+══════════════════════════════════ -->
+<div id="page-tourism" class="page">
+
+  <!-- 축제 리스트 뷰 -->
+  <div id="view-tourism-list">
+    <div class="page-header">
+      <div class="page-header-title">관광</div>
+      <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
+    </div>
+
+    <!-- 이번 달 축제 가로 스크롤 -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">이번 달 축제</div>
+        <button class="section-link" onclick="showCalendar()">캘린더 보기</button>
+      </div>
+    </div>
+    <div class="festival-scroll" style="margin-bottom:8px">
+      <div class="festival-scroll-card" onclick="showFestivalDetail(16)">
+        <div class="fsc-img img-sea"><span class="badge badge-soon fsc-badge">D-6</span></div>
+        <div class="fsc-body"><div class="fsc-date">8.23 ~ 8.25</div><div class="fsc-title">제부도 해양 페스타</div></div>
+      </div>
+      <div class="festival-scroll-card" onclick="showFestivalDetail(13)">
+        <div class="fsc-img img-sunset"><span class="badge badge-upcoming fsc-badge">예정</span></div>
+        <div class="fsc-body"><div class="fsc-date">9.20 ~ 9.22</div><div class="fsc-title">궁평항 낙조축제</div></div>
+      </div>
+      <div class="festival-scroll-card" onclick="showFestivalDetail(14)">
+        <div class="fsc-img img-night"><span class="badge badge-upcoming fsc-badge">예정</span></div>
+        <div class="fsc-body"><div class="fsc-date">10.10 ~ 10.12</div><div class="fsc-title">공룡알화석지 야행</div></div>
+      </div>
+      <div class="festival-scroll-card" onclick="showFestivalDetail(15)">
+        <div class="fsc-img img-peace"><span class="badge badge-upcoming fsc-badge">예정</span></div>
+        <div class="fsc-body"><div class="fsc-date">11.01 ~ 11.03</div><div class="fsc-title">매향리 평화축제</div></div>
+      </div>
+    </div>
+
+    <!-- 테마별 추천 -->
+    <div style="padding:16px 16px 0">
+      <div class="section-title">테마별 추천</div>
+    </div>
+    <div class="theme-chips" style="margin-bottom:8px">
+      <div class="chip active" onclick="pickTheme(this,'all')">전체</div>
+      <div class="chip" onclick="pickTheme(this,'sea')">바다</div>
+      <div class="chip" onclick="pickTheme(this,'nature')">자연</div>
+      <div class="chip" onclick="pickTheme(this,'history')">역사</div>
+      <div class="chip" onclick="pickTheme(this,'family')">아이와 함께</div>
+    </div>
+
+    <!-- 장소 리스트 -->
+    <div class="place-list" id="tourism-place-list">
+      <!-- data.js 로드 후 JS로 렌더 -->
+    </div>
+  </div>
+
+  <!-- 축제 상세 뷰 -->
+  <div id="view-festival-detail">
+    <div class="page-header" style="position:sticky;top:0;z-index:100">
+      <button class="back-btn" onclick="hideFestivalDetail()">← 관광</button>
+      <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
+    </div>
+    <div id="fd-content"></div>
+  </div>
+
+  <!-- 캘린더 뷰 -->
+  <div id="view-calendar" style="display:none">
+    <div class="page-header" style="position:sticky;top:0;z-index:100">
+      <button class="back-btn" onclick="hideCalendar()">← 관광</button>
+    </div>
+    <div class="calendar-nav">
+      <button class="cal-arrow">‹</button>
+      <span class="cal-month">2026년 8월</span>
+      <button class="cal-arrow">›</button>
+    </div>
+    <div class="calendar-grid">
+      <div class="cal-day-hd">일</div><div class="cal-day-hd">월</div><div class="cal-day-hd">화</div>
+      <div class="cal-day-hd">수</div><div class="cal-day-hd">목</div><div class="cal-day-hd">금</div><div class="cal-day-hd">토</div>
+      <div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div>
+      <div class="cal-day">1</div><div class="cal-day">2</div>
+      <div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+      <div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div>
+      <div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day">12</div>
+      <div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day">16</div>
+      <div class="cal-day today">17</div>
+      <div class="cal-day">18</div><div class="cal-day">19</div><div class="cal-day">20</div>
+      <div class="cal-day">21</div><div class="cal-day">22</div>
+      <div class="cal-day event-range has-event">23</div><div class="cal-day event-range has-event">24</div><div class="cal-day event-range has-event">25</div>
+      <div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div>
+      <div class="cal-day">30</div><div class="cal-day">31</div>
+    </div>
+    <div style="padding:12px 16px">
+      <div class="place-item" onclick="showFestivalDetail(16)">
+        <div class="pi pi-festival">🎉</div>
+        <div class="pi-content">
+          <div class="pi-name">제부도 해양 페스타 <span class="badge badge-soon" style="font-size:10px">D-6</span></div>
+          <div class="pi-meta">8.23 ~ 8.25 · 제부도 일원</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /tourism -->
+
+
+<!-- ══════════════════════════════════
+     PAGE: 생활
+══════════════════════════════════ -->
+<div id="page-living" class="page">
+
+  <div class="page-header">
+    <div class="page-header-title">생활</div>
+    <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="living-stats" style="margin-top:4px">
+    <div class="stat-card">
+      <div class="stat-val">4</div>
+      <div class="stat-lbl">등록 가맹점</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val">5</div>
+      <div class="stat-lbl">이용 가능 주차장</div>
+    </div>
+  </div>
+
+  <!-- 업종 아이콘 -->
+  <div style="margin-top:16px">
+    <div class="category-icons">
+      <div class="cat-icon-item" onclick="switchLiving('food')">
+        <div class="cat-icon-circle ci-food">🍴</div>
+        <span class="cat-icon-label">음식점</span>
+      </div>
+      <div class="cat-icon-item" onclick="switchLiving('cafe')">
+        <div class="cat-icon-circle ci-cafe">☕</div>
+        <span class="cat-icon-label">카페</span>
+      </div>
+      <div class="cat-icon-item" onclick="switchLiving('mart')">
+        <div class="cat-icon-circle ci-mart">🛒</div>
+        <span class="cat-icon-label">마트</span>
+      </div>
+      <div class="cat-icon-item" onclick="switchLiving('etc')">
+        <div class="cat-icon-circle ci-etc">···</div>
+        <span class="cat-icon-label">기타</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 가맹점 리스트 -->
+  <div style="padding:20px 0 0">
+    <div style="padding:0 16px 10px;display:flex;align-items:center;justify-content:space-between">
+      <div class="section-title">희망화성지역화폐 가맹점</div>
+    </div>
+    <div class="place-list" id="living-currency-list"></div>
+  </div>
+
+  <!-- 주차장 리스트 -->
+  <div style="padding:20px 0 0">
+    <div style="padding:0 16px 10px"><div class="section-title">주차장</div></div>
+    <div class="place-list" id="living-parking-list"></div>
+  </div>
+
+</div><!-- /living -->
+
+
+<!-- ══════════════════════════════════
+     PAGE: 지도
+══════════════════════════════════ -->
+<div id="page-map" class="page">
+  <div id="kakao-map"></div>
+
+  <!-- 필터 칩 -->
+  <div class="map-chips" id="map-chips">
+    <div class="chip active" data-cat="all"           onclick="setFilter('all')">전체</div>
+    <div class="chip" data-cat="festival"             onclick="setFilter('festival')">🎉 축제</div>
+    <div class="chip" data-cat="restaurant"           onclick="setFilter('restaurant')">🍽 맛집</div>
+    <div class="chip" data-cat="localcurrency"        onclick="setFilter('localcurrency')">💳 가맹점</div>
+    <div class="chip" data-cat="parking"              onclick="setFilter('parking')">🅿 주차장</div>
+    <div class="chip" data-cat="tourist"              onclick="setFilter('tourist')">🏛 관광지</div>
+  </div>
+
+  <!-- 내 위치 -->
+  <button id="btn-mylocation" title="내 위치">📍</button>
+
+  <!-- 범례 -->
+  <div class="map-legend">
+    <div class="legend-row"><div class="legend-dot" style="background:#F97316"></div>축제</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#EF4444"></div>맛집</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#16A34A"></div>가맹점</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#2563EB"></div>주차장</div>
+    <div class="legend-row"><div class="legend-dot" style="background:#7C3AED"></div>관광지</div>
+  </div>
+
+  <!-- 장소 슬라이드 카드 -->
+  <div class="place-slide" id="place-slide">
+    <div class="slide-handle"></div>
+    <button class="sl-close" onclick="closePlaceSlide()">✕</button>
+    <div class="slide-inner" id="slide-inner"></div>
+  </div>
+  <div class="dim" id="map-dim" onclick="closePlaceSlide()"></div>
+</div><!-- /map -->
+
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <button class="nav-item active" data-page="home" onclick="go('home')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    <span>홈</span>
+  </button>
+  <button class="nav-item" data-page="tourism" onclick="go('tourism')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+    <span>관광</span>
+  </button>
+  <button class="nav-brand" onclick="go('home')">
+    <div class="nav-brand-circle">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M12 3L1 9l4 2.18V17h2v-4.82l2 1.09V17c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-3.73l2-1.09V17h2v-5.82L23 9 12 3zm4 14h-2v-3.95l2 1.09V17zM12 14.5L6.5 11.5 12 5l5.5 6.5L12 14.5z"/></svg>
+    </div>
+    <span class="nav-brand-label">화성잇다</span>
+  </button>
+  <button class="nav-item" data-page="living" onclick="go('living')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+    <span>생활</span>
+  </button>
+  <button class="nav-item" data-page="map" onclick="go('map')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+    <span>지도</span>
+  </button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+/* ── 페이지 전환 ── */
+function go(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item[data-page]').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+  window.scrollTo(0, 0);
+  if (page === 'map')     setTimeout(initMap, 80);
+  if (page === 'living')  renderLivingPage();
+  if (page === 'tourism') renderTourismList('all');
+}
+
+function goMapCat(cat) {
+  go('map');
+  setTimeout(() => setFilter(cat), 200);
+}
+
+/* ── 홈 토글 ── */
+function switchHomeTab(el, tab) {
+  document.querySelectorAll('.ttab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('home-tourism').style.display = tab === 'tourism' ? 'block' : 'none';
+  document.getElementById('home-living').style.display  = tab === 'living'  ? 'block' : 'none';
+}
+
+/* ── 테마 필터 (관광) ── */
+const THEME_TAGS = { sea:['바다'], nature:['자연'], history:['역사','세계문화유산'], family:['자연','꽃'] };
+function pickTheme(el, theme) {
+  document.querySelectorAll('.theme-chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderTourismList(theme);
+}
+
+function renderTourismList(theme) {
+  const list = document.getElementById('tourism-place-list');
+  if (!list || typeof PLACES === 'undefined') return;
+  const cats = ['tourist','restaurant','festival'];
+  let items = PLACES.filter(p => cats.includes(p.category));
+  if (theme !== 'all' && THEME_TAGS[theme]) {
+    const tags = THEME_TAGS[theme];
+    items = items.filter(p => p.tags.some(t => tags.includes(t)));
+  }
+  list.innerHTML = items.map(p => {
+    const cfg = CATEGORY_CONFIG[p.category];
+    const isCurrency = p.tags.includes('가맹점');
+    return `
+      <div class="place-item" onclick="${p.category === 'festival' ? 'showFestivalDetail(' + p.id + ')' : 'goMapCat(\'' + p.category + '\')'}">
+        <div class="pi ${iconClass(p.category)}">${iconContent(p.category)}</div>
+        <div class="pi-content">
+          <div class="pi-name">
+            ${p.name}
+            ${isCurrency ? '<span class="currency-tag">희망화성지역화폐</span>' : ''}
+          </div>
+          <div class="pi-meta">${p.address.split(' ').slice(1,3).join(' ')} · ${cfg.label}</div>
+        </div>
+        <div class="pi-right">${p.date ? p.date.split('~')[0].trim().replace('2026-','') : ''}</div>
+      </div>`;
+  }).join('');
+}
+
+function iconClass(cat) {
+  const map = { tourist:'pi-tourist', restaurant:'pi-food', festival:'pi-festival', localcurrency:'pi-currency', parking:'pi-parking' };
+  return map[cat] || 'pi-tourist';
+}
+function iconContent(cat) {
+  const map = { tourist:'🏛', restaurant:'🍽', festival:'🎉', localcurrency:'₩', parking:'P' };
+  return map[cat] || '📍';
+}
+
+/* ── 축제 상세 ── */
+function showFestivalDetail(id) {
+  const place = PLACES.find(p => p.id === id);
+  if (!place) return;
+
+  document.getElementById('view-tourism-list').style.display = 'none';
+  document.getElementById('view-calendar').style.display = 'none';
+  document.getElementById('view-festival-detail').style.display = 'block';
+
+  const imgClass = {13:'img-sunset',14:'img-night',15:'img-peace',16:'img-sea'}[id] || 'img-sunset';
+  const statusBadge = place.status === 'ongoing'
+    ? '<span class="badge badge-ongoing">진행중</span>'
+    : '<span class="badge badge-upcoming">예정</span>';
+
+  document.getElementById('fd-content').innerHTML = `
+    <div class="fd-img ${imgClass}">
+      <span class="badge fd-badge ${place.status === 'ongoing' ? 'badge-ongoing' : 'badge-upcoming'}">${place.status === 'ongoing' ? '진행중' : '예정'}</span>
+    </div>
+    <div class="fd-body">
+      <div class="fd-title">${place.name}</div>
+      <div class="fd-desc">${place.desc}</div>
+      <div class="fd-info-list">
+        <div class="fd-info-row"><div class="fd-info-icon">📅</div><div><div class="fd-info-label">기간</div><div class="fd-info-val">${place.date}</div></div></div>
+        <div class="fd-info-row"><div class="fd-info-icon">📍</div><div><div class="fd-info-label">위치</div><div class="fd-info-val">${place.address}</div></div></div>
+        <div class="fd-info-row"><div class="fd-info-icon">🔗</div><div><div class="fd-info-label">링크</div><div class="fd-info-link">화성시 문화관광 홈페이지</div></div></div>
+      </div>
+    </div>
+    <div class="fd-nearby">
+      <button class="fd-nearby-btn" onclick="goMapCat('restaurant')"><span class="nb-icon">🍽</span>주변 맛집</button>
+      <button class="fd-nearby-btn" onclick="goMapCat('parking')"><span class="nb-icon">🅿</span>주차장</button>
+      <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})"><span class="nb-icon">💳</span>가맹점</button>
+    </div>
+    <div class="fd-cta">
+      <div class="fd-cta-btn" onclick="goMapCat('festival')">🗺 지도에서 위치 확인</div>
+    </div>`;
+
+  go('tourism');
+  document.getElementById('view-tourism-list').style.display = 'none';
+  document.getElementById('view-festival-detail').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+function hideFestivalDetail() {
+  document.getElementById('view-festival-detail').style.display = 'none';
+  document.getElementById('view-tourism-list').style.display = 'block';
+}
+
+function showCalendar() {
+  document.getElementById('view-tourism-list').style.display = 'none';
+  document.getElementById('view-calendar').style.display = 'block';
+  document.getElementById('view-festival-detail').style.display = 'none';
+}
+function hideCalendar() {
+  document.getElementById('view-calendar').style.display = 'none';
+  document.getElementById('view-tourism-list').style.display = 'block';
+}
+
+/* ── 생활 페이지 렌더 ── */
+function renderLivingPage() {
+  if (typeof PLACES === 'undefined') return;
+
+  const cList = document.getElementById('living-currency-list');
+  cList.innerHTML = PLACES.filter(p => p.category === 'localcurrency').map(p => `
+    <div class="place-item" onclick="goMapCat('localcurrency')">
+      <div class="pi pi-currency">₩</div>
+      <div class="pi-content">
+        <div class="pi-name">${p.name}</div>
+        <div class="pi-meta">${p.address}</div>
+      </div>
+    </div>`).join('');
+
+  const pList = document.getElementById('living-parking-list');
+  pList.innerHTML = PLACES.filter(p => p.category === 'parking').map(p => {
+    const free = p.tags.includes('무료');
+    return `
+      <div class="place-item" onclick="goMapCat('parking')">
+        <div class="pi pi-parking">P</div>
+        <div class="pi-content">
+          <div class="pi-name">${p.name}</div>
+          <div class="pi-meta">${p.address}</div>
+        </div>
+        <div class="pi-right"><span class="park-badge ${free ? 'pb-free' : 'pb-paid'}">${free ? '무료' : '유료'}</span></div>
+      </div>`;
+  }).join('');
+}
+
+function switchLiving(type) {
+  showToast(type === 'food' ? '음식점 가맹점을 지도에서 확인하세요' : '업종별 가맹점을 지도에서 확인하세요');
+  goMapCat('localcurrency');
+}
+
+/* ── 토스트 ── */
+let _tt;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ── 초기 렌더 ── */
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(renderTourismList, 100, 'all');
+  setTimeout(renderLivingPage, 100);
+});
+</script>
+
+<!-- 카카오맵 SDK -->
+<script type="text/javascript"
+  src="//dapi.kakao.com/v2/maps/sdk.js?appkey=ba0bc319a905d3747678d9abd48ec129&libraries=services">
+</script>
+<script src="js/data.js"></script>
+<script src="js/map.js"></script>
+</body>
+</html>
