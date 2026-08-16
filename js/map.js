@@ -14,20 +14,74 @@ const CAT_COLOR = {
   localcurrency: '#16A34A',
 };
 
-function initMap() {
-  if (mapReady) { kakao.maps.event.trigger(kakaoMap, 'resize'); return; }
+/* ── 맵 초기화 (재시도 포함) ── */
+function initMap(attempt) {
+  attempt = attempt || 0;
+
+  if (mapReady) {
+    kakao.maps.event.trigger(kakaoMap, 'resize');
+    return;
+  }
+
+  /* Kakao SDK가 아직 안 로드된 경우 최대 20번 재시도 */
+  if (typeof kakao === 'undefined' || !kakao.maps) {
+    if (attempt < 20) {
+      setTimeout(() => initMap(attempt + 1), 150);
+    } else {
+      showMapError('카카오맵 SDK 로드 실패.<br>네트워크 연결 또는 API 키를 확인해 주세요.');
+    }
+    return;
+  }
 
   const container = document.getElementById('kakao-map');
-  kakaoMap = new kakao.maps.Map(container, {
-    center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-    level: 10,
-  });
-  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+  if (!container) return;
 
-  mapReady = true;
-  buildOverlays();
-  setupMyLocation();
-  kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
+  /* 컨테이너에 명시적 높이 부여 */
+  const mapH = window.innerHeight;
+  container.style.height = mapH + 'px';
+
+  /* 로딩 스피너 제거 */
+  const loader = document.getElementById('map-loader');
+  if (loader) loader.remove();
+
+  try {
+    kakaoMap = new kakao.maps.Map(container, {
+      center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
+      level: 10,
+    });
+    kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+
+    mapReady = true;
+    buildOverlays();
+    setupMyLocation();
+    kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
+
+    /* resize 이벤트 등록 */
+    window.addEventListener('resize', () => {
+      if (mapReady) {
+        container.style.height = window.innerHeight + 'px';
+        kakao.maps.event.trigger(kakaoMap, 'resize');
+      }
+    });
+  } catch (err) {
+    showMapError('지도 초기화 오류: ' + err.message);
+  }
+}
+
+function showMapError(msg) {
+  const container = document.getElementById('kakao-map');
+  if (!container) return;
+  container.innerHTML = `
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:12px;padding:24px;background:#f9fafb;text-align:center;">
+      <div style="font-size:48px">🗺️</div>
+      <div style="color:#6b7280;font-size:14px;line-height:1.6">${msg}</div>
+      <button onclick="initMap(0)" style="
+        background:#6366f1;color:#fff;border:none;border-radius:20px;
+        padding:10px 20px;font-size:13px;cursor:pointer">
+        다시 시도
+      </button>
+    </div>`;
 }
 
 /* ── 커스텀 오버레이 ── */

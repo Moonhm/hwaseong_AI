@@ -344,7 +344,18 @@
 
     /* ── MAP PAGE ── */
     #page-map { position: relative; height: 100vh; padding-bottom: 0; overflow: hidden; }
-    #kakao-map { width: 100%; height: 100%; }
+    #kakao-map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    .map-loading {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 12px;
+      background: var(--bg); z-index: 1; color: var(--text-muted);
+    }
+    .map-loading .spinner {
+      width: 36px; height: 36px; border: 3px solid var(--border);
+      border-top-color: var(--primary); border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* 필터 칩 (지도 상단) */
     .map-chips {
@@ -780,7 +791,12 @@
      PAGE: 지도
 ══════════════════════════════════ -->
 <div id="page-map" class="page">
-  <div id="kakao-map"></div>
+  <div id="kakao-map">
+    <div id="map-loader" class="map-loading">
+      <div class="spinner"></div>
+      <span style="font-size:13px">지도를 불러오는 중…</span>
+    </div>
+  </div>
 
   <!-- 필터 칩 -->
   <div class="map-chips" id="map-chips">
@@ -850,7 +866,7 @@ function go(page) {
   document.getElementById('page-' + page).classList.add('active');
   document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
   window.scrollTo(0, 0);
-  if (page === 'map')     setTimeout(initMap, 80);
+  if (page === 'map')     setTimeout(() => initMap(0), 200);
   if (page === 'living')  renderLivingPage();
   if (page === 'tourism') renderTourismList('all');
 }
