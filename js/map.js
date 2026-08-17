@@ -36,9 +36,9 @@ function initMap(attempt) {
   const container = document.getElementById('kakao-map');
   if (!container) return;
 
-  /* 컨테이너에 명시적 높이 부여 */
-  const mapH = window.innerHeight;
-  container.style.height = mapH + 'px';
+  /* 컨테이너에 명시적 픽셀 크기 부여 (docs: width/height 반드시 지정) */
+  container.style.width  = window.innerWidth  + 'px';
+  container.style.height = window.innerHeight + 'px';
 
   /* 로딩 스피너 제거 */
   const loader = document.getElementById('map-loader');
