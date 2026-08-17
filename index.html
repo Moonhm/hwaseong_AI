@@ -1039,18 +1039,8 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b"></script>
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
-<script>
-  var _kakaoScript = document.createElement('script');
-  _kakaoScript.type = 'text/javascript';
-  _kakaoScript.src  = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b';
-  _kakaoScript.onerror = function() {
-    document.querySelectorAll('#map-loader').forEach(function(el) {
-      el.innerHTML = '<div style="color:#ef4444;font-size:13px;padding:20px;text-align:center">카카오맵 SDK 로드 실패<br>네트워크를 확인해 주세요</div>';
-    });
-  };
-  document.body.appendChild(_kakaoScript);
-</script>
 </body>
 </html>
