@@ -7,9 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
-  <script type="text/javascript"
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=33058710ce68ee23163d69818a3056b4&libraries=services">
-  </script>
   <style>
     /* ── TOKENS ── */
     :root {
@@ -1044,5 +1041,16 @@ window.addEventListener('DOMContentLoaded', () => {
 
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
+<script>
+  var _kakaoScript = document.createElement('script');
+  _kakaoScript.type = 'text/javascript';
+  _kakaoScript.src  = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=33058710ce68ee23163d69818a3056b4';
+  _kakaoScript.onerror = function() {
+    document.querySelectorAll('#map-loader').forEach(function(el) {
+      el.innerHTML = '<div style="color:#ef4444;font-size:13px;padding:20px;text-align:center">카카오맵 SDK 로드 실패<br>네트워크를 확인해 주세요</div>';
+    });
+  };
+  document.body.appendChild(_kakaoScript);
+</script>
 </body>
 </html>
