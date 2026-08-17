@@ -65,8 +65,41 @@ hwaseong_AI/
 ## 🛠️ 기술 스택
 
 - 순수 HTML / CSS / JavaScript (프레임워크 없음)
-- 카카오맵 JavaScript API (`autoload=false` + `kakao.maps.load()` 방식)
-- Cloudflare Tunnel로 배포
+- 카카오맵 JavaScript API
+- 화성시 실시간 주차장 API (`smartparking.hscity.go.kr`)
+- Flask 프록시 서버 + Cloudflare Tunnel로 배포
+
+---
+
+## 🚀 배포 서버 실행 방법 (변경됨)
+
+```bash
+# 기존: python -m http.server 8080  ← 더 이상 사용 안 함
+# 신규:
+pip install flask requests
+python tools/server.py --port 8080
+
+# Cloudflare Tunnel은 그대로 포트 8080 유지
+```
+
+> **이유**: 실시간 주차장 API가 CORS 헤더 없음 → Flask 프록시 서버가 `/api/parking/*` 경로로 중계
+
+---
+
+## 📐 데이터 추가 워크플로우
+
+### 방법 1 — 파일 제공 (주소 → 지오코딩)
+```bash
+# 사용자가 파일을 work/ 에 던져주면:
+pip install requests pandas openpyxl
+export KAKAO_REST_KEY="카카오_REST_API_키"
+python tools/geocode.py 파일명.csv --category tourist
+# → _geocoded.json 생성 + data.js 코드 조각 출력
+```
+
+### 방법 2 — 실시간 API (주차장)
+- `js/parking.js`가 서버 프록시(`/api/parking/*`)를 통해 60초마다 자동 갱신
+- 별도 작업 불필요
 
 ---
 

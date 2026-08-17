@@ -381,6 +381,22 @@
     }
     #btn-mylocation:active { transform: scale(0.93); }
 
+    /* ── 실시간 주차장 핀 ── */
+    .pk-pin    { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .pk-circle {
+      min-width: 44px; height: 28px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; padding: 0 8px; gap: 3px;
+      border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      color: #fff; transition: transform 0.15s; white-space: nowrap;
+    }
+    .pk-pin:hover .pk-circle { transform: scale(1.12); }
+    .pk-tail {
+      width: 0; height: 0; margin-top: -2px;
+      border-left: 5px solid transparent; border-right: 5px solid transparent;
+      border-top: 6px solid white;
+    }
+
     /* 커스텀 마커 */
     .cm-pin { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
     .cm-circle {
@@ -1079,5 +1095,6 @@ window.addEventListener('DOMContentLoaded', () => {
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b"></script>
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
+<script src="js/parking.js"></script>
 </body>
 </html>

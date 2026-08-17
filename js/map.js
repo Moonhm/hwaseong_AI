@@ -48,8 +48,9 @@ function initMap() {
   mapReady = true;
 
   buildOverlays();
-  /* fitAllPlaces 제거 — 초기 중심/레벨이 이미 전체를 포함하므로 애니메이션 이동 불필요 */
   setupMyLocation();
+  /* 실시간 주차장 모듈 초기화 (parking.js) */
+  if (typeof initParking === 'function') initParking(kakaoMap);
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
   /* display:none → block 전환 후 크기 재계산 */
@@ -179,11 +180,17 @@ function setFilter(cat) {
     c.classList.toggle('active', c.dataset.cat === cat);
   });
 
+  /* data.js PLACES 오버레이 토글 */
   PLACES.forEach(function (p) {
     overlayMap[p.id] && overlayMap[p.id].setMap(
       (cat === 'all' || p.category === cat) ? kakaoMap : null
     );
   });
+
+  /* 실시간 주차장 오버레이 토글 */
+  if (typeof setParkingVisible === 'function') {
+    setParkingVisible(cat === 'all' || cat === 'parking');
+  }
 
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
   if (targets.length) {
