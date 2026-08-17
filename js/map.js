@@ -17,50 +17,46 @@ const CAT_COLOR = {
 
 /* ── 지도 초기화 ── */
 function initMap() {
-  /* 이미 초기화된 경우 크기만 재계산 */
   if (mapReady) {
     kakaoMap.relayout();
     return;
   }
 
-  /* SDK 로드 확인 */
-  if (typeof kakao === 'undefined' || !kakao.maps) {
+  if (typeof kakao === 'undefined') {
     showMapError('카카오맵 SDK를 불러올 수 없습니다.<br>네트워크 연결을 확인해 주세요.');
     return;
   }
 
-  const container = document.getElementById('kakao-map');
-  if (!container) return;
+  /* autoload=false 방식: kakao.maps.load() 콜백 안에서 지도 생성 */
+  kakao.maps.load(function () {
+    const container = document.getElementById('kakao-map');
+    if (!container) return;
 
-  /* 로딩 스피너 제거 */
-  const loader = document.getElementById('map-loader');
-  if (loader) loader.remove();
+    const loader = document.getElementById('map-loader');
+    if (loader) loader.remove();
 
-  /* 공식 문서 기준: 컨테이너에 명시적 width/height 설정 */
-  container.style.width  = window.innerWidth  + 'px';
-  container.style.height = window.innerHeight + 'px';
-
-  /* 지도 생성 */
-  kakaoMap = new kakao.maps.Map(container, {
-    center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-    level:  10,
-  });
-
-  /* 생성 후 레이아웃 재계산 (display:none 이후 복귀 시 필수) */
-  kakaoMap.relayout();
-  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-
-  mapReady = true;
-  buildOverlays();
-  setupMyLocation();
-  kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
-
-  /* 화면 크기 변경 시 재계산 */
-  window.addEventListener('resize', () => {
-    if (!mapReady) return;
     container.style.width  = window.innerWidth  + 'px';
     container.style.height = window.innerHeight + 'px';
+
+    kakaoMap = new kakao.maps.Map(container, {
+      center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
+      level:  10,
+    });
+
     kakaoMap.relayout();
+    kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+
+    mapReady = true;
+    buildOverlays();
+    setupMyLocation();
+    kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
+
+    window.addEventListener('resize', () => {
+      if (!mapReady) return;
+      container.style.width  = window.innerWidth  + 'px';
+      container.style.height = window.innerHeight + 'px';
+      kakaoMap.relayout();
+    });
   });
 }
 
