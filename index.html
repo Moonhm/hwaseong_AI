@@ -526,138 +526,14 @@
     <button class="ttab"        onclick="switchHomeTab(this,'living')">생활</button>
   </div>
 
-  <!-- 관광 탭 콘텐츠 -->
+  <!-- 관광 탭 콘텐츠 (JS 렌더) -->
   <div id="home-tourism">
-
-    <div class="section">
-      <div class="section-header">
-        <div>
-          <div class="section-title">이번 주 행사</div>
-          <div class="section-sub" style="margin-top:2px">이번 주 축제 · 맛집 · 주차</div>
-        </div>
-      </div>
-
-      <!-- 축제 카드 (big) -->
-      <div class="festival-card-big" onclick="go('tourism');showFestivalDetail(13)" style="margin-bottom:10px">
-        <div class="fcb-img img-sunset">
-          <span class="badge badge-ongoing fcb-badge">진행중</span>
-        </div>
-        <div class="fcb-body">
-          <div class="fcb-date">8.23 ~ 8.25 · 제부도 일원</div>
-          <div class="fcb-title">제부도 해양 페스타</div>
-        </div>
-      </div>
-
-      <!-- 맛집 2×2 그리드 -->
-      <div class="place-grid" style="margin-bottom:10px">
-        <div class="place-card-sm" onclick="goMapCat('restaurant')">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="pi pi-food">🍽</div>
-            <div>
-              <div class="place-card-sm-name">신서해 회집</div>
-              <div class="place-card-sm-addr">서신면 궁평항로 1159</div>
-            </div>
-          </div>
-        </div>
-        <div class="place-card-sm" onclick="goMapCat('restaurant')">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="pi pi-food">🍽</div>
-            <div>
-              <div class="place-card-sm-name">석정</div>
-              <div class="place-card-sm-addr">서신면 궁평항로 1207</div>
-            </div>
-          </div>
-        </div>
-        <div class="place-card-sm" onclick="goMapCat('restaurant')">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="pi pi-food">☕</div>
-            <div>
-              <div class="place-card-sm-name">카페 반월</div>
-              <div class="place-card-sm-addr">반월동 590-14</div>
-            </div>
-          </div>
-        </div>
-        <div class="place-card-sm" onclick="goMapCat('restaurant')">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="pi pi-food">☕</div>
-            <div>
-              <div class="place-card-sm-name">궁평항전망대카페</div>
-              <div class="place-card-sm-addr">우정읍 궁평항로</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 주차장 카드 -->
-      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
-        <div class="pi pi-parking">P</div>
-        <div style="flex:1">
-          <div class="place-card-sm-name">궁평항 공영주차장</div>
-          <div class="place-card-sm-addr">화성시 서신면 궁평리</div>
-        </div>
-        <span class="park-badge pb-free">무료</span>
-      </div>
-    </div>
-
-    <div class="section" style="padding-bottom:24px">
-      <div class="section-header"><div class="section-title">생활 정보</div></div>
-      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:10px" onclick="goMapCat('localcurrency')">
-        <div class="pi pi-currency">₩</div>
-        <div>
-          <div class="place-card-sm-name">희망화성지역화폐 가맹점</div>
-          <div class="place-card-sm-addr">근처 가맹점 128곳</div>
-        </div>
-      </div>
-      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
-        <div class="pi pi-parking">P</div>
-        <div>
-          <div class="place-card-sm-name">주차장 정보</div>
-          <div class="place-card-sm-addr">동탄 · 향남 · 남양</div>
-        </div>
-      </div>
-    </div>
+    <div id="home-tourism-content"></div>
   </div>
 
-  <!-- 생활 탭 콘텐츠 -->
+  <!-- 생활 탭 콘텐츠 (JS 렌더) -->
   <div id="home-living" style="display:none">
-    <div class="living-stats" style="margin-top:4px">
-      <div class="stat-card">
-        <div class="stat-val">128</div>
-        <div class="stat-lbl">근처 가맹점</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">14</div>
-        <div class="stat-lbl">이용 가능 주차장</div>
-      </div>
-    </div>
-    <div style="margin-top:16px">
-      <div class="category-icons">
-        <div class="cat-icon-item" onclick="go('living')">
-          <div class="cat-icon-circle ci-food">🍴</div>
-          <span class="cat-icon-label">음식점</span>
-        </div>
-        <div class="cat-icon-item" onclick="go('living')">
-          <div class="cat-icon-circle ci-cafe">☕</div>
-          <span class="cat-icon-label">카페</span>
-        </div>
-        <div class="cat-icon-item" onclick="go('living')">
-          <div class="cat-icon-circle ci-mart">🛒</div>
-          <span class="cat-icon-label">마트</span>
-        </div>
-        <div class="cat-icon-item" onclick="go('living')">
-          <div class="cat-icon-circle ci-etc">···</div>
-          <span class="cat-icon-label">기타</span>
-        </div>
-      </div>
-    </div>
-    <div class="section" style="padding-bottom:24px">
-      <div class="section-header" style="margin-top:20px"><div class="section-title">희망화성지역화폐 가맹점</div></div>
-      <div class="place-list">
-        <div class="place-item" onclick="goMapCat('localcurrency')"><div class="pi pi-currency">₩</div><div class="pi-content"><div class="pi-name">동탄 바지락칼국수</div><div class="pi-meta">동탄구 · 870m</div></div></div>
-        <div class="place-item" onclick="goMapCat('localcurrency')"><div class="pi pi-currency">₩</div><div class="pi-content"><div class="pi-name">동탄 반찬가게</div><div class="pi-meta">동탄구 · 200m</div></div></div>
-        <div class="place-item" onclick="goMapCat('localcurrency')"><div class="pi pi-currency">₩</div><div class="pi-content"><div class="pi-name">동탄 정육점</div><div class="pi-meta">동탄구 · 350m</div></div></div>
-      </div>
-    </div>
+    <div id="home-living-content"></div>
   </div>
 
 </div><!-- /home -->
@@ -682,24 +558,7 @@
         <button class="section-link" onclick="showCalendar()">캘린더 보기</button>
       </div>
     </div>
-    <div class="festival-scroll" style="margin-bottom:8px">
-      <div class="festival-scroll-card" onclick="showFestivalDetail(16)">
-        <div class="fsc-img img-sea"><span class="badge badge-soon fsc-badge">D-6</span></div>
-        <div class="fsc-body"><div class="fsc-date">8.23 ~ 8.25</div><div class="fsc-title">제부도 해양 페스타</div></div>
-      </div>
-      <div class="festival-scroll-card" onclick="showFestivalDetail(13)">
-        <div class="fsc-img img-sunset"><span class="badge badge-upcoming fsc-badge">예정</span></div>
-        <div class="fsc-body"><div class="fsc-date">9.20 ~ 9.22</div><div class="fsc-title">궁평항 낙조축제</div></div>
-      </div>
-      <div class="festival-scroll-card" onclick="showFestivalDetail(14)">
-        <div class="fsc-img img-night"><span class="badge badge-upcoming fsc-badge">예정</span></div>
-        <div class="fsc-body"><div class="fsc-date">10.10 ~ 10.12</div><div class="fsc-title">공룡알화석지 야행</div></div>
-      </div>
-      <div class="festival-scroll-card" onclick="showFestivalDetail(15)">
-        <div class="fsc-img img-peace"><span class="badge badge-upcoming fsc-badge">예정</span></div>
-        <div class="fsc-body"><div class="fsc-date">11.01 ~ 11.03</div><div class="fsc-title">매향리 평화축제</div></div>
-      </div>
-    </div>
+    <div class="festival-scroll" id="festival-scroll-list" style="margin-bottom:8px"></div>
 
     <!-- 테마별 추천 -->
     <div style="padding:var(--px) var(--px) 0">
@@ -755,13 +614,7 @@
       <div class="cal-day">30</div><div class="cal-day">31</div>
     </div>
     <div style="padding:12px var(--px)">
-      <div class="place-item" onclick="showFestivalDetail(16)">
-        <div class="pi pi-festival">🎉</div>
-        <div class="pi-content">
-          <div class="pi-name">제부도 해양 페스타 <span class="badge badge-soon" style="font-size:10px">D-6</span></div>
-          <div class="pi-meta">8.23 ~ 8.25 · 제부도 일원</div>
-        </div>
-      </div>
+      <div id="calendar-event-list"></div>
     </div>
   </div>
 
@@ -778,16 +631,10 @@
     <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
   </div>
 
-  <!-- 통계 -->
+  <!-- 통계 (JS 렌더) -->
   <div class="living-stats" style="margin-top:4px">
-    <div class="stat-card">
-      <div class="stat-val">4</div>
-      <div class="stat-lbl">등록 가맹점</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val">5</div>
-      <div class="stat-lbl">이용 가능 주차장</div>
-    </div>
+    <div class="stat-card"><div class="stat-val" id="stat-currency">-</div><div class="stat-lbl">등록 가맹점</div></div>
+    <div class="stat-card"><div class="stat-val" id="stat-parking">-</div><div class="stat-lbl">이용 가능 주차장</div></div>
   </div>
 
   <!-- 업종 아이콘 -->
@@ -923,6 +770,120 @@ function goMapCat(cat) {
   setTimeout(() => setFilter(cat), 200);
 }
 
+/* ── 홈 페이지 렌더 ── */
+function renderHomePage() {
+  renderHomeTourism();
+  renderHomeLiving();
+}
+
+function renderHomeTourism() {
+  const el = document.getElementById('home-tourism-content');
+  if (!el || typeof PLACES === 'undefined') return;
+
+  const festivals   = PLACES.filter(p => p.category === 'festival');
+  const restaurants = PLACES.filter(p => p.category === 'restaurant').slice(0, 4);
+  const parkings    = PLACES.filter(p => p.category === 'parking').slice(0, 1);
+  const currencies  = PLACES.filter(p => p.category === 'localcurrency');
+
+  const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>`;
+
+  const festivalBig = festivals.length
+    ? `<div class="festival-card-big" onclick="go('tourism');showFestivalDetail(${festivals[0].id})" style="margin-bottom:10px">
+        <div class="fcb-img img-sunset"><span class="badge badge-${festivals[0].status === 'ongoing' ? 'ongoing' : 'upcoming'} fcb-badge">${festivals[0].status === 'ongoing' ? '진행중' : '예정'}</span></div>
+        <div class="fcb-body">
+          <div class="fcb-date">${festivals[0].date ? festivals[0].date.replace('2026-','').replaceAll('-','.') : ''} · ${festivals[0].address}</div>
+          <div class="fcb-title">${festivals[0].name}</div>
+        </div>
+      </div>`
+    : emptyCard;
+
+  const restaurantGrid = restaurants.length
+    ? `<div class="place-grid" style="margin-bottom:10px">${restaurants.map(p => `
+        <div class="place-card-sm" onclick="goMapCat('restaurant')">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="pi pi-food">🍽</div>
+            <div><div class="place-card-sm-name">${p.name}</div><div class="place-card-sm-addr">${p.address.split(' ').slice(1).join(' ')}</div></div>
+          </div>
+        </div>`).join('')}</div>` : '';
+
+  const parkingCard = parkings.length
+    ? `<div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
+        <div class="pi pi-parking">P</div>
+        <div style="flex:1"><div class="place-card-sm-name">${parkings[0].name}</div><div class="place-card-sm-addr">${parkings[0].address}</div></div>
+        <span class="park-badge ${parkings[0].tags.includes('무료') ? 'pb-free' : 'pb-paid'}">${parkings[0].tags.includes('무료') ? '무료' : '유료'}</span>
+      </div>` : '';
+
+  el.innerHTML = `
+    <div class="section">
+      <div class="section-header">
+        <div><div class="section-title">이번 주 행사</div><div class="section-sub" style="margin-top:2px">축제 · 맛집 · 주차</div></div>
+      </div>
+      ${festivalBig}${restaurantGrid}${parkingCard}
+    </div>
+    <div class="section" style="padding-bottom:24px">
+      <div class="section-header"><div class="section-title">생활 정보</div></div>
+      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:10px" onclick="goMapCat('localcurrency')">
+        <div class="pi pi-currency">₩</div>
+        <div><div class="place-card-sm-name">희망화성지역화폐 가맹점</div><div class="place-card-sm-addr">가맹점 ${currencies.length}곳</div></div>
+      </div>
+      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
+        <div class="pi pi-parking">P</div>
+        <div><div class="place-card-sm-name">주차장 정보</div><div class="place-card-sm-addr">총 ${PLACES.filter(p=>p.category==='parking').length}곳</div></div>
+      </div>
+    </div>`;
+}
+
+function renderHomeLiving() {
+  const el = document.getElementById('home-living-content');
+  if (!el || typeof PLACES === 'undefined') return;
+
+  const currencies = PLACES.filter(p => p.category === 'localcurrency');
+  const parkings   = PLACES.filter(p => p.category === 'parking');
+
+  el.innerHTML = `
+    <div class="living-stats" style="margin-top:4px">
+      <div class="stat-card"><div class="stat-val">${currencies.length}</div><div class="stat-lbl">등록 가맹점</div></div>
+      <div class="stat-card"><div class="stat-val">${parkings.length}</div><div class="stat-lbl">이용 가능 주차장</div></div>
+    </div>
+    <div style="margin-top:16px">
+      <div class="category-icons">
+        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-food">🍴</div><span class="cat-icon-label">음식점</span></div>
+        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-cafe">☕</div><span class="cat-icon-label">카페</span></div>
+        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-mart">🛒</div><span class="cat-icon-label">마트</span></div>
+        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-etc">···</div><span class="cat-icon-label">기타</span></div>
+      </div>
+    </div>
+    <div class="section" style="padding-bottom:24px">
+      <div class="section-header" style="margin-top:20px"><div class="section-title">희망화성지역화폐 가맹점</div></div>
+      <div class="place-list">${currencies.length
+        ? currencies.slice(0,5).map(p => `
+          <div class="place-item" onclick="goMapCat('localcurrency')">
+            <div class="pi pi-currency">₩</div>
+            <div class="pi-content"><div class="pi-name">${p.name}</div><div class="pi-meta">${p.address}</div></div>
+          </div>`).join('')
+        : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'
+      }</div>
+    </div>`;
+}
+
+/* ── 축제 가로 스크롤 렌더 (관광 탭) ── */
+const IMG_CLASSES = ['img-sunset','img-sea','img-night','img-peace','img-dino'];
+function renderFestivalScroll() {
+  const el = document.getElementById('festival-scroll-list');
+  if (!el || typeof PLACES === 'undefined') return;
+  const festivals = PLACES.filter(p => p.category === 'festival');
+  if (!festivals.length) { el.innerHTML = '<div style="padding:8px var(--px);color:var(--text-muted);font-size:13px">축제 데이터 준비 중</div>'; return; }
+  el.innerHTML = festivals.map((p, i) => {
+    const img = IMG_CLASSES[i % IMG_CLASSES.length];
+    const badge = p.status === 'ongoing' ? '<span class="badge badge-ongoing fsc-badge">진행중</span>' : '<span class="badge badge-upcoming fsc-badge">예정</span>';
+    const dateStr = p.date ? p.date.split('~')[0].trim().replace('2026-','').replaceAll('-','.') + ' ~' : '';
+    return `<div class="festival-scroll-card" onclick="showFestivalDetail(${p.id})">
+      <div class="fsc-img ${img}">${badge}</div>
+      <div class="fsc-body"><div class="fsc-date">${dateStr}</div><div class="fsc-title">${p.name}</div></div>
+    </div>`;
+  }).join('');
+}
+
 /* ── 홈 토글 ── */
 function switchHomeTab(el, tab) {
   document.querySelectorAll('.ttab').forEach(t => t.classList.remove('active'));
@@ -948,6 +909,7 @@ function renderTourismList(theme) {
     const tags = THEME_TAGS[theme];
     items = items.filter(p => p.tags.some(t => tags.includes(t)));
   }
+  if (!items.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
   list.innerHTML = items.map((p, i) => {
     const cfg = CATEGORY_CONFIG[p.category];
     const isCurrency = p.tags.includes('가맹점');
@@ -1036,29 +998,38 @@ function hideCalendar() {
 function renderLivingPage() {
   if (typeof PLACES === 'undefined') return;
 
+  const cCount = PLACES.filter(p => p.category === 'localcurrency').length;
+  const pCount = PLACES.filter(p => p.category === 'parking').length;
+  const scEl = document.getElementById('stat-currency');
+  const spEl = document.getElementById('stat-parking');
+  if (scEl) scEl.textContent = cCount;
+  if (spEl) spEl.textContent = pCount;
+
+  const empty = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+
   const cList = document.getElementById('living-currency-list');
-  cList.innerHTML = PLACES.filter(p => p.category === 'localcurrency').map((p, i) => `
-    <div class="place-item" style="animation-delay:${i * 0.05}s" onclick="goMapCat('localcurrency')">
-      <div class="pi pi-currency">₩</div>
-      <div class="pi-content">
-        <div class="pi-name">${p.name}</div>
-        <div class="pi-meta">${p.address}</div>
-      </div>
-    </div>`).join('');
+  const currencies = PLACES.filter(p => p.category === 'localcurrency');
+  cList.innerHTML = currencies.length
+    ? currencies.map((p, i) => `
+        <div class="place-item" style="animation-delay:${i * 0.05}s" onclick="goMapCat('localcurrency')">
+          <div class="pi pi-currency">₩</div>
+          <div class="pi-content"><div class="pi-name">${p.name}</div><div class="pi-meta">${p.address}</div></div>
+        </div>`).join('')
+    : empty;
 
   const pList = document.getElementById('living-parking-list');
-  pList.innerHTML = PLACES.filter(p => p.category === 'parking').map((p, i) => {
-    const free = p.tags.includes('무료');
-    return `
-      <div class="place-item" style="animation-delay:${(i + 0.2) * 0.05}s" onclick="goMapCat('parking')">
-        <div class="pi pi-parking">P</div>
-        <div class="pi-content">
-          <div class="pi-name">${p.name}</div>
-          <div class="pi-meta">${p.address}</div>
-        </div>
-        <div class="pi-right"><span class="park-badge ${free ? 'pb-free' : 'pb-paid'}">${free ? '무료' : '유료'}</span></div>
-      </div>`;
-  }).join('');
+  const parkings = PLACES.filter(p => p.category === 'parking');
+  pList.innerHTML = parkings.length
+    ? parkings.map((p, i) => {
+        const free = p.tags.includes('무료');
+        return `
+          <div class="place-item" style="animation-delay:${i * 0.05}s" onclick="goMapCat('parking')">
+            <div class="pi pi-parking">P</div>
+            <div class="pi-content"><div class="pi-name">${p.name}</div><div class="pi-meta">${p.address}</div></div>
+            <div class="pi-right"><span class="park-badge ${free ? 'pb-free' : 'pb-paid'}">${free ? '무료' : '유료'}</span></div>
+          </div>`;
+      }).join('')
+    : empty;
 }
 
 function switchLiving(type) {
@@ -1096,8 +1067,12 @@ document.addEventListener('keydown', function (e) {
 
 /* ── 초기 렌더 ── */
 window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(renderTourismList, 100, 'all');
-  setTimeout(renderLivingPage, 100);
+  setTimeout(() => {
+    renderHomePage();
+    renderFestivalScroll();
+    renderTourismList('all');
+    renderLivingPage();
+  }, 100);
 });
 </script>
 
