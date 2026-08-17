@@ -5,7 +5,8 @@ let mapReady   = false;
 let overlayMap = {};
 let selectedId = null;
 
-const HWASEONG = { lat: 37.1620, lng: 126.8312 };
+/* 화성특례시 시청 기준 중심 좌표 */
+const HWASEONG = { lat: 37.1996, lng: 126.8312 };
 
 const CAT_COLOR = {
   tourist:       '#7C3AED',
@@ -23,7 +24,7 @@ function initMap() {
   }
 
   if (typeof kakao === 'undefined' || !kakao.maps) {
-    showMapError('카카오맵 SDK를 불러올 수 없습니다.<br>페이지를 새로고침 해주세요.');
+    showMapError('카카오맵을 불러올 수 없습니다.<br>페이지를 새로고침 해주세요.');
     return;
   }
 
@@ -33,30 +34,33 @@ function initMap() {
   const loader = document.getElementById('map-loader');
   if (loader) loader.remove();
 
+  /* 컨테이너 크기 명시 (Kakao Maps 필수 조건) */
   container.style.width  = window.innerWidth  + 'px';
   container.style.height = window.innerHeight + 'px';
 
+  /* 지도 생성 */
   kakaoMap = new kakao.maps.Map(container, {
     center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-    level:  10,
+    level:  11,
   });
 
   kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-
-  /* 렌더링 안정화: 브라우저 페인트 후 크기 재계산 */
-  setTimeout(function() {
-    container.style.width  = window.innerWidth  + 'px';
-    container.style.height = window.innerHeight + 'px';
-    kakaoMap.relayout();
-    kakaoMap.setCenter(new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng));
-  }, 300);
-
   mapReady = true;
+
   buildOverlays();
+  fitAllPlaces();   /* 화성시 전체 장소가 보이도록 자동 범위 조절 */
   setupMyLocation();
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
-  window.addEventListener('resize', () => {
+  /* display:none → block 전환 후 크기 재계산 */
+  setTimeout(function () {
+    container.style.width  = window.innerWidth  + 'px';
+    container.style.height = window.innerHeight + 'px';
+    kakaoMap.relayout();
+  }, 300);
+
+  /* 화면 회전 / 리사이즈 대응 */
+  window.addEventListener('resize', function () {
     if (!mapReady) return;
     container.style.width  = window.innerWidth  + 'px';
     container.style.height = window.innerHeight + 'px';
@@ -64,39 +68,45 @@ function initMap() {
   });
 }
 
-function showMapError(msg) {
-  const container = document.getElementById('kakao-map');
-  if (!container) return;
-  const loader = document.getElementById('map-loader');
-  if (loader) loader.remove();
-  container.innerHTML = `
-    <div style="position:absolute;inset:0;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:12px;padding:24px;
-      background:#f9fafb;text-align:center;">
-      <div style="font-size:48px">🗺️</div>
-      <div style="color:#6b7280;font-size:14px;line-height:1.6">${msg}</div>
-      <button onclick="location.reload()"
-        style="background:#6366f1;color:#fff;border:none;border-radius:20px;
-               padding:10px 20px;font-size:13px;cursor:pointer">
-        새로고침
-      </button>
-    </div>`;
+/* ── 화성시 전체 장소 범위로 자동 맞춤 ── */
+function fitAllPlaces() {
+  var bounds = new kakao.maps.LatLngBounds();
+  PLACES.forEach(function (p) {
+    bounds.extend(new kakao.maps.LatLng(p.lat, p.lng));
+  });
+  kakaoMap.setBounds(bounds, 60);
 }
 
-/* ── 커스텀 오버레이 빌드 ── */
+/* ── 에러 화면 ── */
+function showMapError(msg) {
+  var container = document.getElementById('kakao-map');
+  if (!container) return;
+  var loader = document.getElementById('map-loader');
+  if (loader) loader.remove();
+  container.innerHTML =
+    '<div style="position:absolute;inset:0;display:flex;flex-direction:column;' +
+    'align-items:center;justify-content:center;gap:12px;padding:24px;' +
+    'background:#f9fafb;text-align:center;">' +
+    '<div style="font-size:48px">🗺️</div>' +
+    '<div style="color:#6b7280;font-size:14px;line-height:1.6">' + msg + '</div>' +
+    '<button onclick="location.reload()" ' +
+    'style="background:#6366f1;color:#fff;border:none;border-radius:20px;' +
+    'padding:10px 20px;font-size:13px;cursor:pointer">새로고침</button></div>';
+}
+
+/* ── 커스텀 오버레이 생성 ── */
 function buildOverlays() {
-  PLACES.forEach(p => {
-    const color = CAT_COLOR[p.category] || '#6B7280';
-    const cfg   = CATEGORY_CONFIG[p.category];
-    const label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
+  PLACES.forEach(function (p) {
+    var color = CAT_COLOR[p.category] || '#6B7280';
+    var cfg   = CATEGORY_CONFIG[p.category];
+    var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
 
-    const html = `
-      <div class="cm-pin" id="pin-${p.id}" onclick="onPinClick(event,${p.id})">
-        <div class="cm-circle" style="background:${color}">${cfg.emoji} ${label}</div>
-        <div class="cm-tail" style="border-top-color:${color}"></div>
-      </div>`;
+    var html =
+      '<div class="cm-pin" id="pin-' + p.id + '" onclick="onPinClick(event,' + p.id + ')">' +
+      '<div class="cm-circle" style="background:' + color + '">' + cfg.emoji + ' ' + label + '</div>' +
+      '<div class="cm-tail" style="border-top-color:' + color + '"></div></div>';
 
-    const overlay = new kakao.maps.CustomOverlay({
+    var overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
       content:  html,
       yAnchor:  1.5,
@@ -110,12 +120,16 @@ function buildOverlays() {
 /* ── 핀 클릭 ── */
 function onPinClick(e, id) {
   e.stopPropagation();
-  const place = PLACES.find(p => p.id === id);
+  var place = PLACES.find(function (p) { return p.id === id; });
   if (!place) return;
 
-  if (selectedId) document.getElementById(`pin-${selectedId}`)?.classList.remove('selected');
+  if (selectedId) {
+    var prev = document.getElementById('pin-' + selectedId);
+    if (prev) prev.classList.remove('selected');
+  }
   selectedId = id;
-  document.getElementById(`pin-${id}`)?.classList.add('selected');
+  var cur = document.getElementById('pin-' + id);
+  if (cur) cur.classList.add('selected');
 
   kakaoMap.panTo(new kakao.maps.LatLng(place.lat, place.lng));
   showPlaceSlide(place);
@@ -123,23 +137,23 @@ function onPinClick(e, id) {
 
 /* ── 장소 슬라이드 카드 ── */
 function showPlaceSlide(place) {
-  const cfg   = CATEGORY_CONFIG[place.category];
-  const color = CAT_COLOR[place.category];
+  var cfg   = CATEGORY_CONFIG[place.category];
+  var color = CAT_COLOR[place.category];
 
-  document.getElementById('slide-inner').innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-      <span class="sl-cat" style="background:${cfg.bg};color:${color}">${cfg.emoji} ${cfg.label}</span>
-      ${place.status === 'ongoing' ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : ''}
-    </div>
-    <div class="sl-name">${place.name}</div>
-    <div class="sl-addr">📍 ${place.address}</div>
-    ${place.date ? `<div class="sl-date">📅 ${place.date}</div>` : ''}
-    <div class="sl-desc">${place.desc}</div>
-    <div class="sl-tags">${place.tags.map(t => `<span class="sl-tag">${t}</span>`).join('')}</div>
-    <div class="sl-actions">
-      <button class="sl-btn primary" onclick="findNearby(${place.lat},${place.lng})">💳 반경 500m 가맹점</button>
-      <button class="sl-btn" onclick="openRoute(${place.lat},${place.lng},'${place.name}')">🗺 길찾기</button>
-    </div>`;
+  document.getElementById('slide-inner').innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
+    '<span class="sl-cat" style="background:' + cfg.bg + ';color:' + color + '">' + cfg.emoji + ' ' + cfg.label + '</span>' +
+    (place.status === 'ongoing' ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : '') +
+    '</div>' +
+    '<div class="sl-name">' + place.name + '</div>' +
+    '<div class="sl-addr">📍 ' + place.address + '</div>' +
+    (place.date ? '<div class="sl-date">📅 ' + place.date + '</div>' : '') +
+    '<div class="sl-desc">' + place.desc + '</div>' +
+    '<div class="sl-tags">' + place.tags.map(function (t) { return '<span class="sl-tag">' + t + '</span>'; }).join('') + '</div>' +
+    '<div class="sl-actions">' +
+    '<button class="sl-btn primary" onclick="findNearby(' + place.lat + ',' + place.lng + ')">💳 반경 500m 가맹점</button>' +
+    '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name + '\')">🗺 길찾기</button>' +
+    '</div>';
 
   document.getElementById('place-slide').classList.add('open');
   document.getElementById('map-dim').classList.add('show');
@@ -149,7 +163,8 @@ function closePlaceSlide() {
   document.getElementById('place-slide').classList.remove('open');
   document.getElementById('map-dim').classList.remove('show');
   if (selectedId) {
-    document.getElementById(`pin-${selectedId}`)?.classList.remove('selected');
+    var el = document.getElementById('pin-' + selectedId);
+    if (el) el.classList.remove('selected');
     selectedId = null;
   }
 }
@@ -157,51 +172,59 @@ function closePlaceSlide() {
 /* ── 카테고리 필터 ── */
 function setFilter(cat) {
   closePlaceSlide();
-  document.querySelectorAll('#map-chips .chip').forEach(c =>
-    c.classList.toggle('active', c.dataset.cat === cat)
-  );
-  PLACES.forEach(p => {
-    overlayMap[p.id]?.setMap(
+  document.querySelectorAll('#map-chips .chip').forEach(function (c) {
+    c.classList.toggle('active', c.dataset.cat === cat);
+  });
+
+  PLACES.forEach(function (p) {
+    overlayMap[p.id] && overlayMap[p.id].setMap(
       (cat === 'all' || p.category === cat) ? kakaoMap : null
     );
   });
-  const targets = cat === 'all' ? PLACES : PLACES.filter(p => p.category === cat);
+
+  var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
   if (targets.length) {
-    const bounds = new kakao.maps.LatLngBounds();
-    targets.forEach(p => bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)));
+    var bounds = new kakao.maps.LatLngBounds();
+    targets.forEach(function (p) { bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)); });
     kakaoMap.setBounds(bounds, 80);
   }
 }
 
-/* ── 반경 500m 가맹점 ── */
+/* ── 반경 500m 지역화폐 가맹점 ── */
 function findNearby(lat, lng) {
-  const nearby = PLACES.filter(p =>
-    p.category === 'localcurrency' && Math.hypot(p.lat - lat, p.lng - lng) <= 0.005
-  );
+  var nearby = PLACES.filter(function (p) {
+    return p.category === 'localcurrency' && Math.hypot(p.lat - lat, p.lng - lng) <= 0.005;
+  });
   closePlaceSlide();
-  if (!nearby.length) { showToast('반경 500m 내 지역화폐 가맹점이 없습니다.'); return; }
+  if (!nearby.length) {
+    showToast('반경 500m 내 지역화폐 가맹점이 없습니다.');
+    return;
+  }
   setFilter('localcurrency');
-  showToast(`반경 500m 내 가맹점 ${nearby.length}곳을 찾았어요`);
+  showToast('반경 500m 내 가맹점 ' + nearby.length + '곳을 찾았어요');
 }
 
 /* ── 길찾기 ── */
 function openRoute(lat, lng, name) {
   window.open(
-    `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`,
+    'https://map.kakao.com/link/to/' + encodeURIComponent(name) + ',' + lat + ',' + lng,
     '_blank'
   );
 }
 
 /* ── 내 위치 버튼 ── */
 function setupMyLocation() {
-  document.getElementById('btn-mylocation').addEventListener('click', () => {
-    if (!navigator.geolocation) { showToast('위치 정보를 지원하지 않는 브라우저입니다.'); return; }
+  document.getElementById('btn-mylocation').addEventListener('click', function () {
+    if (!navigator.geolocation) {
+      showToast('위치 정보를 지원하지 않는 브라우저입니다.');
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
-      pos => {
+      function (pos) {
         kakaoMap.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
         kakaoMap.setLevel(7);
       },
-      () => showToast('위치 권한을 허용해 주세요.')
+      function () { showToast('위치 권한을 허용해 주세요.'); }
     );
   });
 }
