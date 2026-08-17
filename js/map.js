@@ -5,8 +5,8 @@ let mapReady   = false;
 let overlayMap = {};
 let selectedId = null;
 
-/* 화성특례시 시청 기준 중심 좌표 */
-const HWASEONG = { lat: 37.1996, lng: 126.8312 };
+/* 화성특례시 전체 장소 중심 좌표 (setBounds 애니메이션 없이 바로 시작) */
+const HWASEONG = { lat: 37.155, lng: 126.848 };
 
 const CAT_COLOR = {
   tourist:       '#7C3AED',
@@ -41,14 +41,14 @@ function initMap() {
   /* 지도 생성 */
   kakaoMap = new kakao.maps.Map(container, {
     center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-    level:  11,
+    level:  10,  /* 화성시 전역이 처음부터 보이는 레벨 */
   });
 
   kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
   mapReady = true;
 
   buildOverlays();
-  fitAllPlaces();   /* 화성시 전체 장소가 보이도록 자동 범위 조절 */
+  /* fitAllPlaces 제거 — 초기 중심/레벨이 이미 전체를 포함하므로 애니메이션 이동 불필요 */
   setupMyLocation();
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
