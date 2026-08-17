@@ -41,8 +41,15 @@ function initMap() {
     level:  10,
   });
 
-  kakaoMap.relayout();
   kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+
+  /* 렌더링 안정화: 브라우저 페인트 후 크기 재계산 */
+  setTimeout(function() {
+    container.style.width  = window.innerWidth  + 'px';
+    container.style.height = window.innerHeight + 'px';
+    kakaoMap.relayout();
+    kakaoMap.setCenter(new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng));
+  }, 300);
 
   mapReady = true;
   buildOverlays();
