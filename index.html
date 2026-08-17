@@ -404,13 +404,23 @@
       bottom: calc(68px + env(safe-area-inset-bottom));
       width: 100%; max-width: 480px;
       background: var(--white); border-radius: 20px 20px 0 0;
-      z-index: 200; box-shadow: 0 -4px 20px rgba(0,0,0,0.12);
-      transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
-      max-height: 55vh; overflow: hidden;
+      z-index: 200; box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
+      transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+      max-height: 60vh; overflow: hidden;
     }
     .place-slide.open { transform: translateX(-50%) translateY(0); }
-    .slide-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); margin: 10px auto 0; }
-    .slide-inner { padding: 12px 20px 20px; overflow-y: auto; max-height: calc(55vh - 40px); }
+    /* 드래그 핸들 존 — touch-action:none 으로 스크롤 간섭 방지 */
+    .slide-drag-zone {
+      padding: 10px 0 4px; display: flex; justify-content: center;
+      touch-action: none; user-select: none; -webkit-user-select: none;
+      cursor: grab;
+    }
+    .slide-drag-zone:active { cursor: grabbing; }
+    .slide-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--border); }
+    .slide-inner {
+      padding: 8px 20px 20px; overflow-y: auto; max-height: calc(60vh - 44px);
+      overscroll-behavior: contain;
+    }
     .sl-cat { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
     .sl-name { font-size: 18px; font-weight: 900; color: var(--text); margin-bottom: 4px; }
     .sl-addr { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
@@ -423,15 +433,18 @@
       flex: 1; padding: 11px 6px; border-radius: 10px; text-align: center;
       font-size: 13px; font-weight: 600; cursor: pointer;
       border: 1.5px solid var(--border); color: var(--text-sub);
-      background: var(--white); transition: background 0.1s;
+      background: var(--white); transition: background 0.1s, transform 0.1s;
     }
+    .sl-btn:active { transform: scale(0.96); }
     .sl-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
     .sl-btn.primary:hover { background: #1D4ED8; }
     .sl-close {
-      position: absolute; top: 16px; right: 16px; width: 28px; height: 28px;
+      position: absolute; top: 14px; right: 16px; width: 28px; height: 28px;
       border-radius: 50%; background: var(--bg); border: none; font-size: 14px;
-      color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer;
+      color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: transform 0.1s;
     }
+    .sl-close:active { transform: scale(0.88); }
 
     /* 범례 */
     .map-legend {
@@ -445,19 +458,45 @@
     .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
     /* dim overlay */
-    .dim { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+    .dim { position: fixed; inset: 0; background: rgba(0,0,0,0.32); z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.28s; }
     .dim.show { opacity: 1; pointer-events: auto; }
+
+    /* ── 리스트 항목 입장 애니메이션 ── */
+    @keyframes item-enter {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .place-item {
+      animation: item-enter 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    /* ── 카드/버튼 눌림 피드백 ── */
+    .festival-card-big      { transition: box-shadow 0.15s, transform 0.12s; }
+    .festival-card-big:active       { transform: scale(0.98); }
+    .festival-scroll-card:active    { transform: scale(0.97); }
+    .place-card-sm          { transition: box-shadow 0.15s, transform 0.12s; }
+    .place-card-sm:active           { transform: scale(0.97); }
+    .chip                   { transition: all 0.14s, transform 0.1s; }
+    .chip:active                    { transform: scale(0.93); }
+    .ttab:active                    { opacity: 0.75; }
+    .cat-icon-item:active   { background: #EBEBEB; }
+    .fd-nearby-btn:active   { transform: scale(0.96); }
+    .fd-cta-btn             { transition: background 0.15s, transform 0.12s; }
+    .fd-cta-btn:active              { transform: scale(0.98); }
+    .nav-item               { transition: color 0.14s, transform 0.1s; }
+    .nav-item:active                { transform: scale(0.88); }
 
     /* ── TOAST ── */
     #toast {
       position: fixed; bottom: calc(68px + env(safe-area-inset-bottom) + 14px); left: 50%;
-      transform: translateX(-50%) translateY(10px);
+      transform: translateX(-50%) translateY(20px) scale(0.88);
       background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
       padding: 10px 20px; border-radius: 24px; white-space: nowrap;
       box-shadow: var(--shadow-md); z-index: 999;
-      opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
   </style>
 </head>
 <body>
@@ -825,7 +864,9 @@
 
   <!-- 장소 슬라이드 카드 -->
   <div class="place-slide" id="place-slide">
-    <div class="slide-handle"></div>
+    <div class="slide-drag-zone" id="slide-drag-zone">
+      <div class="slide-handle"></div>
+    </div>
     <button class="sl-close" onclick="closePlaceSlide()">✕</button>
     <div class="slide-inner" id="slide-inner"></div>
   </div>
@@ -907,11 +948,11 @@ function renderTourismList(theme) {
     const tags = THEME_TAGS[theme];
     items = items.filter(p => p.tags.some(t => tags.includes(t)));
   }
-  list.innerHTML = items.map(p => {
+  list.innerHTML = items.map((p, i) => {
     const cfg = CATEGORY_CONFIG[p.category];
     const isCurrency = p.tags.includes('가맹점');
     return `
-      <div class="place-item" onclick="${p.category === 'festival' ? 'showFestivalDetail(' + p.id + ')' : 'goMapCat(\'' + p.category + '\')'}">
+      <div class="place-item" style="animation-delay:${i * 0.045}s" onclick="${p.category === 'festival' ? 'showFestivalDetail(' + p.id + ')' : 'goMapCat(\'' + p.category + '\')'}">
         <div class="pi ${iconClass(p.category)}">${iconContent(p.category)}</div>
         <div class="pi-content">
           <div class="pi-name">
@@ -996,8 +1037,8 @@ function renderLivingPage() {
   if (typeof PLACES === 'undefined') return;
 
   const cList = document.getElementById('living-currency-list');
-  cList.innerHTML = PLACES.filter(p => p.category === 'localcurrency').map(p => `
-    <div class="place-item" onclick="goMapCat('localcurrency')">
+  cList.innerHTML = PLACES.filter(p => p.category === 'localcurrency').map((p, i) => `
+    <div class="place-item" style="animation-delay:${i * 0.05}s" onclick="goMapCat('localcurrency')">
       <div class="pi pi-currency">₩</div>
       <div class="pi-content">
         <div class="pi-name">${p.name}</div>
@@ -1006,10 +1047,10 @@ function renderLivingPage() {
     </div>`).join('');
 
   const pList = document.getElementById('living-parking-list');
-  pList.innerHTML = PLACES.filter(p => p.category === 'parking').map(p => {
+  pList.innerHTML = PLACES.filter(p => p.category === 'parking').map((p, i) => {
     const free = p.tags.includes('무료');
     return `
-      <div class="place-item" onclick="goMapCat('parking')">
+      <div class="place-item" style="animation-delay:${(i + 0.2) * 0.05}s" onclick="goMapCat('parking')">
         <div class="pi pi-parking">P</div>
         <div class="pi-content">
           <div class="pi-name">${p.name}</div>
@@ -1032,6 +1073,26 @@ function showToast(msg) {
   t.textContent = msg; t.classList.add('show');
   clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2400);
 }
+
+/* ── 슬라이드 드래그-다운 닫기 ── */
+(function () {
+  var startY = 0;
+  var dz = document.getElementById('slide-drag-zone');
+  function onStart(e) { startY = (e.touches ? e.touches[0] : e).clientY; }
+  function onEnd(e) {
+    var endY = (e.changedTouches ? e.changedTouches[0] : e).clientY;
+    if (endY - startY > 60) closePlaceSlide();
+  }
+  dz.addEventListener('touchstart', onStart, { passive: true });
+  dz.addEventListener('touchend',   onEnd);
+  dz.addEventListener('mousedown',  onStart);
+  dz.addEventListener('mouseup',    onEnd);
+})();
+
+/* ── Escape 키로 슬라이드 닫기 ── */
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') closePlaceSlide();
+});
 
 /* ── 초기 렌더 ── */
 window.addEventListener('DOMContentLoaded', () => {

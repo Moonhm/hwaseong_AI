@@ -155,8 +155,11 @@ function showPlaceSlide(place) {
     '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name + '\')">🗺 길찾기</button>' +
     '</div>';
 
-  document.getElementById('place-slide').classList.add('open');
-  document.getElementById('map-dim').classList.add('show');
+  /* rAF으로 렌더 사이클 확보 후 슬라이드 오픈 (janky 방지) */
+  requestAnimationFrame(function () {
+    document.getElementById('place-slide').classList.add('open');
+    document.getElementById('map-dim').classList.add('show');
+  });
 }
 
 function closePlaceSlide() {
