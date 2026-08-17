@@ -869,7 +869,7 @@ function go(page) {
   document.getElementById('page-' + page).classList.add('active');
   document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
   window.scrollTo(0, 0);
-  if (page === 'map')     setTimeout(() => initMap(0), 200);
+  if (page === 'map')     requestAnimationFrame(() => requestAnimationFrame(initMap));
   if (page === 'living')  renderLivingPage();
   if (page === 'tourism') renderTourismList('all');
 }
