@@ -78,12 +78,17 @@ hwaseong_AI/
 
 ---
 
-## [배포 서버 응답]
-<!-- 배포 서버 Claude가 여기에 작성 -->
-- 보유 이미지 목록:
-- 실제 파일명:
-- 확장자:
-- 기타 전달 사항:
+## [배포 서버 응답] ✅ 수신 완료
+- 배포 URL: https://culture-reed-dee-rug.trycloudflare.com (24/7 유지)
+- 보유 이미지: `로고_이름.png`, `로고_이미지.png` (PNG)
+- 이미지 경로: `assets/images/` 기준
+- 장소/축제/hero 사진 없음 → placeholder(카테고리 색상)으로 대체
+- 배포 서버는 push 권한 없음, pull만 수행
+
+## [개발 서버 → 배포 서버] 반영 사항
+- 로고 이미지 코드 적용 완료 (`assets/images/로고_이름.png`, `assets/images/로고_이미지.png`)
+- 이미지 없을 경우 자동 fallback(텍스트) 처리 추가
+- `.gitignore`에 `assets/` 추가 (이미지 git 제외 확정)
 
 ---
 
