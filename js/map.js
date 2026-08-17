@@ -22,57 +22,56 @@ function initMap() {
     return;
   }
 
-  if (typeof kakao === 'undefined') {
-    showMapError('카카오맵 SDK를 불러올 수 없습니다.<br>네트워크 연결을 확인해 주세요.');
+  if (typeof kakao === 'undefined' || !kakao.maps) {
+    showMapError('카카오맵 SDK를 불러올 수 없습니다.<br>페이지를 새로고침 해주세요.');
     return;
   }
 
-  /* autoload=false 방식: kakao.maps.load() 콜백 안에서 지도 생성 */
-  kakao.maps.load(function () {
-    const container = document.getElementById('kakao-map');
-    if (!container) return;
+  const container = document.getElementById('kakao-map');
+  if (!container) return;
 
-    const loader = document.getElementById('map-loader');
-    if (loader) loader.remove();
+  const loader = document.getElementById('map-loader');
+  if (loader) loader.remove();
 
+  container.style.width  = window.innerWidth  + 'px';
+  container.style.height = window.innerHeight + 'px';
+
+  kakaoMap = new kakao.maps.Map(container, {
+    center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
+    level:  10,
+  });
+
+  kakaoMap.relayout();
+  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+
+  mapReady = true;
+  buildOverlays();
+  setupMyLocation();
+  kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
+
+  window.addEventListener('resize', () => {
+    if (!mapReady) return;
     container.style.width  = window.innerWidth  + 'px';
     container.style.height = window.innerHeight + 'px';
-
-    kakaoMap = new kakao.maps.Map(container, {
-      center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-      level:  10,
-    });
-
     kakaoMap.relayout();
-    kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-
-    mapReady = true;
-    buildOverlays();
-    setupMyLocation();
-    kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
-
-    window.addEventListener('resize', () => {
-      if (!mapReady) return;
-      container.style.width  = window.innerWidth  + 'px';
-      container.style.height = window.innerHeight + 'px';
-      kakaoMap.relayout();
-    });
   });
 }
 
 function showMapError(msg) {
   const container = document.getElementById('kakao-map');
   if (!container) return;
+  const loader = document.getElementById('map-loader');
+  if (loader) loader.remove();
   container.innerHTML = `
     <div style="position:absolute;inset:0;display:flex;flex-direction:column;
       align-items:center;justify-content:center;gap:12px;padding:24px;
       background:#f9fafb;text-align:center;">
       <div style="font-size:48px">🗺️</div>
       <div style="color:#6b7280;font-size:14px;line-height:1.6">${msg}</div>
-      <button onclick="initMap()"
+      <button onclick="location.reload()"
         style="background:#6366f1;color:#fff;border:none;border-radius:20px;
                padding:10px 20px;font-size:13px;cursor:pointer">
-        다시 시도
+        새로고침
       </button>
     </div>`;
 }
@@ -154,13 +153,11 @@ function setFilter(cat) {
   document.querySelectorAll('#map-chips .chip').forEach(c =>
     c.classList.toggle('active', c.dataset.cat === cat)
   );
-
   PLACES.forEach(p => {
     overlayMap[p.id]?.setMap(
       (cat === 'all' || p.category === cat) ? kakaoMap : null
     );
   });
-
   const targets = cat === 'all' ? PLACES : PLACES.filter(p => p.category === cat);
   if (targets.length) {
     const bounds = new kakao.maps.LatLngBounds();
@@ -175,10 +172,7 @@ function findNearby(lat, lng) {
     p.category === 'localcurrency' && Math.hypot(p.lat - lat, p.lng - lng) <= 0.005
   );
   closePlaceSlide();
-  if (!nearby.length) {
-    showToast('반경 500m 내 지역화폐 가맹점이 없습니다.');
-    return;
-  }
+  if (!nearby.length) { showToast('반경 500m 내 지역화폐 가맹점이 없습니다.'); return; }
   setFilter('localcurrency');
   showToast(`반경 500m 내 가맹점 ${nearby.length}곳을 찾았어요`);
 }
@@ -194,10 +188,7 @@ function openRoute(lat, lng, name) {
 /* ── 내 위치 버튼 ── */
 function setupMyLocation() {
   document.getElementById('btn-mylocation').addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      showToast('위치 정보를 지원하지 않는 브라우저입니다.');
-      return;
-    }
+    if (!navigator.geolocation) { showToast('위치 정보를 지원하지 않는 브라우저입니다.'); return; }
     navigator.geolocation.getCurrentPosition(
       pos => {
         kakaoMap.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
