@@ -380,6 +380,26 @@
     .map-chips { cursor: grab; user-select: none; }
     .map-chips.dragging { cursor: grabbing; }
 
+    /* 칩 스크롤 화살표 */
+    .chip-arrow {
+      position: absolute; top: 8px; height: 40px; width: 48px;
+      z-index: 11; display: flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer; padding: 0;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s;
+      color: rgba(30,30,30,0.65);
+    }
+    .chip-arrow.visible { opacity: 1; pointer-events: auto; }
+    .chip-arrow:hover { color: rgba(30,30,30,0.9); }
+    #chip-arrow-left  {
+      left: 0;
+      background: linear-gradient(to right, rgba(245,246,248,0.88) 45%, transparent);
+    }
+    #chip-arrow-right {
+      right: 0;
+      background: linear-gradient(to left,  rgba(245,246,248,0.88) 45%, transparent);
+    }
+
     /* 내 위치 버튼 */
     #btn-mylocation {
       position: absolute;
@@ -757,6 +777,14 @@
     <div class="chip" data-cat="tourist"              onclick="setFilter('tourist')">🏛 관광지</div>
   </div>
 
+  <!-- 칩 스크롤 화살표 -->
+  <button id="chip-arrow-left" class="chip-arrow" onclick="scrollChips(-1)" aria-label="왼쪽">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button id="chip-arrow-right" class="chip-arrow" onclick="scrollChips(1)" aria-label="오른쪽">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
   <!-- 실시간 주차 여유 뱃지 -->
   <div id="parking-count-badge" style="
     display:none; position:absolute; top:56px; right:14px; z-index:10;
@@ -843,7 +871,7 @@ function go(page) {
   newPage.classList.add('active');
   newPage.scrollTop = 0; // 페이지 자체 스크롤 초기화 (body 스크롤 아님)
   document.querySelector('.nav-item[data-page="' + page + '"]')?.classList.add('active');
-  if (page === 'map')     requestAnimationFrame(() => requestAnimationFrame(initMap));
+  if (page === 'map')     { requestAnimationFrame(() => requestAnimationFrame(initMap)); setTimeout(updateChipArrows, 120); }
   if (page === 'living')  renderLivingPage();
   if (page === 'tourism') renderTourismList('all');
 }
@@ -1158,16 +1186,38 @@ document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') closePlaceSlide();
 });
 
-/* ── 지도 필터 칩 — 마우스 드래그 스크롤 ── */
+/* ── 지도 필터 칩 — 화살표 + 마우스 드래그 스크롤 ── */
+function updateChipArrows() {
+  var el = document.getElementById('map-chips');
+  var lBtn = document.getElementById('chip-arrow-left');
+  var rBtn = document.getElementById('chip-arrow-right');
+  if (!el || !lBtn || !rBtn) return;
+  var atStart = el.scrollLeft <= 2;
+  var atEnd   = el.scrollLeft >= el.scrollWidth - el.clientWidth - 2;
+  lBtn.classList.toggle('visible', !atStart);
+  rBtn.classList.toggle('visible', !atEnd);
+}
+
+function scrollChips(dir) {
+  var el = document.getElementById('map-chips');
+  el.scrollBy({ left: dir * 130, behavior: 'smooth' });
+  setTimeout(updateChipArrows, 250);
+}
+
 (function () {
   var el = document.getElementById('map-chips');
   var down = false, startX = 0, scrollLeft = 0;
+  el.addEventListener('scroll', updateChipArrows, { passive: true });
   el.addEventListener('mousedown', function (e) {
     down = true; el.classList.add('dragging');
     startX = e.pageX - el.getBoundingClientRect().left;
     scrollLeft = el.scrollLeft;
   });
-  document.addEventListener('mouseup',   function () { down = false; el.classList.remove('dragging'); });
+  document.addEventListener('mouseup', function () {
+    if (!down) return;
+    down = false; el.classList.remove('dragging');
+    updateChipArrows();
+  });
   document.addEventListener('mouseleave', function () { down = false; el.classList.remove('dragging'); });
   el.addEventListener('mousemove', function (e) {
     if (!down) return;
