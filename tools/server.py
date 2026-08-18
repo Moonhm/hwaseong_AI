@@ -16,7 +16,6 @@ Cloudflare Tunnel이 이 서버를 가리키도록 설정하세요.
 
 import argparse
 import os
-import sys
 import requests
 import warnings
 

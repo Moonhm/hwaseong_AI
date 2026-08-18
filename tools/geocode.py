@@ -56,7 +56,7 @@ DESC_COL_CANDIDATES    = ["설명", "description", "desc", "내용", "비고", "
 TAG_COL_CANDIDATES     = ["태그", "tags", "유형", "분류", "종류"]
 
 
-def geocode_address(address: str) -> tuple[float, float] | None:
+def geocode_address(address):  # (str) -> Optional[Tuple[float, float]]
     """카카오 API로 주소를 위도/경도로 변환. 실패 시 None 반환."""
     headers = {"Authorization": f"KakaoAK {KAKAO_REST_KEY}"}
     params  = {"query": address}
