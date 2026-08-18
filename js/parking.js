@@ -268,10 +268,15 @@ function showParkingSlide(p) {
   });
 }
 
-/* ── 지도 상단 여유 카운터 업데이트 ─────────────────────────────── */
+/* ── 지도 상단 여유 카운터 업데이트 (주차장 칩 선택 시에만 표시) ── */
 function updateParkingCount() {
   var el = document.getElementById('parking-count-badge');
   if (!el) return;
+  var chip = document.querySelector('#map-chips .chip[data-cat="parking"]');
+  if (!chip || !chip.classList.contains('active')) {
+    el.style.display = 'none';
+    return;
+  }
   var avail = parkingData.filter(function (p) { return p.open && p.avail > 0; }).length;
   el.textContent = '여유 ' + avail + '곳';
   el.style.display = avail > 0 ? 'inline-block' : 'none';

@@ -225,6 +225,8 @@ function setFilter(cat) {
     targets.forEach(function (p) { bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)); });
     kakaoMap.setBounds(bounds, 80);
   }
+
+  if (typeof updateParkingCount === 'function') updateParkingCount();
 }
 
 /* ── 반경 500m 지역화폐 가맹점 ── */
