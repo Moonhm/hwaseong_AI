@@ -42,81 +42,155 @@ README로 메시지 전달  ──────►      웹 배포 (Cloudflare Tu
 
 ```
 hwaseong_AI/
-├── index.html          # 메인 앱 (CSS 인라인, 단일 파일 SPA)
+├── index.html                         # 메인 앱 (CSS 인라인, 단일 파일 SPA)
 ├── js/
-│   ├── data.js         # 장소 데이터 25개
-│   └── map.js          # 카카오맵 초기화 · 마커 · 필터 로직
-├── assets/             # ⚠️ git 제외 — 배포 서버 로컬에만 존재
+│   ├── data.js                        # 장소 데이터 (관광지·맛집·축제·지역화폐)
+│   ├── map.js                         # 카카오맵 초기화 · 마커 · 필터 로직
+│   ├── parking.js                     # 실시간 주차장 오버레이 모듈
+│   └── parking-static.json            # 주차장 131개 좌표·요금 정보 (정적 캐시)
+├── assets/                            # ⚠️ git 제외 — 배포 서버 로컬에만 존재
 │   └── images/
-│       ├── 로고_이름.png     # 홈 상단 로고 (텍스트 포함)
-│       └── 로고_이미지.png   # 하단 네비 로고 (이미지만)
-├── .gitignore          # assets/ 포함
-└── README.md           # 이 파일
+│       ├── 로고_이름.png
+│       └── 로고_이미지.png
+├── tools/
+│   ├── server.py                      # Flask 서버 (정적파일 + 주차장 API 프록시)
+│   ├── geocode.py                     # 주소 → 위경도 변환 + data.js 자동 추가
+│   └── 화성시_공영주차장_실시간_정보.py  # 주차장 API 래퍼 (FEE_TABLE, _ZONE_MAP 포함)
+├── .gitignore                         # assets/ 포함
+└── README.md                          # 이 파일
 ```
 
-### 이미지 관리 원칙
-- **git에 이미지 절대 포함 금지** (용량 문제)
-- 코드는 `assets/images/` 경로 참조
-- 이미지 없을 경우 자동 fallback 처리 (텍스트 대체)
-- 대용량 사진 필요 시 배포 서버에 직접 추가 후 README로 개발 Claude에게 알림
+---
+
+## 🚀 배포 서버 실행 방법
+
+```bash
+# ⚠️ 반드시 Flask 서버 사용 (python -m http.server 사용 금지)
+pip install flask requests
+python tools/server.py --port 8080
+
+# Cloudflare Tunnel은 포트 8080 유지
+```
+
+**이유**: 실시간 주차장 API(`smartparking.hscity.go.kr`)가 CORS 헤더 없음  
+→ Flask 서버가 `/api/parking/realtime` 경로로 중계해야 실시간 여유 색상 표시
+
+---
+
+## 🅿 주차장 시스템
+
+### 동작 방식 (2단계)
+
+```
+1단계: js/parking-static.json 로드
+       → Flask 없어도 131개 핀 즉시 지도 표시 (회색 = 상태 미확인)
+
+2단계: /api/parking/realtime 호출 (Flask 필요)
+       → 여유 색상 업데이트: 초록(여유) / 주황(혼잡) / 빨강(만차)
+       → 60초마다 자동 갱신
+```
+
+### parking-static.json 재생성 (주차장 목록 변경 시)
+
+```bash
+cd hwaseong_AI
+python3 tools/generate_parking_static.py   # 아직 없으면 아래 명령어로 직접 생성
+# 또는
+python3 - <<'EOF'
+import requests, json, warnings; warnings.filterwarnings("ignore")
+raw = requests.get("https://smartparking.hscity.go.kr/api/parking/searchParkingList.json", verify=False).json()["parkingList"]
+# tools/server.py의 _ZONE_MAP·FEE_TABLE 활용해 재생성
+EOF
+```
+
+### 슬라이드 카드 표시 정보
+
+- 현재 여유 면수 / 총 주차면 / 여유율 바
+- 무료·유료 / 운영중·미운영 배지
+- 요금 안내: 무료 기본 시간, 야간 무료, 요금 단계, 상한선
+- 길찾기 버튼 (카카오맵 앱 연동)
+
+---
+
+## 📍 데이터 추가 워크플로우
+
+> 사용자가 파일을 `work/` 에 던져두면 개발 Claude가 아래 과정을 수행합니다.
+
+### 지원 카테고리
+
+| 카테고리 | 값 | 지도 색상 |
+|---------|-----|---------|
+| 관광지 | `tourist` | 보라 |
+| 맛집 | `restaurant` | 주황 |
+| 축제 | `festival` | 빨강 |
+| 지역화폐 가맹점 | `localcurrency` | 초록 |
+| 주차장 | 자동 (parking.js) | 파랑 |
+
+### 지원 파일 형식
+
+- **CSV** (인코딩 UTF-8 또는 UTF-8 BOM)
+- **Excel** (`.xlsx`, `.xls`)
+- **JSON** (배열 형태)
+
+### 주소 컬럼 자동 인식
+
+파일에 아래 이름 중 하나만 있으면 자동 인식됩니다:
+
+```
+주소 / 도로명주소 / 지번주소 / 소재지 / 위치 / 장소주소 / address
+```
+
+이름 컬럼:
+```
+명칭 / 시설명 / 장소명 / 상호명 / 이름 / 축제명 / 가맹점명 / name
+```
+
+### 실행 방법
+
+```bash
+# 1. 카카오 REST API 키 설정 (한 번만)
+export KAKAO_REST_KEY="ba0bc319a905d3747678d9abd48ec129"
+
+# 2. 파일 변환 + data.js 자동 추가
+python tools/geocode.py 파일명.csv --category tourist
+python tools/geocode.py 파일명.xlsx --category restaurant
+python tools/geocode.py 파일명.json --category festival
+
+# 3. 확인 후 push
+git add js/data.js
+git commit -m "data.js - 관광지 XX개 추가"
+git push
+```
+
+→ 배포 Claude가 `git pull` 하면 즉시 지도에 핀 표시
 
 ---
 
 ## 🛠️ 기술 스택
 
 - 순수 HTML / CSS / JavaScript (프레임워크 없음)
-- 카카오맵 JavaScript API
+- 카카오맵 JavaScript API (`//dapi.kakao.com/v2/maps/sdk.js`)
 - 화성시 실시간 주차장 API (`smartparking.hscity.go.kr`)
-- Flask 프록시 서버 + Cloudflare Tunnel로 배포
+- Flask 프록시 서버 + Cloudflare Tunnel 배포
 
 ---
 
-## 🚀 배포 서버 실행 방법 (변경됨)
-
-```bash
-# 기존: python -m http.server 8080  ← 더 이상 사용 안 함
-# 신규:
-pip install flask requests
-python tools/server.py --port 8080
-
-# Cloudflare Tunnel은 그대로 포트 8080 유지
-```
-
-> **이유**: 실시간 주차장 API가 CORS 헤더 없음 → Flask 프록시 서버가 `/api/parking/*` 경로로 중계
-
----
-
-## 📐 데이터 추가 워크플로우
-
-### 방법 1 — 파일 제공 (주소 → 지오코딩)
-```bash
-# 사용자가 파일을 work/ 에 던져주면:
-pip install requests pandas openpyxl
-export KAKAO_REST_KEY="카카오_REST_API_키"
-python tools/geocode.py 파일명.csv --category tourist
-# → _geocoded.json 생성 + data.js 코드 조각 출력
-```
-
-### 방법 2 — 실시간 API (주차장)
-- `js/parking.js`가 서버 프록시(`/api/parking/*`)를 통해 60초마다 자동 갱신
-- 별도 작업 불필요
-
----
-
-## 📋 작업 히스토리 (기록용)
+## 📋 작업 히스토리
 
 | 커밋 | 내용 |
 |------|------|
 | `6590e46` | 초기 버전 — 카카오맵 통합 모바일 웹앱 |
-| `f37e99c` | 지도 초기화 오류 수정 (명시적 높이, SDK 재시도) |
-| `ff5bc95` | SDK URL https:// 명시, head 배치 |
-| `e12cc0c` | requestAnimationFrame + relayout() 추가 |
-| `bda0a70` | SDK URL `//` → `https://` 변경 (file:// 대응) |
-| `950c775` | API 키 교체 |
-| `8322932` | `autoload=false` + `kakao.maps.load()` 방식으로 변경 |
-| `642b26a` | README 최초 작성 (이미지 구조 · 통신 체계) |
-| `72fd079` | 로고 이미지 코드 적용, gitignore assets/ 추가 |
-| `46961a5` | API 키를 도메인 등록된 키로 최종 교체 |
+| `f37e99c` | 지도 초기화 오류 수정 |
+| `8322932` | `autoload=false` + `kakao.maps.load()` 방식 |
+| `642b26a` | README 최초 작성 |
+| `46961a5` | API 키 교체 (도메인 등록 키로 최종) |
+| `b488910` | 더미 데이터 전체 제거, 동적 렌더링 전환 |
+| `e825d55` | 지도 초기 중심 교체 (오른쪽 이동 현상 제거) |
+| `1a1eddc` | 실시간 주차장 API 연동 (parking.js + server.py) |
+| `7445feb` | 버그 수정 3건 (parking-count-badge 누락 등) |
+| `241b94c` | tools/ 폴더 정리 (화성시_공영주차장_실시간_정보.py 이동) |
+| `ba543b4` | FEE_TABLE·_ZONE_MAP server.py + parking.js 실제 적용 |
+| `302cd4e` | parking-static.json 생성, 지오코더 단순화 (data.js 자동 추가) |
 
 ---
 
@@ -124,7 +198,12 @@ python tools/geocode.py 파일명.csv --category tourist
 
 ### ✉️ 개발 Claude → 배포 Claude
 ```
-현재 전달 사항 없음
+[2026-08-18]
+- 배포 서버 실행 명령어 변경됨:
+    기존: python -m http.server 8080
+    신규: python tools/server.py --port 8080
+- 주차장 핀은 이제 Flask 없이도 131개 자동 표시됨 (parking-static.json)
+- Flask 서버 실행 시 실시간 여유 색상까지 표시됨
 ```
 
 ---
