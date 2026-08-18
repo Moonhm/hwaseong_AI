@@ -44,7 +44,7 @@ README로 메시지 전달  ──────►      웹 배포 (Cloudflare Tu
 hwaseong_AI/
 ├── index.html                         # 메인 앱 (CSS 인라인, 단일 파일 SPA)
 ├── js/
-│   ├── data.js                        # 장소 데이터 (관광지·맛집·축제·지역화폐)
+│   ├── data.js                        # 장소 데이터 116개 (관광지 92 · 축제 24)
 │   ├── map.js                         # 카카오맵 초기화 · 마커 · 필터 로직
 │   ├── parking.js                     # 실시간 주차장 오버레이 모듈
 │   └── parking-static.json            # 주차장 131개 좌표·요금 정보 (정적 캐시)
@@ -175,6 +175,29 @@ git push
 
 ---
 
+## 📊 데이터 현황 (2026-08-18 기준)
+
+| 카테고리 | 수량 | 출처 | 비고 |
+|---------|------|------|------|
+| 관광지 (자연) | 23개 | tour.hscity.go.kr/1tour | 공식 설명 포함 |
+| 관광지 (역사문화) | 18개 | tour.hscity.go.kr/1tour | 공식 설명 포함 |
+| 체험지 | 51개 | tour.hscity.go.kr/2exp | 어촌·농촌·생태·온천·승마 등 |
+| 축제/행사 | 24개 | yeyak.hscity.go.kr | 화성시 통합예약시스템 |
+| 주차장 | 131개 | smartparking.hscity.go.kr | 좌표·요금 정적 캐시 |
+| **합계** | **247개** | | |
+
+> `estimated:true` 필드가 있는 항목은 좌표가 추정값 (실제 확인 필요)
+
+### 향후 추가 예정 데이터
+
+| 데이터 | 접근 방법 | 카테고리 |
+|-------|---------|---------|
+| 화성시 맛집 | 한국관광데이터랩 (datalab.visitkorea.or.kr) | restaurant |
+| 지역화폐 가맹점 | 화성사랑카드 가맹점 API | localcurrency |
+| 추천여행 코스 | tour.hscity.go.kr/3travel | tourist |
+
+---
+
 ## 📋 작업 히스토리
 
 | 커밋 | 내용 |
@@ -191,6 +214,7 @@ git push
 | `241b94c` | tools/ 폴더 정리 (화성시_공영주차장_실시간_정보.py 이동) |
 | `ba543b4` | FEE_TABLE·_ZONE_MAP server.py + parking.js 실제 적용 |
 | `302cd4e` | parking-static.json 생성, 지오코더 단순화 (data.js 자동 추가) |
+| (이번) | data.js — 체험지 51개 + 축제 24개 추가 (총 116개) |
 
 ---
 
@@ -204,6 +228,13 @@ git push
     신규: python tools/server.py --port 8080
 - 주차장 핀은 이제 Flask 없이도 131개 자동 표시됨 (parking-static.json)
 - Flask 서버 실행 시 실시간 여유 색상까지 표시됨
+
+[2026-08-18 추가]
+- data.js 업데이트: 체험지 51개 + 축제/행사 24개 추가 → 총 116개
+  - 체험지: 어촌체험마을(15), 생태체험(6), 온천(4), 요트/승마(7), 목장(3), 기타(16)
+  - 축제: yeyak.hscity.go.kr에서 화성시 행사 24개 수집
+  - 일부 좌표에 estimated:true 표기 (추정값 — 사진 등록 전 직접 확인 필요)
+- git pull 후 브라우저에서 지도 탭에서 카테고리 토글로 확인 가능
 ```
 
 ---
