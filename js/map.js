@@ -20,7 +20,7 @@ const CAT_COLOR = {
 function initMap() {
   if (mapReady) {
     container.style.width  = window.innerWidth  + 'px';
-    container.style.height = (window.innerHeight - 60) + 'px';
+    container.style.height = (window.innerHeight - 52) + 'px';
     kakaoMap.relayout();
     return;
   }
@@ -38,7 +38,7 @@ function initMap() {
 
   /* 컨테이너 크기 명시 (Kakao Maps 필수 조건) */
   container.style.width  = window.innerWidth  + 'px';
-  container.style.height = (window.innerHeight - 60) + 'px';
+  container.style.height = (window.innerHeight - 52) + 'px';
 
   /* 지도 생성 */
   kakaoMap = new kakao.maps.Map(container, {
@@ -58,7 +58,7 @@ function initMap() {
   /* display:none → block 전환 후 크기 재계산 */
   setTimeout(function () {
     container.style.width  = window.innerWidth  + 'px';
-    container.style.height = (window.innerHeight - 60) + 'px';
+    container.style.height = (window.innerHeight - 52) + 'px';
     kakaoMap.relayout();
   }, 300);
 
@@ -66,7 +66,7 @@ function initMap() {
   window.addEventListener('resize', function () {
     if (!mapReady) return;
     container.style.width  = window.innerWidth  + 'px';
-    container.style.height = (window.innerHeight - 60) + 'px';
+    container.style.height = (window.innerHeight - 52) + 'px';
     kakaoMap.relayout();
   });
 }
@@ -140,7 +140,7 @@ function onPinClick(e, id) {
   /* panTo 완료 후 슬라이드 카드 위 영역에 마커가 보이도록 위로 이동
    * panBy(0, -dy): 지도 콘텐츠를 위로 올림 → 핀이 화면에서 더 위에 위치 */
   setTimeout(function () {
-    var navH     = 60;
+    var navH     = 52;
     var mapH     = window.innerHeight - navH;
     var slideH   = Math.min(mapH * 0.6, 420);
     var visibleH = mapH - slideH;
