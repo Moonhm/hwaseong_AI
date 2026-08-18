@@ -43,6 +43,11 @@ README로 메시지 전달  ──────►      웹 배포 (Cloudflare Tu
 ```
 hwaseong_AI/
 ├── index.html                         # 메인 앱 (CSS 인라인, 단일 파일 SPA)
+├── img/                               # ✅ git 추적 — 로고·파비콘
+│   ├── favicon.png                    # 32×32  크롬 탭 아이콘
+│   ├── favicon-192.png                # 192×192 애플 터치 아이콘
+│   ├── logo-icon.png                  # 512×512 아이콘 로고
+│   └── logo-name.png                  # 1310×472 텍스트(한글) 로고
 ├── js/
 │   ├── data.js                        # 장소 데이터 116개 (관광지 92 · 축제 24)
 │   ├── map.js                         # 카카오맵 초기화 · 마커 · 필터 로직
@@ -50,8 +55,9 @@ hwaseong_AI/
 │   └── parking-static.json            # 주차장 131개 좌표·요금 정보 (정적 캐시)
 ├── assets/                            # ⚠️ git 제외 — 배포 서버 로컬에만 존재
 │   └── images/
-│       ├── 로고_이름.png
-│       └── 로고_이미지.png
+│       └── places/                    # 장소 사진 (파일명 = data.js name 값)
+│           ├── 제부도.jpg
+│           └── ...
 ├── tools/
 │   ├── server.py                      # Flask 서버 (정적파일 + 주차장 API 프록시)
 │   ├── geocode.py                     # 주소 → 위경도 변환 + data.js 자동 추가
@@ -247,7 +253,10 @@ git push
 | `241b94c` | tools/ 폴더 정리 (화성시_공영주차장_실시간_정보.py 이동) |
 | `ba543b4` | FEE_TABLE·_ZONE_MAP server.py + parking.js 실제 적용 |
 | `302cd4e` | parking-static.json 생성, 지오코더 단순화 (data.js 자동 추가) |
-| (이번) | data.js — 체험지 51개 + 축제 24개 추가 (총 116개) |
+| `3931360` | data.js — 체험지 51개 + 축제 24개 추가 (총 116개) |
+| `c15d15c` | 지도 버그 수정 (맵 초기 위치, 마커 클릭 시 panBy 오프셋) |
+| `50d6ea6` | img/ 폴더 신설 — 파비콘·로고 git 추적 (favicon.png, logo-icon.png 등) |
+| `c223d0b` | 장소 사진 시스템 구축 (assets/images/places/, onerror fallback) |
 
 ---
 
