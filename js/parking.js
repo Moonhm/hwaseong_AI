@@ -72,19 +72,24 @@ function mergeParkingData(list, rt) {
   parkingData = list.map(function (p) {
     var r = rtMap[p.id] || {};
     return {
-      id:      p.id,
-      name:    p.name,
-      address: p.address,
-      lat:     p.lat,
-      lng:     p.lng,
-      total:   p.total,
-      free:    p.free,
-      type:    p.type,
-      tel:     p.tel,
-      zone:    p.zone,
-      open:    r.open !== undefined ? r.open : p.open,
-      used:    r.used  !== undefined ? r.used  : 0,
-      avail:   r.avail !== undefined ? r.avail : p.total,
+      id:            p.id,
+      name:          p.name,
+      address:       p.address,
+      lat:           p.lat,
+      lng:           p.lng,
+      total:         p.total,
+      free:          p.free,
+      type:          p.type,
+      tel:           p.tel,
+      zone:          p.zone,
+      open:          r.open !== undefined ? r.open : p.open,
+      used:          r.used  !== undefined ? r.used  : 0,
+      avail:         r.avail !== undefined ? r.avail : p.total,
+      feeFreePeriod: p.feeFreePeriod || '',
+      feeNight:      p.feeNight      || '',
+      feeSteps:      p.feeSteps      || [],
+      feeCap:        p.feeCap        || '',
+      feeNote:       p.feeNote       || '',
     };
   });
 }
@@ -167,6 +172,46 @@ function onParkingClick(id) {
   showParkingSlide(p);
 }
 
+function feeSection(p) {
+  if (p.free) {
+    return '<div style="background:#F0FDF4;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:#166534">'
+      + '💚 <strong>무료 주차장</strong>입니다.</div>';
+  }
+  if (!p.feeFreePeriod && !p.feeSteps.length) {
+    return '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">요금 정보 없음</div>';
+  }
+  var rows = '';
+  if (p.feeFreePeriod && p.feeFreePeriod !== '없음') {
+    rows += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+      + '<span style="color:var(--text-muted)">무료 기본</span>'
+      + '<span style="font-weight:600;color:#16A34A">' + p.feeFreePeriod + '</span></div>';
+  }
+  if (p.feeNight && p.feeNight !== '없음') {
+    rows += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+      + '<span style="color:var(--text-muted)">야간 무료</span>'
+      + '<span style="font-weight:600;color:#6366F1">' + p.feeNight + '</span></div>';
+  }
+  p.feeSteps.forEach(function (s) {
+    rows += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+      + '<span style="color:var(--text-muted)">요금</span>'
+      + '<span style="font-weight:500">' + s + '</span></div>';
+  });
+  if (p.feeCap && p.feeCap !== '없음') {
+    rows += '<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+      + '<span style="color:var(--text-muted)">상한선</span>'
+      + '<span style="font-weight:500">' + p.feeCap + '</span></div>';
+  }
+  if (p.feeNote) {
+    rows += '<div style="margin-top:6px;font-size:11px;color:#6366F1">ℹ ' + p.feeNote + '</div>';
+  }
+  return '<div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:12px">'
+    + '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">💰 요금 안내'
+    + (p.zone ? ' <span style="font-size:10px;font-weight:400;color:var(--text-muted)">(' + p.zone + ')</span>' : '')
+    + '</div>'
+    + '<div style="font-size:12px">' + rows + '</div>'
+    + '</div>';
+}
+
 function showParkingSlide(p) {
   var color    = pinColor(p);
   var avail    = p.open ? p.avail : '-';
@@ -199,6 +244,8 @@ function showParkingSlide(p) {
     /* 정보 */
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">구분: ' + (p.type || '-') + ' · ' + (p.zone || '-') + '</div>'
     + (p.tel ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">📞 ' + p.tel + '</div>' : '')
+    /* 요금 정보 */
+    + feeSection(p)
     /* 버튼 */
     + '<div class="sl-actions">'
     + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + p.name + '\')">🗺 길찾기</button>'
