@@ -150,12 +150,25 @@ function onPinClick(e, id) {
   }, 350);
 }
 
+/* ── 장소 사진 HTML (있으면 표시, 없으면 카테고리 색상 배너) ── */
+function placePhotoHtml(place) {
+  var cfg   = CATEGORY_CONFIG[place.category];
+  var color = CAT_COLOR[place.category];
+  var src   = 'assets/images/places/' + place.name + '.jpg';
+  return '<div style="width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:12px;background:' + cfg.bg + ';display:flex;align-items:center;justify-content:center;">' +
+    '<img src="' + src + '" alt="' + place.name + '" ' +
+    'style="width:100%;height:100%;object-fit:cover;" ' +
+    'onerror="this.parentNode.innerHTML=\'<span style=\\\"font-size:36px\\\">' + cfg.emoji + '</span>\'">' +
+    '</div>';
+}
+
 /* ── 장소 슬라이드 카드 ── */
 function showPlaceSlide(place) {
   var cfg   = CATEGORY_CONFIG[place.category];
   var color = CAT_COLOR[place.category];
 
   document.getElementById('slide-inner').innerHTML =
+    placePhotoHtml(place) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
     '<span class="sl-cat" style="background:' + cfg.bg + ';color:' + color + '">' + cfg.emoji + ' ' + cfg.label + '</span>' +
     (place.status === 'ongoing' ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : '') +
