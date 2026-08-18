@@ -5,8 +5,8 @@ let mapReady   = false;
 let overlayMap = {};
 let selectedId = null;
 
-/* 화성특례시 전체 장소 중심 좌표 (setBounds 애니메이션 없이 바로 시작) */
-const HWASEONG = { lat: 37.155, lng: 126.848 };
+/* 화성특례시 중심 좌표 (시청 인근, 초기 기준점) */
+const HWASEONG = { lat: 37.199, lng: 126.831 };
 
 const CAT_COLOR = {
   tourist:       '#7C3AED',
@@ -18,6 +18,10 @@ const CAT_COLOR = {
 
 /* ── 지도 초기화 ── */
 function initMap() {
+  /* container를 먼저 선언해야 mapReady early-return 블록에서도 사용 가능 */
+  var container = document.getElementById('kakao-map');
+  if (!container) return;
+
   if (mapReady) {
     container.style.width  = window.innerWidth  + 'px';
     container.style.height = (window.innerHeight - 52) + 'px';
@@ -30,10 +34,7 @@ function initMap() {
     return;
   }
 
-  const container = document.getElementById('kakao-map');
-  if (!container) return;
-
-  const loader = document.getElementById('map-loader');
+  var loader = document.getElementById('map-loader');
   if (loader) loader.remove();
 
   /* 컨테이너 크기 명시 (Kakao Maps 필수 조건) */
@@ -43,7 +44,7 @@ function initMap() {
   /* 지도 생성 */
   kakaoMap = new kakao.maps.Map(container, {
     center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-    level:  10,  /* 화성시 전역이 처음부터 보이는 레벨 */
+    level:  10,
   });
 
   kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
@@ -51,18 +52,17 @@ function initMap() {
 
   buildOverlays();
   setupMyLocation();
-  /* 실시간 주차장 모듈 초기화 (parking.js) */
   if (typeof initParking === 'function') initParking(kakaoMap);
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
-  /* display:none → block 전환 후 크기 재계산 */
+  /* display:none → block 전환 후 크기 재계산 + 화성시 전체 범위 자동 맞춤 */
   setTimeout(function () {
     container.style.width  = window.innerWidth  + 'px';
     container.style.height = (window.innerHeight - 52) + 'px';
     kakaoMap.relayout();
+    fitAllPlaces();
   }, 300);
 
-  /* 화면 회전 / 리사이즈 대응 */
   window.addEventListener('resize', function () {
     if (!mapReady) return;
     container.style.width  = window.innerWidth  + 'px';
@@ -134,20 +134,26 @@ function onPinClick(e, id) {
   var cur = document.getElementById('pin-' + id);
   if (cur) cur.classList.add('selected');
 
-  kakaoMap.panTo(new kakao.maps.LatLng(place.lat, place.lng));
   showPlaceSlide(place);
 
-  /* panTo 완료 후 슬라이드 카드 위 영역에 마커가 보이도록 위로 이동
-   * panBy(0, -dy): 지도 콘텐츠를 위로 올림 → 핀이 화면에서 더 위에 위치 */
-  setTimeout(function () {
-    var navH     = 52;
-    var mapH     = window.innerHeight - navH;
-    var slideH   = Math.min(mapH * 0.6, 420);
-    var visibleH = mapH - slideH;
-    var targetY  = visibleH * 0.38;                   // 슬라이드 위 가시 영역 38% 위치에 핀
-    var delta    = Math.round(mapH / 2 - targetY);    // 핀이 올라가야 할 픽셀 수
-    kakaoMap.panBy(0, -delta);                        // 음수: 지도 콘텐츠를 위로 이동 → 핀이 화면 위쪽으로
-  }, 350);
+  /* 슬라이드 위 가시 영역 42%에 핀이 오도록 중심을 한 번만 이동
+   * projection으로 정확한 목표 중심 좌표를 계산 → panTo 1회만 호출 */
+  var navH     = 52;
+  var mapH     = window.innerHeight - navH;
+  var slideH   = Math.min(mapH * 0.6, 420);
+  var visibleH = mapH - slideH;
+  var targetY  = visibleH * 0.42;
+  var offsetPx = Math.round(mapH / 2 - targetY); /* 핀이 중심 위로 올라가야 할 px */
+
+  try {
+    var proj      = kakaoMap.getProjection();
+    var pinPt     = proj.pointFromCoords(new kakao.maps.LatLng(place.lat, place.lng));
+    /* 중심을 핀보다 offsetPx픽셀 남쪽(y+)으로 지정 → panTo 후 핀이 가시 영역에 표시 */
+    var newCenter = proj.coordsFromPoint(new kakao.maps.Point(pinPt.x, pinPt.y + offsetPx));
+    kakaoMap.panTo(newCenter);
+  } catch (ex) {
+    kakaoMap.panTo(new kakao.maps.LatLng(place.lat, place.lng));
+  }
 }
 
 /* ── 장소 사진 HTML (있으면 표시, 없으면 카테고리 색상 배너) ── */
