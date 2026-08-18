@@ -375,20 +375,24 @@
     }
     .map-chips::-webkit-scrollbar { display: none; }
     .map-chips .chip {
-      box-shadow: var(--shadow-md); flex-shrink: 0;
+      flex-shrink: 0;
     }
+    .map-chips { cursor: grab; user-select: none; }
+    .map-chips.dragging { cursor: grabbing; }
 
     /* 내 위치 버튼 */
     #btn-mylocation {
       position: absolute;
       bottom: 16px; right: 14px;
-      width: 44px; height: 44px; border-radius: 50%;
-      background: var(--white); border: 1px solid var(--border);
-      box-shadow: var(--shadow-md); font-size: 20px; z-index: 10;
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.72); border: 1px solid rgba(0,0,0,0.10);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.13); z-index: 10;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: transform 0.15s;
+      cursor: pointer; transition: transform 0.15s; backdrop-filter: blur(4px);
+      color: var(--text-sub);
     }
-    #btn-mylocation:active { transform: scale(0.93); }
+    #btn-mylocation:active { transform: scale(0.91); }
+    #btn-mylocation svg { width: 18px; height: 18px; }
 
     /* ── 실시간 주차장 핀 ── */
     .pk-pin    { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
@@ -425,7 +429,7 @@
 
     /* 장소 슬라이드 카드 (지도 하단) */
     .place-slide {
-      position: fixed; left: 50%; transform: translateX(-50%) translateY(100%);
+      position: fixed; left: 50%; transform: translateX(-50%) translateY(calc(100% + 200px));
       bottom: calc(52px + env(safe-area-inset-bottom));
       width: 100%; max-width: 480px;
       background: var(--white); border-radius: 20px 20px 0 0;
@@ -471,15 +475,6 @@
     }
     .sl-close:active { transform: scale(0.88); }
 
-    /* 범례 */
-    .map-legend {
-      position: absolute; bottom: 14px; left: 14px;
-      background: var(--white); border-radius: var(--r-sm);
-      padding: 10px 14px; box-shadow: var(--shadow-md); z-index: 10;
-      border: 1px solid var(--border);
-    }
-    .legend-row { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-sub); margin-bottom: 5px; }
-    .legend-row:last-child { margin-bottom: 0; }
     .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
     /* dim overlay */
@@ -568,7 +563,7 @@
   <div class="page-header">
     <div style="display:flex;align-items:center;gap:8px">
       <img src="img/logo-icon.png" alt="" style="height:30px;width:30px;object-fit:contain;border-radius:6px;">
-      <img src="img/logo-name.png" alt="화성잇다" style="height:20px;object-fit:contain;"
+      <img src="img/logo-name.png" alt="화성잇다" style="height:26px;object-fit:contain;"
            onerror="this.style.display='none'">
     </div>
     <div style="display:flex;align-items:center;gap:8px">
@@ -770,16 +765,16 @@
   "></div>
 
   <!-- 내 위치 -->
-  <button id="btn-mylocation" title="내 위치">📍</button>
-
-  <!-- 범례 -->
-  <div class="map-legend">
-    <div class="legend-row"><div class="legend-dot" style="background:#F97316"></div>축제</div>
-    <div class="legend-row"><div class="legend-dot" style="background:#EF4444"></div>맛집</div>
-    <div class="legend-row"><div class="legend-dot" style="background:#16A34A"></div>가맹점</div>
-    <div class="legend-row"><div class="legend-dot" style="background:#2563EB"></div>주차장</div>
-    <div class="legend-row"><div class="legend-dot" style="background:#7C3AED"></div>관광지</div>
-  </div>
+  <button id="btn-mylocation" title="내 위치">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="7"/>
+      <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>
+      <line x1="12" y1="2" x2="12" y2="6"/>
+      <line x1="12" y1="18" x2="12" y2="22"/>
+      <line x1="2" y1="12" x2="6" y2="12"/>
+      <line x1="18" y1="12" x2="22" y2="12"/>
+    </svg>
+  </button>
 
   <!-- 장소 슬라이드 카드 -->
   <div class="place-slide" id="place-slide">
@@ -1162,6 +1157,26 @@ function showToast(msg) {
 document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') closePlaceSlide();
 });
+
+/* ── 지도 필터 칩 — 마우스 드래그 스크롤 ── */
+(function () {
+  var el = document.getElementById('map-chips');
+  var down = false, startX = 0, scrollLeft = 0;
+  el.addEventListener('mousedown', function (e) {
+    down = true; el.classList.add('dragging');
+    startX = e.pageX - el.getBoundingClientRect().left;
+    scrollLeft = el.scrollLeft;
+  });
+  document.addEventListener('mouseup',   function () { down = false; el.classList.remove('dragging'); });
+  document.addEventListener('mouseleave', function () { down = false; el.classList.remove('dragging'); });
+  el.addEventListener('mousemove', function (e) {
+    if (!down) return;
+    e.preventDefault();
+    var x    = e.pageX - el.getBoundingClientRect().left;
+    var dist = (x - startX) * 1.4;
+    el.scrollLeft = scrollLeft - dist;
+  });
+})();
 
 /* ── 초기 렌더 ── */
 window.addEventListener('DOMContentLoaded', () => {
