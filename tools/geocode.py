@@ -1,32 +1,31 @@
 """
-화성잇다 — 주소 → 위도/경도 변환 도구
-카카오 REST API 사용 (지오코딩)
-
+화성잇다 — 주소 → 카카오맵 등록 도구
+=====================================
 사용법:
-  python geocode.py <입력파일> [--category <카테고리>] [--out <출력파일>]
+  python tools/geocode.py <파일> --category <카테고리>
 
-지원 입력 형식:
-  - CSV  : 주소 컬럼이 있는 파일
-  - JSON : 주소 필드가 있는 배열
-  - Excel: .xlsx / .xls
+카테고리:
+  tourist       관광지
+  restaurant    맛집
+  festival      축제
+  localcurrency 지역화폐 가맹점
 
-출력: js/data.js 에 바로 붙여넣을 수 있는 JSON 배열
+파일 형식: CSV, Excel(.xlsx), JSON
+  - 주소 컬럼: 주소 / 도로명주소 / 소재지 / address 등 자동 인식
+  - 이름 컬럼: 명칭 / 시설명 / 장소명 / name 등 자동 인식
 
 예시:
-  python geocode.py parking.csv --category parking
-  python geocode.py festival.json --category festival --out result.json
+  python tools/geocode.py 관광지목록.csv --category tourist
+  python tools/geocode.py 맛집.xlsx     --category restaurant
+  python tools/geocode.py 축제.json     --category festival
 
 준비사항:
   pip install requests pandas openpyxl
-  Kakao REST API 키를 아래 KAKAO_REST_KEY 에 입력 (또는 환경변수 KAKAO_REST_KEY)
+  카카오 REST API 키를 아래에 입력하거나 환경변수로 설정
+    export KAKAO_REST_KEY="여기에_REST_API_키"
 """
 
-import os
-import sys
-import json
-import time
-import argparse
-import requests
+import os, sys, json, time, argparse, requests
 
 try:
     import pandas as pd
@@ -34,130 +33,106 @@ try:
 except ImportError:
     HAS_PANDAS = False
 
-# ── 설정 ──────────────────────────────────────────────
-# Kakao 개발자 콘솔 → 내 애플리케이션 → 앱 키 → REST API 키
+# ── 카카오 REST API 키 ────────────────────────────────────────────────────────
 KAKAO_REST_KEY = os.environ.get("KAKAO_REST_KEY", "여기에_REST_API_키_입력")
+GEOCODE_URL    = "https://dapi.kakao.com/v2/local/search/address.json"
 
-GEOCODE_URL = "https://dapi.kakao.com/v2/local/search/address.json"
-
-# 카테고리별 기본 태그
+# ── 카테고리별 기본 태그 ──────────────────────────────────────────────────────
 DEFAULT_TAGS = {
     "tourist":       ["관광지"],
     "restaurant":    ["맛집"],
     "festival":      ["축제"],
-    "parking":       ["주차장"],
     "localcurrency": ["가맹점"],
 }
 
-# 주소 컬럼으로 인식할 후보 이름들
-ADDRESS_COL_CANDIDATES = ["주소", "address", "도로명주소", "지번주소", "소재지", "위치", "장소주소"]
-NAME_COL_CANDIDATES    = ["명칭", "name", "시설명", "장소명", "주차장명", "축제명", "가맹점명"]
-DESC_COL_CANDIDATES    = ["설명", "description", "desc", "내용", "비고", "운영시간"]
-TAG_COL_CANDIDATES     = ["태그", "tags", "유형", "분류", "종류"]
+# ── 컬럼 자동 인식 후보 ───────────────────────────────────────────────────────
+_ADDR_COLS = ["주소", "도로명주소", "지번주소", "소재지", "위치", "장소주소", "address"]
+_NAME_COLS = ["명칭", "시설명", "장소명", "상호명", "이름", "축제명", "가맹점명", "name"]
+_DESC_COLS = ["설명", "내용", "비고", "운영시간", "description", "desc"]
+_TAG_COLS  = ["태그", "유형", "분류", "종류", "tags"]
 
 
-def geocode_address(address):  # (str) -> Optional[Tuple[float, float]]
-    """카카오 API로 주소를 위도/경도로 변환. 실패 시 None 반환."""
-    headers = {"Authorization": f"KakaoAK {KAKAO_REST_KEY}"}
-    params  = {"query": address}
-
-    try:
-        resp = requests.get(GEOCODE_URL, headers=headers, params=params, timeout=5)
-        resp.raise_for_status()
-        docs = resp.json().get("documents", [])
-        if docs:
-            x = float(docs[0]["x"])  # 경도 (longitude)
-            y = float(docs[0]["y"])  # 위도 (latitude)
-            return round(y, 5), round(x, 5)
-    except Exception as e:
-        print(f"  ⚠ 지오코딩 실패 ({address}): {e}", file=sys.stderr)
-    return None
-
-
-def pick_col(df_cols, candidates):
-    """후보 컬럼명 중 실제로 존재하는 첫 번째 반환."""
+def _pick(cols, candidates):
     for c in candidates:
-        for col in df_cols:
+        for col in cols:
             if col.strip().lower() == c.lower():
                 return col
     return None
 
 
-def load_records(filepath: str) -> list[dict]:
-    """CSV / Excel / JSON 파일을 레코드 리스트로 읽기."""
-    ext = filepath.rsplit(".", 1)[-1].lower()
+def geocode(address):
+    """주소 → (위도, 경도). 실패 시 None."""
+    try:
+        r = requests.get(
+            GEOCODE_URL,
+            headers={"Authorization": f"KakaoAK {KAKAO_REST_KEY}"},
+            params={"query": address},
+            timeout=5,
+        )
+        r.raise_for_status()
+        docs = r.json().get("documents", [])
+        if docs:
+            return round(float(docs[0]["y"]), 6), round(float(docs[0]["x"]), 6)
+    except Exception as e:
+        print(f"  ⚠ 실패({address}): {e}", file=sys.stderr)
+    return None
 
+
+def load_file(path):
+    """CSV / Excel / JSON → 레코드 리스트."""
+    ext = path.rsplit(".", 1)[-1].lower()
     if ext == "json":
-        with open(filepath, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, list) else [data]
-
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, list) else [d]
     if not HAS_PANDAS:
-        print("CSV/Excel 읽기에는 pandas 가 필요합니다: pip install pandas openpyxl")
-        sys.exit(1)
-
+        sys.exit("CSV/Excel 읽기에는 pandas 필요: pip install pandas openpyxl")
     if ext == "csv":
-        df = pd.read_csv(filepath, encoding="utf-8-sig")
+        df = pd.read_csv(path, encoding="utf-8-sig")
     elif ext in ("xlsx", "xls"):
-        df = pd.read_excel(filepath)
+        df = pd.read_excel(path)
     else:
-        print(f"지원하지 않는 파일 형식: {ext}")
-        sys.exit(1)
-
+        sys.exit(f"지원하지 않는 형식: {ext}")
     return df.where(pd.notna(df), None).to_dict("records")
 
 
-def records_to_places(records: list[dict], category: str) -> list[dict]:
-    """레코드 리스트를 PLACES 형식으로 변환 (지오코딩 포함)."""
-    places = []
-    next_id = 100  # 실제 데이터 ID는 100번부터 시작
+def process(records, category):
+    cols     = list(records[0].keys()) if records else []
+    addr_col = _pick(cols, _ADDR_COLS)
+    name_col = _pick(cols, _NAME_COLS)
+    desc_col = _pick(cols, _DESC_COLS)
+    tag_col  = _pick(cols, _TAG_COLS)
 
-    # 컬럼 자동 감지
-    cols = list(records[0].keys()) if records else []
-    addr_col = pick_col(cols, ADDRESS_COL_CANDIDATES)
-    name_col = pick_col(cols, NAME_COL_CANDIDATES)
-    desc_col = pick_col(cols, DESC_COL_CANDIDATES)
-    tag_col  = pick_col(cols, TAG_COL_CANDIDATES)
-
-    print(f"\n감지된 컬럼:")
-    print(f"  이름  : {name_col or '없음 (자동 생성)'}")
-    print(f"  주소  : {addr_col or '없음 (필수!)'}")
-    print(f"  설명  : {desc_col or '없음'}")
-    print(f"  태그  : {tag_col  or '없음'}")
-    print(f"  카테고리: {category}\n")
-
+    print(f"\n인식된 컬럼 — 이름:{name_col or '없음'}  주소:{addr_col or '❌없음'}  설명:{desc_col or '없음'}")
     if not addr_col:
-        print("❌ 주소 컬럼을 찾을 수 없습니다.")
-        print(f"   파일의 컬럼: {cols}")
-        print(f"   인식 가능한 이름: {ADDRESS_COL_CANDIDATES}")
-        sys.exit(1)
+        sys.exit(f"주소 컬럼을 찾을 수 없습니다. 파일 컬럼: {cols}\n인식 가능 이름: {_ADDR_COLS}")
 
-    total = len(records)
+    places   = []
+    next_id  = 100
+    total    = len(records)
+
     for i, row in enumerate(records):
-        address = str(row.get(addr_col, "")).strip()
-        name    = str(row.get(name_col, f"{category}_{i+1}")).strip() if name_col else f"{category}_{i+1}"
-        desc    = str(row.get(desc_col, "")).strip() if desc_col else ""
-        tags    = DEFAULT_TAGS.get(category, []).copy()
-
+        address = str(row.get(addr_col) or "").strip()
+        name    = str(row.get(name_col) or f"{category}_{i+1}").strip() if name_col else f"{category}_{i+1}"
+        desc    = str(row.get(desc_col) or "").strip() if desc_col else ""
+        tags    = DEFAULT_TAGS.get(category, [])[:]
         if tag_col and row.get(tag_col):
-            extra = str(row[tag_col]).split(",")
-            tags += [t.strip() for t in extra if t.strip()]
+            tags += [t.strip() for t in str(row[tag_col]).split(",") if t.strip()]
 
         if not address:
-            print(f"  [{i+1}/{total}] ⏭  이름 없음 — 주소 빈칸, 건너뜀")
+            print(f"  [{i+1}/{total}] ⏭  {name} — 주소 없음, 건너뜀")
             continue
 
-        print(f"  [{i+1}/{total}] 📍 {name} — {address}", end=" ... ", flush=True)
-        coords = geocode_address(address)
-
-        if coords is None:
+        print(f"  [{i+1}/{total}] {name} → {address} ...", end=" ", flush=True)
+        coords = geocode(address)
+        if not coords:
             print("실패 ❌")
             continue
 
         lat, lng = coords
         print(f"({lat}, {lng}) ✅")
 
-        place = {
+        entry = {
             "id":       next_id,
             "name":     name,
             "category": category,
@@ -167,76 +142,106 @@ def records_to_places(records: list[dict], category: str) -> list[dict]:
             "tags":     tags,
             "desc":     desc,
         }
-
-        # 주차장 전용 필드
-        if category == "parking":
-            for key in ["운영시간", "요금", "총주차면", "주차면수", "유무료"]:
-                if key in row and row[key] is not None:
-                    place[key] = str(row[key])
-
-        # 축제 전용 필드
         if category == "festival":
-            for key in ["기간", "date", "시작일", "종료일", "상태", "status"]:
-                if key in row and row[key] is not None:
-                    place[key] = str(row[key])
+            for k in ["기간", "date", "시작일", "종료일", "상태", "status"]:
+                if row.get(k): entry[k] = str(row[k])
 
-        places.append(place)
+        places.append(entry)
         next_id += 1
-        time.sleep(0.12)  # API 호출 간격 (초당 10건 제한)
+        time.sleep(0.12)
 
     return places
 
 
-def places_to_js_snippet(places: list[dict]) -> str:
-    """PLACES 배열에 바로 추가할 JS 코드 조각 생성."""
+def append_to_data_js(places, data_js_path):
+    """js/data.js 의 PLACES 배열 끝에 새 항목을 추가."""
+    with open(data_js_path, "r", encoding="utf-8") as f:
+        src = f.read()
+
     lines = []
     for p in places:
-        tags_str  = json.dumps(p["tags"], ensure_ascii=False)
+        tags = json.dumps(p["tags"], ensure_ascii=False)
         extra = ""
-        for key in ["운영시간", "요금", "총주차면", "date", "status"]:
-            if key in p:
-                extra += f', {key}: "{p[key]}"'
+        for k in ["기간", "date", "status"]:
+            if k in p:
+                extra += f', {k}: "{p[k]}"'
         lines.append(
             f'  {{ id:{p["id"]}, name:"{p["name"]}", category:"{p["category"]}", '
             f'lat:{p["lat"]}, lng:{p["lng"]}, address:"{p["address"]}", '
-            f'tags:{tags_str}, desc:"{p["desc"]}"{extra} }},'
+            f'tags:{tags}, desc:"{p["desc"]}"{extra} }},'
         )
-    return "\n".join(lines)
+    snippet = "\n".join(lines)
+
+    # PLACES = []; 또는 PLACES = [ ... ]; 찾아서 닫는 ] 앞에 삽입
+    import re
+    def inserter(m):
+        body = m.group(1).rstrip()
+        sep  = ",\n" if body.rstrip().endswith("}") else ""
+        return f"const PLACES = [{body}{sep}\n{snippet}\n];"
+
+    new_src = re.sub(r"const PLACES\s*=\s*\[([\s\S]*?)\];", inserter, src)
+    if new_src == src:
+        print("⚠ data.js에서 PLACES 배열을 찾지 못했습니다. 수동으로 추가해 주세요.")
+        return False
+
+    with open(data_js_path, "w", encoding="utf-8") as f:
+        f.write(new_src)
+    return True
 
 
 def main():
-    parser = argparse.ArgumentParser(description="주소 → 위경도 변환 (카카오 API)")
-    parser.add_argument("input",      help="입력 파일 경로 (CSV / Excel / JSON)")
-    parser.add_argument("--category", default="tourist",
-                        choices=["tourist","restaurant","festival","parking","localcurrency"],
-                        help="카테고리 (기본: tourist)")
-    parser.add_argument("--out",      default=None,
-                        help="출력 JSON 파일 경로 (기본: <입력파일명>_geocoded.json)")
+    parser = argparse.ArgumentParser(description="주소 → 위경도 변환 후 data.js 자동 추가")
+    parser.add_argument("input",      help="입력 파일 (CSV / Excel / JSON)")
+    parser.add_argument("--category", required=True,
+                        choices=["tourist", "restaurant", "festival", "localcurrency"],
+                        help="카테고리")
+    parser.add_argument("--data-js",  default=None,
+                        help="data.js 경로 (기본: 자동 탐색)")
     args = parser.parse_args()
 
     if KAKAO_REST_KEY == "여기에_REST_API_키_입력":
-        print("❌ KAKAO_REST_KEY 를 설정하세요.")
-        print("   방법 1: 스크립트 상단 KAKAO_REST_KEY 변수에 직접 입력")
-        print("   방법 2: export KAKAO_REST_KEY='your_key' 환경변수 설정")
-        sys.exit(1)
+        sys.exit("❌ KAKAO_REST_KEY를 설정하세요.\n"
+                 "  export KAKAO_REST_KEY='your_key'  또는\n"
+                 "  스크립트 상단 KAKAO_REST_KEY 변수에 직접 입력")
+
+    # data.js 경로 자동 탐색
+    data_js = args.data_js
+    if not data_js:
+        here = os.path.dirname(os.path.abspath(__file__))
+        candidates = [
+            os.path.join(here, "..", "js", "data.js"),
+            os.path.join(os.getcwd(), "js", "data.js"),
+        ]
+        for c in candidates:
+            if os.path.exists(c):
+                data_js = os.path.normpath(c)
+                break
+    if not data_js or not os.path.exists(data_js):
+        sys.exit("❌ js/data.js를 찾을 수 없습니다. --data-js 옵션으로 경로를 지정하세요.")
 
     print(f"📂 파일 읽는 중: {args.input}")
-    records = load_records(args.input)
+    records = load_file(args.input)
     print(f"   {len(records)}건 로드됨")
 
-    places = records_to_places(records, args.category)
+    places = process(records, args.category)
     print(f"\n✅ 변환 완료: {len(places)}/{len(records)}건")
 
-    # JSON 파일 저장
-    out_path = args.out or args.input.rsplit(".", 1)[0] + "_geocoded.json"
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(places, f, ensure_ascii=False, indent=2)
-    print(f"💾 JSON 저장: {out_path}")
+    if not places:
+        print("추가할 항목이 없습니다.")
+        return
 
-    # JS 코드 조각 출력
-    print(f"\n── data.js 에 붙여넣을 코드 ──────────────────")
-    print(places_to_js_snippet(places))
-    print("────────────────────────────────────────────\n")
+    if append_to_data_js(places, data_js):
+        print(f"📝 data.js 업데이트 완료 ({data_js})")
+        print(f"   → 지도에 {len(places)}개 핀이 추가되었습니다.")
+        print(f"\n다음 단계: git add js/data.js && git commit && git push")
+    else:
+        # 수동 추가용 코드 출력
+        print("\n── data.js 에 직접 붙여넣을 코드 ──")
+        for p in places:
+            tags = json.dumps(p["tags"], ensure_ascii=False)
+            print(f'  {{ id:{p["id"]}, name:"{p["name"]}", category:"{p["category"]}", '
+                  f'lat:{p["lat"]}, lng:{p["lng"]}, address:"{p["address"]}", '
+                  f'tags:{tags}, desc:"{p["desc"]}" }},')
 
 
 if __name__ == "__main__":

@@ -24,23 +24,33 @@ function initParking(map) {
   parkingTimer = setInterval(refreshParking, REFRESH_INTERVAL);
 }
 
-/* ── 전체 데이터 최초 로드 (정적 목록 + 실시간) ─────────────────── */
+/*
+ * 로드 전략:
+ *   1단계: js/parking-static.json (정적 파일, 서버 없이도 항상 동작) → 핀 즉시 표시
+ *   2단계: /api/parking/realtime (Flask 프록시, 실패해도 무시) → 색상만 업데이트
+ */
 function fetchParkingAll() {
-  Promise.all([
-    fetch('/api/parking/list').then(function (r) { return r.json(); }),
-    fetch('/api/parking/realtime').then(function (r) { return r.json(); }),
-  ])
-  .then(function (results) {
-    var listRes = results[0];
-    var rtRes   = results[1];
-    if (!listRes.ok) throw new Error('목록 API 오류');
-    mergeParkingData(listRes.data, rtRes.ok ? rtRes.data : []);
-    drawParkingOverlays();
-    updateParkingCount();
-  })
-  .catch(function (e) {
-    console.warn('[주차장] 데이터 로드 실패:', e);
-  });
+  fetch('js/parking-static.json')
+    .then(function (r) { return r.json(); })
+    .then(function (staticList) {
+      mergeParkingData(staticList, []);
+      drawParkingOverlays();
+      updateParkingCount();
+      /* 실시간 정보 추가 시도 (Flask 없으면 조용히 실패) */
+      return fetch('/api/parking/realtime').then(function (r) { return r.json(); }).catch(function () { return null; });
+    })
+    .then(function (res) {
+      if (!res || !res.ok) return;
+      var rtMap = {};
+      res.data.forEach(function (p) { rtMap[p.id] = p; });
+      parkingData.forEach(function (p) {
+        var rt = rtMap[p.id];
+        if (rt) { p.used = rt.used; p.avail = rt.avail; p.open = rt.open; }
+      });
+      updateAllPins();
+      updateParkingCount();
+    })
+    .catch(function (e) { console.warn('[주차장] 로드 실패:', e); });
 }
 
 /* ── 실시간만 갱신 ───────────────────────────────────────────────── */
