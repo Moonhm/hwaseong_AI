@@ -770,11 +770,11 @@
   <!-- 필터 칩 -->
   <div class="map-chips" id="map-chips">
     <div class="chip active" data-cat="all"           onclick="setFilter('all')">전체</div>
-    <div class="chip" data-cat="festival"             onclick="setFilter('festival')">🎉 축제</div>
-    <div class="chip" data-cat="restaurant"           onclick="setFilter('restaurant')">🍽 맛집</div>
-    <div class="chip" data-cat="localcurrency"        onclick="setFilter('localcurrency')">💳 가맹점</div>
-    <div class="chip" data-cat="parking"              onclick="setFilter('parking')">🅿 주차장</div>
-    <div class="chip" data-cat="tourist"              onclick="setFilter('tourist')">🏛 관광지</div>
+    <div class="chip" data-cat="festival"             onclick="setFilter('festival')">축제</div>
+    <div class="chip" data-cat="restaurant"           onclick="setFilter('restaurant')">맛집</div>
+    <div class="chip" data-cat="localcurrency"        onclick="setFilter('localcurrency')">가맹점</div>
+    <div class="chip" data-cat="parking"              onclick="setFilter('parking')">주차장</div>
+    <div class="chip" data-cat="tourist"              onclick="setFilter('tourist')">관광지</div>
   </div>
 
   <!-- 칩 스크롤 화살표 -->
@@ -909,12 +909,19 @@ function renderHomeTourism() {
   const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>`;
 
   const festivalBig = festivals.length
-    ? `<div class="festival-card-big" onclick="go('tourism');showFestivalDetail(${festivals[0].id})" style="margin-bottom:10px">
-        <div class="fcb-img img-sunset"><span class="badge badge-${festivals[0].status === 'ongoing' ? 'ongoing' : 'upcoming'} fcb-badge">${festivals[0].status === 'ongoing' ? '진행중' : '예정'}</span></div>
-        <div class="fcb-body">
-          <div class="fcb-date">${festivals[0].date ? festivals[0].date.replace('2026-','').replaceAll('-','.') : ''} · ${festivals[0].address}</div>
-          <div class="fcb-title">${festivals[0].name}</div>
+    ? `<div onclick="go('tourism');showFestivalDetail(${festivals[0].id})"
+        style="background:var(--white);border-radius:var(--r-md);border:1px solid var(--border);
+        border-left:3px solid var(--orange);padding:14px 16px;
+        display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:8px;transition:box-shadow 0.15s;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
+            <span class="badge badge-${festivals[0].status === 'ongoing' ? 'ongoing' : 'upcoming'}">${festivals[0].status === 'ongoing' ? '진행중' : '예정'}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${festivals[0].date ? festivals[0].date.replace('2026-','').replaceAll('-','.') : ''}</span>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${festivals[0].name}</div>
+          <div style="font-size:12px;color:var(--text-muted);">${festivals[0].address.split(' ').slice(0,3).join(' ')}</div>
         </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>`
     : emptyCard;
 
@@ -937,19 +944,30 @@ function renderHomeTourism() {
   el.innerHTML = `
     <div class="section">
       <div class="section-header">
-        <div><div class="section-title">이번 주 행사</div><div class="section-sub" style="margin-top:2px">축제 · 맛집 · 주차</div></div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="section-title">행사</div>
+            ${festivals.some(f => f.status === 'ongoing') ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : ''}
+          </div>
+          <div class="section-sub" style="margin-top:2px">이번 주 축제 · 맛집 · 주차</div>
+        </div>
       </div>
       ${festivalBig}${restaurantGrid}${parkingCard}
     </div>
     <div class="section" style="padding-bottom:24px">
-      <div class="section-header"><div class="section-title">생활 정보</div></div>
-      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:10px" onclick="goMapCat('localcurrency')">
+      <div class="section-header">
+        <div class="section-title">생활</div>
+        <div style="font-size:12px;color:var(--text-muted)">가맹점 · 주차 정보</div>
+      </div>
+      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:8px" onclick="goMapCat('localcurrency')">
         <div class="pi pi-currency">₩</div>
-        <div><div class="place-card-sm-name">희망화성지역화폐 가맹점</div><div class="place-card-sm-addr">가맹점 ${currencies.length}곳</div></div>
+        <div style="flex:1"><div class="place-card-sm-name">희망화성지역화폐 가맹점</div><div class="place-card-sm-addr">가맹점 ${currencies.length}곳</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
         <div class="pi pi-parking">P</div>
-        <div><div class="place-card-sm-name">주차장 정보</div><div class="place-card-sm-addr">총 ${PLACES.filter(p=>p.category==='parking').length}곳</div></div>
+        <div style="flex:1"><div class="place-card-sm-name">주차장 정보</div><div class="place-card-sm-addr">총 ${PLACES.filter(p=>p.category==='parking').length}곳</div></div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>`;
 }
