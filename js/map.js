@@ -756,9 +756,6 @@ function closePlaceSlide() {
     if (tk) { tk.el.classList.remove('selected'); tk.overlay.setZIndex(1); }
     selectedId = null;
   }
-  if (typeof clearParkingSelection === 'function') clearParkingSelection();
-  if (typeof clearConvSelection    === 'function') clearConvSelection();
-  if (typeof clearLcSelection      === 'function') clearLcSelection();
 }
 
 /* ── 모든 핀 숨김 (필터 없음 상태) ── */

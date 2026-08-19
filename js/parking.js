@@ -6,7 +6,6 @@ var parkingTimer   = null;
 var parkingVisible = false;
 var pkDisplayItems = [];       /* 현재 지도에 올라간 CustomOverlay */
 var pkOverlayMap   = {};       /* id → overlay (호버용) */
-var selectedPkId   = null;     /* 현재 선택된 주차장 핀 id */
 
 var PK_PIN_LEVEL   = 7;        /* 이 레벨 이하 = 개별 핀, 이상 = 클러스터 원 */
 var PK_GRID = {
@@ -245,25 +244,10 @@ function pinHtml(p) {
     + '</div>';
 }
 
-/* ── 선택 상태 해제 ── */
-function clearParkingSelection() {
-  if (selectedPkId !== null) {
-    var el = document.getElementById('pkpin-' + selectedPkId);
-    if (el) el.classList.remove('selected');
-    if (pkOverlayMap[selectedPkId]) pkOverlayMap[selectedPkId].setZIndex(1);
-    selectedPkId = null;
-  }
-}
-
 /* ── 핀 클릭 ── */
 function onParkingClick(id) {
   var p = parkingData.find(function (x) { return x.id === id; });
   if (!p) return;
-  clearParkingSelection();
-  selectedPkId = id;
-  var el = document.getElementById('pkpin-' + id);
-  if (el) el.classList.add('selected');
-  if (pkOverlayMap[id]) pkOverlayMap[id].setZIndex(200);
   if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(p.lat, p.lng, 50, 300);
   showParkingSlide(p);
 }
