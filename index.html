@@ -387,7 +387,6 @@
       font-weight: 700; border-radius: 50%;
     }
     .cal-day.today::after { background: rgba(255,255,255,0.8) !important; }
-    .cal-day.event-range { background: #FFF7ED; color: var(--orange); font-weight: 600; }
     .cal-day.cal-selected:not(.today) { background: #EEF2FF; color: var(--primary); font-weight: 700; border-radius: 50%; }
     /* 캘린더 이벤트 목록 */
     .cal-event-item {
@@ -935,9 +934,10 @@
       margin-bottom: 20px; overflow: hidden;
     }
     .quiz-progress-fill {
-      height: 100%; border-radius: 3px;
+      height: 100%; width: 100%; border-radius: 3px;
       background: linear-gradient(90deg, #F97316, #EA580C);
-      transition: width 0.4s ease;
+      transform-origin: left;
+      transition: transform 0.4s ease;
     }
     .quiz-question {
       font-size: 17px; font-weight: 800; color: #1B2A5C;
@@ -1248,7 +1248,7 @@
       <span class="home-about-chip">🏛 관광지 159곳</span>
       <span class="home-about-chip">🎉 축제 48건</span>
       <span class="home-about-chip">🅿 실시간 공영주차장</span>
-      <span class="home-about-chip"><img src="img/gyeonggi_currency_logo.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>
+      <span class="home-about-chip"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>
     </div>
   </div>
 
@@ -1420,7 +1420,7 @@
         <span class="cat-icon-label">관광식당</span>
       </div>
       <div class="cat-icon-item" id="liv-cat-currency" onclick="switchLivingCat(this,'currency')">
-        <div class="cat-icon-circle ci-mart" style="background:#EFF6FF"><img src="img/gyeonggi_currency_logo.png" style="width:55%;height:55%;object-fit:contain"></div>
+        <div class="cat-icon-circle ci-mart" style="background:#EFF6FF"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:55%;height:55%;object-fit:contain"></div>
         <span class="cat-icon-label">가맹점</span>
       </div>
       <div class="cat-icon-item" id="liv-cat-parking" onclick="switchLivingCat(this,'parking')">
@@ -1457,7 +1457,7 @@
   <div class="map-chips" id="map-chips">
     <div class="chip" data-cat="all"           onclick="setFilter('all')">전체</div>
     <div class="chip chip--parking" data-cat="parking"      onclick="toggleParking()">🅿 공영주차장</div>
-    <div class="chip" data-cat="localcurrency" onclick="setFilter('localcurrency')"><img src="img/gyeonggi_currency_logo.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px">지역화폐 가맹점</div>
+    <div class="chip" data-cat="localcurrency" onclick="setFilter('localcurrency')"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px">지역화폐 가맹점</div>
     <div class="chip" data-cat="tourist"       onclick="setFilter('tourist')">관광지</div>
     <div class="chip" data-cat="festival"      onclick="setFilter('festival')">축제</div>
     <div class="chip" data-cat="mobeom"        onclick="setFilter('mobeom')">모범음식점</div>
@@ -1841,7 +1841,7 @@ function _renderQuizQuestion() {
     '<div class="quiz-card">'
     + '<div class="quiz-step-label">' + (_quizStep + 1) + ' / ' + QUIZ_QS.length + '</div>'
     + '<div class="quiz-progress-track">'
-    + '  <div class="quiz-progress-fill" style="width:' + pct + '%"></div>'
+    + '  <div class="quiz-progress-fill" style="transform:scaleX(' + (pct / 100).toFixed(3) + ')"></div>'
     + '</div>'
     + '<div class="quiz-question">' + q.q + '</div>'
     + '<div class="quiz-options-grid">'
@@ -2198,7 +2198,7 @@ var _CAT_STYLE = {
   mobeom:       { bg: '#FEF3C7', em: '🍽' },
   touristrest:  { bg: '#FEE2E2', em: '🥢' },
   parking:      { bg: '#EFF6FF', em: '🅿' },
-  localcurrency:{ bg: '#F0FDF4', em: '<img src="img/gyeonggi_currency_logo.png" style="width:18px;height:18px;object-fit:contain">'  },
+  localcurrency:{ bg: '#F0FDF4', em: '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:18px;height:18px;object-fit:contain">'  },
   hotel:        { bg: '#EDE9FE', em: '🏨' },
   camping:      { bg: '#DCFCE7', em: '⛺' },
 };
@@ -2430,7 +2430,7 @@ function renderHomeLiving() {
         const cat  = (p.c || '').trim();
         const addr = (p.a || p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
         return `<div class="place-item" onclick="goLivingCat('currency')" style="gap:10px">
-          <div style="width:38px;height:38px;border-radius:12px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="img/gyeonggi_currency_logo.png" style="width:24px;height:24px;object-fit:contain"></div>
+          <div style="width:38px;height:38px;border-radius:12px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:24px;height:24px;object-fit:contain"></div>
           <div class="pi-content" style="min-width:0">
             <div class="pi-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
             <div class="pi-meta">${cat}${addr ? ' · ' + addr : ''}</div>
@@ -2461,7 +2461,7 @@ function renderHomeLiving() {
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
       <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px" onclick="goLivingCat('currency')">
-        <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="img/gyeonggi_currency_logo.png" style="width:22px;height:22px;object-fit:contain"></div>
+        <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:22px;height:22px;object-fit:contain"></div>
         <div>
           <div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.1">${currencies.length.toLocaleString()}</div>
           <div style="font-size:10px;color:var(--text-muted);margin-top:2px">지역화폐 가맹점</div>
@@ -2479,7 +2479,7 @@ function renderHomeLiving() {
       <div class="category-icons">
         <div class="cat-icon-item" onclick="goLivingCat('restaurant')"><div class="cat-icon-circle ci-food">🍴</div><span class="cat-icon-label">모범음식점</span></div>
         <div class="cat-icon-item" onclick="goLivingCat('touristrest')"><div class="cat-icon-circle ci-cafe">🥢</div><span class="cat-icon-label">관광식당</span></div>
-        <div class="cat-icon-item" onclick="goLivingCat('currency')"><div class="cat-icon-circle ci-mart" style="background:#EFF6FF"><img src="img/gyeonggi_currency_logo.png" style="width:55%;height:55%;object-fit:contain"></div><span class="cat-icon-label">지역화폐</span></div>
+        <div class="cat-icon-item" onclick="goLivingCat('currency')"><div class="cat-icon-circle ci-mart" style="background:#EFF6FF"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:55%;height:55%;object-fit:contain"></div><span class="cat-icon-label">지역화폐</span></div>
         <div class="cat-icon-item" onclick="goLivingCat('parking')"><div class="cat-icon-circle" style="background:#DBEAFE;color:#2563EB;font-size:16px;font-weight:800">P</div><span class="cat-icon-label">공영주차장</span></div>
       </div>
     </div>
@@ -2810,7 +2810,7 @@ function iconClass(cat) {
   return map[cat] || 'pi-tourist';
 }
 function iconContent(cat) {
-  if (cat === 'localcurrency') return '<img src="img/gyeonggi_currency_logo.png" style="width:64%;height:64%;object-fit:contain;display:block">';
+  if (cat === 'localcurrency') return '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:64%;height:64%;object-fit:contain;display:block">';
   const map = { tourist:'🏛', restaurant:'🍽', festival:'🎉', parking:'P' };
   return map[cat] || '📍';
 }
@@ -2861,7 +2861,7 @@ function showFestivalDetail(id) {
     <div class="fd-nearby">
       <button class="fd-nearby-btn" onclick="goMapCat('mobeom')"><span class="nb-icon">🍽</span>주변 맛집</button>
       <button class="fd-nearby-btn" onclick="goMapCat('parking')"><span class="nb-icon">🅿</span>공영주차장</button>
-      <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})"><span class="nb-icon"><img src="img/gyeonggi_currency_logo.png" style="width:20px;height:20px;object-fit:contain"></span>가맹점</button>
+      <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})"><span class="nb-icon"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:20px;height:20px;object-fit:contain"></span>가맹점</button>
     </div>
     <div class="fd-cta">
       <div class="fd-cta-btn" onclick="goMapFocus(${place.lat},${place.lng},5,${place.id})">🗺 지도에서 위치 확인</div>
@@ -2952,7 +2952,7 @@ function renderLivingCatList(cat) {
             ? 'goMapLc(' + p.lat + ',' + p.lng + ')'
             : 'goMapCat(\'localcurrency\')';
           return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.04) + 's;cursor:pointer" onclick="' + clickFn + '">'
-            + '<div class="pi pi-currency"><img src="img/gyeonggi_currency_logo.png" style="width:64%;height:64%;object-fit:contain;display:block"></div>'
+            + '<div class="pi pi-currency"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:64%;height:64%;object-fit:contain;display:block"></div>'
             + '<div class="pi-content">'
             + '<div class="pi-name">' + name + '</div>'
             + '<div class="pi-meta">' + (cat2 ? cat2 + ' · ' : '') + addr + '</div>'

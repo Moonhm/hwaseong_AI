@@ -301,9 +301,13 @@ function showTkClusters(bounds, level) {
       (cnt > 1 ? '<span style="color:rgba(255,255,255,0.88);font-size:8px;line-height:1.3">' + cnt + '</span>' : '');
 
     (function (clat, clng, lv) {
-      el.addEventListener('click', function () {
-        kakaoMap.setCenter(new kakao.maps.LatLng(clat, clng));
-        kakaoMap.setLevel(Math.max(1, lv - 2));
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var dest = new kakao.maps.LatLng(clat, clng);
+        kakaoMap.panTo(dest);
+        setTimeout(function () {
+          kakaoMap.setLevel(Math.max(1, lv - 2), { animate: { duration: 400 } });
+        }, 180);
       });
     })(lat, lng, level);
 

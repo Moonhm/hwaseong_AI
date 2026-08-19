@@ -19,8 +19,12 @@ function initParking(map) {
   fetchParkingAll();
   if (parkingTimer) clearInterval(parkingTimer);
   parkingTimer = setInterval(refreshParking, REFRESH_INTERVAL);
+  var _pkIdleTimer = null;
   kakao.maps.event.addListener(map, 'idle', function () {
-    if (parkingVisible) updateParkingDisplay();
+    clearTimeout(_pkIdleTimer);
+    _pkIdleTimer = setTimeout(function () {
+      if (parkingVisible) updateParkingDisplay();
+    }, 80);
   });
 }
 
@@ -54,6 +58,7 @@ function fetchParkingAll() {
 }
 
 function refreshParking() {
+  if (!parkingVisible) return;
   fetch('/api/parking/realtime')
     .then(function (r) { return r.json(); })
     .then(function (res) { _applyRealtime(res); })
@@ -197,7 +202,8 @@ function showPkClusters(bounds, level) {
       (cnt > 1 ? '<span style="color:rgba(255,255,255,0.88);font-size:8px;line-height:1.3">' + cnt + '곳</span>' : '');
 
     el.onclick = (function (clat, clng, lv) {
-      return function () {
+      return function (e) {
+        e.stopPropagation();
         var dest = new kakao.maps.LatLng(clat, clng);
         var targetLevel = Math.max(1, lv - 2);
         parkingMap.panTo(dest);
