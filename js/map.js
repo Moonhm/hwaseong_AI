@@ -529,7 +529,7 @@ function goNearestParking(placeLat, placeLng, placeId) {
 
   /* 관광지 하이라이트 핀 */
   var tPlace = PLACES.find(function (pl) { return pl.id === placeId; });
-  var touristEl = _makeNpPin('#FB923C', '🏛', tPlace ? tPlace.name : '관광지', function () {
+  var touristEl = _makeNpPin('#FB923C', '🌟', tPlace ? tPlace.name : '관광지', function () {
     exitNearestParkMode();
   });
   var touristOv = new kakao.maps.CustomOverlay({
