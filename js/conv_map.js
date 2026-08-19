@@ -71,7 +71,7 @@ var CONV_ELMAP  = {};   /* id  → DOM el */
 var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
 var _jebuOv     = null;
 
-var CONV_CACHE_VER = 'v3'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
+var CONV_CACHE_VER = 'v4'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
 
 /* localStorage 캐시 키 */
 function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat; }
@@ -160,8 +160,14 @@ function _geocodeCat(cat) {
   var finished = 0;
 
   rawItems.forEach(function (item, i) {
-    /* 괄호 내 동명 제거 — 도로명만 남겨 geocoding 정확도 향상 */
-    var cleanAddr = (item.addr || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+    /* 괄호·건물명 제거 — 도로명+번지만 남겨 geocoding 정확도 향상
+     * 예) "동탄대로 469-12 Alice" → "동탄대로 469-12"
+     *     "남양동 1365 선주빌딩" → "남양동 1365"
+     *     "세자로 480 (안녕동)" → "세자로 480" */
+    var cleanAddr = (item.addr || '')
+      .replace(/\s*\([^)]*\)\s*$/, '')          /* 말미 괄호 */
+      .replace(/\s+[가-힣A-Za-z][^\d]*$/, '')   /* 번지 뒤 한글·영문 건물명 */
+      .trim();
     var fullAddr  = cfg.getFullAddr
       ? cfg.getFullAddr(Object.assign({}, item, { addr: cleanAddr }))
       : '경기도 화성시 ' + cleanAddr;

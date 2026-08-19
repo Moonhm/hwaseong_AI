@@ -2909,10 +2909,11 @@ function renderLivingCatList(cat) {
     if (titleEl) titleEl.textContent = '모범음식점';
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
-      return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.03) + 's">'
+      return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.03) + 's" onclick="goMapCat(\'mobeom\')">'
         + '<div class="pi ci-food" style="border-radius:12px;background:#FEF3C7;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🍽️</div>'
         + '<div class="pi-content"><div class="pi-name">' + r.name + '</div>'
         + '<div class="pi-meta">화성시 ' + r.addr + '</div></div>'
+        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
         + '</div>';
     }).join('');
 
@@ -2923,7 +2924,7 @@ function renderLivingCatList(cat) {
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
       var tagClass = r.cuisine.includes('네팔') ? 'cuisine-nepal' : r.cuisine.includes('러시아') ? 'cuisine-russia' : '';
-      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's">'
+      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's" onclick="goMapCat(\'touristrest\')">'
         + '<div class="pi" style="border-radius:12px;background:#FEE2E2;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🥢</div>'
         + '<div class="pi-content">'
         + '<div class="pi-name" style="gap:6px">' + r.name
@@ -2931,7 +2932,8 @@ function renderLivingCatList(cat) {
         + '</div>'
         + '<div class="pi-meta">화성시 ' + r.addr + (r.area ? ' · ' + r.area : '') + '</div>'
         + '</div>'
-        + (r.tel ? '<div class="pi-right" style="font-size:11px;color:var(--text-muted)">' + r.tel + '</div>' : '')
+        + (r.tel ? '<div class="pi-right" style="font-size:11px;color:var(--text-muted)">' + r.tel + '</div>'
+                 : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>')
         + '</div>';
     }).join('');
 
