@@ -904,24 +904,18 @@
       <button class="back-btn" onclick="hideCalendar()">← 관광</button>
     </div>
     <div class="calendar-nav">
-      <button class="cal-arrow">‹</button>
-      <span class="cal-month">2026년 8월</span>
-      <button class="cal-arrow">›</button>
+      <button class="cal-arrow" onclick="calNav(-1)">‹</button>
+      <span class="cal-month" id="cal-month-label">2026년 8월</span>
+      <button class="cal-arrow" onclick="calNav(1)">›</button>
     </div>
-    <div class="calendar-grid">
-      <div class="cal-day-hd">일</div><div class="cal-day-hd">월</div><div class="cal-day-hd">화</div>
-      <div class="cal-day-hd">수</div><div class="cal-day-hd">목</div><div class="cal-day-hd">금</div><div class="cal-day-hd">토</div>
-      <div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div>
-      <div class="cal-day">1</div><div class="cal-day">2</div>
-      <div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
-      <div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div>
-      <div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day">12</div>
-      <div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div><div class="cal-day">16</div>
-      <div class="cal-day today">17</div>
-      <div class="cal-day">18</div><div class="cal-day">19</div><div class="cal-day">20</div>
-      <div class="cal-day">21</div><div class="cal-day">22</div>
-      <div class="cal-day event-range has-event">23</div><div class="cal-day event-range has-event">24</div><div class="cal-day event-range has-event">25</div>
-      <div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div>
+    <div class="calendar-grid" id="calendar-grid">
+      <div class="cal-day-hd">일</div><div class="cal-day-hd">월</div><div class="cal-day-hd">화</div><div class="cal-day-hd">수</div><div class="cal-day-hd">목</div><div class="cal-day-hd">금</div><div class="cal-day-hd">토</div>
+      <div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div>
+      <div class="cal-day">1</div>
+      <div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div>
+      <div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div>
+      <div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day today">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div>
+      <div class="cal-day event-range has-event">23</div><div class="cal-day event-range has-event">24</div><div class="cal-day event-range has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div>
       <div class="cal-day">30</div><div class="cal-day">31</div>
     </div>
     <div style="padding:12px var(--px)">
@@ -1116,7 +1110,18 @@ function go(page) {
   document.querySelector('.nav-item[data-page="' + page + '"]')?.classList.add('active');
   if (page === 'map')     { requestAnimationFrame(() => requestAnimationFrame(initMap)); setTimeout(updateChipArrows, 120); }
   if (page === 'living')  renderLivingPage();
-  if (page === 'tourism') renderTourismList('all');
+  /* BUG-7: 서브탭 상태 유지 — 'all'로 강제 리셋하지 않음 */
+  if (page === 'tourism') {
+    var sub = _tourismSub || 'all';
+    if (sub === 'stay' || sub === 'camp' || sub === 'temple') {
+      /* 비리스트 서브탭은 switchTourismSub로 상태 복원 */
+      var chip = document.querySelector('.tourism-subnav .chip.active');
+      if (chip) switchTourismSub(chip, sub);
+      else renderTourismList('all');
+    } else {
+      renderTourismList(sub === 'festival' ? 'festival-only' : sub === 'spot' ? 'tourist-only' : 'all');
+    }
+  }
 }
 
 /* ── 사이드 메뉴 ── */
@@ -1188,8 +1193,8 @@ function renderNearbyResult(myLat, myLng) {
     if (d < minTDist) { minTDist = d; nearestTourist = p; }
   });
 
-  /* 가장 가까운 주차장 */
-  var parks = PLACES.filter(function (p) { return p.category === 'parking'; });
+  /* 가장 가까운 주차장 — parkingData 사용 */
+  var parks = (typeof parkingData !== 'undefined') ? parkingData : [];
   var nearestPark = null, minPDist = Infinity;
   parks.forEach(function (p) {
     var d = _distKm(myLat, myLng, p.lat, p.lng);
@@ -1369,10 +1374,10 @@ function renderHomeTourism() {
 
 function renderHomeLiving() {
   const el = document.getElementById('home-living-content');
-  if (!el || typeof PLACES === 'undefined') return;
+  if (!el) return;
 
-  const currencies = PLACES.filter(p => p.category === 'localcurrency');
-  const parkings   = PLACES.filter(p => p.category === 'parking');
+  const currencies = (typeof lcData !== 'undefined') ? lcData : [];
+  const parkings   = (typeof parkingData !== 'undefined') ? parkingData : [];
 
   el.innerHTML = `
     <div class="living-stats" style="margin-top:4px">
@@ -1381,10 +1386,10 @@ function renderHomeLiving() {
     </div>
     <div style="margin-top:16px">
       <div class="category-icons">
-        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-food">🍴</div><span class="cat-icon-label">음식점</span></div>
-        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-cafe">☕</div><span class="cat-icon-label">카페</span></div>
-        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-mart">🛒</div><span class="cat-icon-label">마트</span></div>
-        <div class="cat-icon-item" onclick="go('living')"><div class="cat-icon-circle ci-etc">···</div><span class="cat-icon-label">기타</span></div>
+        <div class="cat-icon-item" onclick="goLivingCat('restaurant')"><div class="cat-icon-circle ci-food">🍴</div><span class="cat-icon-label">모범음식점</span></div>
+        <div class="cat-icon-item" onclick="goLivingCat('touristrest')"><div class="cat-icon-circle ci-cafe">🥢</div><span class="cat-icon-label">관광식당</span></div>
+        <div class="cat-icon-item" onclick="goLivingCat('currency')"><div class="cat-icon-circle ci-mart">₩</div><span class="cat-icon-label">지역화폐</span></div>
+        <div class="cat-icon-item" onclick="goLivingCat('parking')"><div class="cat-icon-circle ci-etc">P</div><span class="cat-icon-label">주차장</span></div>
       </div>
     </div>
     <div class="section" style="padding-bottom:24px">
@@ -1652,6 +1657,18 @@ function iconContent(cat) {
 }
 
 /* ── 축제 상세 ── */
+/* festival의 status/date는 data.js에서 추가됐으나, 파싱 폴백도 유지 */
+function getFestivalMeta(place) {
+  var status = place.status || 'upcoming';
+  var date   = place.date   || '';
+  /* date가 없으면 desc에서 추출 시도 */
+  if (!date && place.desc) {
+    var parts = place.desc.split('|');
+    if (parts.length > 1) date = parts[1].trim();
+  }
+  return { status: status, date: date };
+}
+
 function showFestivalDetail(id) {
   const place = PLACES.find(p => p.id === id);
   if (!place) return;
@@ -1660,26 +1677,30 @@ function showFestivalDetail(id) {
   document.getElementById('view-calendar').style.display = 'none';
   document.getElementById('view-festival-detail').style.display = 'block';
 
-  const imgClass = {13:'img-sunset',14:'img-night',15:'img-peace',16:'img-sea'}[id] || 'img-sunset';
-  const statusBadge = place.status === 'ongoing'
-    ? '<span class="badge badge-ongoing">진행중</span>'
-    : '<span class="badge badge-upcoming">예정</span>';
+  /* BUG-9: 인덱스 기반 이미지 클래스 */
+  const IMG_CLASSES_FD = ['img-sunset','img-sea','img-night','img-peace','img-dino'];
+  const festivals = PLACES.filter(p => p.category === 'festival');
+  const festIdx = festivals.findIndex(f => f.id === id);
+  const imgClass = IMG_CLASSES_FD[Math.max(0, festIdx) % IMG_CLASSES_FD.length];
+
+  const { status, date } = getFestivalMeta(place);
+  const isOngoing = status === 'ongoing';
 
   document.getElementById('fd-content').innerHTML = `
     <div class="fd-img ${imgClass}">
-      <span class="badge fd-badge ${place.status === 'ongoing' ? 'badge-ongoing' : 'badge-upcoming'}">${place.status === 'ongoing' ? '진행중' : '예정'}</span>
+      <span class="badge fd-badge ${isOngoing ? 'badge-ongoing' : 'badge-upcoming'}">${isOngoing ? '진행중' : '예정'}</span>
     </div>
     <div class="fd-body">
       <div class="fd-title">${place.name}</div>
-      <div class="fd-desc">${place.desc}</div>
+      <div class="fd-desc">${place.desc ? place.desc.split('|')[0].trim() : ''}</div>
       <div class="fd-info-list">
-        <div class="fd-info-row"><div class="fd-info-icon">📅</div><div><div class="fd-info-label">기간</div><div class="fd-info-val">${place.date}</div></div></div>
+        ${date ? `<div class="fd-info-row"><div class="fd-info-icon">📅</div><div><div class="fd-info-label">일정</div><div class="fd-info-val">${date}</div></div></div>` : ''}
         <div class="fd-info-row"><div class="fd-info-icon">📍</div><div><div class="fd-info-label">위치</div><div class="fd-info-val">${place.address}</div></div></div>
         <div class="fd-info-row"><div class="fd-info-icon">🔗</div><div><div class="fd-info-label">링크</div><div class="fd-info-link">화성시 문화관광 홈페이지</div></div></div>
       </div>
     </div>
     <div class="fd-nearby">
-      <button class="fd-nearby-btn" onclick="goMapCat('restaurant')"><span class="nb-icon">🍽</span>주변 맛집</button>
+      <button class="fd-nearby-btn" onclick="goMapCat('mobeom')"><span class="nb-icon">🍽</span>주변 맛집</button>
       <button class="fd-nearby-btn" onclick="goMapCat('parking')"><span class="nb-icon">🅿</span>주차장</button>
       <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})"><span class="nb-icon">💳</span>가맹점</button>
     </div>
@@ -1687,9 +1708,6 @@ function showFestivalDetail(id) {
       <div class="fd-cta-btn" onclick="goMapCat('festival')">🗺 지도에서 위치 확인</div>
     </div>`;
 
-  go('tourism');
-  document.getElementById('view-tourism-list').style.display = 'none';
-  document.getElementById('view-festival-detail').style.display = 'block';
   document.getElementById('page-tourism').scrollTop = 0;
 }
 
@@ -1756,30 +1774,28 @@ function renderLivingCatList(cat) {
     }).join('');
 
   } else if (cat === 'currency') {
-    if (typeof PLACES === 'undefined') { list.innerHTML = empty; return; }
-    var items = PLACES.filter(function(p) { return p.category === 'localcurrency'; });
+    var lcArr = (typeof lcData !== 'undefined') ? lcData : [];
     if (titleEl) titleEl.textContent = '희망화성지역화폐 가맹점';
-    if (countEl) countEl.textContent = items.length + '곳';
-    list.innerHTML = items.length
-      ? items.map(function(p, i) {
+    if (countEl) countEl.textContent = lcArr.length + '곳';
+    list.innerHTML = lcArr.length
+      ? lcArr.map(function(p, i) {
           return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's" onclick="goMapCat(\'localcurrency\')">'
             + '<div class="pi pi-currency">₩</div>'
-            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + p.address + '</div></div>'
+            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + (p.address || '') + '</div></div>'
             + '</div>';
         }).join('')
       : empty;
 
   } else if (cat === 'parking') {
-    if (typeof PLACES === 'undefined') { list.innerHTML = empty; return; }
-    var items = PLACES.filter(function(p) { return p.category === 'parking'; });
+    var pkArr = (typeof parkingData !== 'undefined') ? parkingData : [];
     if (titleEl) titleEl.textContent = '주차장';
-    if (countEl) countEl.textContent = items.length + '곳';
-    list.innerHTML = items.length
-      ? items.map(function(p, i) {
-          var free = p.tags.includes('무료');
+    if (countEl) countEl.textContent = pkArr.length + '곳';
+    list.innerHTML = pkArr.length
+      ? pkArr.map(function(p, i) {
+          var free = p.tags && p.tags.includes('무료');
           return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's" onclick="goMapCat(\'parking\')">'
             + '<div class="pi pi-parking">P</div>'
-            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + p.address + '</div></div>'
+            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + (p.address || '') + '</div></div>'
             + '<div class="pi-right"><span class="park-badge ' + (free ? 'pb-free' : 'pb-paid') + '">' + (free ? '무료' : '유료') + '</span></div>'
             + '</div>';
         }).join('')
@@ -1788,10 +1804,8 @@ function renderLivingCatList(cat) {
 }
 
 function renderLivingPage() {
-  if (typeof PLACES === 'undefined') return;
-
-  var cCount = PLACES.filter(function(p) { return p.category === 'localcurrency'; }).length;
-  var pCount = PLACES.filter(function(p) { return p.category === 'parking'; }).length;
+  var cCount = (typeof lcData !== 'undefined') ? lcData.length : 0;
+  var pCount = (typeof parkingData !== 'undefined') ? parkingData.length : 0;
   var scEl = document.getElementById('stat-currency');
   var spEl = document.getElementById('stat-parking');
   if (scEl) scEl.textContent = cCount;
@@ -1815,20 +1829,55 @@ function showToast(msg) {
   clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
-/* ── 슬라이드 드래그-다운 닫기 ── */
-(function () {
-  var startY = 0;
-  var dz = document.getElementById('slide-drag-zone');
-  function onStart(e) { startY = (e.touches ? e.touches[0] : e).clientY; }
-  function onEnd(e) {
-    var endY = (e.changedTouches ? e.changedTouches[0] : e).clientY;
-    if (endY - startY > 60) closePlaceSlide();
+/* BUG-11: 드래그 리스너는 map.js setupSlideCardDrag()에서만 등록 (중복 제거) */
+
+/* ── 달력 월 탐색 (BUG-8) ── */
+var _calYear = 2026, _calMonth = 7; /* 0-indexed: 7=8월 */
+function calNav(dir) {
+  _calMonth += dir;
+  if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
+  if (_calMonth > 11) { _calMonth = 0;  _calYear++; }
+
+  var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  var lbl = document.getElementById('cal-month-label');
+  if (lbl) lbl.textContent = _calYear + '년 ' + MONTHS[_calMonth];
+
+  var grid = document.getElementById('calendar-grid');
+  if (!grid) return;
+
+  /* 기존 날짜 칸 제거 (헤더 .cal-day-hd 7개는 유지) */
+  var dayCells = grid.querySelectorAll('.cal-day');
+  dayCells.forEach(function (c) { grid.removeChild(c); });
+  /* 날짜 div 새로 삽입 */
+  var firstDay   = new Date(_calYear, _calMonth, 1).getDay(); /* 0=일 */
+  var daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+  var todayYear  = 2026, todayMonth = 7, todayDay = 19;
+  var frag = document.createDocumentFragment();
+
+  /* 앞쪽 빈 칸 */
+  for (var b = 0; b < firstDay; b++) {
+    var blank = document.createElement('div');
+    blank.className = 'cal-day';
+    blank.style.color = 'var(--text-muted)';
+    frag.appendChild(blank);
   }
-  dz.addEventListener('touchstart', onStart, { passive: true });
-  dz.addEventListener('touchend',   onEnd);
-  dz.addEventListener('mousedown',  onStart);
-  dz.addEventListener('mouseup',    onEnd);
-})();
+  /* 날짜 칸 */
+  for (var d = 1; d <= daysInMonth; d++) {
+    var cell = document.createElement('div');
+    var isToday = _calYear === todayYear && _calMonth === todayMonth && d === todayDay;
+    cell.className = 'cal-day' + (isToday ? ' today' : '');
+    cell.textContent = d;
+    frag.appendChild(cell);
+  }
+  grid.appendChild(frag);
+}
+
+/* ── 홈탭 생활 아이콘 → 생활 탭 + 특정 카테고리 (BUG-12) ── */
+function goLivingCat(cat) {
+  go('living');
+  var el = document.getElementById('liv-cat-' + cat);
+  if (el) switchLivingCat(el, cat);
+}
 
 /* ── Escape 키로 슬라이드 닫기 ── */
 document.addEventListener('keydown', function (e) {

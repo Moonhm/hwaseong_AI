@@ -12,8 +12,8 @@ var touristVisible      = false;
 var touristDisplayItems = [];
 var touristOverlayMap   = {};   /* id → { overlay, el } */
 
-var LC_PIN_LEVEL = 7;           /* ≤ 이 레벨: 개별 핀 / 초과: 클러스터 원 */
-var LC_GRID = {
+var TK_PIN_LEVEL = 7;           /* ≤ 이 레벨: 개별 핀 / 초과: 클러스터 원 (tourist 전용, localcurrency의 TK_PIN_LEVEL과 분리) */
+var TK_GRID = {
   14: 0.30, 13: 0.15, 12: 0.08, 11: 0.05, 10: 0.03, 9: 0.02, 8: 0.015
 };
 
@@ -80,6 +80,8 @@ function initMap() {
   setupZoomSlider();
   if (typeof initParking       === 'function') initParking(kakaoMap);
   if (typeof initLocalCurrency === 'function') initLocalCurrency(kakaoMap);
+  /* 최초 진입 시 전체 필터 자동 활성화 */
+  setTimeout(function () { setFilter('all'); }, 350);
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
   kakao.maps.event.addListener(kakaoMap, 'idle', function () {
     if (touristVisible) updateTouristDisplay();
@@ -207,7 +209,7 @@ function updateTouristDisplay() {
     clearTouristDisplay();
     var level  = kakaoMap.getLevel();
     var bounds = kakaoMap.getBounds();
-    if (level <= LC_PIN_LEVEL) showTkViewport(bounds);
+    if (level <= TK_PIN_LEVEL) showTkViewport(bounds);
     else                       showTkClusters(bounds, level);
   }, 100);
 }
@@ -265,7 +267,7 @@ function showTkViewport(bounds) {
 /* 줌아웃 상태: 그리드 기반 클러스터 원 */
 function showTkClusters(bounds, level) {
   var sw    = bounds.getSouthWest(), ne = bounds.getNorthEast();
-  var grid  = LC_GRID[level] || 0.02;
+  var grid  = TK_GRID[level] || 0.02;
   var pad   = grid * 0.5;
   var minLat = sw.getLat() - pad, maxLat = ne.getLat() + pad;
   var minLng = sw.getLng() - pad, maxLng = ne.getLng() + pad;
@@ -564,8 +566,13 @@ function setFilter(cat) {
 
 /* ── 반경 500m 지역화폐 가맹점 ── */
 function findNearby(lat, lng) {
-  var nearby = PLACES.filter(function (p) {
-    return p.category === 'localcurrency' && Math.hypot(p.lat - lat, p.lng - lng) <= 0.005;
+  /* lcData: localcurrency.js에서 로드한 배열 */
+  var pool = (typeof lcData !== 'undefined' && lcData.length)
+    ? lcData
+    : PLACES.filter(function (p) { return p.category === 'localcurrency'; });
+
+  var nearby = pool.filter(function (p) {
+    return Math.hypot(p.lat - lat, p.lng - lng) <= 0.005;
   });
   closePlaceSlide();
   if (!nearby.length) {
