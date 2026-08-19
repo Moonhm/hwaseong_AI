@@ -995,6 +995,64 @@
       transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+    /* ── ABOUT + 데이터 출처 ── */
+    .home-about {
+      margin: 20px var(--px) 0;
+      background: var(--white);
+      border-radius: var(--r-md);
+      padding: 22px 18px 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+    .home-about-badge {
+      display: inline-block;
+      background: rgba(249,115,22,0.10);
+      color: var(--orange);
+      font-size: 11px; font-weight: 800; letter-spacing: 1px;
+      padding: 3px 10px; border-radius: 20px; margin-bottom: 10px;
+    }
+    .home-about-title {
+      margin: 0 0 10px; font-size: 16px; font-weight: 800; color: var(--text);
+    }
+    .home-about-desc {
+      margin: 0 0 16px; font-size: 13px; color: var(--text-sub); line-height: 1.85;
+    }
+    .home-about-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .home-about-chip {
+      font-size: 11.5px; font-weight: 600;
+      color: var(--orange);
+      background: rgba(249,115,22,0.07);
+      border: 1px solid rgba(249,115,22,0.18);
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .home-data-notice {
+      margin: 12px var(--px) 0;
+      padding: 16px 16px 14px;
+      background: var(--bg);
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+    }
+    .dn-heading {
+      font-size: 10.5px; font-weight: 800; color: var(--text-muted);
+      letter-spacing: 0.7px; text-transform: uppercase; margin: 0 0 10px;
+    }
+    .dn-body {
+      font-size: 11px; color: #a0aec0; line-height: 1.8; margin: 0 0 7px;
+    }
+    .dn-body strong { color: #718096; font-weight: 700; }
+    .dn-copy {
+      font-size: 10px; color: #b8c2cc; line-height: 1.6;
+      margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--border);
+    }
+    .dn-dev {
+      border-top: none; padding-top: 3px; margin-top: 3px;
+      color: #a0aec0; font-weight: 600;
+    }
+    .dn-mail { color: var(--orange); text-decoration: none; }
+    .home-bottom-pad { height: 24px; }
   </style>
 </head>
 <body>
@@ -1052,6 +1110,66 @@
   <div id="home-living" style="display:none;margin-top:16px">
     <div id="home-living-content"></div>
   </div>
+
+  <!-- ── About ── -->
+  <div class="home-about">
+    <span class="home-about-badge">About</span>
+    <h2 class="home-about-title">화성잇다란?</h2>
+    <p class="home-about-desc">
+      화성잇다는 경기도 화성특례시의 관광지·축제·맛집·주차장·지역화폐 가맹점을
+      카카오맵 기반으로 통합 제공하는 모바일 여행 정보 앱이에요.
+      화성시 공식 공공데이터와 실시간 주차 API를 연동해 관광지 159곳, 축제 48건,
+      공영주차장 131개, 지역화폐 가맹점 27,374개의 정보를 한눈에 확인할 수 있어요.
+    </p>
+    <div class="home-about-chips">
+      <span class="home-about-chip">🗺 카카오맵 API</span>
+      <span class="home-about-chip">🏛 관광지 159곳</span>
+      <span class="home-about-chip">🎉 축제 48건</span>
+      <span class="home-about-chip">🅿 실시간 주차장</span>
+      <span class="home-about-chip">💳 지역화폐 가맹점</span>
+    </div>
+  </div>
+
+  <!-- ── 데이터 출처 고지 ── -->
+  <div class="home-data-notice">
+    <p class="dn-heading">데이터 출처 및 유의사항</p>
+
+    <p class="dn-body">
+      본 서비스는 <strong>화성시 공식 관광 포털</strong>(tour.hscity.go.kr),
+      <strong>화성시 공식 행사 예약</strong>(yeyak.hscity.go.kr),
+      <strong>한국관광 데이터랩</strong>, <strong>공공데이터포털</strong>에서 제공하는
+      데이터를 활용합니다.
+    </p>
+
+    <p class="dn-body">
+      <strong>실시간 주차 데이터 (화성시 스마트파킹)</strong> — smartparking.hscity.go.kr
+      공공 API 기반. 주차 여유 대수는 실시간 추정치로 실제 현장 상황과 차이가 있을 수 있으며,
+      60초 주기로 자동 갱신됩니다.
+    </p>
+
+    <p class="dn-body">
+      <strong>지역화폐 가맹점 (희망화성지역화폐)</strong> — 화성사랑카드 가맹점 현황
+      데이터 기반. 등록·폐업 현황은 실시간으로 변동될 수 있으며, 최신 정보는
+      화성사랑카드 공식 채널에서 확인하세요.
+    </p>
+
+    <p class="dn-body">
+      <strong>관광지·편의시설 데이터</strong> — 화성시 공식 관광 포털 및 한국관광
+      데이터랩의 공개 데이터를 기반으로 수집·정비하였습니다. 좌표는 웹 검증을 거쳤으나
+      100–200m 오차가 있을 수 있습니다. 모범음식점·관광식당 등 편의시설 정보는
+      화성시 공공데이터 기준이며 현장 상황과 다를 수 있습니다.
+    </p>
+
+    <p class="dn-copy">
+      © 데이터 출처: 화성시 공식 관광포털 · 화성시 스마트파킹 · 희망화성지역화폐 · 한국관광 데이터랩 · 공공데이터포털
+    </p>
+    <p class="dn-copy dn-dev">
+      개발: 문형민 &nbsp;|&nbsp; 문의:
+      <a href="mailto:hm8824@naver.com" class="dn-mail">hm8824@naver.com</a>
+    </p>
+  </div>
+
+  <div class="home-bottom-pad"></div>
 
 </div><!-- /home -->
 
