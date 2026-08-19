@@ -55,7 +55,7 @@ function initMap() {
 
   mapReady = true;
 
-  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHTBOTTOM);
 
   buildOverlays();
   setupMyLocation();
