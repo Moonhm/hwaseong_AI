@@ -1248,7 +1248,7 @@
       <span class="home-about-chip">🏛 관광지 159곳</span>
       <span class="home-about-chip">🎉 축제 48건</span>
       <span class="home-about-chip">🅿 실시간 공영주차장</span>
-      <span class="home-about-chip">💳 지역화폐 가맹점</span>
+      <span class="home-about-chip"><img src="img/gyeonggi_currency_logo.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>
     </div>
   </div>
 
@@ -1420,7 +1420,7 @@
         <span class="cat-icon-label">관광식당</span>
       </div>
       <div class="cat-icon-item" id="liv-cat-currency" onclick="switchLivingCat(this,'currency')">
-        <div class="cat-icon-circle ci-mart">💳</div>
+        <div class="cat-icon-circle ci-mart" style="background:#EFF6FF"><img src="img/gyeonggi_currency_logo.png" style="width:55%;height:55%;object-fit:contain"></div>
         <span class="cat-icon-label">가맹점</span>
       </div>
       <div class="cat-icon-item" id="liv-cat-parking" onclick="switchLivingCat(this,'parking')">
@@ -1457,7 +1457,7 @@
   <div class="map-chips" id="map-chips">
     <div class="chip" data-cat="all"           onclick="setFilter('all')">전체</div>
     <div class="chip chip--parking" data-cat="parking"      onclick="toggleParking()">🅿 공영주차장</div>
-    <div class="chip" data-cat="localcurrency" onclick="setFilter('localcurrency')">지역화폐 가맹점</div>
+    <div class="chip" data-cat="localcurrency" onclick="setFilter('localcurrency')"><img src="img/gyeonggi_currency_logo.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px">지역화폐 가맹점</div>
     <div class="chip" data-cat="tourist"       onclick="setFilter('tourist')">관광지</div>
     <div class="chip" data-cat="festival"      onclick="setFilter('festival')">축제</div>
     <div class="chip" data-cat="mobeom"        onclick="setFilter('mobeom')">모범음식점</div>
@@ -2846,7 +2846,7 @@ function showFestivalDetail(id) {
     <div class="fd-nearby">
       <button class="fd-nearby-btn" onclick="goMapCat('mobeom')"><span class="nb-icon">🍽</span>주변 맛집</button>
       <button class="fd-nearby-btn" onclick="goMapCat('parking')"><span class="nb-icon">🅿</span>공영주차장</button>
-      <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})"><span class="nb-icon">💳</span>가맹점</button>
+      <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})"><span class="nb-icon"><img src="img/gyeonggi_currency_logo.png" style="width:20px;height:20px;object-fit:contain"></span>가맹점</button>
     </div>
     <div class="fd-cta">
       <div class="fd-cta-btn" onclick="goMapFocus(${place.lat},${place.lng},5,${place.id})">🗺 지도에서 위치 확인</div>

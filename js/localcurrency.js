@@ -146,7 +146,7 @@ function showLcSlide(p) {
   document.getElementById('slide-inner').innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
     + '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;'
-    + 'padding:3px 10px;border-radius:20px">💳 지역화폐 가맹점</span>'
+    + 'padding:3px 10px;border-radius:20px"><img src="img/gyeonggi_currency_logo.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>'
     + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:4px">' + p.n + '</div>'
     + '<div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:6px">' + p.c + '</div>'
