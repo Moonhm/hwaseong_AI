@@ -11,106 +11,106 @@
 
 **2026 Hwaseong City AI Hackathon (2026 화성시 해커톤)**
 
-*경기도 화성특례시의 관광지·축제·주차·지역화폐 정보를 한 곳에서 — 모바일 최적화 통합 관광 웹앱*
+*Connecting tourists to Hwaseong (화성) — maps, festivals, parking, local currency, and personalized recommendations, all in one mobile app.*
 
 </div>
 
 ---
 
-## 화성잇다란?
+## What is Hwaseong-itda (화성잇다)?
 
-**화성잇다**는 *"화성을 잇다"* — 관광객과 화성특례시를 연결한다는 뜻입니다.
+**Hwaseong-itda (화성잇다)** means *"Connecting Hwaseong"* — linking tourists to everything Hwaseong Special City (화성특례시) has to offer.
 
-화성시 공식 데이터를 기반으로 159개 관광지, 48개 축제·행사, 131개 공영주차장(실시간), 27,374개 지역화폐 가맹점을 지도 위에서 한눈에 탐색할 수 있습니다. AI 기반 추천 시스템으로 내 취향에 맞는 여행지를 찾을 수도 있습니다.
-
----
-
-## 주요 기능
-
-| 화면 | 설명 |
-|------|------|
-| **🏠 홈** | GPS 기반 가장 가까운 관광지 추천 · 실시간 인근 주차 현황 · 장소 검색 · 앱 URL 공유 |
-| **🗺 지도** | 카카오맵 위 카테고리 칩 필터 — 관광지 클러스터/핀 · 실시간 주차장(🟢🟡🔴) · 지역화폐 가맹점 · 편의정보 |
-| **🎉 관광** | 관광지 159개 목록(테마 필터) · 2026 축제 캘린더 · 월별 이벤트 탐색 |
-| **🧭 AI 추천** | 5문항 여행 취향 설문 → AI가 최적 관광지 Top 3 추천 · 사진 카드 + 지도 바로가기 |
-| **⭐ 별점** | 159개 관광지 전체 별점(3.2–4.9) · 리뷰 수 · 목록·홈카드·슬라이드 패널에서 표시 |
-
-### 편의정보 (지도 → 편의정보 칩)
-
-| 카테고리 | 수량 | 내용 |
-|----------|-----:|------|
-| 모범음식점 | 94개 | 화성시 지정 우수 음식점 |
-| 관광식당업 | 35개 | 관광식당업 등록업소 |
-| 관광호텔 | 14개 | 등급·객실 수 표시 |
-| 캠핑장 | 11개 | 야영면 수·부대시설 |
-| 템플스테이 | 1개 | 용주사 프로그램 안내 |
-| 제부도 숙박 | 115개 | 펜션·민박·모텔·콘도 전체 목록 |
+Built on official city data, the app brings together 159 tourist spots (관광지), 48 festivals and events (축제·행사), 131 public parking lots (공영주차장) with real-time availability, and 27,374 local currency merchants (지역화폐 가맹점) onto a single interactive map. An AI-powered recommendation quiz helps users discover destinations that match their travel style.
 
 ---
 
-## 데이터 출처
+## Features
 
-| 데이터 | 출처 | 비고 |
-|--------|------|------|
-| 관광지 159개 (자연·역사 41개) | 화성시 문화관광 (`tour.hscity.go.kr`) | 공식 API |
-| 체험마을·체험지 51개 | 화성시 문화관광 (`tour.hscity.go.kr/2exp`) | |
-| 관광지 추가 67개 | 한국관광 데이터랩 (`datalab.visitkorea.or.kr`) | 쇼핑·골프·호텔·공원 등 |
-| 축제·행사 48개 (2026) | 화성시 예약시스템 (`yeyak.hscity.go.kr`) | |
-| 공영주차장 131개 (실시간) | 화성 스마트파킹 API (`smartparking.hscity.go.kr`) | Flask 프록시 경유 |
-| 지역화폐 가맹점 27,374개 | 화성사랑카드 공개 데이터 | 4.2MB 지연 로드 |
-| 편의정보 157개 | 화성시 공식 데이터 (`tour.hscity.go.kr`) | 음식점·호텔·캠핑 등 |
-| 제부도 숙박 115개 | 화성시 문화관광 사이트 | 펜션·민박·모텔·콘도 |
+| Screen | Description |
+|--------|-------------|
+| **🏠 Home (홈)** | GPS-based nearest tourist spot recommendation · Real-time nearby parking availability · Place search bar · App URL sharing |
+| **🗺 Map (지도)** | Kakao Maps with category chip filters — tourist clusters/pins · Real-time parking lots (🟢🟡🔴) · Local currency merchants · Convenience info |
+| **🎉 Tourism (관광)** | Full list of 159 tourist spots with theme filters · 2026 Festival calendar (축제 달력) · Monthly event browsing |
+| **🧭 AI Recommendation (AI 추천)** | 5-question travel personality quiz → AI recommends Top 3 destinations · Photo cards + direct map focus |
+| **⭐ Star Ratings (별점)** | Ratings (3.2–4.9) and review counts for all 159 tourist spots · Shown in list, home cards, and detail panel |
+
+### Convenience Info (편의정보) — Map Chip Filter
+
+| Category | Count | Content |
+|----------|------:|---------|
+| Model Restaurants (모범음식점) | 94 | City-certified quality restaurants |
+| Tourist Restaurants (관광식당업) | 35 | Registered tourist dining establishments |
+| Tourist Hotels (관광호텔) | 14 | Grade and room count displayed |
+| Campsites (캠핑장) | 11 | Number of pitches and facilities |
+| Temple Stay (템플스테이) | 1 | Yongjusa (용주사) program guide |
+| Jebu Island Accommodations (제부도 숙박) | 115 | Pensions, guesthouses, motels, condos |
 
 ---
 
-## 기술 스택
+## Data Sources
 
-| 레이어 | 기술 |
-|--------|------|
-| Frontend | Vanilla HTML · CSS · JavaScript (단일 파일 SPA, 프레임워크 없음) |
-| 지도 | Kakao Maps JavaScript SDK v2 |
-| 프록시 서버 | Flask (Python) — 주차장 API CORS 우회 |
-| 배포 | Cloudflare Quick Tunnel |
+| Data | Source | Note |
+|------|--------|------|
+| Tourist spots — natural & historic (자연·역사) · 41 | Hwaseong City Tourism (`tour.hscity.go.kr`) | Official API |
+| Tourist spots — experience villages (체험마을) · 51 | Hwaseong City Tourism (`tour.hscity.go.kr/2exp`) | |
+| Tourist spots — additional (쇼핑·골프·호텔·공원 등) · 67 | Korea Tourism Data Lab (`datalab.visitkorea.or.kr`) | |
+| Festivals & events (축제·행사) · 48 | Hwaseong City Reservation System (`yeyak.hscity.go.kr`) | 2026 |
+| Public parking lots (공영주차장) · 131 | Hwaseong Smart Parking API (`smartparking.hscity.go.kr`) | Real-time via Flask proxy |
+| Local currency merchants (지역화폐 가맹점) · 27,374 | Hwaseong Love Card (화성사랑카드) public data | 4.2 MB lazy-loaded |
+| Convenience facilities (편의정보) · 157 | Hwaseong City official data (`tour.hscity.go.kr`) | Restaurants, hotels, campsites |
+| Jebu Island accommodations (제부도 숙박) · 115 | Hwaseong City Tourism website | Pensions, guesthouses, motels |
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Vanilla HTML · CSS · JavaScript (single-file SPA, no framework) |
+| Map | Kakao Maps JavaScript SDK v2 |
+| Proxy Server | Flask (Python) — CORS relay for parking API (주차장 API) |
+| Deployment | Cloudflare Quick Tunnel |
 | AI | Claude Sonnet 4.6 (Anthropic) |
 
 ---
 
-## 로컬 실행
+## Running Locally
 
 ```bash
-# 1. 클론
+# 1. Clone
 git clone https://github.com/Moonhm/hwaseong_AI.git
 cd hwaseong_AI
 
-# 2. Flask 설치
+# 2. Install Flask
 pip install flask requests
 
-# 3. 프록시 서버 실행 (실시간 주차장 데이터에 필요)
+# 3. Start the proxy server (required for real-time parking data)
 python tools/server.py --port 8080
 
-# 4. http://localhost:8080 접속
+# 4. Open http://localhost:8080
 ```
 
-> 카카오맵 API 키는 Cloudflare 도메인 기준으로 설정되어 있습니다.
-> 로컬 개발 시 [developers.kakao.com](https://developers.kakao.com)에서 별도 키를 발급하세요.
+> The Kakao Maps API key is pre-configured for the Cloudflare domain.
+> For local development, register your own key at [developers.kakao.com](https://developers.kakao.com).
 
 ---
 
-## 팀
+## Team
 
-| 이름 | 역할 |
+| Name | Role |
 |------|------|
-| 문형민 (Moon Hyeongmin) | 개발, 데이터 파이프라인 |
-| 서교연 (Seo Gyoyeon) | UI/UX 디자인 (Figma), QA |
+| 문형민 (Moon Hyeongmin) | Development, data pipeline |
+| 서교연 (Seo Gyoyeon) | UI/UX design (Figma), QA |
 
-> Contact: hm8824@naver.com
+> Contact: seoky0219@gmail.com
 
 ---
 
 <div align="center">
 
-*Made with ♥ for Hwaseong (화성), Korea · 2026 화성시 AI 해커톤*
+*Made with ♥ for Hwaseong (화성), Korea · 2026 Hwaseong City AI Hackathon*
 
-**[라이브 앱 바로가기 →](https://culture-reed-dee-rug.trycloudflare.com)**
+**[Try the live app →](https://culture-reed-dee-rug.trycloudflare.com)**
 
 </div>
