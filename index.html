@@ -119,6 +119,36 @@
       background: transparent; font-family: inherit;
     }
 
+    /* ── SEARCH RESULTS ── */
+    .home-search-results {
+      display: none; position: relative; z-index: 50;
+      margin: -6px var(--px) 0; background: var(--white);
+      border: 1.5px solid var(--border); border-top: none;
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10); overflow: hidden;
+    }
+    .home-search-results.open { display: block; }
+    .sr-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px; cursor: pointer;
+      border-bottom: 1px solid var(--border); transition: background 0.12s;
+    }
+    .sr-item:last-child { border-bottom: none; }
+    .sr-item:active { background: #F3F4F6; }
+    .sr-icon {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .sr-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sr-sub  { font-size: 11px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sr-empty { padding: 20px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+    .search-bar input { caret-color: var(--primary); }
+    .search-clear {
+      display: none; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%; background: #E5E7EB;
+      cursor: pointer; flex-shrink: 0; font-size: 11px; color: #6B7280;
+    }
+
     /* ── TOGGLE TABS ── */
     .toggle-tabs {
       display: flex; gap: 8px; padding: 0 var(--px) 14px;
@@ -1080,10 +1110,15 @@
   </div>
 
   <!-- 검색바 -->
-  <div class="search-bar">
+  <div class="search-bar" id="home-search-bar">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" placeholder="맛집, 축제, 가맹점, 공영주차장 검색" />
+    <input type="text" id="home-search-input" placeholder="맛집, 축제, 가맹점, 공영주차장 검색"
+           oninput="homeSearchInput(this.value)"
+           onkeydown="if(event.key==='Enter')doHomeSearch(this.value)"
+           autocomplete="off" />
+    <div class="search-clear" id="home-search-clear" onclick="clearHomeSearch()">✕</div>
   </div>
+  <div class="home-search-results" id="home-search-results"></div>
 
   <!-- 관광/생활 토글 -->
   <div class="toggle-tabs">
@@ -1994,6 +2029,170 @@ function renderHomePage() {
   renderHomeLiving();
 }
 
+/* ══════════════════════════════════════════════════
+   홈 검색
+══════════════════════════════════════════════════ */
+var _srTimer = null;
+
+var _REGIONS = [
+  { name: '동탄',   lat: 37.2004, lng: 127.0781, level: 6 },
+  { name: '병점',   lat: 37.2266, lng: 127.0483, level: 6 },
+  { name: '봉담',   lat: 37.2119, lng: 126.9248, level: 6 },
+  { name: '향남',   lat: 37.0835, lng: 126.9072, level: 6 },
+  { name: '남양',   lat: 37.1996, lng: 126.8219, level: 6 },
+  { name: '우정',   lat: 37.0638, lng: 126.8290, level: 6 },
+  { name: '비봉',   lat: 37.1912, lng: 126.8631, level: 6 },
+  { name: '마도',   lat: 37.1637, lng: 126.7897, level: 6 },
+  { name: '팔탄',   lat: 37.1361, lng: 126.9397, level: 6 },
+  { name: '양감',   lat: 37.1052, lng: 126.9733, level: 6 },
+  { name: '정남',   lat: 37.1669, lng: 127.0007, level: 6 },
+  { name: '반월',   lat: 37.2315, lng: 127.0527, level: 6 },
+  { name: '진안',   lat: 37.2436, lng: 126.9968, level: 6 },
+  { name: '장안',   lat: 37.0870, lng: 126.8628, level: 6 },
+  { name: '서신',   lat: 37.1549, lng: 126.5757, level: 7 },
+  { name: '송산',   lat: 37.2152, lng: 126.6774, level: 6 },
+  { name: '화성',   lat: 37.1996, lng: 126.8316, level: 9 },
+  { name: '제부도', lat: 37.1578, lng: 126.5764, level: 7 },
+  { name: '공룡알화석지', lat: 37.1928, lng: 126.6574, level: 5 },
+  { name: '화성행궁', lat: 37.2844, lng: 127.0130, level: 5 },
+];
+
+var _CAT_STYLE = {
+  tourist:      { bg: '#EEF2FF', em: '🏛' },
+  festival:     { bg: '#FFF7ED', em: '🎉' },
+  restaurant:   { bg: '#FEF3C7', em: '🍽' },
+  mobeom:       { bg: '#FEF3C7', em: '🍽' },
+  touristrest:  { bg: '#FEE2E2', em: '🥢' },
+  parking:      { bg: '#EFF6FF', em: '🅿' },
+  localcurrency:{ bg: '#F0FDF4', em: '₩'  },
+  hotel:        { bg: '#EDE9FE', em: '🏨' },
+  camping:      { bg: '#DCFCE7', em: '⛺' },
+};
+
+function homeSearchInput(val) {
+  clearTimeout(_srTimer);
+  var clearBtn = document.getElementById('home-search-clear');
+  if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
+  if (!val.trim()) { closeHomeSearch(); return; }
+  _srTimer = setTimeout(function() { doHomeSearch(val); }, 220);
+}
+
+function doHomeSearch(q) {
+  q = (q || '').trim();
+  if (!q) { closeHomeSearch(); return; }
+  var ql = q.toLowerCase();
+  var results = [];
+
+  /* 1) 지역명 */
+  _REGIONS.forEach(function(r) {
+    if (r.name.includes(q) || q.includes(r.name)) {
+      results.push({ type: 'region', name: r.name + ' 지역', sub: '지도에서 보기', em: '📍', bg: '#F3F4F6', lat: r.lat, lng: r.lng, level: r.level });
+    }
+  });
+
+  /* 2) PLACES (관광지·축제·맛집·주차장 등) */
+  if (typeof PLACES !== 'undefined') {
+    PLACES.forEach(function(p) {
+      if ((p.name || '').toLowerCase().includes(ql) || (p.address || '').toLowerCase().includes(ql)) {
+        var s = _CAT_STYLE[p.category] || { bg: '#F3F4F6', em: '📌' };
+        var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+        results.push({ type: 'place', name: p.name, sub: addr, em: s.em, bg: s.bg, lat: p.lat, lng: p.lng, id: p.id, cat: p.category });
+      }
+    });
+  }
+
+  /* 3) 공영주차장 (parkingData) */
+  if (typeof parkingData !== 'undefined') {
+    parkingData.forEach(function(p) {
+      if ((p.name || '').toLowerCase().includes(ql)) {
+        var isFree = p.free || (p.tags && p.tags.includes('무료'));
+        var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + addr, em: '🅿', bg: '#EFF6FF', lat: p.lat, lng: p.lng });
+      }
+    });
+  }
+
+  /* 4) 지역화폐 가맹점 (최대 5개) */
+  if (typeof lcData !== 'undefined') {
+    var lcHits = 0;
+    for (var i = 0; i < lcData.length && lcHits < 5; i++) {
+      var p = lcData[i];
+      if ((p.n || '').toLowerCase().includes(ql) || (p.c || '').toLowerCase().includes(ql)) {
+        var addr = (p.a || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+        results.push({ type: 'lc', name: p.n, sub: (p.c || '') + (addr ? ' · ' + addr : ''), em: '₩', bg: '#F0FDF4', lat: p.lat, lng: p.lng });
+        lcHits++;
+      }
+    }
+  }
+
+  renderHomeSearchResults(results.slice(0, 9), q);
+}
+
+function renderHomeSearchResults(results, q) {
+  var el = document.getElementById('home-search-results');
+  var bar = document.getElementById('home-search-bar');
+  if (!el) return;
+
+  if (!results.length) {
+    el.innerHTML = '<div class="sr-empty">검색 결과가 없어요</div>';
+    el.classList.add('open');
+    if (bar) bar.style.borderRadius = 'var(--r-pill) var(--r-pill) 0 0';
+    return;
+  }
+
+  el.innerHTML = results.map(function(r, idx) {
+    return '<div class="sr-item" onclick="_srClick(' + idx + ')">'
+      + '<div class="sr-icon" style="background:' + r.bg + '">' + r.em + '</div>'
+      + '<div style="flex:1;min-width:0"><div class="sr-name">' + r.name + '</div><div class="sr-sub">' + r.sub + '</div></div>'
+      + '</div>';
+  }).join('');
+
+  window._srResults = results;
+  el.classList.add('open');
+  if (bar) bar.style.borderRadius = 'var(--r-pill) var(--r-pill) 0 0';
+}
+
+function _srClick(idx) {
+  var r = (window._srResults || [])[idx];
+  if (!r) return;
+  clearHomeSearch();
+  if (r.type === 'place' && r.lat && r.lng) {
+    goMapFocus(r.lat, r.lng, 4, r.id != null ? r.id : null);
+  } else if (r.type === 'parking' && r.lat) {
+    goMapPark(r.lat, r.lng);
+  } else if (r.type === 'lc' && r.lat) {
+    go('map');
+    setTimeout(function() {
+      if (!kakaoMap) return;
+      kakaoMap.setCenter(new kakao.maps.LatLng(r.lat, r.lng));
+      kakaoMap.setLevel(4);
+      if (typeof setFilter === 'function') setFilter('localcurrency');
+    }, 350);
+  } else if (r.lat) {
+    go('map');
+    setTimeout(function() {
+      if (!kakaoMap) return;
+      kakaoMap.setCenter(new kakao.maps.LatLng(r.lat, r.lng));
+      kakaoMap.setLevel(r.level || 6);
+    }, 350);
+  }
+}
+
+function closeHomeSearch() {
+  var el  = document.getElementById('home-search-results');
+  var bar = document.getElementById('home-search-bar');
+  if (el)  { el.classList.remove('open'); el.innerHTML = ''; }
+  if (bar) bar.style.borderRadius = '';
+}
+
+function clearHomeSearch() {
+  var inp = document.getElementById('home-search-input');
+  var clr = document.getElementById('home-search-clear');
+  if (inp) inp.value = '';
+  if (clr) clr.style.display = 'none';
+  closeHomeSearch();
+}
+
 function renderHomeTourism() {
   const el = document.getElementById('home-tourism-content');
   if (!el || typeof PLACES === 'undefined') return;
@@ -2829,6 +3028,15 @@ function scrollChips(dir) {
 })();
 
 /* ── 초기 렌더 ── */
+/* 검색창 외부 클릭 시 결과 닫기 */
+document.addEventListener('click', function(e) {
+  var bar = document.getElementById('home-search-bar');
+  var res = document.getElementById('home-search-results');
+  if (bar && res && !bar.contains(e.target) && !res.contains(e.target)) {
+    closeHomeSearch();
+  }
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   /* 주차장 데이터 사전 로드 (76KB) — 홈·가까운관광지 즉시 표시용 */
   fetch('js/parking-static.json').then(function(r) { return r.json(); }).then(function(d) {
