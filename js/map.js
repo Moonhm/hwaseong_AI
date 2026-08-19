@@ -26,7 +26,16 @@ const CAT_COLOR = {
   festival:      '#F97316',
   parking:       '#2563EB',
   localcurrency: '#16A34A',
+  mobeom:        '#D97706',
+  touristrest:   '#DC2626',
+  hotel:         '#7C3AED',
+  camping:       '#16A34A',
+  temple:        '#92400E',
+  jebu:          '#0284C7',
 };
+
+/* 편의정보 카테고리 목록 */
+var CONV_CATS = ['mobeom','touristrest','hotel','camping','temple','jebu'];
 
 /* ── 실제 컨테이너 너비 계산 (max-width:480px 반영) ── */
 function mapW() { return Math.min(window.innerWidth, 480); }
@@ -489,6 +498,7 @@ function clearFilter() {
   if (typeof setParkingVisible  === 'function') setParkingVisible(false);
   if (typeof updateParkingCount === 'function') updateParkingCount();
   if (typeof setLcVisible       === 'function') setLcVisible(false);
+  if (typeof hideAllConv        === 'function') hideAllConv();
 }
 
 /* ── 카테고리 필터 (같은 칩 재클릭 시 토글 해제) ── */
@@ -511,6 +521,24 @@ function setFilter(cat) {
 
   /* 새 칩 활성화 */
   if (chip) chip.classList.add('active');
+
+  /* 편의정보 카테고리: PLACES 핀 숨기고 conv 오버레이 표시 */
+  var isConvCat = CONV_CATS.indexOf(cat) !== -1;
+
+  if (typeof hideAllConv === 'function') hideAllConv();
+
+  if (isConvCat) {
+    /* PLACES 핀 전체 숨김 */
+    PLACES.forEach(function (p) {
+      if (p.category === 'tourist') return;
+      overlayMap[p.id] && overlayMap[p.id].setMap(null);
+    });
+    setTouristVisible(false);
+    if (typeof setParkingVisible  === 'function') setParkingVisible(false);
+    if (typeof setLcVisible       === 'function') setLcVisible(false);
+    if (typeof showConvCat        === 'function') showConvCat(cat);
+    return;
+  }
 
   PLACES.forEach(function (p) {
     if (p.category === 'tourist') return;
