@@ -222,7 +222,7 @@ function updateTouristDisplay() {
 function showTkViewport(bounds) {
   var sw    = bounds.getSouthWest(), ne = bounds.getNorthEast();
   var color = CAT_COLOR.tourist;
-  var cfg   = CATEGORY_CONFIG.tourist;
+  var cfg   = CATEGORY_CONFIG.tourist || {};
 
   PLACES.forEach(function (p) {
     if (p.category !== 'tourist') return;
@@ -230,7 +230,7 @@ function showTkViewport(bounds) {
     if (p.lng < sw.getLng() || p.lng > ne.getLng()) return;
 
     var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
-    var wrap  = _mkCmPin(color, cfg.emoji, label);
+    var wrap  = _mkCmPin(color, cfg.emoji || '🌟', label);
 
     if (p.id === selectedId) wrap.classList.add('selected');
 
@@ -384,7 +384,7 @@ function setupSlideCardDrag() {
 
 /* ── 장소 사진 HTML ── */
 function placePhotoHtml(place) {
-  var cfg = CATEGORY_CONFIG[place.category];
+  var cfg = CATEGORY_CONFIG[place.category] || {};
   var src = 'assets/images/places/' + place.name + '.jpg';
 
   if (place.category === 'tourist') {
@@ -407,8 +407,8 @@ function placePhotoHtml(place) {
 
 /* ── 장소 슬라이드 카드 ── */
 function showPlaceSlide(place) {
-  var cfg       = CATEGORY_CONFIG[place.category];
-  var color     = CAT_COLOR[place.category];
+  var cfg       = CATEGORY_CONFIG[place.category] || {};
+  var color     = CAT_COLOR[place.category] || '#6B7280';
   var isTourist = place.category === 'tourist';
 
   /* 관광지: 긴 설명 truncation */
