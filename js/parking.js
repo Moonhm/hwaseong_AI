@@ -125,7 +125,10 @@ function pinHtml(p) {
   var color  = pinColor(p);
   var status = statusText(p);
   var label  = p.name.length > 7 ? p.name.slice(0, 6) + '…' : p.name;
-  return '<div class="pk-pin" id="pkpin-' + p.id + '" onclick="onParkingClick(' + p.id + ')">'
+  return '<div class="pk-pin" id="pkpin-' + p.id + '"'
+    + ' onclick="onParkingClick(' + p.id + ')"'
+    + ' onmouseover="pkHoverIn(' + p.id + ')"'
+    + ' onmouseout="pkHoverOut(' + p.id + ')">'
     + '<div class="pk-circle" style="background:' + color + '">'
     + 'P <span style="font-size:10px">' + status + '</span>'
     + '</div>'
@@ -147,7 +150,7 @@ function drawParkingOverlays() {
       yAnchor:  1.5,
       zIndex:   2,
     });
-    overlay.setMap(parkingMap);
+    /* 초기에는 숨김 — setFilter('parking') / setFilter('all') 시 표시 */
     overlay._pkId = p.id;
     parkingOverlays.push(overlay);
   });
@@ -280,4 +283,14 @@ function updateParkingCount() {
   var avail = parkingData.filter(function (p) { return p.open && p.avail > 0; }).length;
   el.textContent = '여유 ' + avail + '곳';
   el.style.display = avail > 0 ? 'inline-block' : 'none';
+}
+
+/* ── 주차장 핀 호버 z-index (겹칠 때 맨 앞으로) ── */
+function pkHoverIn(id) {
+  var o = parkingOverlays.find(function (x) { return x._pkId === id; });
+  if (o) o.setZIndex(100);
+}
+function pkHoverOut(id) {
+  var o = parkingOverlays.find(function (x) { return x._pkId === id; });
+  if (o) o.setZIndex(2);
 }

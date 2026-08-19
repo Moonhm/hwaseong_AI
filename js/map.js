@@ -134,6 +134,13 @@ function buildOverlays() {
         e.stopPropagation();
         onPinClick(placeId);
       });
+      /* 호버 시 핀을 최상단으로 */
+      wrap.addEventListener('mouseover', function () {
+        if (selectedId !== placeId) overlayMap[placeId] && overlayMap[placeId].setZIndex(100);
+      });
+      wrap.addEventListener('mouseout', function () {
+        if (selectedId !== placeId) overlayMap[placeId] && overlayMap[placeId].setZIndex(1);
+      });
     })(p.id);
 
     var overlay = new kakao.maps.CustomOverlay({
@@ -142,7 +149,8 @@ function buildOverlays() {
       yAnchor:  1.5,
       zIndex:   1,
     });
-    overlay.setMap(kakaoMap);
+    /* 초기에는 숨김 — setFilter() 호출 시에만 표시 */
+    overlay.setMap(null);
     overlayMap[p.id] = overlay;
     overlayEls[p.id] = wrap;
   });
@@ -154,11 +162,13 @@ function onPinClick(id) {
   if (!place) return;
 
   /* 이전 선택 해제 */
-  if (selectedId !== null && overlayEls[selectedId]) {
-    overlayEls[selectedId].classList.remove('selected');
+  if (selectedId !== null) {
+    if (overlayEls[selectedId]) overlayEls[selectedId].classList.remove('selected');
+    if (overlayMap[selectedId]) overlayMap[selectedId].setZIndex(1);
   }
   selectedId = id;
   if (overlayEls[id]) overlayEls[id].classList.add('selected');
+  if (overlayMap[id]) overlayMap[id].setZIndex(200);
 
   /* 슬라이드 카드 표시 */
   showPlaceSlide(place);
@@ -245,16 +255,40 @@ function closePlaceSlide() {
   document.getElementById('map-dim').classList.remove('show');
   if (selectedId !== null) {
     if (overlayEls[selectedId]) overlayEls[selectedId].classList.remove('selected');
+    if (overlayMap[selectedId]) overlayMap[selectedId].setZIndex(1);
     selectedId = null;
   }
 }
 
-/* ── 카테고리 필터 ── */
+/* ── 모든 핀 숨김 (필터 없음 상태) ── */
+function clearFilter() {
+  PLACES.forEach(function (p) {
+    overlayMap[p.id] && overlayMap[p.id].setMap(null);
+  });
+  if (typeof setParkingVisible === 'function') setParkingVisible(false);
+  if (typeof updateParkingCount === 'function') updateParkingCount();
+}
+
+/* ── 카테고리 필터 (같은 칩 재클릭 시 토글 해제) ── */
 function setFilter(cat) {
   closePlaceSlide();
+
+  var chip     = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
+  var wasActive = chip && chip.classList.contains('active');
+
+  /* 모든 칩 비활성화 */
   document.querySelectorAll('#map-chips .chip').forEach(function (c) {
-    c.classList.toggle('active', c.dataset.cat === cat);
+    c.classList.remove('active');
   });
+
+  if (wasActive) {
+    /* 같은 칩 재클릭 → 필터 해제, 핀 전체 숨김 */
+    clearFilter();
+    return;
+  }
+
+  /* 새 칩 활성화 */
+  if (chip) chip.classList.add('active');
 
   PLACES.forEach(function (p) {
     overlayMap[p.id] && overlayMap[p.id].setMap(
