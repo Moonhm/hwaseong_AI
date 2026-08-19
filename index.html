@@ -985,7 +985,8 @@
 
   <!-- 헤더 -->
   <div class="page-header">
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;-webkit-tap-highlight-color:transparent"
+         onclick="shareApp()" title="앱 공유하기">
       <img src="img/logo-icon.png" alt="" style="height:30px;width:30px;object-fit:contain;border-radius:6px;">
       <img src="img/logo-name.png" alt="화성잇다" style="height:26px;object-fit:contain;"
            onerror="this.style.display='none'">
@@ -2463,6 +2464,32 @@ function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+/* ── 로고 클릭 → 앱 공유 ── */
+function shareApp() {
+  var url  = window.location.href.split('?')[0].split('#')[0];
+  var title = '화성잇다 — 화성특례시 통합 관광 앱';
+  var text  = '화성시 관광지·축제·맛집·주차장을 한눈에! 🗺';
+
+  if (navigator.share) {
+    navigator.share({ title: title, text: text, url: url }).catch(function () {});
+  } else if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function () {
+      showToast('🔗 주소를 복사했어요! 친구에게 공유해보세요');
+    }).catch(function () { _shareFallback(url); });
+  } else {
+    _shareFallback(url);
+  }
+}
+function _shareFallback(url) {
+  try {
+    var el = document.createElement('textarea');
+    el.value = url; el.style.position = 'fixed'; el.style.opacity = '0';
+    document.body.appendChild(el); el.select(); document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('🔗 주소를 복사했어요! 친구에게 공유해보세요');
+  } catch (e) { showToast('주소: ' + url); }
 }
 
 /* BUG-11: 드래그 리스너는 map.js setupSlideCardDrag()에서만 등록 (중복 제거) */
