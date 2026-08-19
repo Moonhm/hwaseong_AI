@@ -435,7 +435,7 @@ function showPlaceSlide(place) {
   if (isTourist) {
     actionsHtml =
       '<button class="sl-btn" style="width:100%;background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" ' +
-      'onclick="goNearestParking(' + place.lat + ',' + place.lng + ')">🅿 가장 가까운 공영주차장 찾기</button>' +
+      'onclick="goNearestParking(' + place.lat + ',' + place.lng + ',' + place.id + ')">🅿 가장 가까운 공영주차장 찾기</button>' +
       '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' +
       encodeURIComponent(place.name) + '\',\'_blank\')">🔍 카카오지도</button>' +
       routeBtn;
@@ -490,8 +490,13 @@ function toggleTouristDesc() {
   b.textContent   = isExpanded ? '더보기' : '접기';
 }
 
-/* ── 관광지 → 가장 가까운 공영주차장 표시 ── */
-function goNearestParking(placeLat, placeLng) {
+/* ══════════════════════════════════════════
+   가장 가까운 공영주차장 모드 (NP Mode)
+   ── 두 핀만 강조 표시, 나머지 레이어 숨김
+   ══════════════════════════════════════════ */
+var _npMode = null; /* { placeId, touristOv, parkOv, backBtn } */
+
+function goNearestParking(placeLat, placeLng, placeId) {
   if (typeof parkingData === 'undefined' || !parkingData.length) {
     if (typeof showToast === 'function') showToast('주차장 정보를 불러오는 중입니다.');
     return;
@@ -499,10 +504,10 @@ function goNearestParking(placeLat, placeLng) {
 
   /* 유클리드 거리로 최근접 주차장 탐색 */
   var nearest = null, minDist = Infinity;
-  parkingData.forEach(function (p) {
-    if (!p.lat || !p.lng) return;
-    var d = Math.pow(p.lat - placeLat, 2) + Math.pow((p.lng - placeLng) * 0.89, 2);
-    if (d < minDist) { minDist = d; nearest = p; }
+  parkingData.forEach(function (pk) {
+    if (!pk.lat || !pk.lng) return;
+    var d = Math.pow(pk.lat - placeLat, 2) + Math.pow((pk.lng - placeLng) * 0.89, 2);
+    if (d < minDist) { minDist = d; nearest = pk; }
   });
 
   if (!nearest) {
@@ -510,30 +515,140 @@ function goNearestParking(placeLat, placeLng) {
     return;
   }
 
-  /* 슬라이드 닫고 주차장 레이어 활성화 */
+  /* 이전 NP 모드 정리 */
+  _exitNpMode(false);
   closePlaceSlide();
-  if (typeof activateParking === 'function') activateParking();
 
-  /* 두 핀이 모두 보이도록 bounds 조정 */
+  /* 모든 레이어 숨김 */
+  setTouristVisible(false);
+  if (typeof setLcVisible      === 'function') setLcVisible(false);
+  if (typeof hideAllConv       === 'function') hideAllConv();
+  if (typeof setParkingVisible === 'function') setParkingVisible(false);
+  document.querySelectorAll('#map-chips .chip').forEach(function (c) { c.classList.remove('active'); });
+  Object.keys(overlayMap).forEach(function (id) { overlayMap[id].setMap(null); });
+
+  /* 관광지 하이라이트 핀 */
+  var tPlace = PLACES.find(function (pl) { return pl.id === placeId; });
+  var touristEl = _makeNpPin('#FB923C', '🏛', tPlace ? tPlace.name : '관광지', function () {
+    exitNearestParkMode();
+  });
+  var touristOv = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(placeLat, placeLng),
+    content: touristEl, yAnchor: 1.55, zIndex: 50, map: kakaoMap,
+  });
+
+  /* 주차장 하이라이트 핀 */
+  var nearestId = nearest.id;
+  var parkEl = _makeNpPin('#2563EB', 'P', nearest.name, function () {
+    if (typeof showParkingSlide === 'function') {
+      var pk = parkingData.find(function (x) { return x.id === nearestId; });
+      if (pk) showParkingSlide(pk);
+    }
+  });
+  var parkOv = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(nearest.lat, nearest.lng),
+    content: parkEl, yAnchor: 1.55, zIndex: 50, map: kakaoMap,
+  });
+
+  /* 뒤로가기 버튼 생성 */
+  var backBtn = document.createElement('div');
+  backBtn.id = 'np-back-btn';
+  backBtn.setAttribute('aria-label', '이전으로');
+  backBtn.innerHTML = '&#8592;';
+  backBtn.onclick = exitNearestParkMode;
+  document.body.appendChild(backBtn);
+
+  _npMode = { placeId: placeId, touristOv: touristOv, parkOv: parkOv, backBtn: backBtn };
+
+  /* 두 핀 모두 보이도록 bounds 조정 */
   setTimeout(function () {
     if (!kakaoMap || typeof kakao === 'undefined') return;
     var bounds = new kakao.maps.LatLngBounds();
     bounds.extend(new kakao.maps.LatLng(placeLat, placeLng));
     bounds.extend(new kakao.maps.LatLng(nearest.lat, nearest.lng));
-    kakaoMap.setBounds(bounds, 110);
-
-    /* 너무 가깝거나 멀 때 레벨 보정 */
+    kakaoMap.setBounds(bounds, 120);
     setTimeout(function () {
       var lv = kakaoMap.getLevel();
       if (lv < 3) kakaoMap.setLevel(3);
       if (lv > 8) kakaoMap.setLevel(8);
-
-      /* 주차장 슬라이드 카드 표시 */
-      setTimeout(function () {
-        if (typeof onParkingClick === 'function') onParkingClick(nearest.id);
-      }, 300);
     }, 200);
-  }, 350);
+  }, 320);
+}
+
+/* 하이라이트 핀 DOM 생성 */
+function _makeNpPin(color, icon, name, onClickFn) {
+  var wrap = document.createElement('div');
+  wrap.className = 'np-pin';
+
+  var circleWrap = document.createElement('div');
+  circleWrap.className = 'np-circle-wrap';
+
+  var ring1 = document.createElement('div');
+  ring1.className = 'np-ring';
+  ring1.style.borderColor = color;
+
+  var ring2 = document.createElement('div');
+  ring2.className = 'np-ring r2';
+  ring2.style.borderColor = color;
+
+  var circle = document.createElement('div');
+  circle.className = 'np-circle';
+  circle.style.background = color;
+  circle.style.color = '#fff';
+  /* P 배지는 텍스트, 나머지는 이모지 */
+  if (icon === 'P') {
+    circle.style.fontSize = '22px';
+    circle.style.fontWeight = '900';
+    circle.style.fontFamily = 'sans-serif';
+  } else {
+    circle.style.fontSize = '26px';
+  }
+  circle.textContent = icon;
+
+  if (onClickFn) {
+    circleWrap.style.cursor = 'pointer';
+    circleWrap.addEventListener('click', function (e) { e.stopPropagation(); onClickFn(); });
+  }
+
+  circleWrap.appendChild(ring1);
+  circleWrap.appendChild(ring2);
+  circleWrap.appendChild(circle);
+
+  var tail = document.createElement('div');
+  tail.className = 'np-tail';
+  tail.style.borderTopColor = color;
+
+  var label = document.createElement('div');
+  label.className = 'np-label';
+  label.textContent = name.length > 13 ? name.slice(0, 12) + '…' : name;
+
+  wrap.appendChild(circleWrap);
+  wrap.appendChild(tail);
+  wrap.appendChild(label);
+  return wrap;
+}
+
+/* NP 모드 종료 + 관광지 슬라이드 복원 */
+function exitNearestParkMode() {
+  if (!_npMode) return;
+  var pid = _npMode.placeId;
+  _exitNpMode(false);
+  setTouristVisible(true);
+  if (pid != null) setTimeout(function () { onPinClick(pid); }, 120);
+}
+
+/* NP 모드 오버레이·버튼만 정리 */
+function exitNpModeOnly() { _exitNpMode(false); }
+
+function _exitNpMode(restoreLayer) {
+  if (!_npMode) return;
+  if (_npMode.touristOv) _npMode.touristOv.setMap(null);
+  if (_npMode.parkOv)    _npMode.parkOv.setMap(null);
+  if (_npMode.backBtn && _npMode.backBtn.parentNode) {
+    _npMode.backBtn.parentNode.removeChild(_npMode.backBtn);
+  }
+  _npMode = null;
+  if (restoreLayer) setTouristVisible(true);
 }
 
 function closePlaceSlide() {
