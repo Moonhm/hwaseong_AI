@@ -122,11 +122,15 @@ function showClusters(bounds, level) {
       'box-sizing:border-box;';
     el.textContent = label;
 
-    /* 클릭 시 해당 지점으로 줌인 */
+    /* 클릭 시 해당 지점으로 부드럽게 줌인 */
     el.onclick = (function (clat, clng, lv) {
       return function () {
-        kakaoMap.setCenter(new kakao.maps.LatLng(clat, clng));
-        kakaoMap.setLevel(Math.max(1, lv - 2));
+        var dest = new kakao.maps.LatLng(clat, clng);
+        var targetLevel = Math.max(1, lv - 2);
+        kakaoMap.panTo(dest);
+        setTimeout(function () {
+          kakaoMap.setLevel(targetLevel, { animate: { duration: 400 } });
+        }, 180);
       };
     })(lat, lng, level);
 

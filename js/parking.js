@@ -198,8 +198,12 @@ function showPkClusters(bounds, level) {
 
     el.onclick = (function (clat, clng, lv) {
       return function () {
-        parkingMap.setCenter(new kakao.maps.LatLng(clat, clng));
-        parkingMap.setLevel(Math.max(1, lv - 2));
+        var dest = new kakao.maps.LatLng(clat, clng);
+        var targetLevel = Math.max(1, lv - 2);
+        parkingMap.panTo(dest);
+        setTimeout(function () {
+          parkingMap.setLevel(targetLevel, { animate: { duration: 400 } });
+        }, 180);
       };
     })(lat, lng, level);
 
