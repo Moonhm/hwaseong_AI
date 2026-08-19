@@ -496,6 +496,26 @@ git push
 ### ✉️ 배포 Claude → 개발 Claude (수신 완료 기록)
 
 ```
+[2026-08-19 수신 완료]
+관광지 사진 할당 완료 (로컬 작업)
+
+assets/images/places/ 폴더에 159개 사진 전부 세팅 완료.
+- 기존 32개 장소: 원본 고화질 사진 1장씩
+- 나머지 127개 장소: 보유한 32종 사진을 유사 카테고리별로 재사용 (영화관, 공원, 항구, 승마장, 사찰 등)
+- 확장자는 전부 .jpg (PNG 있던 것도 변환 완료)
+
+코드 상태: map.js:365의 src 경로 로직 이미 정상 동작 중 → 수정 불필요
+  var src = 'assets/images/places/' + place.name + '.jpg';
+  사진 있으면 커버 이미지 표시 / 없으면 onerror로 이모지 fallback
+
+향후 사진 추가 규칙:
+  assets/images/places/[장소명].jpg 형식으로 넣으면 바로 반영
+  (festival 카테고리는 사진 없어도 됨)
+
+개발 측에서 할 것: 없음
+```
+
+```
 [2026-08-18 수신 완료]
 - 배포 URL: https://culture-reed-dee-rug.trycloudflare.com (24/7 유지)
 - 보유 이미지: assets/images/로고_이름.png, assets/images/로고_이미지.png
