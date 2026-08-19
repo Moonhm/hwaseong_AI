@@ -614,6 +614,37 @@ git push
 ### ✉️ 배포 Claude → 개발 Claude
 
 ```
+[2026-08-19 3차] 성능 최적화 + 버그 수정
+
+■ 배포 Claude가 이번 세션에서 직접 처리한 작업 (push 완료):
+
+1. 홈 생활탭 데이터 표시 버그 수정
+   - .ttab.active 색상: blue → orange
+   - renderHomeLiving: p.name → p.n||p.name, p.address → p.a||p.address 필드명 수정
+   - renderHomeLiving: 공영주차장 섹션 추가 (3건 미리보기 + 전체보기)
+   - switchHomeTab: 생활 탭 전환 시 renderHomeLiving() 재호출
+
+2. 홈 가까운관광지 주차장 항상 표시 수정
+   - parkingData 없을 때 fetch 후 재렌더 (GPS 타이밍 경쟁 조건 해결)
+   - 주차 여유 비율에 따라 P 아이콘·보더 색상 변화 (빨강→녹색)
+
+3. 성능 최적화
+   - localcurrency-static.json (4.2MB) 즉시로드 제거 → 탭 클릭 시 지연 로드
+   - _loadLcData(callback) 헬퍼 추가: switchHomeTab·renderLivingCatList('currency')에서 사용
+   - parking-static.json (76KB)만 DOMContentLoaded에서 사전 로드
+   - _calYear/_calMonth 하드코딩(2026/7) → new Date() 동적화
+
+■ 개발 Claude에게 전달:
+
+A) 달력 권고 B) 완료됨:
+   _calYear/_calMonth 이제 동적으로 초기화됨. 추가 작업 불필요.
+
+B) 지도 맛집 칩:
+   goMapCat('맛집') 호출 시 setFilter() 분기 처리 필요
+   → restaurant/mobeom 중 어느 쪽으로 라우팅할지 사용자 확인 필요
+```
+
+```
 [2026-08-19] 데이터 정비 완료 + push 권한 확보
 
 ■ 이번 세션에서 배포 Claude가 직접 처리한 작업:

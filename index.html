@@ -2066,7 +2066,10 @@ function switchHomeTab(el, tab) {
   el.classList.add('active');
   document.getElementById('home-tourism').style.display = tab === 'tourism' ? 'block' : 'none';
   document.getElementById('home-living').style.display  = tab === 'living'  ? 'block' : 'none';
-  if (tab === 'living') renderHomeLiving();
+  if (tab === 'living') {
+    renderHomeLiving();
+    _loadLcData(renderHomeLiving); /* 가맹점 미로드 시 fetch 후 재렌더 */
+  }
 }
 
 /* ── 관광 서브탭 전환 ── */
@@ -2446,9 +2449,11 @@ function renderLivingCatList(cat) {
 
   } else if (cat === 'currency') {
     var lcArr = (typeof lcData !== 'undefined') ? lcData : [];
+    /* 미로드 시 fetch 후 자동 재렌더 */
+    if (!lcArr.length) { _loadLcData(function() { renderLivingCatList('currency'); }); }
     var LC_SHOW = 80;
     if (titleEl) titleEl.textContent = '희망화성지역화폐 가맹점';
-    if (countEl) countEl.textContent = lcArr.length + '곳';
+    if (countEl) countEl.textContent = lcArr.length ? lcArr.length.toLocaleString() + '곳' : '로딩 중...';
     list.innerHTML = lcArr.length
       ? lcArr.slice(0, LC_SHOW).map(function(p, i) {
           /* lcData 필드: n=이름, c=업종, a=주소, lat, lng */
@@ -2557,8 +2562,20 @@ function _shareFallback(url) {
 
 /* BUG-11: 드래그 리스너는 map.js setupSlideCardDrag()에서만 등록 (중복 제거) */
 
+/* ── localcurrency 지연 로드 헬퍼 (4.2MB — 사용 시점에만 fetch) ── */
+function _loadLcData(callback) {
+  if (typeof lcData === 'undefined' || lcData.length) return; /* 이미 로드됨 */
+  fetch('js/localcurrency-static.json').then(function(r) { return r.json(); }).then(function(d) {
+    lcData = d;
+    var sc = document.getElementById('stat-currency');
+    if (sc) sc.textContent = lcData.length.toLocaleString();
+    if (callback) callback();
+  }).catch(function() { if (callback) callback(); });
+}
+
 /* ── 달력 월 탐색 (BUG-8) ── */
-var _calYear = 2026, _calMonth = 7; /* 0-indexed: 7=8월 */
+var _td0 = new Date();
+var _calYear = _td0.getFullYear(), _calMonth = _td0.getMonth();
 var _calInitDone = false;
 
 /* 축제 날짜 Set 반환 — 날짜 범위("YYYY-MM-DD ~ YYYY-MM-DD") 전체 처리 */
@@ -2692,15 +2709,13 @@ function scrollChips(dir) {
 
 /* ── 초기 렌더 ── */
 window.addEventListener('DOMContentLoaded', () => {
-  /* 홈 생활탭 데이터 사전 로드 — initMap() 이전에도 카운트/목록이 표시되도록 */
-  fetch('js/parking-static.json').then(r => r.json()).then(d => {
+  /* 주차장 데이터 사전 로드 (76KB) — 홈·가까운관광지 즉시 표시용 */
+  fetch('js/parking-static.json').then(function(r) { return r.json(); }).then(function(d) {
     if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
-    renderHomeLiving();
-  }).catch(() => {});
-  fetch('js/localcurrency-static.json').then(r => r.json()).then(d => {
-    if (typeof lcData !== 'undefined' && !lcData.length) lcData = d;
-    renderHomeLiving();
-  }).catch(() => {});
+    var sp = document.getElementById('stat-parking');
+    if (sp) sp.textContent = parkingData.length;
+  }).catch(function() {});
+  /* localcurrency-static.json(4.2MB)은 탭 클릭 시 지연 로드 */
 
   setTimeout(() => {
     renderHomePage();
