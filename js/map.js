@@ -861,7 +861,12 @@ function setFilter(cat) {
   if (typeof updateParkingCount === 'function') updateParkingCount();
 
   /* LC 칩 단독 선택 시에만 업종 필터 바 표시 */
-  if (cat === 'localcurrency' && _lcFBar) _lcFBar.style.display = 'block';
+  if (cat === 'localcurrency' && _lcFBar) {
+    _lcFBar.style.display = 'block';
+    setTimeout(function () {
+      if (typeof updateLcArrows === 'function') updateLcArrows();
+    }, 50);
+  }
 
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
   fitPlaces(targets);

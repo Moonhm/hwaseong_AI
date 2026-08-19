@@ -514,22 +514,38 @@
 
     /* 지역화폐 업종 필터 바 */
     #lc-filter-bar {
-      display: none; position: absolute; top: 60px; left: 0; right: 0; z-index: 9;
-      padding: 7px 14px; background: rgba(248,250,252,0.96);
-      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto; white-space: nowrap;
-      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      display: none; position: absolute; top: 56px; left: 0; right: 0; z-index: 9;
+      padding: 7px 0 6px;
     }
-    #lc-filter-bar::-webkit-scrollbar { display: none; }
+    #lc-filter-scroll {
+      display: flex; gap: 7px; padding: 0 44px 0 44px;
+      overflow-x: auto; scrollbar-width: none;
+      -webkit-overflow-scrolling: touch; white-space: nowrap;
+      cursor: grab; user-select: none; touch-action: pan-x;
+    }
+    #lc-filter-scroll::-webkit-scrollbar { display: none; }
+    #lc-filter-scroll.dragging { cursor: grabbing; }
     .lc-fchip {
+      flex-shrink: 0;
       display: inline-flex; align-items: center; gap: 3px;
-      padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border);
-      background: #fff; color: var(--text-sub); font-size: 12px; font-weight: 600;
-      cursor: pointer; margin-right: 6px; white-space: nowrap; transition: all 0.15s;
+      padding: 6px 14px; border-radius: 20px; border: 1.5px solid rgba(0,0,0,0.13);
+      background: rgba(255,255,255,0.92); color: var(--text-sub);
+      font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.10); transition: all 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .lc-fchip.active { background: #DCFCE7; color: #15803D; border-color: #86EFAC; }
+    .lc-fchip.active { background: #DCFCE7; color: #15803D; border-color: #86EFAC; box-shadow: 0 1px 4px rgba(21,128,61,0.15); }
+    .lc-arr {
+      position: absolute; top: 0; bottom: 0; width: 44px; z-index: 1;
+      display: flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer; padding: 0;
+      opacity: 0; pointer-events: none; transition: opacity 0.18s;
+      color: rgba(30,30,30,0.7);
+    }
+    .lc-arr.visible { opacity: 1; pointer-events: auto; }
+    @media (hover: none) { #lc-arr-right { opacity: 0.75; pointer-events: auto; } }
+    #lc-arr-left  { left: 0;  background: linear-gradient(to right, rgba(245,246,248,0.92) 50%, transparent); }
+    #lc-arr-right { right: 0; background: linear-gradient(to left,  rgba(245,246,248,0.92) 50%, transparent); }
 
     /* 즐겨찾기 버튼 */
     .fav-btn { background: #FFF1F2; color: #E11D48; border-color: #FECDD3; }
@@ -1603,14 +1619,22 @@
 
   <!-- 지역화폐 업종 필터 바 -->
   <div id="lc-filter-bar">
-    <button class="lc-fchip active" data-lcat="all"    onclick="setLcFilter('all')">전체</button>
-    <button class="lc-fchip"        data-lcat="food"   onclick="setLcFilter('food')">🍽 음식점</button>
-    <button class="lc-fchip"        data-lcat="cafe"   onclick="setLcFilter('cafe')">☕ 카페</button>
-    <button class="lc-fchip"        data-lcat="mart"   onclick="setLcFilter('mart')">🛒 마트·편의점</button>
-    <button class="lc-fchip"        data-lcat="beauty" onclick="setLcFilter('beauty')">💅 뷰티</button>
-    <button class="lc-fchip"        data-lcat="health" onclick="setLcFilter('health')">💊 의료</button>
-    <button class="lc-fchip"        data-lcat="car"    onclick="setLcFilter('car')">🚗 자동차</button>
-    <button class="lc-fchip"        data-lcat="edu"    onclick="setLcFilter('edu')">📚 학원</button>
+    <button id="lc-arr-left" class="lc-arr" onclick="scrollLcFilter(-1)" aria-label="이전">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div id="lc-filter-scroll">
+      <button class="lc-fchip active" data-lcat="all"    onclick="setLcFilter('all')">전체</button>
+      <button class="lc-fchip"        data-lcat="food"   onclick="setLcFilter('food')">🍽 음식점</button>
+      <button class="lc-fchip"        data-lcat="cafe"   onclick="setLcFilter('cafe')">☕ 카페</button>
+      <button class="lc-fchip"        data-lcat="mart"   onclick="setLcFilter('mart')">🛒 마트·편의점</button>
+      <button class="lc-fchip"        data-lcat="beauty" onclick="setLcFilter('beauty')">💅 뷰티</button>
+      <button class="lc-fchip"        data-lcat="health" onclick="setLcFilter('health')">💊 의료</button>
+      <button class="lc-fchip"        data-lcat="car"    onclick="setLcFilter('car')">🚗 자동차</button>
+      <button class="lc-fchip"        data-lcat="edu"    onclick="setLcFilter('edu')">📚 학원</button>
+    </div>
+    <button id="lc-arr-right" class="lc-arr" onclick="scrollLcFilter(1)" aria-label="다음">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
 
   <!-- 실시간 주차 여유 뱃지 -->
@@ -3669,6 +3693,38 @@ function scrollChips(dir) {
   el.scrollBy({ left: dir * 130, behavior: 'smooth' });
   setTimeout(updateChipArrows, 250);
 }
+
+function updateLcArrows() {
+  var el   = document.getElementById('lc-filter-scroll');
+  var lBtn = document.getElementById('lc-arr-left');
+  var rBtn = document.getElementById('lc-arr-right');
+  if (!el || !lBtn || !rBtn) return;
+  lBtn.classList.toggle('visible', el.scrollLeft > 2);
+  rBtn.classList.toggle('visible', el.scrollLeft < el.scrollWidth - el.clientWidth - 2);
+}
+function scrollLcFilter(dir) {
+  var el = document.getElementById('lc-filter-scroll');
+  if (el) el.scrollBy({ left: dir * 130, behavior: 'smooth' });
+  setTimeout(updateLcArrows, 250);
+}
+(function () {
+  var el = document.getElementById('lc-filter-scroll');
+  if (!el) return;
+  el.addEventListener('scroll', updateLcArrows, { passive: true });
+  var down = false, startX = 0, scrollLeft = 0;
+  el.addEventListener('mousedown', function (e) {
+    down = true; el.classList.add('dragging');
+    startX = e.pageX - el.getBoundingClientRect().left;
+    scrollLeft = el.scrollLeft;
+  });
+  document.addEventListener('mouseup', function () {
+    if (!down) return; down = false; el.classList.remove('dragging'); updateLcArrows();
+  });
+  el.addEventListener('mousemove', function (e) {
+    if (!down) return; e.preventDefault();
+    el.scrollLeft = scrollLeft - (e.pageX - el.getBoundingClientRect().left - startX);
+  });
+})();
 
 (function () {
   var el = document.getElementById('map-chips');
