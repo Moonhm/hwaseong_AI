@@ -400,19 +400,42 @@
       background: linear-gradient(to left,  rgba(245,246,248,0.88) 45%, transparent);
     }
 
-    /* 내 위치 버튼 */
+    /* 지도 우측 컨트롤 그룹 (GPS + 줌) */
+    #map-controls {
+      position: absolute; right: 14px; bottom: 16px; z-index: 10;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
     #btn-mylocation {
-      position: absolute;
-      bottom: 16px; right: 14px;
       width: 36px; height: 36px; border-radius: 50%;
       background: rgba(255,255,255,0.42); border: 1px solid rgba(0,0,0,0.08);
-      box-shadow: 0 1px 6px rgba(0,0,0,0.13); z-index: 10;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.13);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: transform 0.15s; backdrop-filter: blur(4px);
+      cursor: pointer; transition: transform 0.15s;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
       color: var(--text-sub);
     }
     #btn-mylocation:active { transform: scale(0.91); }
     #btn-mylocation svg { width: 18px; height: 18px; }
+    /* 줌 컨트롤 */
+    #map-zoom-ctrl {
+      display: flex; flex-direction: column;
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.13);
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    #map-zoom-ctrl button {
+      width: 32px; height: 30px;
+      background: rgba(255,255,255,0.42); border: none;
+      font-size: 17px; font-weight: 300; line-height: 1;
+      color: rgba(40,40,40,0.65); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.1s;
+    }
+    #map-zoom-ctrl button:first-child {
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+    }
+    #map-zoom-ctrl button:active { background: rgba(255,255,255,0.72); }
 
     /* ── 실시간 주차장 핀 ── */
     .pk-pin    { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
@@ -792,17 +815,23 @@
     padding:4px 10px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.2);
   "></div>
 
-  <!-- 내 위치 -->
-  <button id="btn-mylocation" title="내 위치">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <circle cx="12" cy="12" r="7"/>
-      <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>
-      <line x1="12" y1="2" x2="12" y2="6"/>
-      <line x1="12" y1="18" x2="12" y2="22"/>
-      <line x1="2" y1="12" x2="6" y2="12"/>
-      <line x1="18" y1="12" x2="22" y2="12"/>
-    </svg>
-  </button>
+  <!-- 우측 컨트롤: GPS (위) + 줌 (아래) -->
+  <div id="map-controls">
+    <button id="btn-mylocation" title="내 위치">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="7"/>
+        <circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>
+        <line x1="12" y1="2" x2="12" y2="6"/>
+        <line x1="12" y1="18" x2="12" y2="22"/>
+        <line x1="2" y1="12" x2="6" y2="12"/>
+        <line x1="18" y1="12" x2="22" y2="12"/>
+      </svg>
+    </button>
+    <div id="map-zoom-ctrl">
+      <button onclick="kakaoMap && kakaoMap.setLevel(kakaoMap.getLevel()-1)" aria-label="확대">+</button>
+      <button onclick="kakaoMap && kakaoMap.setLevel(kakaoMap.getLevel()+1)" aria-label="축소">−</button>
+    </div>
+  </div>
 
   <!-- 장소 슬라이드 카드 -->
   <div class="place-slide" id="place-slide">

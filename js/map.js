@@ -53,7 +53,6 @@ function initMap() {
     level:  9,
   });
 
-  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
   mapReady = true;
 
   buildOverlays();
