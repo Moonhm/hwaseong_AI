@@ -24,6 +24,20 @@ function initParking(map) {
   });
 }
 
+/* ── 실시간 데이터 적용 (공통 헬퍼) ── */
+function _applyRealtime(data) {
+  if (!data || !data.ok) return;
+  var rtMap = {};
+  data.data.forEach(function (p) { rtMap[p.id] = p; });
+  parkingData.forEach(function (p) {
+    var rt = rtMap[p.id];
+    if (rt) { p.used = rt.used; p.avail = rt.avail; p.open = rt.open; }
+  });
+  _pinColorCache = {}; /* 색상 캐시 무효화 */
+  if (parkingVisible) updateParkingDisplay();
+  updateParkingCount();
+}
+
 /* ── 정적 + 실시간 데이터 로드 ── */
 function fetchParkingAll() {
   fetch('js/parking-static.json')
@@ -35,34 +49,14 @@ function fetchParkingAll() {
         .then(function (r) { return r.json(); })
         .catch(function () { return null; });
     })
-    .then(function (res) {
-      if (!res || !res.ok) return;
-      var rtMap = {};
-      res.data.forEach(function (p) { rtMap[p.id] = p; });
-      parkingData.forEach(function (p) {
-        var rt = rtMap[p.id];
-        if (rt) { p.used = rt.used; p.avail = rt.avail; p.open = rt.open; }
-      });
-      if (parkingVisible) updateParkingDisplay();
-      updateParkingCount();
-    })
+    .then(function (res) { _applyRealtime(res); })
     .catch(function (e) { console.warn('[주차장]', e); });
 }
 
 function refreshParking() {
   fetch('/api/parking/realtime')
     .then(function (r) { return r.json(); })
-    .then(function (res) {
-      if (!res.ok) return;
-      var rtMap = {};
-      res.data.forEach(function (p) { rtMap[p.id] = p; });
-      parkingData.forEach(function (p) {
-        var rt = rtMap[p.id];
-        if (rt) { p.used = rt.used; p.avail = rt.avail; p.open = rt.open; }
-      });
-      if (parkingVisible) updateParkingDisplay();
-      updateParkingCount();
-    })
+    .then(function (res) { _applyRealtime(res); })
     .catch(function () {});
 }
 
@@ -99,6 +93,13 @@ function statusText(p) {
   if (!p.open)      return '미운영';
   if (p.avail <= 0) return '만차';
   return p.avail + '대';
+}
+/* ── 핀 색상 캐시 (실시간 업데이트 시 무효화) ── */
+var _pinColorCache = {};
+function pinColorCached(p) {
+  var key = p.id + ':' + p.open + ':' + p.avail;
+  if (!_pinColorCache[key]) _pinColorCache[key] = pinColor(p);
+  return _pinColorCache[key];
 }
 
 /* ── 표시/숨김 ── */
@@ -215,7 +216,7 @@ function showPkClusters(bounds, level) {
 
 /* ── 개별 핀 HTML ── */
 function pinHtml(p) {
-  var color  = pinColor(p);
+  var color  = pinColorCached(p);
   var status = statusText(p);
   return '<div class="pk-pin" id="pkpin-' + p.id + '"'
     + ' onclick="onParkingClick(' + p.id + ')"'
@@ -274,7 +275,7 @@ function feeSection(p) {
 }
 
 function showParkingSlide(p) {
-  var color   = pinColor(p);
+  var color   = pinColorCached(p);
   var avail   = p.open ? p.avail : '-';
   var ratio   = p.total > 0 ? Math.round((p.avail / p.total) * 100) : 0;
   var freeTag = p.free

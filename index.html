@@ -3023,7 +3023,7 @@ function _shareFallback(url) {
 
 /* ── localcurrency 지연 로드 헬퍼 (4.2MB — 사용 시점에만 fetch) ── */
 function _loadLcData(callback) {
-  if (typeof lcData === 'undefined' || lcData.length) return; /* 이미 로드됨 */
+  if (typeof lcData !== 'undefined' && lcData.length) return; /* 이미 로드됨 */
   fetch('js/localcurrency-static.json').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     var sc = document.getElementById('stat-currency');
@@ -3037,8 +3037,11 @@ var _td0 = new Date();
 var _calYear = _td0.getFullYear(), _calMonth = _td0.getMonth();
 var _calInitDone = false;
 
-/* 축제 날짜 Set 반환 — day → [{name, id, status, date}] */
+/* 축제 날짜 Set 반환 — 날짜 범위("YYYY-MM-DD ~ YYYY-MM-DD") 전체 처리 */
+var _festDaysCache = {};
 function _getFestDays(year, month) {
+  var key = year + '-' + month;
+  if (_festDaysCache[key]) return _festDaysCache[key];
   var days = {};
   if (typeof PLACES === 'undefined') return days;
   PLACES.filter(function(p) { return p.category === 'festival' && p.date; })
@@ -3047,8 +3050,13 @@ function _getFestDays(year, month) {
       var sp      = ranges[0].trim().split('-');
       var ep      = (ranges[1] || ranges[0]).trim().split('-');
       if (sp.length < 3 || ep.length < 3) return;
-      var start = new Date(parseInt(sp[0]), parseInt(sp[1]) - 1, parseInt(sp[2]));
-      var end   = new Date(parseInt(ep[0]), parseInt(ep[1]) - 1, parseInt(ep[2]));
+      var sy = parseInt(sp[0]), sm = parseInt(sp[1]) - 1, sd = parseInt(sp[2]);
+      var ey = parseInt(ep[0]), em = parseInt(ep[1]) - 1, ed = parseInt(ep[2]);
+      /* 해당 월에 겹치지 않으면 스킵 */
+      if (ey < year || (ey === year && em < month)) return;
+      if (sy > year || (sy === year && sm > month)) return;
+      var start = new Date(sy, sm, sd);
+      var end   = new Date(ey, em, ed);
       var cur   = new Date(start);
       while (cur <= end) {
         if (cur.getFullYear() === year && cur.getMonth() === month) {
@@ -3061,6 +3069,7 @@ function _getFestDays(year, month) {
         cur.setDate(cur.getDate() + 1);
       }
     });
+  _festDaysCache[key] = days;
   return days;
 }
 
@@ -3257,8 +3266,6 @@ window.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
     renderHomePage();
     renderFestivalScroll();
-    renderTourismList('all');
-    renderLivingPage();
   }, 100);
 });
 </script>

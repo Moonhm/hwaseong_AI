@@ -504,9 +504,8 @@ function closePlaceSlide() {
 
 /* ── 모든 핀 숨김 (필터 없음 상태) ── */
 function clearFilter() {
-  PLACES.forEach(function (p) {
-    if (p.category === 'tourist') return;
-    overlayMap[p.id] && overlayMap[p.id].setMap(null);
+  Object.keys(overlayMap).forEach(function (id) {
+    overlayMap[id].setMap(null);
   });
   setTouristVisible(false);
   if (typeof setParkingVisible  === 'function') setParkingVisible(false);
@@ -552,12 +551,14 @@ function setFilter(cat) {
     c.classList.remove('active');
   });
 
+  /* overlayMap은 tourist 제외 핀만 담고 있음 — tourist 체크 불필요 */
+  function _hideOverlays() {
+    Object.keys(overlayMap).forEach(function (id) { overlayMap[id].setMap(null); });
+  }
+
   if (wasActive) {
     /* 같은 칩 재클릭 → 일반 필터 해제, 주차장 상태 복원 */
-    PLACES.forEach(function (p) {
-      if (p.category === 'tourist') return;
-      overlayMap[p.id] && overlayMap[p.id].setMap(null);
-    });
+    _hideOverlays();
     setTouristVisible(false);
     if (typeof setLcVisible  === 'function') setLcVisible(false);
     if (typeof hideAllConv   === 'function') hideAllConv();
@@ -569,16 +570,13 @@ function setFilter(cat) {
   /* 새 칩 활성화 */
   if (chip) chip.classList.add('active');
 
-  /* 편의정보 카테고리: PLACES 핀 숨기고 conv 오버레이 표시 */
+  /* 편의정보 카테고리: 핀 숨기고 conv 오버레이 표시 */
   var isConvCat = CONV_CATS.indexOf(cat) !== -1;
 
   if (typeof hideAllConv === 'function') hideAllConv();
 
   if (isConvCat) {
-    PLACES.forEach(function (p) {
-      if (p.category === 'tourist') return;
-      overlayMap[p.id] && overlayMap[p.id].setMap(null);
-    });
+    _hideOverlays();
     setTouristVisible(false);
     if (typeof setLcVisible === 'function') setLcVisible(false);
     if (typeof showConvCat  === 'function') showConvCat(cat);
@@ -587,10 +585,14 @@ function setFilter(cat) {
     return;
   }
 
-  PLACES.forEach(function (p) {
-    if (p.category === 'tourist') return;
-    overlayMap[p.id] && overlayMap[p.id].setMap(
-      (cat === 'all' || p.category === cat) ? kakaoMap : null
+  /* 카테고리별 핀 표시/숨김 — overlayMap 키 기반 */
+  var catMap = {};
+  if (cat !== 'all') {
+    PLACES.forEach(function (p) { if (p.category !== 'tourist') catMap[p.id] = p.category; });
+  }
+  Object.keys(overlayMap).forEach(function (id) {
+    overlayMap[id].setMap(
+      (cat === 'all' || catMap[id] === cat) ? kakaoMap : null
     );
   });
 
