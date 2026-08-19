@@ -855,8 +855,9 @@ function findNearby(lat, lng) {
     ? lcData
     : PLACES.filter(function (p) { return p.category === 'localcurrency'; });
 
+  var cosLat = Math.cos(lat * Math.PI / 180);
   var nearby = pool.filter(function (p) {
-    return Math.hypot(p.lat - lat, p.lng - lng) <= 0.005;
+    return Math.hypot(p.lat - lat, (p.lng - lng) * cosLat) <= 0.0045;
   });
   closePlaceSlide();
   if (!nearby.length) {
