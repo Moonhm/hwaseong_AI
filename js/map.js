@@ -59,7 +59,8 @@ function initMap() {
   setupMyLocation();
   setupSlideCardDrag();
   setupZoomSlider();
-  if (typeof initParking === 'function') initParking(kakaoMap);
+  if (typeof initParking       === 'function') initParking(kakaoMap);
+  if (typeof initLocalCurrency === 'function') initLocalCurrency(kakaoMap);
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
   /* display:none → block 전환 후 크기 재계산 */
@@ -266,8 +267,9 @@ function clearFilter() {
   PLACES.forEach(function (p) {
     overlayMap[p.id] && overlayMap[p.id].setMap(null);
   });
-  if (typeof setParkingVisible === 'function') setParkingVisible(false);
+  if (typeof setParkingVisible  === 'function') setParkingVisible(false);
   if (typeof updateParkingCount === 'function') updateParkingCount();
+  if (typeof setLcVisible       === 'function') setLcVisible(false);
 }
 
 /* ── 카테고리 필터 (같은 칩 재클릭 시 토글 해제) ── */
@@ -297,8 +299,11 @@ function setFilter(cat) {
     );
   });
 
-  if (typeof setParkingVisible === 'function') {
+  if (typeof setParkingVisible  === 'function') {
     setParkingVisible(cat === 'all' || cat === 'parking');
+  }
+  if (typeof setLcVisible === 'function') {
+    setLcVisible(cat === 'all' || cat === 'localcurrency');
   }
 
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
