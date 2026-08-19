@@ -1277,7 +1277,7 @@
   <!-- 내 위치 추천 (항상 표시) -->
   <div class="nearby-wrap" id="home-nearby-section">
     <div class="nearby-cta" onclick="requestNearbyRec()">
-      <div class="nearby-cta-icon">📍</div>
+      <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
       <div>
         <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 공영주차장</div>
         <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
@@ -2257,7 +2257,7 @@ function renderNearbyResult(myLat, myLng) {
     + '<div class="nearby-photo" onclick="goMapFocus(' + nearestTourist.lat + ',' + nearestTourist.lng + ',4,' + nearestTourist.id + ')">'
     + '<img src="' + imgSrc + '" alt="' + tName + '" onerror="this.style.display=\'none\'">'
     + '<div class="nearby-photo-overlay"></div>'
-    + '<div class="nearby-dist-badge">📍 ' + _distLabel(minTDist) + '</div>'
+    + '<div class="nearby-dist-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11" fill="#fff" style="vertical-align:middle;margin-right:3px"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>' + _distLabel(minTDist) + '</div>'
     + '<div class="nearby-photo-info">'
     + '<div class="nearby-photo-cat">★ 가장 가까운 관광지</div>'
     + '<div class="nearby-photo-name">' + tName + '</div>'
@@ -2266,7 +2266,7 @@ function renderNearbyResult(myLat, myLng) {
 
     /* 하단 정보 */
     + '<div class="nearby-body">'
-    + '<div class="nearby-addr">📍 화성시 ' + tAddr + '</div>'
+    + '<div class="nearby-addr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="vertical-align:middle;margin-right:3px"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>화성시 ' + tAddr + '</div>'
     + (nearestTourist.rating ? '<div style="display:flex;align-items:center;gap:4px;margin:3px 0 6px"><span style="color:#F59E0B;font-size:12px">' + (function(r){var f=Math.floor(r),h=(r-f)>=0.3?1:0;return '★'.repeat(f)+(h?'½':'')+'☆'.repeat(5-f-h);})(nearestTourist.rating) + '</span><span style="font-size:12px;font-weight:700;color:#D97706">' + nearestTourist.rating + '</span><span style="font-size:11px;color:var(--text-muted)">(' + (nearestTourist.reviewCount||0).toLocaleString() + ')</span></div>' : '')
     + '<div class="nearby-actions">'
     + '<button class="nearby-btn primary" onclick="goMapFocus(' + nearestTourist.lat + ',' + nearestTourist.lng + ',4,' + nearestTourist.id + ')">🗺 지도에서 보기</button>'

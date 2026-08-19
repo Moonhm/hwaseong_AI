@@ -140,7 +140,7 @@ function _mkCmPin(color, emoji, label) {
   var circle = document.createElement('div');
   circle.className = 'cm-circle';
   circle.style.background = color;
-  circle.textContent = emoji + ' ' + label;
+  circle.textContent = label;
   var tail = document.createElement('div');
   tail.className = 'cm-tail';
   tail.style.borderTopColor = color;
