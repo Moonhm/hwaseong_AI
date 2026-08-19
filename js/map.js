@@ -441,6 +441,8 @@ function showPlaceSlide(place) {
   var actionsHtml;
   if (isTourist) {
     actionsHtml =
+      '<button class="sl-btn" style="width:100%;background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" ' +
+      'onclick="goNearestParking(' + place.lat + ',' + place.lng + ')">🅿 가장 가까운 공영주차장 찾기</button>' +
       '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' +
       encodeURIComponent(place.name) + '\',\'_blank\')">🔍 카카오지도</button>' +
       routeBtn;
@@ -493,6 +495,52 @@ function toggleTouristDesc() {
   s.style.display = isExpanded ? 'inline' : 'none';
   f.style.display = isExpanded ? 'none'   : 'inline';
   b.textContent   = isExpanded ? '더보기' : '접기';
+}
+
+/* ── 관광지 → 가장 가까운 공영주차장 표시 ── */
+function goNearestParking(placeLat, placeLng) {
+  if (typeof parkingData === 'undefined' || !parkingData.length) {
+    if (typeof showToast === 'function') showToast('주차장 정보를 불러오는 중입니다.');
+    return;
+  }
+
+  /* 유클리드 거리로 최근접 주차장 탐색 */
+  var nearest = null, minDist = Infinity;
+  parkingData.forEach(function (p) {
+    if (!p.lat || !p.lng) return;
+    var d = Math.pow(p.lat - placeLat, 2) + Math.pow((p.lng - placeLng) * 0.89, 2);
+    if (d < minDist) { minDist = d; nearest = p; }
+  });
+
+  if (!nearest) {
+    if (typeof showToast === 'function') showToast('주변 공영주차장을 찾을 수 없습니다.');
+    return;
+  }
+
+  /* 슬라이드 닫고 주차장 레이어 활성화 */
+  closePlaceSlide();
+  if (typeof activateParking === 'function') activateParking();
+
+  /* 두 핀이 모두 보이도록 bounds 조정 */
+  setTimeout(function () {
+    if (!kakaoMap || typeof kakao === 'undefined') return;
+    var bounds = new kakao.maps.LatLngBounds();
+    bounds.extend(new kakao.maps.LatLng(placeLat, placeLng));
+    bounds.extend(new kakao.maps.LatLng(nearest.lat, nearest.lng));
+    kakaoMap.setBounds(bounds, 110);
+
+    /* 너무 가깝거나 멀 때 레벨 보정 */
+    setTimeout(function () {
+      var lv = kakaoMap.getLevel();
+      if (lv < 3) kakaoMap.setLevel(3);
+      if (lv > 8) kakaoMap.setLevel(8);
+
+      /* 주차장 슬라이드 카드 표시 */
+      setTimeout(function () {
+        if (typeof onParkingClick === 'function') onParkingClick(nearest.id);
+      }, 300);
+    }, 200);
+  }, 350);
 }
 
 function closePlaceSlide() {
