@@ -193,9 +193,9 @@ function showLcSlide(p) {
     + '<div class="sl-addr" style="margin-bottom:16px" data-addr="' + (p.a || '').replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + (p.a || '') + '</div>'
     + '<div class="sl-actions">'
     + '<button class="sl-btn primary" onclick="openRoute('
-    + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🗺 길찾기</button>'
+    + p.lat + ',' + p.lng + ',\'' + (p.n || '').replace(/'/g, '') + '\')">🗺 길찾기</button>'
     + '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingLc('
-    + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🅿 가장 가까운 공영주차장 찾기</button>'
+    + p.lat + ',' + p.lng + ',\'' + (p.n || '').replace(/'/g, '') + '\')">🅿 가장 가까운 공영주차장 찾기</button>'
     + (function() {
         var fid = 'lc-' + p.id;
         var saved = typeof isFav !== 'undefined' && isFav(fid);

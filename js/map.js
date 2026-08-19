@@ -385,7 +385,7 @@ function setupSlideCardDrag() {
 
 /* ── 장소 사진 HTML ── */
 function placePhotoHtml(place) {
-  var cfg = CATEGORY_CONFIG[place.category] || {};
+  var cfg = CATEGORY_CONFIG[place.category] || { bg: '#F3F4F6', emoji: '📍' };
   var src = 'assets/images/places/' + place.name + '.jpg';
 
   if (place.category === 'tourist') {
@@ -408,7 +408,7 @@ function placePhotoHtml(place) {
 
 /* ── 장소 슬라이드 카드 ── */
 function showPlaceSlide(place) {
-  var cfg       = CATEGORY_CONFIG[place.category] || {};
+  var cfg       = CATEGORY_CONFIG[place.category] || { label: '', bg: '#F3F4F6', emoji: '📍' };
   var color     = CAT_COLOR[place.category] || '#6B7280';
   var isTourist = place.category === 'tourist';
 
@@ -435,7 +435,7 @@ function showPlaceSlide(place) {
     : '';
 
   /* 액션 버튼 — 이름에 작은따옴표 포함 시 onclick 오류 방지 */
-  var safeName = place.name.replace(/['"]/g, '');
+  var safeName = (place.name || '').replace(/['"]/g, '');
   var routeBtn = '<button class="sl-btn" style="' +
     (isTourist ? 'background:' + color + ';color:#fff;border-color:' + color : '') +
     '" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺 길찾기</button>';

@@ -305,7 +305,7 @@ function showParkingSlide(p) {
     + '<span style="background:#DBEAFE;color:#2563EB;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🅿 주차장</span>'
     + freeTag + openTag + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">' + p.name + '</div>'
-    + '<div class="sl-addr" style="margin-bottom:12px" data-addr="' + p.address.replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + p.address + '</div>'
+    + '<div class="sl-addr" style="margin-bottom:12px" data-addr="' + (p.address || '').replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + (p.address || '') + '</div>'
     + '<div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:12px">'
     + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'
     + '<span style="font-size:13px;color:var(--text-sub)">현재 여유</span>'
@@ -318,7 +318,7 @@ function showParkingSlide(p) {
     + (p.tel ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">📞 ' + p.tel + '</div>' : '')
     + feeSection(p)
     + '<div class="sl-actions">'
-    + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + p.name.replace(/'/g, '') + '\')">🗺 길찾기</button>'
+    + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + (p.name || '').replace(/'/g, '') + '\')">🗺 길찾기</button>'
     + '<button class="sl-btn" onclick="refreshParking();showToast(\'새로고침 완료\')">🔄 새로고침</button>'
     + (function() {
         var fid = 'park-' + p.id;
@@ -326,7 +326,7 @@ function showParkingSlide(p) {
         return '<button class="sl-btn fav-btn' + (saved ? ' saved' : '') + '" id="slide-fav-btn"'
           + ' data-fid="' + fid + '" data-type="parking" data-pid="' + p.id + '"'
           + ' data-lat="' + p.lat + '" data-lng="' + p.lng + '"'
-          + ' data-name="' + p.name.replace(/"/g, '') + '"'
+          + ' data-name="' + (p.name || '').replace(/"/g, '') + '"'
           + ' onclick="toggleFavBtn(this)">' + (saved ? '♥ 저장됨' : '♡ 저장') + '</button>';
       })()
     + '</div>';
