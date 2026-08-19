@@ -21,7 +21,7 @@ var LC_GRID = {
 const HWASEONG = { lat: 37.199, lng: 126.831 };
 
 const CAT_COLOR = {
-  tourist:       '#F97316',
+  tourist:       '#FB923C',
   restaurant:    '#EF4444',
   festival:      '#F97316',
   parking:       '#2563EB',
@@ -273,7 +273,7 @@ function showTkClusters(bounds, level) {
 
     var el = document.createElement('div');
     el.style.cssText =
-      'width:38px;height:38px;border-radius:50%;background:#F97316;' +
+      'width:38px;height:38px;border-radius:50%;background:#FB923C;' +
       'border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.22);' +
       'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
       'cursor:pointer;box-sizing:border-box;';
@@ -363,6 +363,18 @@ function setupSlideCardDrag() {
 function placePhotoHtml(place) {
   var cfg = CATEGORY_CONFIG[place.category];
   var src = 'assets/images/places/' + place.name + '.jpg';
+
+  if (place.category === 'tourist') {
+    /* 이미지 있으면 커버, 없으면 그라데이션 + 🏞️ */
+    return '<div style="width:100%;height:120px;border-radius:12px;overflow:hidden;margin-bottom:12px;' +
+      'position:relative;background:linear-gradient(135deg,#FFF7ED,#FFEDD5)">' +
+      '<img src="' + src + '" alt="" ' +
+      'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" ' +
+      'onerror="this.style.display=\'none\'">' +
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:40px;pointer-events:none">🏞️</div>' +
+      '</div>';
+  }
+
   return '<div style="width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:12px;background:' + cfg.bg + ';display:flex;align-items:center;justify-content:center;">' +
     '<img src="' + src + '" alt="' + place.name + '" ' +
     'style="width:100%;height:100%;object-fit:cover;" ' +
@@ -372,8 +384,48 @@ function placePhotoHtml(place) {
 
 /* ── 장소 슬라이드 카드 ── */
 function showPlaceSlide(place) {
-  var cfg   = CATEGORY_CONFIG[place.category];
-  var color = CAT_COLOR[place.category];
+  var cfg       = CATEGORY_CONFIG[place.category];
+  var color     = CAT_COLOR[place.category];
+  var isTourist = place.category === 'tourist';
+
+  /* 관광지: 긴 설명 truncation */
+  var fullDesc  = place.desc || '';
+  var descHtml;
+  if (isTourist && fullDesc.length > 130) {
+    var short = fullDesc.slice(0, 130) + '…';
+    descHtml =
+      '<div class="sl-desc">' +
+      '<span id="sl-desc-short">' + short + '</span>' +
+      '<span id="sl-desc-full" style="display:none">' + fullDesc + '</span>' +
+      '<button id="sl-desc-btn" onclick="toggleTouristDesc()" ' +
+      'style="font-size:12px;color:' + color + ';background:none;border:none;' +
+      'cursor:pointer;padding:0 0 0 2px;font-weight:600">더보기</button>' +
+      '</div>';
+  } else {
+    descHtml = '<div class="sl-desc">' + fullDesc + '</div>';
+  }
+
+  /* 태그: 관광지는 주황 테마, 나머지는 기본(파란) */
+  var tagStyle = isTourist
+    ? 'style="background:' + cfg.bg + ';color:' + color + '"'
+    : '';
+
+  /* 액션 버튼 */
+  var routeBtn = '<button class="sl-btn" style="' +
+    (isTourist ? 'background:' + color + ';color:#fff;border-color:' + color : '') +
+    '" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name + '\')">🗺 길찾기</button>';
+
+  var actionsHtml;
+  if (isTourist) {
+    actionsHtml =
+      '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' +
+      encodeURIComponent(place.name) + '\',\'_blank\')">🔍 카카오지도</button>' +
+      routeBtn;
+  } else {
+    actionsHtml =
+      '<button class="sl-btn primary" onclick="findNearby(' + place.lat + ',' + place.lng + ')">💳 반경 500m 가맹점</button>' +
+      routeBtn;
+  }
 
   document.getElementById('slide-inner').innerHTML =
     placePhotoHtml(place) +
@@ -384,17 +436,27 @@ function showPlaceSlide(place) {
     '<div class="sl-name">' + place.name + '</div>' +
     '<div class="sl-addr">📍 ' + place.address + '</div>' +
     (place.date ? '<div class="sl-date">📅 ' + place.date + '</div>' : '') +
-    '<div class="sl-desc">' + place.desc + '</div>' +
-    '<div class="sl-tags">' + place.tags.map(function (t) { return '<span class="sl-tag">' + t + '</span>'; }).join('') + '</div>' +
-    '<div class="sl-actions">' +
-    '<button class="sl-btn primary" onclick="findNearby(' + place.lat + ',' + place.lng + ')">💳 반경 500m 가맹점</button>' +
-    '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name + '\')">🗺 길찾기</button>' +
-    '</div>';
+    descHtml +
+    '<div class="sl-tags">' +
+    place.tags.map(function (t) { return '<span class="sl-tag" ' + tagStyle + '>' + t + '</span>'; }).join('') +
+    '</div>' +
+    '<div class="sl-actions">' + actionsHtml + '</div>';
 
   requestAnimationFrame(function () {
     document.getElementById('place-slide').classList.add('open');
     document.getElementById('map-dim').classList.add('show');
   });
+}
+
+function toggleTouristDesc() {
+  var s = document.getElementById('sl-desc-short');
+  var f = document.getElementById('sl-desc-full');
+  var b = document.getElementById('sl-desc-btn');
+  if (!s || !f || !b) return;
+  var isExpanded = f.style.display !== 'none';
+  s.style.display = isExpanded ? 'inline' : 'none';
+  f.style.display = isExpanded ? 'none'   : 'inline';
+  b.textContent   = isExpanded ? '더보기' : '접기';
 }
 
 function closePlaceSlide() {

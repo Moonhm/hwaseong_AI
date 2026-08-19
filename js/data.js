@@ -211,7 +211,7 @@ const PLACES = [
 ];
 // 카테고리 설정
 const CATEGORY_CONFIG = {
-  tourist:       { label: '관광지',   color: '#F97316', bg: '#FFF7ED', emoji: '★' },
+  tourist:       { label: '관광지',   color: '#FB923C', bg: '#FFF7ED', emoji: '★' },
   restaurant:    { label: '맛집',     color: '#D97706', bg: '#FEF3C7', emoji: '🍽' },
   festival:      { label: '축제',     color: '#DC2626', bg: '#FEE2E2', emoji: '🎉' },
   parking:       { label: '주차장',   color: '#2563EB', bg: '#DBEAFE', emoji: '🅿' },
