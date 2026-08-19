@@ -2864,7 +2864,7 @@ function renderTempleStay() {
 }
 
 /* ── 테마 필터 (관광) ── */
-const THEME_TAGS = { sea:['바다'], nature:['자연'], history:['역사','세계문화유산'], family:['자연','꽃'] };
+const THEME_TAGS = { sea:['바다'], nature:['자연'], history:['역사','세계문화유산'], family:['가족','체험','자연','꽃'] };
 function pickTheme(el, theme) {
   document.querySelectorAll('#tourism-theme-chips .chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
