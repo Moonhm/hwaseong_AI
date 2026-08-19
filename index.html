@@ -596,7 +596,6 @@
     .tourism-subnav {
       display: flex; gap: 8px; overflow-x: auto; padding: 10px var(--px) 12px;
       scrollbar-width: none; background: var(--white);
-      position: sticky; top: 49px; z-index: 50;
       border-bottom: 1px solid var(--border);
     }
     .tourism-subnav::-webkit-scrollbar { display: none; }
@@ -1033,19 +1032,21 @@
 
   <!-- 축제 리스트 뷰 -->
   <div id="view-tourism-list">
-    <div class="page-header">
-      <div class="page-header-title">관광</div>
-      <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
-    </div>
-
-    <!-- 서브탭 -->
-    <div class="tourism-subnav">
-      <div class="chip active" onclick="switchTourismSub(this,'all')">전체</div>
-      <div class="chip" onclick="switchTourismSub(this,'festival')">축제</div>
-      <div class="chip" onclick="switchTourismSub(this,'spot')">관광지</div>
-      <div class="chip" onclick="switchTourismSub(this,'stay')">숙박</div>
-      <div class="chip" onclick="switchTourismSub(this,'camp')">캠핑</div>
-      <div class="chip" onclick="switchTourismSub(this,'temple')">템플스테이</div>
+    <!-- 헤더 + 서브탭을 하나의 sticky 컨테이너로 묶어 틈 없이 고정 -->
+    <div style="position:sticky;top:0;z-index:100;background:var(--white)">
+      <div class="page-header" style="position:relative;border-bottom:none">
+        <div class="page-header-title">관광</div>
+        <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
+      </div>
+      <!-- 서브탭 -->
+      <div class="tourism-subnav">
+        <div class="chip active" onclick="switchTourismSub(this,'all')">전체</div>
+        <div class="chip" onclick="switchTourismSub(this,'festival')">축제</div>
+        <div class="chip" onclick="switchTourismSub(this,'spot')">관광지</div>
+        <div class="chip" onclick="switchTourismSub(this,'stay')">숙박</div>
+        <div class="chip" onclick="switchTourismSub(this,'camp')">캠핑</div>
+        <div class="chip" onclick="switchTourismSub(this,'temple')">템플스테이</div>
+      </div>
     </div>
 
     <!-- 전체/축제/관광지 콘텐츠 -->
