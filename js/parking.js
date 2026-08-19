@@ -104,33 +104,29 @@ function mergeParkingData(list, rt) {
   });
 }
 
-/* ── 오버레이 색상 ───────────────────────────────────────────────── */
+/* ── 오버레이 색상 (운영중=파랑, 미운영=회색) ── */
 function pinColor(p) {
-  if (!p.open)           return '#9CA3AF'; // 회색 — 미운영
-  if (p.total <= 0)      return '#9CA3AF';
-  var ratio = p.avail / p.total;
-  if (ratio <= 0)        return '#EF4444'; // 빨강 — 만차
-  if (ratio < 0.3)       return '#F97316'; // 주황 — 혼잡
-  return '#16A34A';                        // 초록 — 여유
+  if (!p.open || p.total <= 0) return '#9CA3AF';
+  return '#2563EB';
 }
 
 function statusText(p) {
   if (!p.open)      return '미운영';
   if (p.avail <= 0) return '만차';
-  return p.avail + '면';
+  return p.avail + '대';
 }
 
 /* ── 오버레이 HTML ───────────────────────────────────────────────── */
 function pinHtml(p) {
   var color  = pinColor(p);
   var status = statusText(p);
-  var label  = p.name.length > 7 ? p.name.slice(0, 6) + '…' : p.name;
   return '<div class="pk-pin" id="pkpin-' + p.id + '"'
     + ' onclick="onParkingClick(' + p.id + ')"'
     + ' onmouseover="pkHoverIn(' + p.id + ')"'
     + ' onmouseout="pkHoverOut(' + p.id + ')">'
     + '<div class="pk-circle" style="background:' + color + '">'
-    + 'P <span style="font-size:10px">' + status + '</span>'
+    + '<span class="pk-p">P</span>'
+    + '<span class="pk-count">' + status + '</span>'
     + '</div>'
     + '<div class="pk-tail" style="border-top-color:' + color + '"></div>'
     + '</div>';
@@ -164,9 +160,11 @@ function updateAllPins() {
     var color  = pinColor(p);
     var status = statusText(p);
     var circle = el.querySelector('.pk-circle');
+    var count  = el.querySelector('.pk-count');
     var tail   = el.querySelector('.pk-tail');
-    if (circle) { circle.style.background = color; circle.innerHTML = 'P <span style="font-size:10px">' + status + '</span>'; }
-    if (tail)   { tail.style.borderTopColor = color; }
+    if (circle) circle.style.background = color;
+    if (count)  count.textContent = status;
+    if (tail)   tail.style.borderTopColor = color;
   });
 }
 
