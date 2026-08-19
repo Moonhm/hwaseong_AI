@@ -629,11 +629,11 @@ function _makeNpPin(color, icon, name, onClickFn) {
 
   var iconSpan = document.createElement('span');
   iconSpan.textContent = icon;
-  iconSpan.style.fontSize = '18px';
+  iconSpan.style.fontSize = '14px';
 
   var nameSpan = document.createElement('span');
   nameSpan.textContent = name.length > 10 ? name.slice(0, 9) + '…' : name;
-  nameSpan.style.fontSize = '13px';
+  nameSpan.style.fontSize = '11px';
 
   pill.appendChild(iconSpan);
   pill.appendChild(nameSpan);
@@ -685,11 +685,11 @@ function _makeNpParkPin(pkData, onClickFn) {
   pill.style.background = color;
 
   var badge = document.createElement('span');
-  badge.style.cssText = 'font-size:22px;line-height:1;flex-shrink:0';
+  badge.style.cssText = 'font-size:16px;line-height:1;flex-shrink:0';
   badge.textContent = '🅿️';
 
   var countSpan = document.createElement('span');
-  countSpan.style.cssText = 'font-size:15px;font-weight:900';
+  countSpan.style.cssText = 'font-size:12px;font-weight:900';
   countSpan.textContent = countTxt;
 
   pill.appendChild(badge);

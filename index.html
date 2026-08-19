@@ -947,35 +947,20 @@
     .np-pin { display:flex; flex-direction:column; align-items:center; user-select:none; }
     .np-pill-wrap {
       position:relative; display:flex; align-items:center; justify-content:center;
-      animation: npBounce 1.9s ease-in-out infinite;
     }
     .np-pill {
-      height:40px; border-radius:20px; padding:0 16px;
-      display:flex; align-items:center; justify-content:center; gap:6px;
-      font-size:14px; font-weight:700; color:#fff;
-      border:3px solid #fff;
-      box-shadow:0 3px 14px rgba(0,0,0,0.28);
+      height:32px; border-radius:16px; padding:0 12px;
+      display:flex; align-items:center; justify-content:center; gap:5px;
+      font-size:12px; font-weight:700; color:#fff;
+      border:2px solid #fff;
+      box-shadow:0 2px 10px rgba(0,0,0,0.25);
       white-space:nowrap; position:relative; z-index:1;
     }
-    .np-pill-ring {
-      position:absolute; inset:-8px; border-radius:28px;
-      border:2.5px solid; pointer-events:none;
-      animation: npRingPill 1.9s ease-out infinite;
-    }
-    .np-pill-ring.r2 { animation-delay:0.95s; }
+    .np-pill-ring { display:none; }
     .np-tail {
       width:0; height:0; margin-top:-2px;
-      border-left:8px solid transparent; border-right:8px solid transparent;
-      border-top-width:10px; border-top-style:solid;
-    }
-    @keyframes npBounce {
-      0%,100% { transform:translateY(0) scale(1); }
-      40%     { transform:translateY(-5px) scale(1.08); }
-      55%     { transform:translateY(-2px) scale(1.04); }
-    }
-    @keyframes npRingPill {
-      0%   { transform:scale(1);   opacity:.8; }
-      100% { transform:scale(1.55); opacity:0; }
+      border-left:6px solid transparent; border-right:6px solid transparent;
+      border-top-width:8px; border-top-style:solid;
     }
 
     /* 뒤로가기 버튼 */
