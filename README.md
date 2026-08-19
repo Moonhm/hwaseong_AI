@@ -46,20 +46,22 @@
 [개발 로컬]                      [배포 서버 로컬]
 개발 Claude (나)                  배포 Claude (거기)
 ─────────────────────────────────────────────────
-코드 작성 · 수정                  이미지 등 대용량 파일 보유
-git push만 수행      ──────►      git pull만 수행
-README로 메시지 전달  ──────►      웹 배포 (Cloudflare Tunnel)
-                     ◄──────      사용자 통해 메시지 전달
+작업 전: fetch → 코드 읽기       이미지 등 대용량 파일 보유
+코드 작성 · 수정    ◄──────►     코드·데이터·README 수정
+git push 수행       ──────►      git pull 후 웹 배포
+README로 메시지 전달 ◄──────►    README로 메시지 전달
 ```
 
 ### 핵심 규칙
-| 역할 | push | pull |
+| 역할 | push | pull/fetch |
 |------|------|------|
-| 개발 Claude | ✅ 가능 | ❌ 절대 금지 |
-| 배포 Claude | ✅ 가능 (2026-08-19부터 `gh auth login` 완료) | ✅ 가능 |
+| 개발 Claude | ✅ 가능 | ✅ 작업 전 fetch로 동기화 필수 |
+| 배포 Claude | ✅ 가능 (2026-08-19부터) | ✅ 가능 |
 
-> **개발 Claude가 pull 하면 배포 서버의 로컬 변경사항이 덮어씌워질 수 있음**  
-> **배포 Claude도 이제 push 가능 — 데이터/README 변경은 배포 Claude가 직접 push 가능**
+> **양방향 push 체계 (2026-08-19부터)**  
+> 개발 Claude: 작업 전 반드시 `git fetch origin main`으로 최신 코드 확인 후 작업  
+> 배포 Claude: 코드·데이터·README 수정 후 직접 push 가능  
+> 두 Claude 모두 README [메시지함]으로 직접 소통
 
 ---
 
