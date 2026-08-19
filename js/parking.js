@@ -104,14 +104,14 @@ function mergeParkingData(list, rt) {
   });
 }
 
-/* ── 오버레이 색상 ───────────────────────────────────────────────── */
+/* ── 오버레이 색상 (빨강→초록 연속 그라데이션) ── */
 function pinColor(p) {
-  if (!p.open)           return '#9CA3AF';
-  if (p.total <= 0)      return '#9CA3AF';
+  if (!p.open || p.total <= 0) return '#9CA3AF';
   var ratio = p.avail / p.total;
-  if (ratio <= 0)        return '#EF4444';
-  if (ratio < 0.3)       return '#F97316';
-  return '#16A34A';
+  if (ratio <= 0) return '#EF4444';
+  /* ratio 0→1 을 HSL hue 0(빨강)→118(초록)으로 매핑 */
+  var hue = Math.round(ratio * 118);
+  return 'hsl(' + hue + ',72%,42%)';
 }
 
 function statusText(p) {
@@ -284,9 +284,15 @@ function updateParkingCount() {
     el.style.display = 'none';
     return;
   }
-  var avail = parkingData.filter(function (p) { return p.open && p.avail > 0; }).length;
-  el.textContent = '여유 ' + avail + '곳';
-  el.style.display = avail > 0 ? 'inline-block' : 'none';
+  var open   = parkingData.filter(function (p) { return p.open; });
+  var avail  = open.filter(function (p) { return p.avail > 0; }).length;
+  var total  = open.length;
+  /* 여유 비율에 따라 배지 색상 변경 */
+  var ratio  = total > 0 ? avail / total : 0;
+  var hue    = Math.round(ratio * 118);
+  el.style.background = 'hsl(' + hue + ',65%,40%)';
+  el.textContent = '🅿 여유 ' + avail + ' / ' + total + '곳';
+  el.style.display = 'inline-block';
 }
 
 /* ── 주차장 핀 호버 z-index (겹칠 때 맨 앞으로) ── */
