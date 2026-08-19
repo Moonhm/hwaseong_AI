@@ -1729,6 +1729,7 @@ function go(page) {
     } else {
       renderTourismList(sub === 'festival' ? 'festival-only' : sub === 'spot' ? 'tourist-only' : 'all');
     }
+    setTimeout(updateFestArrows, 60);
   }
 }
 
