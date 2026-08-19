@@ -1,128 +1,156 @@
 'use strict';
 
-var lcData      = [];
-var lcClusterer = null;
-var lcMap       = null;
-var lcBuilt     = false;
-var lcBuilding  = false;
+var lcData        = [];
+var lcMap         = null;
+var lcVisible     = false;
+var lcDisplayItems = [];   /* 현재 지도에 올라간 Marker / CustomOverlay */
 
-/* ── 데이터만 미리 로드 (마커 생성은 지연) ── */
+var LC_PIN_LEVEL  = 5;     /* 이 레벨 이하에서만 개별 핀 표시 */
+
+/* 줌 레벨별 격자 크기(도 단위) — 격자 하나 = 클러스터 원 하나 */
+var LC_GRID = {
+  14: 0.30, 13: 0.15, 12: 0.08, 11: 0.05, 10: 0.03,
+   9: 0.02,  8: 0.012, 7: 0.008, 6: 0.005
+};
+
+/* ── 초기화: 데이터만 로드, Marker 생성 없음 ── */
 function initLocalCurrency(map) {
   lcMap = map;
   fetch('js/localcurrency-static.json')
     .then(function (r) { return r.json(); })
-    .then(function (data) { lcData = data; })
-    .catch(function (e) { console.warn('[가맹점] 로드 실패:', e); });
+    .then(function (data) {
+      lcData = data;
+      kakao.maps.event.addListener(map, 'idle', onLcMapIdle);
+    })
+    .catch(function (e) { console.warn('[가맹점]', e); });
 }
 
-/* ── 표시 / 숨김 ── */
+function onLcMapIdle() {
+  if (lcVisible) updateLcDisplay();
+}
+
+/* ── 표시/숨김 ── */
 function setLcVisible(visible) {
-  if (!visible) {
-    if (lcClusterer) lcClusterer.setMap(null);
-    return;
-  }
-  /* 이미 완성됐으면 바로 표시 */
-  if (lcBuilt && lcClusterer) {
-    lcClusterer.setMap(lcMap);
-    return;
-  }
-  /* 아직 만들지 않았으면 청크 빌드 시작 */
-  if (!lcBuilding) buildLcClusterer();
+  lcVisible = visible;
+  if (!visible) clearLcDisplay();
+  else          updateLcDisplay();
 }
 
-/* ── 클러스터러 + 마커를 500개씩 청크로 비동기 생성 ── */
-function buildLcClusterer() {
-  if (!lcMap || !lcData.length || lcBuilding) return;
-  lcBuilding = true;
+/* ── 현재 표시 중인 것 전부 제거 ── */
+function clearLcDisplay() {
+  lcDisplayItems.forEach(function (item) { item.setMap(null); });
+  lcDisplayItems = [];
+}
 
-  lcClusterer = new kakao.maps.MarkerClusterer({
-    map:              lcMap,
-    averageCenter:    true,
-    minLevel:         7,
-    disableClickZoom: false,
-    styles: [{
-      width: '42px', height: '42px',
-      background: 'rgba(22,163,74,0.38)',
-      borderRadius: '50%',
-      color: '#fff',
-      textAlign: 'center',
-      lineHeight: '42px',
-      fontSize: '12px',
-      fontWeight: '700',
-      border: '2px solid rgba(255,255,255,0.7)',
-      boxSizing: 'border-box',
-      boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
-    }, {
-      width: '50px', height: '50px',
-      background: 'rgba(22,163,74,0.44)',
-      borderRadius: '50%',
-      color: '#fff',
-      textAlign: 'center',
-      lineHeight: '50px',
-      fontSize: '13px',
-      fontWeight: '700',
-      border: '2px solid rgba(255,255,255,0.7)',
-      boxSizing: 'border-box',
-      boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
-    }, {
-      width: '58px', height: '58px',
-      background: 'rgba(15,118,56,0.48)',
-      borderRadius: '50%',
-      color: '#fff',
-      textAlign: 'center',
-      lineHeight: '58px',
-      fontSize: '14px',
-      fontWeight: '700',
-      border: '2px solid rgba(255,255,255,0.7)',
-      boxSizing: 'border-box',
-      boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
-    }],
+/* ── 줌 레벨에 따라 클러스터 원 or 개별 핀 ── */
+function updateLcDisplay() {
+  if (!lcMap || !lcData.length) return;
+  clearLcDisplay();
+
+  var level  = lcMap.getLevel();
+  var bounds = lcMap.getBounds();
+
+  if (level <= LC_PIN_LEVEL) {
+    showViewportMarkers(bounds);
+  } else {
+    showClusters(bounds, level);
+  }
+}
+
+/* ── 뷰포트 안 가맹점만 개별 마커로 표시 ── */
+function showViewportMarkers(bounds) {
+  var sw = bounds.getSouthWest();
+  var ne = bounds.getNorthEast();
+  var minLat = sw.getLat(), maxLat = ne.getLat();
+  var minLng = sw.getLng(), maxLng = ne.getLng();
+
+  lcData.filter(function (p) {
+    return p.lat >= minLat && p.lat <= maxLat &&
+           p.lng >= minLng && p.lng <= maxLng;
+  }).forEach(function (p) {
+    var marker = new kakao.maps.Marker({
+      position: new kakao.maps.LatLng(p.lat, p.lng),
+      map: lcMap,
+    });
+    kakao.maps.event.addListener(marker, 'click', (function (pp) {
+      return function () { showLcSlide(pp); };
+    })(p));
+    lcDisplayItems.push(marker);
+  });
+}
+
+/* ── 격자 기반 클러스터 원 표시 ── */
+function showClusters(bounds, level) {
+  var sw  = bounds.getSouthWest();
+  var ne  = bounds.getNorthEast();
+  var pad = (LC_GRID[level] || 0.02) * 0.5;
+  var minLat = sw.getLat() - pad, maxLat = ne.getLat() + pad;
+  var minLng = sw.getLng() - pad, maxLng = ne.getLng() + pad;
+  var grid   = LC_GRID[level] || 0.02;
+
+  /* 뷰포트 내 데이터를 격자 셀로 묶기 */
+  var cells = {};
+  lcData.forEach(function (p) {
+    if (p.lat < minLat || p.lat > maxLat ||
+        p.lng < minLng || p.lng > maxLng) return;
+    var key = Math.floor(p.lat / grid) + ',' + Math.floor(p.lng / grid);
+    if (!cells[key]) cells[key] = { sumLat: 0, sumLng: 0, count: 0 };
+    cells[key].sumLat += p.lat;
+    cells[key].sumLng += p.lng;
+    cells[key].count++;
   });
 
-  var CHUNK = 500;
-  var allMarkers = [];
+  Object.keys(cells).forEach(function (key) {
+    var c   = cells[key];
+    var lat = c.sumLat / c.count;
+    var lng = c.sumLng / c.count;
+    var cnt = c.count;
+    var size  = cnt >= 1000 ? 56 : cnt >= 100 ? 48 : cnt >= 10 ? 40 : 34;
+    var alpha = cnt >= 100  ? 0.50 : 0.38;
+    var label = cnt >= 1000 ? (cnt / 1000).toFixed(1) + 'k' : String(cnt);
 
-  function addChunk(start) {
-    var end = Math.min(start + CHUNK, lcData.length);
-    var chunk = [];
-    for (var i = start; i < end; i++) {
-      var p = lcData[i];
-      var marker = new kakao.maps.Marker({
-        position: new kakao.maps.LatLng(p.lat, p.lng),
-      });
-      /* IIFE로 클로저 캡처 */
-      (function (pp) {
-        kakao.maps.event.addListener(marker, 'click', function () {
-          showLcSlide(pp);
-        });
-      })(p);
-      chunk.push(marker);
-    }
-    allMarkers = allMarkers.concat(chunk);
-    lcClusterer.addMarkers(chunk, end < lcData.length); /* 마지막 청크만 redraw */
+    var el = document.createElement('div');
+    el.style.cssText =
+      'width:' + size + 'px;height:' + size + 'px;line-height:' + (size - 4) + 'px;' +
+      'background:rgba(22,163,74,' + alpha + ');' +
+      'border-radius:50%;border:2px solid rgba(255,255,255,0.75);' +
+      'color:#fff;text-align:center;font-size:11px;font-weight:700;' +
+      'cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.14);' +
+      'box-sizing:border-box;';
+    el.textContent = label;
 
-    if (end < lcData.length) {
-      setTimeout(function () { addChunk(end); }, 0);
-    } else {
-      lcBuilt     = true;
-      lcBuilding  = false;
-    }
-  }
+    /* 클릭 시 해당 지점으로 줌인 */
+    el.onclick = (function (clat, clng, lv) {
+      return function () {
+        kakaoMap.setCenter(new kakao.maps.LatLng(clat, clng));
+        kakaoMap.setLevel(Math.max(1, lv - 2));
+      };
+    })(lat, lng, level);
 
-  addChunk(0);
+    var overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(lat, lng),
+      content:  el,
+      yAnchor:  0.5,
+      zIndex:   5,
+      map:      lcMap,
+    });
+    lcDisplayItems.push(overlay);
+  });
 }
 
 /* ── 가맹점 슬라이드 카드 ── */
 function showLcSlide(p) {
   document.getElementById('slide-inner').innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
-    + '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">💳 지역화폐 가맹점</span>'
+    + '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;'
+    + 'padding:3px 10px;border-radius:20px">💳 지역화폐 가맹점</span>'
     + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:4px">' + p.n + '</div>'
     + '<div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:6px">' + p.c + '</div>'
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">📍 ' + p.a + '</div>'
     + '<div class="sl-actions">'
-    + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🗺 길찾기</button>'
+    + '<button class="sl-btn primary" onclick="openRoute('
+    + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🗺 길찾기</button>'
     + '</div>';
 
   requestAnimationFrame(function () {
