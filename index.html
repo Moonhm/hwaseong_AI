@@ -592,6 +592,117 @@
       background: var(--text-sub); border-radius: 1px;
     }
 
+    /* ── 관광 서브탭 ── */
+    .tourism-subnav {
+      display: flex; gap: 8px; overflow-x: auto; padding: 10px var(--px) 12px;
+      scrollbar-width: none; background: var(--white);
+      position: sticky; top: 49px; z-index: 50;
+      border-bottom: 1px solid var(--border);
+    }
+    .tourism-subnav::-webkit-scrollbar { display: none; }
+
+    /* ── 호텔 아이템 ── */
+    .hotel-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px var(--px); background: var(--white);
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      transition: background 0.1s;
+    }
+    .hotel-item:hover { background: #FAFAFA; }
+    .hotel-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: #FFF7ED; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .hotel-grade { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px; }
+    .grade-4 { background: #FFF7ED; color: #F97316; }
+    .grade-3 { background: #FEF9C3; color: #CA8A04; }
+    .grade-2 { background: #F1F5F9; color: #64748B; }
+    .grade-1 { background: #F1F5F9; color: #94A3B8; }
+    .grade-0 { background: #F1F5F9; color: #9CA3AF; }
+
+    /* ── 제부도 요약 카드 ── */
+    .jebu-hero {
+      margin: 12px var(--px); border-radius: var(--r-lg); overflow: hidden;
+      background: linear-gradient(135deg, #0EA5E9, #0369A1);
+      cursor: pointer; transition: transform 0.12s, box-shadow 0.15s;
+      box-shadow: var(--shadow-sm);
+    }
+    .jebu-hero:active { transform: scale(0.98); }
+    .jebu-hero-body { padding: 18px 20px; color: #fff; }
+    .jebu-hero-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .jebu-hero-sub   { font-size: 12px; opacity: 0.8; margin-bottom: 14px; }
+    .jebu-counts { display: flex; gap: 10px; flex-wrap: wrap; }
+    .jebu-count-item {
+      background: rgba(255,255,255,0.18); border-radius: 8px;
+      padding: 8px 12px; text-align: center; flex: 1; min-width: 56px;
+    }
+    .jebu-count-val { font-size: 18px; font-weight: 900; }
+    .jebu-count-lbl { font-size: 10px; opacity: 0.85; margin-top: 1px; }
+
+    .jebu-type-header {
+      padding: 12px var(--px) 6px; font-size: 13px; font-weight: 700; color: var(--text);
+      background: var(--bg); border-top: 1px solid var(--border);
+    }
+
+    /* ── 캠핑장 아이템 ── */
+    .camp-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px var(--px); background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+    .camp-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: var(--green-bg); display: flex; align-items: center;
+      justify-content: center; font-size: 20px;
+    }
+    .camp-fac {
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px;
+      background: var(--green-bg); color: var(--green); display: inline-block; margin-top: 5px;
+    }
+    .camp-pub {
+      font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+      background: var(--primary-bg); color: var(--primary);
+      display: inline-block; margin-top: 5px; margin-left: 4px;
+    }
+
+    /* ── 템플스테이 카드 ── */
+    .temple-card {
+      margin: 12px var(--px); border-radius: var(--r-lg); overflow: hidden;
+      box-shadow: var(--shadow-sm); background: var(--white); border: 1px solid var(--border);
+    }
+    .temple-hero {
+      height: 130px;
+      background: linear-gradient(150deg, #1a1a3e, #2e1760, #5b21b6);
+      display: flex; align-items: center; justify-content: center; font-size: 52px;
+    }
+    .temple-body { padding: 16px 20px; }
+    .temple-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+    .temple-desc  { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 12px; }
+    .temple-prog-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 13px; color: var(--text-sub); padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .temple-prog-item:last-child { border-bottom: none; }
+
+    /* ── 관광식당 업종 태그 ── */
+    .cuisine-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #FEE2E2; color: #DC2626; }
+    .cuisine-nepal  { background: #EDE9FE; color: #7C3AED; }
+    .cuisine-russia { background: #E0F2FE; color: #0369A1; }
+
+    /* ── 생활 탭 카테고리 활성 ── */
+    .cat-icon-item.cat-active .cat-icon-circle { outline: 2.5px solid var(--primary); outline-offset: 2px; }
+    .cat-icon-item.cat-active .cat-icon-label  { color: var(--primary); font-weight: 700; }
+
+    /* ── 통계 소형 카드 ── */
+    .stat-card-sm {
+      background: var(--white); border-radius: var(--r-md);
+      border: 1px solid var(--border); padding: 12px 14px;
+    }
+    .stat-val-sm { font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+    .stat-lbl-sm { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
     /* ── TOAST ── */
     #toast {
       position: fixed; bottom: calc(52px + env(safe-area-inset-bottom) + 14px); left: 50%;
@@ -664,31 +775,48 @@
       <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
     </div>
 
-    <!-- 이번 달 축제 가로 스크롤 -->
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">이번 달 축제</div>
-        <button class="section-link" onclick="showCalendar()">캘린더 보기</button>
+    <!-- 서브탭 -->
+    <div class="tourism-subnav">
+      <div class="chip active" onclick="switchTourismSub(this,'all')">전체</div>
+      <div class="chip" onclick="switchTourismSub(this,'festival')">축제</div>
+      <div class="chip" onclick="switchTourismSub(this,'spot')">관광지</div>
+      <div class="chip" onclick="switchTourismSub(this,'stay')">숙박</div>
+      <div class="chip" onclick="switchTourismSub(this,'camp')">캠핑</div>
+      <div class="chip" onclick="switchTourismSub(this,'temple')">템플스테이</div>
+    </div>
+
+    <!-- 전체/축제/관광지 콘텐츠 -->
+    <div id="tourism-default">
+      <div class="section" id="tourism-festival-header">
+        <div class="section-header">
+          <div class="section-title">이번 달 축제</div>
+          <button class="section-link" onclick="showCalendar()">캘린더 보기</button>
+        </div>
       </div>
-    </div>
-    <div class="festival-scroll" id="festival-scroll-list" style="margin-bottom:8px"></div>
+      <div class="festival-scroll" id="festival-scroll-list" style="margin-bottom:8px"></div>
 
-    <!-- 테마별 추천 -->
-    <div style="padding:var(--px) var(--px) 0">
-      <div class="section-title">테마별 추천</div>
-    </div>
-    <div class="theme-chips" style="margin-bottom:8px">
-      <div class="chip active" onclick="pickTheme(this,'all')">전체</div>
-      <div class="chip" onclick="pickTheme(this,'sea')">바다</div>
-      <div class="chip" onclick="pickTheme(this,'nature')">자연</div>
-      <div class="chip" onclick="pickTheme(this,'history')">역사</div>
-      <div class="chip" onclick="pickTheme(this,'family')">아이와 함께</div>
-    </div>
+      <div id="tourism-theme-header" style="padding:var(--px) var(--px) 0">
+        <div class="section-title">테마별 추천</div>
+      </div>
+      <div class="theme-chips" id="tourism-theme-chips" style="margin-bottom:8px">
+        <div class="chip active" onclick="pickTheme(this,'all')">전체</div>
+        <div class="chip" onclick="pickTheme(this,'sea')">바다</div>
+        <div class="chip" onclick="pickTheme(this,'nature')">자연</div>
+        <div class="chip" onclick="pickTheme(this,'history')">역사</div>
+        <div class="chip" onclick="pickTheme(this,'family')">아이와 함께</div>
+      </div>
+      <div class="place-list" id="tourism-place-list"></div>
+    </div><!-- /tourism-default -->
 
-    <!-- 장소 리스트 -->
-    <div class="place-list" id="tourism-place-list">
-      <!-- data.js 로드 후 JS로 렌더 -->
-    </div>
+    <!-- 숙박 섹션 -->
+    <div id="tourism-stay" style="display:none"></div>
+
+    <!-- 캠핑 섹션 -->
+    <div id="tourism-camp" style="display:none"></div>
+
+    <!-- 템플스테이 섹션 -->
+    <div id="tourism-temple" style="display:none"></div>
+
   </div>
 
   <!-- 축제 상세 뷰 -->
@@ -744,46 +872,43 @@
     <div style="font-size:11px;color:var(--text-muted)">화성특례시</div>
   </div>
 
-  <!-- 통계 (JS 렌더) -->
-  <div class="living-stats" style="margin-top:4px">
-    <div class="stat-card"><div class="stat-val" id="stat-currency">-</div><div class="stat-lbl">등록 가맹점</div></div>
-    <div class="stat-card"><div class="stat-val" id="stat-parking">-</div><div class="stat-lbl">이용 가능 주차장</div></div>
+  <!-- 통계 4칸 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px var(--px) 0">
+    <div class="stat-card-sm"><div class="stat-val-sm">94</div><div class="stat-lbl-sm">모범음식점</div></div>
+    <div class="stat-card-sm"><div class="stat-val-sm">35</div><div class="stat-lbl-sm">관광식당업</div></div>
+    <div class="stat-card-sm"><div class="stat-val-sm" id="stat-currency">-</div><div class="stat-lbl-sm">지역화폐 가맹점</div></div>
+    <div class="stat-card-sm"><div class="stat-val-sm" id="stat-parking">-</div><div class="stat-lbl-sm">이용 주차장</div></div>
   </div>
 
-  <!-- 업종 아이콘 -->
-  <div style="margin-top:16px">
+  <!-- 카테고리 아이콘 -->
+  <div style="margin-top:14px">
     <div class="category-icons">
-      <div class="cat-icon-item" onclick="switchLiving('food')">
+      <div class="cat-icon-item cat-active" id="liv-cat-restaurant" onclick="switchLivingCat(this,'restaurant')">
         <div class="cat-icon-circle ci-food">🍴</div>
-        <span class="cat-icon-label">음식점</span>
+        <span class="cat-icon-label">모범음식점</span>
       </div>
-      <div class="cat-icon-item" onclick="switchLiving('cafe')">
-        <div class="cat-icon-circle ci-cafe">☕</div>
-        <span class="cat-icon-label">카페</span>
+      <div class="cat-icon-item" id="liv-cat-touristrest" onclick="switchLivingCat(this,'touristrest')">
+        <div class="cat-icon-circle" style="background:#FEE2E2">🥢</div>
+        <span class="cat-icon-label">관광식당</span>
       </div>
-      <div class="cat-icon-item" onclick="switchLiving('mart')">
-        <div class="cat-icon-circle ci-mart">🛒</div>
-        <span class="cat-icon-label">마트</span>
+      <div class="cat-icon-item" id="liv-cat-currency" onclick="switchLivingCat(this,'currency')">
+        <div class="cat-icon-circle ci-mart">💳</div>
+        <span class="cat-icon-label">가맹점</span>
       </div>
-      <div class="cat-icon-item" onclick="switchLiving('etc')">
-        <div class="cat-icon-circle ci-etc">···</div>
-        <span class="cat-icon-label">기타</span>
+      <div class="cat-icon-item" id="liv-cat-parking" onclick="switchLivingCat(this,'parking')">
+        <div class="cat-icon-circle" style="background:#DBEAFE">🅿</div>
+        <span class="cat-icon-label">주차장</span>
       </div>
     </div>
   </div>
 
-  <!-- 가맹점 리스트 -->
-  <div style="padding:20px 0 0">
+  <!-- 동적 리스트 -->
+  <div style="padding:16px 0 0">
     <div style="padding:0 var(--px) 10px;display:flex;align-items:center;justify-content:space-between">
-      <div class="section-title">희망화성지역화폐 가맹점</div>
+      <div class="section-title" id="living-list-title">모범음식점</div>
+      <div class="section-sub" id="living-list-count">94곳</div>
     </div>
-    <div class="place-list" id="living-currency-list"></div>
-  </div>
-
-  <!-- 주차장 리스트 -->
-  <div style="padding:20px 0 0">
-    <div style="padding:0 var(--px) 10px"><div class="section-title">주차장</div></div>
-    <div class="place-list" id="living-parking-list"></div>
+    <div class="place-list" id="living-main-list"></div>
   </div>
 
 </div><!-- /living -->
@@ -1073,22 +1198,202 @@ function switchHomeTab(el, tab) {
   document.getElementById('home-living').style.display  = tab === 'living'  ? 'block' : 'none';
 }
 
+/* ── 관광 서브탭 전환 ── */
+var _tourismSub = 'all';
+function switchTourismSub(el, tab) {
+  document.querySelectorAll('.tourism-subnav .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  _tourismSub = tab;
+
+  var sections = ['tourism-default','tourism-stay','tourism-camp','tourism-temple'];
+  sections.forEach(function(id) {
+    var el2 = document.getElementById(id);
+    if (el2) el2.style.display = 'none';
+  });
+
+  if (tab === 'all' || tab === 'festival' || tab === 'spot') {
+    var def = document.getElementById('tourism-default');
+    if (def) def.style.display = 'block';
+    var fhdr   = document.getElementById('tourism-festival-header');
+    var fscroll = document.getElementById('festival-scroll-list');
+    var thdr   = document.getElementById('tourism-theme-header');
+    var tchips = document.getElementById('tourism-theme-chips');
+    if (tab === 'festival') {
+      if (fhdr)   fhdr.style.display   = 'block';
+      if (fscroll) fscroll.style.display = 'block';
+      if (thdr)   thdr.style.display   = 'none';
+      if (tchips) tchips.style.display  = 'none';
+      renderTourismList('festival-only');
+    } else if (tab === 'spot') {
+      if (fhdr)   fhdr.style.display   = 'none';
+      if (fscroll) fscroll.style.display = 'none';
+      if (thdr)   thdr.style.display   = 'block';
+      if (tchips) tchips.style.display  = 'flex';
+      renderTourismList('tourist-only');
+    } else {
+      if (fhdr)   fhdr.style.display   = 'block';
+      if (fscroll) fscroll.style.display = 'block';
+      if (thdr)   thdr.style.display   = 'block';
+      if (tchips) tchips.style.display  = 'flex';
+      renderTourismList('all');
+    }
+  } else if (tab === 'stay') {
+    var s = document.getElementById('tourism-stay');
+    if (s) { s.style.display = 'block'; renderHotels(); }
+  } else if (tab === 'camp') {
+    var c = document.getElementById('tourism-camp');
+    if (c) { c.style.display = 'block'; renderCamping(); }
+  } else if (tab === 'temple') {
+    var t = document.getElementById('tourism-temple');
+    if (t) { t.style.display = 'block'; renderTempleStay(); }
+  }
+}
+
+/* ── 숙박 렌더 ── */
+function renderHotels() {
+  var el = document.getElementById('tourism-stay');
+  if (!el || typeof CONVENIENCE === 'undefined') return;
+  var hotelHtml = '<div style="padding:16px var(--px) 8px;border-bottom:1px solid var(--border)">'
+    + '<div class="section-title">관광호텔</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">화성시 공식 등록 ' + CONVENIENCE.hotels.length + '곳</div>'
+    + '</div>'
+    + CONVENIENCE.hotels.map(function(h) {
+        var gradeClass = h.grade === '4성급' ? 'grade-4' : h.grade === '3성급' ? 'grade-3' : h.grade === '2성급' ? 'grade-2' : h.grade === '1성급' ? 'grade-1' : 'grade-0';
+        return '<div class="hotel-item">'
+          + '<div class="hotel-icon">🏨</div>'
+          + '<div class="pi-content">'
+          + '<div class="pi-name" style="flex-wrap:nowrap;gap:8px">' + h.name
+          + (h.grade !== '-' ? ' <span class="hotel-grade ' + gradeClass + '">' + h.grade + '</span>' : '')
+          + '</div>'
+          + '<div class="pi-meta">' + h.addr + '</div>'
+          + '</div>'
+          + '<div class="pi-right" style="text-align:right"><div style="font-size:14px;font-weight:700;color:var(--text)">' + h.rooms + '</div><div style="font-size:10px;color:var(--text-muted)">객실</div></div>'
+          + '</div>';
+      }).join('');
+
+  var s = CONVENIENCE.jebu.summary;
+  var jebuHtml = '<div class="jebu-hero" onclick="toggleJebuList()">'
+    + '<div class="jebu-hero-body">'
+    + '<div class="jebu-hero-title">⛱ 제부도 숙박</div>'
+    + '<div class="jebu-hero-sub">서신면 해안길 일대 · 총 ' + s.total + '곳</div>'
+    + '<div class="jebu-counts">'
+    + '<div class="jebu-count-item"><div class="jebu-count-val">' + s.pension_outside + '</div><div class="jebu-count-lbl">관광펜션</div></div>'
+    + '<div class="jebu-count-item"><div class="jebu-count-val">' + s.inside + '</div><div class="jebu-count-lbl">내부숙박</div></div>'
+    + '<div class="jebu-count-item"><div class="jebu-count-val">' + s.minbak_inside + '</div><div class="jebu-count-lbl">민박(내)</div></div>'
+    + '<div class="jebu-count-item"><div class="jebu-count-val">' + (s.minbak_nearby + s.nearby) + '</div><div class="jebu-count-lbl">인근</div></div>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div id="jebu-list-section" style="display:none"></div>';
+
+  el.innerHTML = hotelHtml + '<div style="height:20px"></div>'
+    + '<div style="padding:16px var(--px) 8px;border-bottom:1px solid var(--border)">'
+    + '<div class="section-title">제부도 숙박</div>'
+    + '</div>'
+    + jebuHtml
+    + '<div style="height:24px"></div>';
+}
+
+var _jebuOpen = false;
+function toggleJebuList() {
+  _jebuOpen = !_jebuOpen;
+  var sec = document.getElementById('jebu-list-section');
+  if (!sec) return;
+  if (!_jebuOpen) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  var c = CONVENIENCE.jebu;
+  var buildList = function(items, label) {
+    return '<div class="jebu-type-header">' + label + ' (' + items.length + '곳)</div>'
+      + items.map(function(it) {
+          return '<div class="place-item">'
+            + '<div class="pi pi-tourist">⛱</div>'
+            + '<div class="pi-content"><div class="pi-name">' + it.name + '</div>'
+            + '<div class="pi-meta">화성시 서신면 ' + it.addr + (it.tel ? ' · ' + it.tel : '') + '</div></div>'
+            + '</div>';
+        }).join('');
+  };
+  sec.innerHTML = buildList(c.pension_outside, '관광펜션')
+    + buildList(c.inside, '내부 숙박')
+    + buildList(c.nearby, '인근 숙박')
+    + buildList(c.minbak_inside, '민박 (섬 내)')
+    + buildList(c.minbak_nearby, '민박 (인근)');
+}
+
+/* ── 캠핑 렌더 ── */
+function renderCamping() {
+  var el = document.getElementById('tourism-camp');
+  if (!el || typeof CONVENIENCE === 'undefined') return;
+  el.innerHTML = '<div style="padding:16px var(--px) 8px;border-bottom:1px solid var(--border)">'
+    + '<div class="section-title">캠핑장</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">화성시 등록 캠핑장 ' + CONVENIENCE.camping.length + '곳</div>'
+    + '</div>'
+    + CONVENIENCE.camping.map(function(c) {
+        return '<div class="camp-item">'
+          + '<div class="camp-icon">⛺</div>'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
+          + '<div style="font-size:15px;font-weight:600;color:var(--text)">' + c.name + '</div>'
+          + (c.pub ? '<span class="camp-pub">공영</span>' : '')
+          + '</div>'
+          + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">'
+          + '화성시 ' + c.addr + (c.tel ? ' · ' + c.tel : '') + '</div>'
+          + '<span class="camp-fac">야영 ' + c.sites + '면</span> '
+          + '<span class="camp-fac">' + c.fac + '</span>'
+          + '</div>'
+          + '</div>';
+      }).join('')
+    + '<div style="height:24px"></div>';
+}
+
+/* ── 템플스테이 렌더 ── */
+function renderTempleStay() {
+  var el = document.getElementById('tourism-temple');
+  if (!el || typeof CONVENIENCE === 'undefined') return;
+  var t = CONVENIENCE.templeStay;
+  el.innerHTML = '<div style="padding:16px var(--px) 0">'
+    + '<div class="section-title">템플스테이</div>'
+    + '</div>'
+    + '<div class="temple-card">'
+    + '<div class="temple-hero">🏯</div>'
+    + '<div class="temple-body">'
+    + '<div class="temple-title">' + t.name + '</div>'
+    + '<div class="temple-desc">' + t.desc + '</div>'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:4px">📍 화성시 ' + t.addr + '</div>'
+    + '<div style="font-size:13px;color:var(--text-muted);margin-bottom:12px">📞 ' + t.tel + ' · ⏰ ' + t.schedule + '</div>'
+    + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px">운영 프로그램</div>'
+    + '<div class="temple-prog">'
+    + t.programs.map(function(p) {
+        return '<div class="temple-prog-item"><span style="color:var(--primary);font-size:14px">•</span><span>' + p + '</span></div>';
+      }).join('')
+    + '</div>'
+    + '</div>'
+    + '</div>'
+    + '<div style="height:24px"></div>';
+}
+
 /* ── 테마 필터 (관광) ── */
 const THEME_TAGS = { sea:['바다'], nature:['자연'], history:['역사','세계문화유산'], family:['자연','꽃'] };
 function pickTheme(el, theme) {
-  document.querySelectorAll('.theme-chips .chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
+  document.querySelectorAll('#tourism-theme-chips .chip').forEach(c => c.classList.remove('active'));
+  if (el) el.classList.add('active');
   renderTourismList(theme);
 }
 
 function renderTourismList(theme) {
   const list = document.getElementById('tourism-place-list');
   if (!list || typeof PLACES === 'undefined') return;
-  const cats = ['tourist','restaurant','festival'];
-  let items = PLACES.filter(p => cats.includes(p.category));
-  if (theme !== 'all' && THEME_TAGS[theme]) {
-    const tags = THEME_TAGS[theme];
-    items = items.filter(p => p.tags.some(t => tags.includes(t)));
+  let items;
+  if (theme === 'festival-only') {
+    items = PLACES.filter(p => p.category === 'festival');
+  } else if (theme === 'tourist-only') {
+    items = PLACES.filter(p => p.category === 'tourist');
+  } else {
+    const cats = ['tourist','restaurant','festival'];
+    items = PLACES.filter(p => cats.includes(p.category));
+    if (theme !== 'all' && THEME_TAGS[theme]) {
+      const tags = THEME_TAGS[theme];
+      items = items.filter(p => p.tags.some(t => tags.includes(t)));
+    }
   }
   if (!items.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
   list.innerHTML = items.map((p, i) => {
@@ -1176,41 +1481,97 @@ function hideCalendar() {
 }
 
 /* ── 생활 페이지 렌더 ── */
+/* ── 생활편의 카테고리 전환 ── */
+function switchLivingCat(el, cat) {
+  document.querySelectorAll('.cat-icon-item').forEach(function(c) { c.classList.remove('cat-active'); });
+  if (el) el.classList.add('cat-active');
+  renderLivingCatList(cat);
+}
+
+function renderLivingCatList(cat) {
+  var list = document.getElementById('living-main-list');
+  var titleEl = document.getElementById('living-list-title');
+  var countEl = document.getElementById('living-list-count');
+  if (!list) return;
+  var empty = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+
+  if (cat === 'restaurant') {
+    if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
+    var items = CONVENIENCE.restaurants;
+    if (titleEl) titleEl.textContent = '모범음식점';
+    if (countEl) countEl.textContent = items.length + '곳';
+    list.innerHTML = items.map(function(r, i) {
+      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's">'
+        + '<div class="pi ci-food" style="border-radius:12px;background:#FEF3C7;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🍽️</div>'
+        + '<div class="pi-content"><div class="pi-name">' + r.name + '</div>'
+        + '<div class="pi-meta">화성시 ' + r.addr + '</div></div>'
+        + '</div>';
+    }).join('');
+
+  } else if (cat === 'touristrest') {
+    if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
+    var items = CONVENIENCE.touristRestaurants;
+    if (titleEl) titleEl.textContent = '관광식당업';
+    if (countEl) countEl.textContent = items.length + '곳';
+    list.innerHTML = items.map(function(r, i) {
+      var tagClass = r.cuisine.includes('네팔') ? 'cuisine-nepal' : r.cuisine.includes('러시아') ? 'cuisine-russia' : '';
+      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's">'
+        + '<div class="pi" style="border-radius:12px;background:#FEE2E2;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🥢</div>'
+        + '<div class="pi-content">'
+        + '<div class="pi-name" style="gap:6px">' + r.name
+        + '<span class="cuisine-tag ' + tagClass + '">' + r.cuisine + '</span>'
+        + '</div>'
+        + '<div class="pi-meta">화성시 ' + r.addr + (r.area ? ' · ' + r.area : '') + '</div>'
+        + '</div>'
+        + (r.tel ? '<div class="pi-right" style="font-size:11px;color:var(--text-muted)">' + r.tel + '</div>' : '')
+        + '</div>';
+    }).join('');
+
+  } else if (cat === 'currency') {
+    if (typeof PLACES === 'undefined') { list.innerHTML = empty; return; }
+    var items = PLACES.filter(function(p) { return p.category === 'localcurrency'; });
+    if (titleEl) titleEl.textContent = '희망화성지역화폐 가맹점';
+    if (countEl) countEl.textContent = items.length + '곳';
+    list.innerHTML = items.length
+      ? items.map(function(p, i) {
+          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's" onclick="goMapCat(\'localcurrency\')">'
+            + '<div class="pi pi-currency">₩</div>'
+            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + p.address + '</div></div>'
+            + '</div>';
+        }).join('')
+      : empty;
+
+  } else if (cat === 'parking') {
+    if (typeof PLACES === 'undefined') { list.innerHTML = empty; return; }
+    var items = PLACES.filter(function(p) { return p.category === 'parking'; });
+    if (titleEl) titleEl.textContent = '주차장';
+    if (countEl) countEl.textContent = items.length + '곳';
+    list.innerHTML = items.length
+      ? items.map(function(p, i) {
+          var free = p.tags.includes('무료');
+          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's" onclick="goMapCat(\'parking\')">'
+            + '<div class="pi pi-parking">P</div>'
+            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + p.address + '</div></div>'
+            + '<div class="pi-right"><span class="park-badge ' + (free ? 'pb-free' : 'pb-paid') + '">' + (free ? '무료' : '유료') + '</span></div>'
+            + '</div>';
+        }).join('')
+      : empty;
+  }
+}
+
 function renderLivingPage() {
   if (typeof PLACES === 'undefined') return;
 
-  const cCount = PLACES.filter(p => p.category === 'localcurrency').length;
-  const pCount = PLACES.filter(p => p.category === 'parking').length;
-  const scEl = document.getElementById('stat-currency');
-  const spEl = document.getElementById('stat-parking');
+  var cCount = PLACES.filter(function(p) { return p.category === 'localcurrency'; }).length;
+  var pCount = PLACES.filter(function(p) { return p.category === 'parking'; }).length;
+  var scEl = document.getElementById('stat-currency');
+  var spEl = document.getElementById('stat-parking');
   if (scEl) scEl.textContent = cCount;
   if (spEl) spEl.textContent = pCount;
 
-  const empty = '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
-
-  const cList = document.getElementById('living-currency-list');
-  const currencies = PLACES.filter(p => p.category === 'localcurrency');
-  cList.innerHTML = currencies.length
-    ? currencies.map((p, i) => `
-        <div class="place-item" style="animation-delay:${i * 0.05}s" onclick="goMapCat('localcurrency')">
-          <div class="pi pi-currency">₩</div>
-          <div class="pi-content"><div class="pi-name">${p.name}</div><div class="pi-meta">${p.address}</div></div>
-        </div>`).join('')
-    : empty;
-
-  const pList = document.getElementById('living-parking-list');
-  const parkings = PLACES.filter(p => p.category === 'parking');
-  pList.innerHTML = parkings.length
-    ? parkings.map((p, i) => {
-        const free = p.tags.includes('무료');
-        return `
-          <div class="place-item" style="animation-delay:${i * 0.05}s" onclick="goMapCat('parking')">
-            <div class="pi pi-parking">P</div>
-            <div class="pi-content"><div class="pi-name">${p.name}</div><div class="pi-meta">${p.address}</div></div>
-            <div class="pi-right"><span class="park-badge ${free ? 'pb-free' : 'pb-paid'}">${free ? '무료' : '유료'}</span></div>
-          </div>`;
-      }).join('')
-    : empty;
+  // 기본 탭: 모범음식점
+  var firstCat = document.getElementById('liv-cat-restaurant');
+  switchLivingCat(firstCat, 'restaurant');
 }
 
 function switchLiving(type) {
@@ -1300,6 +1661,7 @@ window.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b"></script>
+<script src="js/convenience.js"></script>
 <script src="js/data.js"></script>
 <script src="js/map.js"></script>
 <script src="js/parking.js"></script>
