@@ -80,8 +80,7 @@ function initMap() {
   setupZoomSlider();
   if (typeof initParking       === 'function') initParking(kakaoMap);
   if (typeof initLocalCurrency === 'function') initLocalCurrency(kakaoMap);
-  /* 최초 진입 시 전체 필터 자동 활성화 */
-  setTimeout(function () { setFilter('all'); }, 350);
+  /* 최초 진입 시 아무것도 표시하지 않음 */
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
   kakao.maps.event.addListener(kakaoMap, 'idle', function () {
     if (touristVisible) updateTouristDisplay();
@@ -501,23 +500,56 @@ function clearFilter() {
   if (typeof updateParkingCount === 'function') updateParkingCount();
   if (typeof setLcVisible       === 'function') setLcVisible(false);
   if (typeof hideAllConv        === 'function') hideAllConv();
+  document.querySelectorAll('#map-chips .chip').forEach(function (c) {
+    c.classList.remove('active');
+  });
 }
 
-/* ── 카테고리 필터 (같은 칩 재클릭 시 토글 해제) ── */
+/* ── 주차장 독립 토글 (다른 필터와 동시 선택 가능) ── */
+function toggleParking() {
+  closePlaceSlide();
+  var chip = document.querySelector('.chip[data-cat="parking"]');
+  var nowActive = !!(chip && !chip.classList.contains('active'));
+  if (chip) chip.classList.toggle('active');
+  if (typeof setParkingVisible  === 'function') setParkingVisible(nowActive);
+  if (typeof updateParkingCount === 'function') updateParkingCount();
+}
+
+/* 주차장 강제 활성화 (goMapPark 등에서 사용) */
+function activateParking() {
+  var chip = document.querySelector('.chip[data-cat="parking"]');
+  if (chip && !chip.classList.contains('active')) toggleParking();
+}
+
+/* ── 카테고리 필터 (같은 칩 재클릭 시 토글 해제, 주차장 칩은 독립 유지) ── */
 function setFilter(cat) {
+  if (cat === 'parking') { toggleParking(); return; }
+
   closePlaceSlide();
 
-  var chip     = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
+  /* 주차장 칩 상태 보존 */
+  var parkChip    = document.querySelector('.chip[data-cat="parking"]');
+  var parkActive  = !!(parkChip && parkChip.classList.contains('active'));
+
+  var chip      = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
   var wasActive = chip && chip.classList.contains('active');
 
-  /* 모든 칩 비활성화 */
-  document.querySelectorAll('#map-chips .chip').forEach(function (c) {
+  /* 주차장 제외 모든 칩 비활성화 */
+  document.querySelectorAll('#map-chips .chip:not([data-cat="parking"])').forEach(function (c) {
     c.classList.remove('active');
   });
 
   if (wasActive) {
-    /* 같은 칩 재클릭 → 필터 해제, 핀 전체 숨김 */
-    clearFilter();
+    /* 같은 칩 재클릭 → 일반 필터 해제, 주차장 상태 복원 */
+    PLACES.forEach(function (p) {
+      if (p.category === 'tourist') return;
+      overlayMap[p.id] && overlayMap[p.id].setMap(null);
+    });
+    setTouristVisible(false);
+    if (typeof setLcVisible  === 'function') setLcVisible(false);
+    if (typeof hideAllConv   === 'function') hideAllConv();
+    if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive);
+    if (typeof updateParkingCount === 'function') updateParkingCount();
     return;
   }
 
@@ -530,15 +562,15 @@ function setFilter(cat) {
   if (typeof hideAllConv === 'function') hideAllConv();
 
   if (isConvCat) {
-    /* PLACES 핀 전체 숨김 */
     PLACES.forEach(function (p) {
       if (p.category === 'tourist') return;
       overlayMap[p.id] && overlayMap[p.id].setMap(null);
     });
     setTouristVisible(false);
-    if (typeof setParkingVisible  === 'function') setParkingVisible(false);
-    if (typeof setLcVisible       === 'function') setLcVisible(false);
-    if (typeof showConvCat        === 'function') showConvCat(cat);
+    if (typeof setLcVisible === 'function') setLcVisible(false);
+    if (typeof showConvCat  === 'function') showConvCat(cat);
+    if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive);
+    if (typeof updateParkingCount === 'function') updateParkingCount();
     return;
   }
 
@@ -550,18 +582,12 @@ function setFilter(cat) {
   });
 
   setTouristVisible(cat === 'all' || cat === 'tourist');
-
-  if (typeof setParkingVisible  === 'function') {
-    setParkingVisible(cat === 'all' || cat === 'parking');
-  }
-  if (typeof setLcVisible === 'function') {
-    setLcVisible(cat === 'all' || cat === 'localcurrency');
-  }
+  if (typeof setLcVisible === 'function') setLcVisible(cat === 'all' || cat === 'localcurrency');
+  if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive || cat === 'all');
+  if (typeof updateParkingCount === 'function') updateParkingCount();
 
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
   fitPlaces(targets);
-
-  if (typeof updateParkingCount === 'function') updateParkingCount();
 }
 
 /* ── 반경 500m 지역화폐 가맹점 ── */

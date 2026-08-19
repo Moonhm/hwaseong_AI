@@ -255,6 +255,8 @@
       transition: all 0.14s;
     }
     .chip.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+    .chip--parking { border-color: #2563EB; color: #2563EB; }
+    .chip--parking.active { background: #2563EB; color: #fff; border-color: #2563EB; }
 
     /* ── 축제 상세 ── */
     #view-festival-detail { display: none; }
@@ -1179,17 +1181,17 @@
 
   <!-- 필터 칩 -->
   <div class="map-chips" id="map-chips">
-    <div class="chip" data-cat="all"                  onclick="setFilter('all')">전체</div>
-    <div class="chip" data-cat="festival"             onclick="setFilter('festival')">축제</div>
-    <div class="chip" data-cat="tourist"              onclick="setFilter('tourist')">관광지</div>
-    <div class="chip" data-cat="mobeom"               onclick="setFilter('mobeom')">모범음식점</div>
-    <div class="chip" data-cat="touristrest"           onclick="setFilter('touristrest')">관광식당업</div>
-    <div class="chip" data-cat="hotel"                onclick="setFilter('hotel')">관광호텔</div>
-    <div class="chip" data-cat="camping"              onclick="setFilter('camping')">캠핑장</div>
-    <div class="chip" data-cat="temple"               onclick="setFilter('temple')">템플스테이</div>
-    <div class="chip" data-cat="jebu"                 onclick="setFilter('jebu')">제부도 숙박</div>
-    <div class="chip" data-cat="localcurrency"        onclick="setFilter('localcurrency')">지역화폐 가맹점</div>
-    <div class="chip" data-cat="parking"              onclick="setFilter('parking')">주차장</div>
+    <div class="chip" data-cat="all"           onclick="setFilter('all')">전체</div>
+    <div class="chip chip--parking" data-cat="parking"      onclick="toggleParking()">🅿 주차장</div>
+    <div class="chip" data-cat="localcurrency" onclick="setFilter('localcurrency')">지역화폐 가맹점</div>
+    <div class="chip" data-cat="tourist"       onclick="setFilter('tourist')">관광지</div>
+    <div class="chip" data-cat="festival"      onclick="setFilter('festival')">축제</div>
+    <div class="chip" data-cat="mobeom"        onclick="setFilter('mobeom')">모범음식점</div>
+    <div class="chip" data-cat="touristrest"   onclick="setFilter('touristrest')">관광식당업</div>
+    <div class="chip" data-cat="hotel"         onclick="setFilter('hotel')">관광호텔</div>
+    <div class="chip" data-cat="camping"       onclick="setFilter('camping')">캠핑장</div>
+    <div class="chip" data-cat="temple"        onclick="setFilter('temple')">템플스테이</div>
+    <div class="chip" data-cat="jebu"          onclick="setFilter('jebu')">제부도 숙박</div>
   </div>
 
   <!-- 칩 스크롤 화살표 -->
@@ -1612,7 +1614,10 @@ function _quizShowStored() {
 
 function goMapCat(cat) {
   go('map');
-  setTimeout(() => setFilter(cat), 200);
+  setTimeout(function () {
+    if (cat === 'parking') { if (typeof activateParking === 'function') activateParking(); }
+    else setFilter(cat);
+  }, 200);
 }
 
 /* ── 특정 장소로 지도 이동 + 슬라이드 오픈 ──
@@ -1637,12 +1642,12 @@ function goMapFocus(lat, lng, level, placeId) {
   }, 350);
 }
 
-/* ── 주차장 위치로 지도 이동 ── */
+/* ── 주차장 위치로 지도 이동 (주차장 칩 강제 활성화) ── */
 function goMapPark(lat, lng) {
   go('map');
   setTimeout(function () {
     if (!kakaoMap) return;
-    setFilter('parking');
+    if (typeof activateParking === 'function') activateParking();
     setTimeout(function () {
       kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
       kakaoMap.setLevel(4);
