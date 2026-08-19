@@ -104,10 +104,14 @@ function mergeParkingData(list, rt) {
   });
 }
 
-/* ── 오버레이 색상 (운영중=파랑, 미운영=회색) ── */
+/* ── 오버레이 색상 ───────────────────────────────────────────────── */
 function pinColor(p) {
-  if (!p.open || p.total <= 0) return '#9CA3AF';
-  return '#2563EB';
+  if (!p.open)           return '#9CA3AF';
+  if (p.total <= 0)      return '#9CA3AF';
+  var ratio = p.avail / p.total;
+  if (ratio <= 0)        return '#EF4444';
+  if (ratio < 0.3)       return '#F97316';
+  return '#16A34A';
 }
 
 function statusText(p) {
@@ -125,7 +129,7 @@ function pinHtml(p) {
     + ' onmouseover="pkHoverIn(' + p.id + ')"'
     + ' onmouseout="pkHoverOut(' + p.id + ')">'
     + '<div class="pk-circle" style="background:' + color + '">'
-    + '<span class="pk-p">P</span>'
+    + '<span class="pk-p-badge" style="color:' + color + '">P</span>'
     + '<span class="pk-count">' + status + '</span>'
     + '</div>'
     + '<div class="pk-tail" style="border-top-color:' + color + '"></div>'
@@ -160,9 +164,11 @@ function updateAllPins() {
     var color  = pinColor(p);
     var status = statusText(p);
     var circle = el.querySelector('.pk-circle');
+    var badge  = el.querySelector('.pk-p-badge');
     var count  = el.querySelector('.pk-count');
     var tail   = el.querySelector('.pk-tail');
     if (circle) circle.style.background = color;
+    if (badge)  badge.style.color = color;
     if (count)  count.textContent = status;
     if (tail)   tail.style.borderTopColor = color;
   });
