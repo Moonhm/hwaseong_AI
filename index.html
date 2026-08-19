@@ -1194,6 +1194,20 @@
     .menu-item-text { flex: 1; }
     .menu-item-label { font-size: 14px; font-weight: 700; color: var(--text); }
     .menu-item-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .menu-fav-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 20px; cursor: pointer; transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .menu-fav-item:active { background: var(--bg); }
+    .menu-fav-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .menu-fav-name { font-size: 15px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .menu-fav-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .menu-fav-empty { padding: 14px 20px; font-size: 13px; color: var(--text-muted); }
     .menu-rec-banner {
       margin: 16px 16px 0;
       background: linear-gradient(135deg, #F97316, #EA580C);
@@ -1677,6 +1691,9 @@
       <div class="menu-rec-banner-arrow">시작하기 →</div>
     </div>
 
+    <!-- 즐겨찾기 -->
+    <div id="menu-favs-wrap"></div>
+
     <!-- 바로가기 -->
     <div class="menu-section-title">바로가기</div>
     <div class="menu-item" onclick="menuGoTourism('festival')">
@@ -1780,6 +1797,7 @@ function go(page) {
 function openMenu() {
   document.getElementById('menu-dim').classList.add('open');
   document.getElementById('menu-drawer').classList.add('open');
+  if (typeof renderMenuFavs === 'function') renderMenuFavs();
 }
 function closeMenu() {
   document.getElementById('menu-dim').classList.remove('open');
@@ -3331,7 +3349,7 @@ function renderFavSection() {
   var sec = document.getElementById('home-favs-section');
   if (!sec) return;
   var favs = getFavs();
-  if (!favs.length) { sec.style.display = 'none'; return; }
+  if (!favs.length) { sec.style.display = 'none'; renderMenuFavs(); return; }
   sec.style.display = 'block';
   var TYPE_EMOJI = { place:'★', lc:'💳', parking:'🅿' };
   var TYPE_BG    = { place:'#FEF3C7', lc:'#DCFCE7', parking:'#DBEAFE' };
@@ -3352,6 +3370,34 @@ function renderFavSection() {
     }).join('') +
     (favs.length > 6 ? '<div style="text-align:center;font-size:12px;color:var(--primary);padding:4px 0">+' + (favs.length - 6) + '개 더</div>' : '') +
     '</div>';
+  renderMenuFavs();
+}
+
+function renderMenuFavs() {
+  var wrap = document.getElementById('menu-favs-wrap');
+  if (!wrap) return;
+  var favs = getFavs();
+  if (!favs.length) { wrap.innerHTML = ''; return; }
+  var TYPE_LABEL = { place:'관광지', lc:'가맹점', parking:'주차장' };
+  var TYPE_BG    = { place:'#FEF3C7', lc:'#DCFCE7', parking:'#DBEAFE' };
+  var TYPE_EMOJI = { place:'★', lc:'💳', parking:'🅿' };
+  wrap.innerHTML =
+    '<div class="menu-section-title" style="padding-top:16px">♥ 즐겨찾기</div>' +
+    favs.slice(0, 5).map(function(f) {
+      var sid = f.id.replace(/'/g, '');
+      return '<div class="menu-fav-item" onclick="closeMenu();navToFav(\'' + sid + '\')">' +
+        '<div class="menu-fav-icon" style="background:' + (TYPE_BG[f.type] || '#F3F4F6') + '">' + (TYPE_EMOJI[f.type] || '★') + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="menu-fav-name">' + (f.name || '') + '</div>' +
+          '<div class="menu-fav-type">' + (TYPE_LABEL[f.type] || '') + '</div>' +
+        '</div>' +
+        '<button style="background:none;border:none;color:#D1D5DB;font-size:22px;cursor:pointer;padding:0 0 0 8px;line-height:1" ' +
+          'onclick="event.stopPropagation();removeFav(\'' + sid + '\');renderMenuFavs()">×</button>' +
+        '</div>';
+    }).join('') +
+    (favs.length > 5
+      ? '<div style="text-align:center;font-size:12px;color:var(--primary);padding:4px 0 8px">+' + (favs.length - 5) + '개 더 (홈에서 확인)</div>'
+      : '');
 }
 
 /* ── 토스트 ── */
