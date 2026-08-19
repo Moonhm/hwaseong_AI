@@ -2,10 +2,12 @@
 
 let kakaoMap   = null;
 let mapReady   = false;
-let overlayMap = {};
+let overlayMap = {};   /* id → CustomOverlay */
+let overlayEls = {};   /* id → DOM element (직접 조작용) */
 let selectedId = null;
+let slideStartY = 0;   /* 드래그-투-클로즈용 */
 
-/* 화성특례시 중심 좌표 (시청 인근, 초기 기준점) */
+/* 화성특례시 중심 좌표 (시청 인근) */
 const HWASEONG = { lat: 37.199, lng: 126.831 };
 
 const CAT_COLOR = {
@@ -18,10 +20,10 @@ const CAT_COLOR = {
 
 /* ── 지도 초기화 ── */
 function initMap() {
-  /* container를 먼저 선언해야 mapReady early-return 블록에서도 사용 가능 */
   var container = document.getElementById('kakao-map');
   if (!container) return;
 
+  /* 이미 초기화된 경우: 크기 재계산만 */
   if (mapReady) {
     container.style.width  = window.innerWidth  + 'px';
     container.style.height = (window.innerHeight - 52) + 'px';
@@ -37,37 +39,39 @@ function initMap() {
   var loader = document.getElementById('map-loader');
   if (loader) loader.remove();
 
-  /* 컨테이너 크기 명시 (Kakao Maps 필수 조건) */
   container.style.width  = window.innerWidth  + 'px';
   container.style.height = (window.innerHeight - 52) + 'px';
 
-  /* 지도 생성 */
-  kakaoMap = new kakao.maps.Map(container, {
-    center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-    level:  10,
-  });
+  /* 참고 깃 패턴: kakao.maps.load() 콜백 안에서 지도 생성 */
+  kakao.maps.load(function () {
+    kakaoMap = new kakao.maps.Map(container, {
+      center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
+      level:  10,
+    });
 
-  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-  mapReady = true;
+    kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+    mapReady = true;
 
-  buildOverlays();
-  setupMyLocation();
-  if (typeof initParking === 'function') initParking(kakaoMap);
-  kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
+    buildOverlays();
+    setupMyLocation();
+    setupSlideCardDrag();
+    if (typeof initParking === 'function') initParking(kakaoMap);
+    kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
-  /* display:none → block 전환 후 크기 재계산 + 화성시 전체 범위 자동 맞춤 */
-  setTimeout(function () {
-    container.style.width  = window.innerWidth  + 'px';
-    container.style.height = (window.innerHeight - 52) + 'px';
-    kakaoMap.relayout();
-    fitAllPlaces();
-  }, 300);
+    /* display:none → block 전환 후 크기 재계산 + 화성시 전체 범위 자동 맞춤 */
+    setTimeout(function () {
+      container.style.width  = window.innerWidth  + 'px';
+      container.style.height = (window.innerHeight - 52) + 'px';
+      kakaoMap.relayout();
+      fitAllPlaces();
+    }, 300);
 
-  window.addEventListener('resize', function () {
-    if (!mapReady) return;
-    container.style.width  = window.innerWidth  + 'px';
-    container.style.height = (window.innerHeight - 52) + 'px';
-    kakaoMap.relayout();
+    window.addEventListener('resize', function () {
+      if (!mapReady) return;
+      container.style.width  = window.innerWidth  + 'px';
+      container.style.height = (window.innerHeight - 52) + 'px';
+      kakaoMap.relayout();
+    });
   });
 }
 
@@ -78,6 +82,10 @@ function fitAllPlaces() {
     bounds.extend(new kakao.maps.LatLng(p.lat, p.lng));
   });
   kakaoMap.setBounds(bounds, 60);
+  /* 너무 축소되지 않도록 최대 레벨 9 제한 */
+  setTimeout(function () {
+    if (kakaoMap.getLevel() > 9) kakaoMap.setLevel(9);
+  }, 150);
 }
 
 /* ── 에러 화면 ── */
@@ -97,70 +105,108 @@ function showMapError(msg) {
     'padding:10px 20px;font-size:13px;cursor:pointer">새로고침</button></div>';
 }
 
-/* ── 커스텀 오버레이 생성 ── */
+/* ── 커스텀 오버레이 생성 (참고 깃: DOM 요소 직접 생성 방식) ── */
 function buildOverlays() {
   PLACES.forEach(function (p) {
     var color = CAT_COLOR[p.category] || '#6B7280';
     var cfg   = CATEGORY_CONFIG[p.category];
     var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
 
-    var html =
-      '<div class="cm-pin" id="pin-' + p.id + '" onclick="onPinClick(event,' + p.id + ')">' +
-      '<div class="cm-circle" style="background:' + color + '">' + cfg.emoji + ' ' + label + '</div>' +
-      '<div class="cm-tail" style="border-top-color:' + color + '"></div></div>';
+    var wrap   = document.createElement('div');
+    wrap.className = 'cm-pin';
+
+    var circle = document.createElement('div');
+    circle.className = 'cm-circle';
+    circle.style.background = color;
+    circle.textContent = cfg.emoji + ' ' + label;
+
+    var tail = document.createElement('div');
+    tail.className = 'cm-tail';
+    tail.style.borderTopColor = color;
+
+    wrap.appendChild(circle);
+    wrap.appendChild(tail);
+
+    /* 클로저로 place id 캡처 */
+    (function (placeId) {
+      wrap.addEventListener('click', function (e) {
+        e.stopPropagation();
+        onPinClick(placeId);
+      });
+    })(p.id);
 
     var overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
-      content:  html,
+      content:  wrap,
       yAnchor:  1.5,
       zIndex:   1,
     });
     overlay.setMap(kakaoMap);
     overlayMap[p.id] = overlay;
+    overlayEls[p.id] = wrap;
   });
 }
 
 /* ── 핀 클릭 ── */
-function onPinClick(e, id) {
-  e.stopPropagation();
+function onPinClick(id) {
   var place = PLACES.find(function (p) { return p.id === id; });
   if (!place) return;
 
-  if (selectedId) {
-    var prev = document.getElementById('pin-' + selectedId);
-    if (prev) prev.classList.remove('selected');
+  /* 이전 선택 해제 */
+  if (selectedId !== null && overlayEls[selectedId]) {
+    overlayEls[selectedId].classList.remove('selected');
   }
   selectedId = id;
-  var cur = document.getElementById('pin-' + id);
-  if (cur) cur.classList.add('selected');
+  if (overlayEls[id]) overlayEls[id].classList.add('selected');
 
+  /* 슬라이드 카드 표시 */
   showPlaceSlide(place);
 
-  /* 슬라이드 위 가시 영역 42%에 핀이 오도록 중심을 한 번만 이동
-   * projection으로 정확한 목표 중심 좌표를 계산 → panTo 1회만 호출 */
-  var navH     = 52;
-  var mapH     = window.innerHeight - navH;
-  var slideH   = Math.min(mapH * 0.6, 420);
-  var visibleH = mapH - slideH;
-  var targetY  = visibleH * 0.42;
-  var offsetPx = Math.round(mapH / 2 - targetY); /* 핀이 중심 위로 올라가야 할 px */
-
-  try {
-    var proj      = kakaoMap.getProjection();
-    var pinPt     = proj.pointFromCoords(new kakao.maps.LatLng(place.lat, place.lng));
-    /* 중심을 핀보다 offsetPx픽셀 남쪽(y+)으로 지정 → panTo 후 핀이 가시 영역에 표시 */
-    var newCenter = proj.coordsFromPoint(new kakao.maps.Point(pinPt.x, pinPt.y + offsetPx));
-    kakaoMap.panTo(newCenter);
-  } catch (ex) {
-    kakaoMap.panTo(new kakao.maps.LatLng(place.lat, place.lng));
-  }
+  /* ① panTo로 핀을 지도 중심으로 이동
+   * ② 350ms 후 panBy로 슬라이드 위 가시 영역에 핀 위치 조정
+   * 참고 깃 패턴 — panBy 양수(+) = 핀이 화면 위쪽으로 이동 */
+  kakaoMap.panTo(new kakao.maps.LatLng(place.lat, place.lng));
+  setTimeout(function () {
+    var navH     = 52;
+    var mapH     = window.innerHeight - navH;
+    var slideH   = Math.min(mapH * 0.6, 420);
+    var visibleH = mapH - slideH;
+    var targetY  = visibleH * 0.42;               /* 슬라이드 위 가시 영역 42% 위치 */
+    var delta    = Math.round(mapH / 2 - targetY); /* 이동해야 할 픽셀 (항상 양수) */
+    kakaoMap.panBy(0, delta);                      /* 양수 = 핀이 화면 위쪽으로 */
+  }, 350);
 }
 
-/* ── 장소 사진 HTML (있으면 표시, 없으면 카테고리 색상 배너) ── */
+/* ── 슬라이드 카드 드래그-투-클로즈 (참고 깃 패턴) ── */
+function setupSlideCardDrag() {
+  var dragZone = document.getElementById('slide-drag-zone');
+  if (!dragZone) return;
+
+  dragZone.addEventListener('touchstart', function (e) {
+    slideStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  dragZone.addEventListener('touchend', function (e) {
+    var endY = e.changedTouches[0].clientY;
+    if (endY - slideStartY > 60) closePlaceSlide();
+  });
+
+  dragZone.addEventListener('mousedown', function (e) {
+    slideStartY = e.clientY;
+  });
+
+  document.addEventListener('mouseup', function (e) {
+    var slide = document.getElementById('place-slide');
+    if (slide && slide.classList.contains('open') && e.clientY - slideStartY > 60) {
+      closePlaceSlide();
+    }
+  });
+}
+
+/* ── 장소 사진 HTML ── */
 function placePhotoHtml(place) {
-  var cfg   = CATEGORY_CONFIG[place.category];
-  var color = CAT_COLOR[place.category];
-  var src   = 'assets/images/places/' + place.name + '.jpg';
+  var cfg = CATEGORY_CONFIG[place.category];
+  var src = 'assets/images/places/' + place.name + '.jpg';
   return '<div style="width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:12px;background:' + cfg.bg + ';display:flex;align-items:center;justify-content:center;">' +
     '<img src="' + src + '" alt="' + place.name + '" ' +
     'style="width:100%;height:100%;object-fit:cover;" ' +
@@ -189,7 +235,6 @@ function showPlaceSlide(place) {
     '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name + '\')">🗺 길찾기</button>' +
     '</div>';
 
-  /* rAF으로 렌더 사이클 확보 후 슬라이드 오픈 (janky 방지) */
   requestAnimationFrame(function () {
     document.getElementById('place-slide').classList.add('open');
     document.getElementById('map-dim').classList.add('show');
@@ -199,9 +244,8 @@ function showPlaceSlide(place) {
 function closePlaceSlide() {
   document.getElementById('place-slide').classList.remove('open');
   document.getElementById('map-dim').classList.remove('show');
-  if (selectedId) {
-    var el = document.getElementById('pin-' + selectedId);
-    if (el) el.classList.remove('selected');
+  if (selectedId !== null) {
+    if (overlayEls[selectedId]) overlayEls[selectedId].classList.remove('selected');
     selectedId = null;
   }
 }
@@ -213,14 +257,12 @@ function setFilter(cat) {
     c.classList.toggle('active', c.dataset.cat === cat);
   });
 
-  /* data.js PLACES 오버레이 토글 */
   PLACES.forEach(function (p) {
     overlayMap[p.id] && overlayMap[p.id].setMap(
       (cat === 'all' || p.category === cat) ? kakaoMap : null
     );
   });
 
-  /* 실시간 주차장 오버레이 토글 */
   if (typeof setParkingVisible === 'function') {
     setParkingVisible(cat === 'all' || cat === 'parking');
   }
