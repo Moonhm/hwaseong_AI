@@ -40,7 +40,7 @@ var CONV_CATS = ['mobeom','touristrest','hotel','camping','temple','jebu'];
 
 /* ── 실제 컨테이너 너비 계산 (max-width:480px 반영) ── */
 function mapW() { return Math.min(window.innerWidth, 480); }
-function mapH() { return window.innerHeight - 52; }
+function mapH() { return window.innerHeight - 46; }
 
 /* ── 지도 초기화 ── */
 function initMap() {

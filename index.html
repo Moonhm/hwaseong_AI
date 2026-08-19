@@ -54,7 +54,7 @@
     .page {
       display: none; position: absolute;
       top: 0; left: 0; right: 0;
-      bottom: calc(52px + env(safe-area-inset-bottom));
+      bottom: calc(46px + env(safe-area-inset-bottom));
       overflow-y: auto; overscroll-behavior-y: contain;
       -webkit-overflow-scrolling: touch;
     }
@@ -70,12 +70,12 @@
     }
     .nav-item {
       flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 3px; height: 52px;
+      justify-content: center; gap: 2px; height: 46px;
       color: var(--text-muted); font-size: 10px; font-weight: 600;
       transition: color 0.14s;
     }
     .nav-item.active { color: var(--primary); }
-    .nav-item svg { width: 22px; height: 22px; }
+    .nav-item svg { width: 20px; height: 20px; }
 
     /* ── PAGE HEADER ── */
     .page-header {
@@ -472,7 +472,7 @@
     .pb-paid { background: #DBEAFE; color: var(--primary); }
 
     /* ── MAP PAGE ── */
-    #page-map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(52px + env(safe-area-inset-bottom)); height: auto; padding-bottom: 0; overflow: hidden; }
+    #page-map { position: absolute; top: 0; left: 0; right: 0; bottom: calc(46px + env(safe-area-inset-bottom)); height: auto; padding-bottom: 0; overflow: hidden; }
     #kakao-map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; touch-action: none; }
     .map-loading {
       position: absolute; inset: 0; display: flex; flex-direction: column;
@@ -603,7 +603,7 @@
     /* 장소 슬라이드 카드 (지도 하단) */
     .place-slide {
       position: fixed; left: 50%; transform: translateX(-50%) translateY(calc(100% + 200px));
-      bottom: calc(52px + env(safe-area-inset-bottom));
+      bottom: calc(46px + env(safe-area-inset-bottom));
       width: 100%; max-width: 480px;
       background: var(--white); border-radius: 20px 20px 0 0;
       z-index: 200; box-shadow: 0 -4px 24px rgba(0,0,0,0.18);
@@ -995,7 +995,7 @@
     /* 뒤로가기 버튼 */
     #np-back-btn {
       position:fixed;
-      bottom:calc(52px + 72px);
+      bottom:calc(46px + 72px);
       left:max(14px, calc((100vw - 480px) / 2 + 14px));
       width:46px; height:46px; border-radius:50%;
       background:rgba(0,0,0,0.42);
@@ -1173,7 +1173,7 @@
 
     /* ── TOAST ── */
     #toast {
-      position: fixed; bottom: calc(52px + env(safe-area-inset-bottom) + 14px); left: 50%;
+      position: fixed; bottom: calc(46px + env(safe-area-inset-bottom) + 14px); left: 50%;
       transform: translateX(-50%) translateY(20px) scale(0.88);
       background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
       padding: 10px 20px; border-radius: 24px; white-space: nowrap;
