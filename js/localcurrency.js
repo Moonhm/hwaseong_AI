@@ -182,7 +182,7 @@ function showClusters(bounds, level) {
 
 /* ── 가맹점 슬라이드 카드 ── */
 function showLcSlide(p) {
-  if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(p.lat, p.lng, 50);
+  if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(p.lat, p.lng, 50, 240);
   document.getElementById('slide-inner').innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
     + '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;'

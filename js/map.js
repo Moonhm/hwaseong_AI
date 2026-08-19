@@ -338,16 +338,16 @@ function onPinClick(id) {
 }
 
 /* 핀을 슬라이드 카드 위 가시 영역 중앙으로 이동
- * setCenter(즉시) 후 50ms 대기 → panBy (참고 레포 패턴) */
-function _panPinAboveSlide(lat, lng, delay) {
+ * customSlideH: 슬라이드 실제 예상 높이(px). 미지정 시 자동 계산(최대 420px) */
+function _panPinAboveSlide(lat, lng, delay, customSlideH) {
   if (!kakaoMap || !lat || !lng) return;
   kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
   setTimeout(function () {
     if (!kakaoMap) return;
     var h        = mapH();
-    var slideH   = Math.min(h * 0.6, 420);
+    var slideH   = customSlideH != null ? customSlideH : Math.min(h * 0.6, 420);
     var visibleH = h - slideH;
-    var targetY  = visibleH * 0.40;
+    var targetY  = visibleH * 0.50;
     kakaoMap.panBy(0, Math.round(h / 2 - targetY));
   }, delay != null ? delay : 50);
 }
