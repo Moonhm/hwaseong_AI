@@ -104,8 +104,7 @@ function _saveConvCache(cat, places) {
 function showConvCat(cat) {
   if (!kakaoMap) return;
 
-  /* 제부도: 115개 geocoding 대신 단일 요약 마커 표시 */
-  if (cat === 'jebu') { _showJebuMarker(); return; }
+  if (cat === 'jebu') { _showJebuPins(); return; }
 
   var status = CONV_STATUS[cat] || 'idle';
 
@@ -138,7 +137,6 @@ function hideAllConv() {
       CONV_OVMAP[p.id] && CONV_OVMAP[p.id].setMap(null);
     });
   });
-  if (_jebuOv) _jebuOv.setMap(null);
 }
 
 /* ── Geocoding ── */
@@ -277,7 +275,41 @@ function _buildOverlays(cat, places) {
   });
 }
 
-/* ── 제부도 단일 마커 ── */
+/* ── 제부도 개별 핀 표시 ── */
+function _showJebuPins() {
+  if (CONV_STATUS.jebu === 'done') {
+    (CONV_PLACES.jebu || []).forEach(function (p) {
+      CONV_OVMAP[p.id] && CONV_OVMAP[p.id].setMap(kakaoMap);
+    });
+    kakaoMap.setCenter(new kakao.maps.LatLng(JEBU_LAT, JEBU_LNG));
+    kakaoMap.setLevel(7);
+    return;
+  }
+  var items = CONV_CAT_CFG.jebu.getItems();
+  var places = [];
+  items.forEach(function (item, i) {
+    if (!item.lat || !item.lng) return;
+    places.push({
+      id:       'jebu_' + i,
+      name:     item.name,
+      category: 'jebu',
+      address:  '화성시 서신면 ' + (item.addr || ''),
+      lat:      item.lat,
+      lng:      item.lng,
+      tags:     [],
+      desc:     '',
+      extra:    { type: item.type || '숙박', tel: item.tel || '' },
+    });
+  });
+  CONV_PLACES.jebu = places;
+  CONV_STATUS.jebu  = 'done';
+  _buildOverlays('jebu', places);
+  kakaoMap.setCenter(new kakao.maps.LatLng(JEBU_LAT, JEBU_LNG));
+  kakaoMap.setLevel(7);
+  showToast('제부도 숙박 ' + places.length + '곳 표시됨');
+}
+
+/* ── 제부도 단일 마커 (레거시 — 미사용) ── */
 function _showJebuMarker() {
   if (!_jebuOv) {
     var wrap   = document.createElement('div');
