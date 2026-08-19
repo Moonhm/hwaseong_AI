@@ -1641,6 +1641,7 @@
 /* ── 페이지 전환 ── */
 function go(page) {
   closeQuiz();
+  closeMenu();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item[data-page]').forEach(b => b.classList.remove('active'));
   var newPage = document.getElementById('page-' + page);
