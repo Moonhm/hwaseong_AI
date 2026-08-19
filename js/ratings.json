@@ -1,0 +1,797 @@
+{
+  "1": {
+    "rating": 4.9,
+    "reviewCount": 2318,
+    "kakaoId": "8069124"
+  },
+  "2": {
+    "rating": 4.5,
+    "reviewCount": 1285,
+    "kakaoId": "14973250"
+  },
+  "3": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "10734494"
+  },
+  "4": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "1768296843"
+  },
+  "5": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": null
+  },
+  "6": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "8215120"
+  },
+  "7": {
+    "rating": 4.2,
+    "reviewCount": 196,
+    "kakaoId": "2065421924"
+  },
+  "8": {
+    "rating": 4.6,
+    "reviewCount": 963,
+    "kakaoId": null
+  },
+  "9": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "26953063"
+  },
+  "10": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "11614162"
+  },
+  "11": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": null
+  },
+  "12": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "8097620"
+  },
+  "13": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "14": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "11487287"
+  },
+  "15": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "326291281"
+  },
+  "16": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "8282686"
+  },
+  "17": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "394890892"
+  },
+  "18": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "1743553784"
+  },
+  "19": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "990723437"
+  },
+  "20": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "27305931"
+  },
+  "21": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "22": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "25302787"
+  },
+  "23": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "24": {
+    "rating": 4.5,
+    "reviewCount": 1285,
+    "kakaoId": "8037586"
+  },
+  "25": {
+    "rating": 4.6,
+    "reviewCount": 1285,
+    "kakaoId": "11405128"
+  },
+  "26": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "11973856"
+  },
+  "27": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "10186752"
+  },
+  "28": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "29": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "8233215"
+  },
+  "30": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "31": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "26309531"
+  },
+  "32": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "496887642"
+  },
+  "33": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "910717295"
+  },
+  "34": {
+    "rating": 4.4,
+    "reviewCount": 571,
+    "kakaoId": "1572909682"
+  },
+  "35": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "26466915"
+  },
+  "36": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "11787581"
+  },
+  "37": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "12761151"
+  },
+  "38": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": "11590900"
+  },
+  "39": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "107708346"
+  },
+  "40": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "41": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "66": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "67": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "68": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "69": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": "18552661"
+  },
+  "70": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "71": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "72": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "73": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "74": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "75": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "76": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "77": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "78": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "79": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "80": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "81": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "82": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "83": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "201": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "202": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "203": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "204": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "205": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "206": {
+    "rating": 3.8,
+    "reviewCount": 23,
+    "kakaoId": null
+  },
+  "207": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "208": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "209": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "210": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "211": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "212": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "213": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "26596977"
+  },
+  "214": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "215": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "216": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "217": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "8690568"
+  },
+  "218": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "219": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "220": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": "17006084"
+  },
+  "221": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": "7888743"
+  },
+  "222": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "223": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "224": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "225": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "226": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "227": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "228": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "27474101"
+  },
+  "229": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "230": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "231": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "232": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "233": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "134": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": null
+  },
+  "135": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "136": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "137": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "17384591"
+  },
+  "138": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": null
+  },
+  "139": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "140": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "141": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "23665568"
+  },
+  "142": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "10714405"
+  },
+  "143": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "1323091167"
+  },
+  "144": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": "142745949"
+  },
+  "145": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "146": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "147": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "148": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "149": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "150": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "151": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "22133960"
+  },
+  "152": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "153": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "154": {
+    "rating": 3.8,
+    "reviewCount": 23,
+    "kakaoId": "555357898"
+  },
+  "155": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "156": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "2099189066"
+  },
+  "157": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "158": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "10575455"
+  },
+  "159": {
+    "rating": 3.8,
+    "reviewCount": 23,
+    "kakaoId": null
+  },
+  "160": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "7863914"
+  },
+  "161": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "13324379"
+  },
+  "162": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "1357766584"
+  },
+  "163": {
+    "rating": 4.0,
+    "reviewCount": 115,
+    "kakaoId": "26889397"
+  },
+  "164": {
+    "rating": 4.0,
+    "reviewCount": 115,
+    "kakaoId": "421973157"
+  },
+  "165": {
+    "rating": 4.0,
+    "reviewCount": 115,
+    "kakaoId": "1452780856"
+  },
+  "166": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "167": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "530691581"
+  },
+  "168": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "169": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "170": {
+    "rating": 4.1,
+    "reviewCount": 196,
+    "kakaoId": null
+  },
+  "171": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": "1307187084"
+  },
+  "172": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "173": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": "26625219"
+  },
+  "174": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "175": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "176": {
+    "rating": 4.2,
+    "reviewCount": 235,
+    "kakaoId": "1716345539"
+  },
+  "177": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "1374670657"
+  },
+  "178": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "179": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "180": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "181": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "182": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "183": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "1107446132"
+  },
+  "184": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "185": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "186": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "19616239"
+  },
+  "187": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": "687436457"
+  },
+  "188": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": "989213915"
+  },
+  "189": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "190": {
+    "rating": 4.1,
+    "reviewCount": 235,
+    "kakaoId": "18524900"
+  },
+  "191": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "192": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "193": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "194": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "195": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "196": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "197": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "198": {
+    "rating": 3.9,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "199": {
+    "rating": 4.0,
+    "reviewCount": 76,
+    "kakaoId": null
+  },
+  "200": {
+    "rating": 4.3,
+    "reviewCount": 571,
+    "kakaoId": "26957694"
+  }
+}

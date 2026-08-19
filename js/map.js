@@ -445,6 +445,18 @@ function showPlaceSlide(place) {
       routeBtn;
   }
 
+  var ratingHtml = '';
+  if (isTourist && place.rating) {
+    var full = Math.floor(place.rating), half = (place.rating - full) >= 0.3 ? 1 : 0;
+    var stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - half);
+    ratingHtml =
+      '<div class="sl-rating">' +
+      '<span class="sl-stars">' + stars + '</span>' +
+      '<span class="sl-rating-num">' + place.rating + '</span>' +
+      '<span class="sl-rating-cnt">(' + (place.reviewCount || 0).toLocaleString() + '개 리뷰)</span>' +
+      '</div>';
+  }
+
   document.getElementById('slide-inner').innerHTML =
     placePhotoHtml(place) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
@@ -452,6 +464,7 @@ function showPlaceSlide(place) {
     (place.status === 'ongoing' ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : '') +
     '</div>' +
     '<div class="sl-name">' + place.name + '</div>' +
+    ratingHtml +
     '<div class="sl-addr">📍 ' + place.address + '</div>' +
     (place.date ? '<div class="sl-date">📅 ' + place.date + '</div>' : '') +
     descHtml +
