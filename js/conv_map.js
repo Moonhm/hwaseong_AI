@@ -345,7 +345,28 @@ function _showConvSlide(place) {
 /* ── 슬라이드 카드: 제부도 ── */
 function _showJebuSlide() {
   if (!CONVENIENCE || !CONVENIENCE.jebu || !CONVENIENCE.jebu.summary) return;
-  var s = CONVENIENCE.jebu.summary;
+  var j = CONVENIENCE.jebu;
+  var s = j.summary;
+
+  function _listHtml(arr) {
+    return (arr || []).map(function (it) {
+      return '<div style="padding:7px 0;border-bottom:1px solid #F1F5F9;display:flex;flex-direction:column;gap:2px">' +
+        '<span style="font-size:13px;font-weight:600;color:#1E293B">' + it.name + '</span>' +
+        '<span style="font-size:11px;color:#64748B">서신면 ' + it.addr + '</span>' +
+        (it.tel ? '<span style="font-size:11px;color:#64748B">📞 ' + it.tel + '</span>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function _section(label, arr) {
+    if (!arr || !arr.length) return '';
+    return '<div style="margin-top:14px">' +
+      '<div style="font-size:12px;font-weight:700;color:#0284C7;background:#E0F2FE;' +
+      'border-radius:6px;padding:5px 10px;margin-bottom:2px">' + label + ' · ' + arr.length + '곳</div>' +
+      _listHtml(arr) +
+      '</div>';
+  }
+
   var html =
     '<div style="width:100%;height:80px;border-radius:12px;background:#E0F2FE;' +
     'display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:12px">⛱</div>' +
@@ -362,7 +383,12 @@ function _showJebuSlide() {
     '</div>' +
     '<div class="sl-actions">' +
     '<button class="sl-btn" onclick="openRoute(37.1578,126.5764,\'제부도\')">🗺 길찾기</button>' +
-    '</div>';
+    '</div>' +
+    _section('🏖 관광펜션', j.pension_outside) +
+    _section('🏨 제부도 내 숙박', j.inside) +
+    _section('🏡 인근 숙박', j.nearby) +
+    _section('🏠 민박 (섬 내)', j.minbak_inside) +
+    _section('🏘 민박 (인근)', j.minbak_nearby);
 
   document.getElementById('slide-inner').innerHTML = html;
   requestAnimationFrame(function () {
