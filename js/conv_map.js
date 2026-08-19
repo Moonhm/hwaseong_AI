@@ -34,7 +34,7 @@ var CONV_CAT_CFG = {
   },
   temple: {
     label: '템플스테이', color: '#92400E', bg: '#FDE68A', emoji: '🏯',
-    getItems: function () { return [CONVENIENCE.templeStay]; },
+    getItems: function () { return CONVENIENCE.templeStay ? [CONVENIENCE.templeStay] : []; },
     extraHtml: function (ex) {
       return '<div class="sl-addr">⏰ ' + (ex.schedule || '') + '</div>';
     },
@@ -42,7 +42,7 @@ var CONV_CAT_CFG = {
   jebu: {
     label: '제부도 숙박', color: '#0284C7', bg: '#E0F2FE', emoji: '⛱',
     getItems: function () {
-      var j = CONVENIENCE.jebu;
+      var j = CONVENIENCE.jebu || {};
       var all = [];
       (j.pension_outside || []).forEach(function (x) { all.push(Object.assign({}, x, { type: '관광펜션' })); });
       (j.inside          || []).forEach(function (x) { all.push(Object.assign({}, x, { type: '도서내 숙박' })); });
