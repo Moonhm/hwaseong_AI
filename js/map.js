@@ -537,9 +537,9 @@ function goNearestParking(placeLat, placeLng, placeId) {
     content: touristEl, yAnchor: 1.55, zIndex: 50, map: kakaoMap,
   });
 
-  /* 주차장 하이라이트 핀 */
+  /* 주차장 하이라이트 핀 — 잔여 대수·색상 반영 */
   var nearestId = nearest.id;
-  var parkEl = _makeNpPin('#2563EB', 'P', nearest.name, function () {
+  var parkEl = _makeNpParkPin(nearest, function () {
     if (typeof showParkingSlide === 'function') {
       var pk = parkingData.find(function (x) { return x.id === nearestId; });
       if (pk) showParkingSlide(pk);
@@ -575,56 +575,108 @@ function goNearestParking(placeLat, placeLng, placeId) {
   }, 320);
 }
 
-/* 하이라이트 핀 DOM 생성 */
+/* 관광지 하이라이트 핀 — 타원형 pill */
 function _makeNpPin(color, icon, name, onClickFn) {
   var wrap = document.createElement('div');
   wrap.className = 'np-pin';
 
-  var circleWrap = document.createElement('div');
-  circleWrap.className = 'np-circle-wrap';
+  var pillWrap = document.createElement('div');
+  pillWrap.className = 'np-pill-wrap';
+  if (onClickFn) {
+    pillWrap.style.cursor = 'pointer';
+    pillWrap.addEventListener('click', function (e) { e.stopPropagation(); onClickFn(); });
+  }
 
   var ring1 = document.createElement('div');
-  ring1.className = 'np-ring';
+  ring1.className = 'np-pill-ring';
   ring1.style.borderColor = color;
 
   var ring2 = document.createElement('div');
-  ring2.className = 'np-ring r2';
+  ring2.className = 'np-pill-ring r2';
   ring2.style.borderColor = color;
 
-  var circle = document.createElement('div');
-  circle.className = 'np-circle';
-  circle.style.background = color;
-  circle.style.color = '#fff';
-  /* P 배지는 텍스트, 나머지는 이모지 */
-  if (icon === 'P') {
-    circle.style.fontSize = '22px';
-    circle.style.fontWeight = '900';
-    circle.style.fontFamily = 'sans-serif';
-  } else {
-    circle.style.fontSize = '26px';
-  }
-  circle.textContent = icon;
+  var pill = document.createElement('div');
+  pill.className = 'np-pill';
+  pill.style.background = color;
 
-  if (onClickFn) {
-    circleWrap.style.cursor = 'pointer';
-    circleWrap.addEventListener('click', function (e) { e.stopPropagation(); onClickFn(); });
-  }
+  var iconSpan = document.createElement('span');
+  iconSpan.textContent = icon;
+  iconSpan.style.fontSize = '18px';
 
-  circleWrap.appendChild(ring1);
-  circleWrap.appendChild(ring2);
-  circleWrap.appendChild(circle);
+  var nameSpan = document.createElement('span');
+  nameSpan.textContent = name.length > 10 ? name.slice(0, 9) + '…' : name;
+  nameSpan.style.fontSize = '13px';
+
+  pill.appendChild(iconSpan);
+  pill.appendChild(nameSpan);
+  pillWrap.appendChild(ring1);
+  pillWrap.appendChild(ring2);
+  pillWrap.appendChild(pill);
 
   var tail = document.createElement('div');
   tail.className = 'np-tail';
   tail.style.borderTopColor = color;
 
-  var label = document.createElement('div');
-  label.className = 'np-label';
-  label.textContent = name.length > 13 ? name.slice(0, 12) + '…' : name;
-
-  wrap.appendChild(circleWrap);
+  wrap.appendChild(pillWrap);
   wrap.appendChild(tail);
-  wrap.appendChild(label);
+  return wrap;
+}
+
+/* 주차장 하이라이트 핀 — 색상(잔여 비율) + P배지 + 잔여 대수 */
+function _makeNpParkPin(pkData, onClickFn) {
+  /* 잔여 비율로 색상 결정 (parking.js의 pinColor 재현) */
+  var color;
+  if (!pkData.open || pkData.total <= 0) {
+    color = '#9CA3AF';
+  } else {
+    var ratio = pkData.avail / pkData.total;
+    color = ratio <= 0 ? '#EF4444' : 'hsl(' + Math.round(ratio * 118) + ',72%,42%)';
+  }
+  var countTxt = !pkData.open ? '미운영' : pkData.avail <= 0 ? '만차' : pkData.avail + '대';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'np-pin';
+
+  var pillWrap = document.createElement('div');
+  pillWrap.className = 'np-pill-wrap';
+  if (onClickFn) {
+    pillWrap.style.cursor = 'pointer';
+    pillWrap.addEventListener('click', function (e) { e.stopPropagation(); onClickFn(); });
+  }
+
+  var ring1 = document.createElement('div');
+  ring1.className = 'np-pill-ring';
+  ring1.style.borderColor = color;
+
+  var ring2 = document.createElement('div');
+  ring2.className = 'np-pill-ring r2';
+  ring2.style.borderColor = color;
+
+  var pill = document.createElement('div');
+  pill.className = 'np-pill';
+  pill.style.background = color;
+
+  var badge = document.createElement('div');
+  badge.className = 'np-p-badge';
+  badge.style.color = color;
+  badge.textContent = 'P';
+
+  var countSpan = document.createElement('span');
+  countSpan.style.cssText = 'font-size:15px;font-weight:900';
+  countSpan.textContent = countTxt;
+
+  pill.appendChild(badge);
+  pill.appendChild(countSpan);
+  pillWrap.appendChild(ring1);
+  pillWrap.appendChild(ring2);
+  pillWrap.appendChild(pill);
+
+  var tail = document.createElement('div');
+  tail.className = 'np-tail';
+  tail.style.borderTopColor = color;
+
+  wrap.appendChild(pillWrap);
+  wrap.appendChild(tail);
   return wrap;
 }
 
