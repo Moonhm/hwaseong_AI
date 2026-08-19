@@ -2391,10 +2391,29 @@ function doHomeSearch(q) {
       var p = lcData[i];
       if ((p.n || '').toLowerCase().includes(ql) || (p.c || '').toLowerCase().includes(ql)) {
         var addr = (p.a || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        results.push({ type: 'lc', name: p.n, sub: (p.c || '') + (addr ? ' · ' + addr : ''), em: '₩', bg: '#F0FDF4', lat: p.lat, lng: p.lng });
+        results.push({ type: 'lc', name: p.n, sub: (p.c || '') + (addr ? ' · ' + addr : ''), em: '₩', bg: '#F0FDF4', lat: p.lat, lng: p.lng, _raw: p });
         lcHits++;
       }
     }
+  }
+
+  /* 5) 편의시설 — 모범음식점 · 관광식당 (최대 5개) */
+  if (typeof CONVENIENCE !== 'undefined') {
+    var convHits = 0;
+    var convSets = [
+      { arr: CONVENIENCE.restaurants,        cat: 'restaurant',  label: '모범음식점' },
+      { arr: CONVENIENCE.touristRestaurants, cat: 'touristrest', label: '관광식당'   },
+    ];
+    convSets.forEach(function(cs) {
+      if (convHits >= 5 || !cs.arr) return;
+      cs.arr.forEach(function(p) {
+        if (convHits >= 5) return;
+        if ((p.name || '').toLowerCase().includes(ql)) {
+          results.push({ type: 'conv', name: p.name, sub: cs.label + (p.addr ? ' · ' + p.addr : ''), em: '🍽', bg: '#FFF7ED', convCat: cs.cat });
+          convHits++;
+        }
+      });
+    });
   }
 
   renderHomeSearchResults(results.slice(0, 9), q);
@@ -2439,7 +2458,14 @@ function _srClick(idx) {
       kakaoMap.setCenter(new kakao.maps.LatLng(r.lat, r.lng));
       kakaoMap.setLevel(4);
       if (typeof setFilter === 'function') setFilter('localcurrency');
-    }, 350);
+      if (r._raw && typeof showLcSlide === 'function') showLcSlide(r._raw);
+    }, 400);
+  } else if (r.type === 'conv') {
+    go('living');
+    setTimeout(function() {
+      var el = document.getElementById('liv-cat-' + r.convCat);
+      if (typeof switchLivingCat === 'function') switchLivingCat(el, r.convCat);
+    }, 300);
   } else if (r.lat) {
     go('map');
     setTimeout(function() {
