@@ -205,7 +205,8 @@ function showPkClusters(bounds, level) {
       return function (e) {
         e.stopPropagation();
         var dest = new kakao.maps.LatLng(clat, clng);
-        var targetLevel = Math.max(1, lv - 2);
+        /* PK_PIN_LEVEL(7) 이하로 한 번에 이동 */
+        var targetLevel = Math.max(1, Math.min(lv - 2, PK_PIN_LEVEL));
         parkingMap.panTo(dest);
         setTimeout(function () {
           parkingMap.setLevel(targetLevel, { animate: { duration: 400 } });
@@ -313,7 +314,7 @@ function showParkingSlide(p) {
     + (p.tel ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">📞 ' + p.tel + '</div>' : '')
     + feeSection(p)
     + '<div class="sl-actions">'
-    + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + p.name + '\')">🗺 길찾기</button>'
+    + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + p.name.replace(/'/g, '') + '\')">🗺 길찾기</button>'
     + '<button class="sl-btn" onclick="refreshParking();showToast(\'새로고침 완료\')">🔄 새로고침</button>'
     + '</div>';
 

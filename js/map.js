@@ -1,11 +1,12 @@
 'use strict';
 
-let kakaoMap   = null;
-let mapReady   = false;
-let overlayMap = {};   /* id → CustomOverlay (tourist 제외) */
-let overlayEls = {};   /* id → DOM element */
-let selectedId = null;
-let slideStartY = 0;
+let kakaoMap      = null;
+let mapReady      = false;
+let overlayMap    = {};   /* id → CustomOverlay (tourist 제외) */
+let overlayEls    = {};   /* id → DOM element */
+let overlayCatMap = {};   /* id → category (setFilter 최적화용 — buildOverlays에서 구축) */
+let selectedId    = null;
+let slideStartY   = 0;
 
 /* ── tourist 클러스터/뷰포트 렌더링 (parking 동일 패턴) ── */
 var touristVisible      = false;
@@ -132,6 +133,22 @@ function showMapError(msg) {
     'padding:10px 20px;font-size:13px;cursor:pointer">새로고침</button></div>';
 }
 
+/* ── 핀 DOM 요소 생성 공통 헬퍼 (buildOverlays·showTkViewport 공유) ── */
+function _mkCmPin(color, emoji, label) {
+  var wrap   = document.createElement('div');
+  wrap.className = 'cm-pin';
+  var circle = document.createElement('div');
+  circle.className = 'cm-circle';
+  circle.style.background = color;
+  circle.textContent = emoji + ' ' + label;
+  var tail = document.createElement('div');
+  tail.className = 'cm-tail';
+  tail.style.borderTopColor = color;
+  wrap.appendChild(circle);
+  wrap.appendChild(tail);
+  return wrap;
+}
+
 /* ── 커스텀 오버레이 생성 (tourist 제외 — 별도 동적 렌더링) ── */
 function buildOverlays() {
   PLACES.forEach(function (p) {
@@ -140,21 +157,7 @@ function buildOverlays() {
     var color = CAT_COLOR[p.category] || '#6B7280';
     var cfg   = CATEGORY_CONFIG[p.category];
     var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
-
-    var wrap   = document.createElement('div');
-    wrap.className = 'cm-pin';
-
-    var circle = document.createElement('div');
-    circle.className = 'cm-circle';
-    circle.style.background = color;
-    circle.textContent = cfg.emoji + ' ' + label;
-
-    var tail = document.createElement('div');
-    tail.className = 'cm-tail';
-    tail.style.borderTopColor = color;
-
-    wrap.appendChild(circle);
-    wrap.appendChild(tail);
+    var wrap  = _mkCmPin(color, cfg.emoji, label);
 
     /* 클로저로 place id 캡처 */
     (function (placeId) {
@@ -179,8 +182,9 @@ function buildOverlays() {
     });
     /* 초기에는 숨김 — setFilter() 호출 시에만 표시 */
     overlay.setMap(null);
-    overlayMap[p.id] = overlay;
-    overlayEls[p.id] = wrap;
+    overlayMap[p.id]    = overlay;
+    overlayEls[p.id]    = wrap;
+    overlayCatMap[p.id] = p.category;
   });
 }
 
@@ -216,32 +220,18 @@ function updateTouristDisplay() {
 
 /* 줌인 상태: 뷰포트 내 개별 핀 */
 function showTkViewport(bounds) {
-  var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
+  var sw    = bounds.getSouthWest(), ne = bounds.getNorthEast();
+  var color = CAT_COLOR.tourist;
+  var cfg   = CATEGORY_CONFIG.tourist;
+
   PLACES.forEach(function (p) {
     if (p.category !== 'tourist') return;
     if (p.lat < sw.getLat() || p.lat > ne.getLat()) return;
     if (p.lng < sw.getLng() || p.lng > ne.getLng()) return;
 
-    var color = CAT_COLOR.tourist;
-    var cfg   = CATEGORY_CONFIG.tourist;
     var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
+    var wrap  = _mkCmPin(color, cfg.emoji, label);
 
-    var wrap   = document.createElement('div');
-    wrap.className = 'cm-pin';
-
-    var circle = document.createElement('div');
-    circle.className = 'cm-circle';
-    circle.style.background = color;
-    circle.textContent = cfg.emoji + ' ' + label;
-
-    var tail = document.createElement('div');
-    tail.className = 'cm-tail';
-    tail.style.borderTopColor = color;
-
-    wrap.appendChild(circle);
-    wrap.appendChild(tail);
-
-    /* 선택 상태 복원 */
     if (p.id === selectedId) wrap.classList.add('selected');
 
     (function (pid) {
@@ -304,9 +294,11 @@ function showTkClusters(bounds, level) {
       el.addEventListener('click', function (e) {
         e.stopPropagation();
         var dest = new kakao.maps.LatLng(clat, clng);
+        /* TK_PIN_LEVEL(7) 이하로 한 번에 이동 — 단계별 클릭 없이 바로 핀 표시 */
+        var targetLevel = Math.max(1, Math.min(lv - 2, TK_PIN_LEVEL));
         kakaoMap.panTo(dest);
         setTimeout(function () {
-          kakaoMap.setLevel(Math.max(1, lv - 2), { animate: { duration: 400 } });
+          kakaoMap.setLevel(targetLevel, { animate: { duration: 400 } });
         }, 180);
       });
     })(lat, lng, level);
@@ -433,10 +425,11 @@ function showPlaceSlide(place) {
     ? 'style="background:' + cfg.bg + ';color:' + color + '"'
     : '';
 
-  /* 액션 버튼 */
+  /* 액션 버튼 — 이름에 작은따옴표 포함 시 onclick 오류 방지 */
+  var safeName = place.name.replace(/'/g, '');
   var routeBtn = '<button class="sl-btn" style="' +
     (isTourist ? 'background:' + color + ';color:#fff;border-color:' + color : '') +
-    '" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name + '\')">🗺 길찾기</button>';
+    '" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺 길찾기</button>';
 
   var actionsHtml;
   if (isTourist) {
@@ -638,14 +631,10 @@ function setFilter(cat) {
     return;
   }
 
-  /* 카테고리별 핀 표시/숨김 — overlayMap 키 기반 */
-  var catMap = {};
-  if (cat !== 'all') {
-    PLACES.forEach(function (p) { if (p.category !== 'tourist') catMap[p.id] = p.category; });
-  }
+  /* 카테고리별 핀 표시/숨김 — overlayCatMap으로 PLACES 재순회 없이 처리 */
   Object.keys(overlayMap).forEach(function (id) {
     overlayMap[id].setMap(
-      (cat === 'all' || catMap[id] === cat) ? kakaoMap : null
+      (cat === 'all' || overlayCatMap[id] === cat) ? kakaoMap : null
     );
   });
 

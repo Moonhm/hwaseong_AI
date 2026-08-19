@@ -13,24 +13,12 @@ var LC_GRID = {
    9: 0.02,  8: 0.012, 7: 0.008, 6: 0.005
 };
 
-/* ── 초기화: 데이터만 로드, Marker 생성 없음 ── */
+/* ── 초기화: idle 이벤트만 등록, 데이터 fetch는 setLcVisible(true) 시 지연로드 ── */
 var _lcIdleTimer = null;
 
 function initLocalCurrency(map) {
   lcMap = map;
   kakao.maps.event.addListener(map, 'idle', onLcMapIdle);
-  /* 생활탭에서 이미 fetch 완료된 경우 중복 요청 방지 */
-  if (lcData && lcData.length) {
-    if (lcVisible) updateLcDisplay();
-    return;
-  }
-  fetch('js/localcurrency-static.json')
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      lcData = data;
-      if (lcVisible) updateLcDisplay();
-    })
-    .catch(function (e) { console.warn('[가맹점]', e); });
 }
 
 function onLcMapIdle() {
@@ -43,11 +31,15 @@ function onLcMapIdle() {
 /* ── 표시/숨김 ── */
 function setLcVisible(visible) {
   lcVisible = visible;
-  if (!visible) {
-    clearLcDisplay();
-  } else {
-    updateLcDisplay();
+  if (!visible) { clearLcDisplay(); return; }
+  /* 데이터 미로드 시 지연 fetch 후 렌더 */
+  if (!lcData.length) {
+    if (typeof _loadLcData === 'function') {
+      _loadLcData(function () { if (lcVisible) updateLcDisplay(); });
+    }
+    return;
   }
+  updateLcDisplay();
 }
 
 /* ── 현재 표시 중인 것 전부 제거 ── */
