@@ -155,9 +155,9 @@ function buildOverlays() {
     if (p.category === 'tourist') return;
 
     var color = CAT_COLOR[p.category] || '#6B7280';
-    var cfg   = CATEGORY_CONFIG[p.category];
+    var cfg   = CATEGORY_CONFIG[p.category] || {};
     var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
-    var wrap  = _mkCmPin(color, cfg.emoji, label);
+    var wrap  = _mkCmPin(color, cfg.emoji || '📍', label);
 
     /* 클로저로 place id 캡처 */
     (function (placeId) {
@@ -596,7 +596,7 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
 function goNearestParking(placeLat, placeLng, placeId) {
   var tPlace = PLACES.find(function (pl) { return pl.id === placeId; });
   _goNPCore(placeLat, placeLng, tPlace ? tPlace.name : '관광지', '🌟',
-    function () { setTouristVisible(true); setTimeout(function () { onPinClick(placeId); }, 60); });
+    function () { setTouristVisible(true); setTimeout(function () { onPinClick(placeId); }, 120); });
 }
 
 /* ── 편의정보(conv) 핀에서 호출 ── */

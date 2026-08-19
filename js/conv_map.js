@@ -161,6 +161,24 @@ function _geocodeCat(cat) {
   var results  = [];
   var total    = rawItems.length;
   var finished = 0;
+  var _done    = false;
+
+  /* 콜백이 끝내 오지 않을 경우 대비 — 마지막 배치 발송 후 10초 뒤 강제 완료 */
+  var maxDelay = Math.floor((total - 1) / 10) * 200 + 10000;
+  setTimeout(function () {
+    if (_done) return;
+    _done = true;
+    CONV_STATUS[cat] = 'done';
+    CONV_PLACES[cat] = results;
+    _saveConvCache(cat, results);
+    var activeChip = document.querySelector('#map-chips .chip.active');
+    var activeCat  = activeChip ? activeChip.getAttribute('data-cat') : null;
+    if (activeCat === cat) {
+      _buildOverlays(cat, results);
+      showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨 (타임아웃)');
+      _fitConv(cat);
+    }
+  }, maxDelay);
 
   rawItems.forEach(function (item, i) {
     /* 괄호·건물명 제거 — 도로명+번지만 남겨 geocoding 정확도 향상
@@ -195,7 +213,8 @@ function _geocodeCat(cat) {
         }
         finished++;
 
-        if (finished === total) {
+        if (finished === total && !_done) {
+          _done = true;
           CONV_STATUS[cat] = 'done';
           CONV_PLACES[cat] = results;
           _saveConvCache(cat, results); /* 다음 방문 시 재사용 */
@@ -324,6 +343,7 @@ function _showConvSlide(place) {
 
 /* ── 슬라이드 카드: 제부도 ── */
 function _showJebuSlide() {
+  if (!CONVENIENCE || !CONVENIENCE.jebu || !CONVENIENCE.jebu.summary) return;
   var s = CONVENIENCE.jebu.summary;
   var html =
     '<div style="width:100%;height:80px;border-radius:12px;background:#E0F2FE;' +
