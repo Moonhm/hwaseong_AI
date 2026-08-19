@@ -672,11 +672,16 @@
       right: max(0px, calc((100vw - 480px) / 2));
       width: min(72vw, 320px);
       background: var(--white); z-index: 601;
-      transform: translateX(100%);
-      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      transform: translateX(110%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.35s;
       overflow-y: auto; box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+      visibility: hidden;
     }
-    #menu-drawer.open { transform: translateX(0); }
+    #menu-drawer.open {
+      transform: translateX(0);
+      visibility: visible;
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0s;
+    }
     .menu-header {
       display: flex; align-items: center; justify-content: space-between;
       padding: 16px 20px; border-bottom: 1px solid var(--border);
