@@ -2,10 +2,20 @@
 
 let kakaoMap   = null;
 let mapReady   = false;
-let overlayMap = {};   /* id → CustomOverlay */
-let overlayEls = {};   /* id → DOM element (직접 조작용) */
+let overlayMap = {};   /* id → CustomOverlay (tourist 제외) */
+let overlayEls = {};   /* id → DOM element */
 let selectedId = null;
-let slideStartY = 0;   /* 드래그-투-클로즈용 */
+let slideStartY = 0;
+
+/* ── tourist 클러스터/뷰포트 렌더링 (parking 동일 패턴) ── */
+var touristVisible      = false;
+var touristDisplayItems = [];
+var touristOverlayMap   = {};   /* id → { overlay, el } */
+
+var LC_PIN_LEVEL = 7;           /* ≤ 이 레벨: 개별 핀 / 초과: 클러스터 원 */
+var LC_GRID = {
+  14: 0.30, 13: 0.15, 12: 0.08, 11: 0.05, 10: 0.03, 9: 0.02, 8: 0.015
+};
 
 /* 화성특례시 중심 좌표 (시청 인근) */
 const HWASEONG = { lat: 37.199, lng: 126.831 };
@@ -62,6 +72,9 @@ function initMap() {
   if (typeof initParking       === 'function') initParking(kakaoMap);
   if (typeof initLocalCurrency === 'function') initLocalCurrency(kakaoMap);
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
+  kakao.maps.event.addListener(kakaoMap, 'idle', function () {
+    if (touristVisible) updateTouristDisplay();
+  });
 
   /* display:none → block 전환 후 크기 재계산 */
   setTimeout(function () {
@@ -108,9 +121,11 @@ function showMapError(msg) {
     'padding:10px 20px;font-size:13px;cursor:pointer">새로고침</button></div>';
 }
 
-/* ── 커스텀 오버레이 생성 (참고 깃: DOM 요소 직접 생성 방식) ── */
+/* ── 커스텀 오버레이 생성 (tourist 제외 — 별도 동적 렌더링) ── */
 function buildOverlays() {
   PLACES.forEach(function (p) {
+    if (p.category === 'tourist') return;
+
     var color = CAT_COLOR[p.category] || '#6B7280';
     var cfg   = CATEGORY_CONFIG[p.category];
     var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
@@ -158,6 +173,132 @@ function buildOverlays() {
   });
 }
 
+/* ── 관광지 클러스터/뷰포트 렌더링 (parking 동일 패턴) ── */
+function setTouristVisible(visible) {
+  touristVisible = visible;
+  if (!visible) clearTouristDisplay();
+  else          updateTouristDisplay();
+}
+
+function clearTouristDisplay() {
+  touristDisplayItems.forEach(function (o) { o.setMap(null); });
+  touristDisplayItems = [];
+  touristOverlayMap   = {};
+}
+
+function updateTouristDisplay() {
+  if (!kakaoMap) return;
+  clearTouristDisplay();
+  var level  = kakaoMap.getLevel();
+  var bounds = kakaoMap.getBounds();
+  if (level <= LC_PIN_LEVEL) showTkViewport(bounds);
+  else                       showTkClusters(bounds, level);
+}
+
+/* 줌인 상태: 뷰포트 내 개별 핀 */
+function showTkViewport(bounds) {
+  var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
+  PLACES.forEach(function (p) {
+    if (p.category !== 'tourist') return;
+    if (p.lat < sw.getLat() || p.lat > ne.getLat()) return;
+    if (p.lng < sw.getLng() || p.lng > ne.getLng()) return;
+
+    var color = CAT_COLOR.tourist;
+    var cfg   = CATEGORY_CONFIG.tourist;
+    var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
+
+    var wrap   = document.createElement('div');
+    wrap.className = 'cm-pin';
+
+    var circle = document.createElement('div');
+    circle.className = 'cm-circle';
+    circle.style.background = color;
+    circle.textContent = cfg.emoji + ' ' + label;
+
+    var tail = document.createElement('div');
+    tail.className = 'cm-tail';
+    tail.style.borderTopColor = color;
+
+    wrap.appendChild(circle);
+    wrap.appendChild(tail);
+
+    /* 선택 상태 복원 */
+    if (p.id === selectedId) wrap.classList.add('selected');
+
+    (function (pid) {
+      wrap.addEventListener('click', function (e) {
+        e.stopPropagation();
+        onPinClick(pid);
+      });
+    })(p.id);
+
+    var overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(p.lat, p.lng),
+      content:  wrap,
+      yAnchor:  1.5,
+      zIndex:   p.id === selectedId ? 200 : 1,
+      map:      kakaoMap,
+    });
+
+    touristDisplayItems.push(overlay);
+    touristOverlayMap[p.id] = { overlay: overlay, el: wrap };
+  });
+}
+
+/* 줌아웃 상태: 그리드 기반 클러스터 원 */
+function showTkClusters(bounds, level) {
+  var sw    = bounds.getSouthWest(), ne = bounds.getNorthEast();
+  var grid  = LC_GRID[level] || 0.02;
+  var pad   = grid * 0.5;
+  var minLat = sw.getLat() - pad, maxLat = ne.getLat() + pad;
+  var minLng = sw.getLng() - pad, maxLng = ne.getLng() + pad;
+
+  var cells = {};
+  PLACES.forEach(function (p) {
+    if (p.category !== 'tourist') return;
+    if (p.lat < minLat || p.lat > maxLat) return;
+    if (p.lng < minLng || p.lng > maxLng) return;
+    var key = Math.floor(p.lat / grid) + ',' + Math.floor(p.lng / grid);
+    if (!cells[key]) cells[key] = { sumLat: 0, sumLng: 0, count: 0 };
+    cells[key].sumLat += p.lat;
+    cells[key].sumLng += p.lng;
+    cells[key].count++;
+  });
+
+  Object.keys(cells).forEach(function (key) {
+    var c   = cells[key];
+    var cnt = c.count;
+    var lat = c.sumLat / cnt;
+    var lng = c.sumLng / cnt;
+
+    var el = document.createElement('div');
+    el.style.cssText =
+      'width:38px;height:38px;border-radius:50%;background:#F97316;' +
+      'border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.22);' +
+      'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+      'cursor:pointer;box-sizing:border-box;';
+    el.innerHTML =
+      '<span style="color:#fff;font-size:13px;line-height:1">★</span>' +
+      (cnt > 1 ? '<span style="color:rgba(255,255,255,0.88);font-size:8px;line-height:1.3">' + cnt + '</span>' : '');
+
+    (function (clat, clng, lv) {
+      el.addEventListener('click', function () {
+        kakaoMap.setCenter(new kakao.maps.LatLng(clat, clng));
+        kakaoMap.setLevel(Math.max(1, lv - 2));
+      });
+    })(lat, lng, level);
+
+    var overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(lat, lng),
+      content:  el,
+      yAnchor:  0.5,
+      zIndex:   5,
+      map:      kakaoMap,
+    });
+    touristDisplayItems.push(overlay);
+  });
+}
+
 /* ── 핀 클릭 ── */
 function onPinClick(id) {
   var place = PLACES.find(function (p) { return p.id === id; });
@@ -165,12 +306,16 @@ function onPinClick(id) {
 
   /* 이전 선택 해제 */
   if (selectedId !== null) {
-    if (overlayEls[selectedId]) overlayEls[selectedId].classList.remove('selected');
-    if (overlayMap[selectedId]) overlayMap[selectedId].setZIndex(1);
+    if (overlayEls[selectedId])       overlayEls[selectedId].classList.remove('selected');
+    if (overlayMap[selectedId])       overlayMap[selectedId].setZIndex(1);
+    var prevTk = touristOverlayMap[selectedId];
+    if (prevTk) { prevTk.el.classList.remove('selected'); prevTk.overlay.setZIndex(1); }
   }
   selectedId = id;
   if (overlayEls[id]) overlayEls[id].classList.add('selected');
   if (overlayMap[id]) overlayMap[id].setZIndex(200);
+  var curTk = touristOverlayMap[id];
+  if (curTk) { curTk.el.classList.add('selected'); curTk.overlay.setZIndex(200); }
 
   /* 슬라이드 카드 표시 */
   showPlaceSlide(place);
@@ -258,6 +403,8 @@ function closePlaceSlide() {
   if (selectedId !== null) {
     if (overlayEls[selectedId]) overlayEls[selectedId].classList.remove('selected');
     if (overlayMap[selectedId]) overlayMap[selectedId].setZIndex(1);
+    var tk = touristOverlayMap[selectedId];
+    if (tk) { tk.el.classList.remove('selected'); tk.overlay.setZIndex(1); }
     selectedId = null;
   }
 }
@@ -265,8 +412,10 @@ function closePlaceSlide() {
 /* ── 모든 핀 숨김 (필터 없음 상태) ── */
 function clearFilter() {
   PLACES.forEach(function (p) {
+    if (p.category === 'tourist') return;
     overlayMap[p.id] && overlayMap[p.id].setMap(null);
   });
+  setTouristVisible(false);
   if (typeof setParkingVisible  === 'function') setParkingVisible(false);
   if (typeof updateParkingCount === 'function') updateParkingCount();
   if (typeof setLcVisible       === 'function') setLcVisible(false);
@@ -294,10 +443,13 @@ function setFilter(cat) {
   if (chip) chip.classList.add('active');
 
   PLACES.forEach(function (p) {
+    if (p.category === 'tourist') return;
     overlayMap[p.id] && overlayMap[p.id].setMap(
       (cat === 'all' || p.category === cat) ? kakaoMap : null
     );
   });
+
+  setTouristVisible(cat === 'all' || cat === 'tourist');
 
   if (typeof setParkingVisible  === 'function') {
     setParkingVisible(cat === 'all' || cat === 'parking');
