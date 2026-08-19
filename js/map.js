@@ -55,11 +55,10 @@ function initMap() {
 
   mapReady = true;
 
-  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.BOTTOMRIGHT);
-
   buildOverlays();
   setupMyLocation();
   setupSlideCardDrag();
+  setupZoomSlider();
   if (typeof initParking === 'function') initParking(kakaoMap);
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
@@ -410,4 +409,34 @@ function showMyLocationDot(latlng) {
     zIndex:   50,
   });
   myLocationOverlay.setMap(kakaoMap);
+}
+
+/* ── 커스텀 줌 슬라이더 ── */
+function setupZoomSlider() {
+  var slider  = document.getElementById('zoom-track');
+  var btnIn   = document.getElementById('zoom-in-btn');
+  var btnOut  = document.getElementById('zoom-out-btn');
+  if (!slider || !kakaoMap) return;
+
+  function levelToSlider(level) { return 15 - level; }
+  function sliderToLevel(val)   { return 15 - parseInt(val); }
+
+  slider.value = levelToSlider(kakaoMap.getLevel());
+
+  slider.addEventListener('input', function () {
+    kakaoMap.setLevel(sliderToLevel(this.value));
+  });
+
+  btnIn.addEventListener('click', function () {
+    kakaoMap.setLevel(Math.max(1, kakaoMap.getLevel() - 1));
+  });
+
+  btnOut.addEventListener('click', function () {
+    kakaoMap.setLevel(Math.min(14, kakaoMap.getLevel() + 1));
+  });
+
+  kakao.maps.event.addListener(kakaoMap, 'zoom_changed', function () {
+    var sl = document.getElementById('zoom-track');
+    if (sl) sl.value = levelToSlider(kakaoMap.getLevel());
+  });
 }
