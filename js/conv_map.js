@@ -299,7 +299,7 @@ function _showConvSlide(place) {
     '<span class="sl-cat" style="background:' + cfg.bg + ';color:' + cfg.color + '">' + cfg.emoji + ' ' + cfg.label + '</span>' +
     '</div>' +
     '<div class="sl-name">' + place.name + '</div>' +
-    '<div class="sl-addr">📍 ' + place.address + '</div>' +
+    '<div class="sl-addr" data-addr="' + place.address.replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + place.address + '</div>' +
     (ex.tel ? '<div class="sl-addr">📞 ' + ex.tel + '</div>' : '') +
     cfg.extraHtml(ex) +
     '<div class="sl-actions">' +
@@ -329,7 +329,7 @@ function _showJebuSlide() {
     '<span class="sl-cat" style="background:#E0F2FE;color:#0284C7">⛱ 제부도 숙박</span>' +
     '</div>' +
     '<div class="sl-name">제부도 숙박 종합</div>' +
-    '<div class="sl-addr">📍 화성시 서신면 제부도 일대 · 총 ' + s.total + '곳</div>' +
+    '<div class="sl-addr">화성시 서신면 제부도 일대 · 총 ' + s.total + '곳</div>' +
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;text-align:center">' +
     '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + s.pension_outside + '</div><div style="font-size:10px;color:#6b7280">관광펜션</div></div>' +
     '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + s.inside + '</div><div style="font-size:10px;color:#6b7280">내부숙박</div></div>' +
