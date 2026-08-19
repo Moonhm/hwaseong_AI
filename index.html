@@ -2368,15 +2368,19 @@ function renderHomeLiving() {
 
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
-      <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:14px;padding:14px;cursor:pointer" onclick="goLivingCat('currency')">
-        <div style="font-size:22px;margin-bottom:6px">₩</div>
-        <div style="font-size:20px;font-weight:800;color:#1d4ed8">${currencies.length.toLocaleString()}</div>
-        <div style="font-size:11px;color:#3b82f6;margin-top:2px">지역화폐 가맹점</div>
+      <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px" onclick="goLivingCat('currency')">
+        <div style="width:36px;height:36px;border-radius:10px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#2563EB;flex-shrink:0">₩</div>
+        <div>
+          <div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.1">${currencies.length.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">지역화폐 가맹점</div>
+        </div>
       </div>
-      <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:14px;padding:14px;cursor:pointer" onclick="goLivingCat('parking')">
-        <div style="font-size:22px;margin-bottom:6px">🅿</div>
-        <div style="font-size:20px;font-weight:800;color:#15803d">${parkings.length}</div>
-        <div style="font-size:11px;color:#22c55e;margin-top:2px">공영주차장</div>
+      <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:10px" onclick="goLivingCat('parking')">
+        <div style="width:36px;height:36px;border-radius:10px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#16A34A;flex-shrink:0">P</div>
+        <div>
+          <div style="font-size:17px;font-weight:800;color:var(--text);line-height:1.1">${parkings.length}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px">공영주차장</div>
+        </div>
       </div>
     </div>
     <div style="margin-top:14px">
