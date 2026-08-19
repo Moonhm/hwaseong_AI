@@ -321,7 +321,7 @@ function showParkingSlide(p) {
         var fid = 'park-' + p.id;
         var saved = typeof isFav !== 'undefined' && isFav(fid);
         return '<button class="sl-btn fav-btn' + (saved ? ' saved' : '') + '" id="slide-fav-btn"'
-          + ' data-fid="' + fid + '" data-type="parking"'
+          + ' data-fid="' + fid + '" data-type="parking" data-pid="' + p.id + '"'
           + ' data-lat="' + p.lat + '" data-lng="' + p.lng + '"'
           + ' data-name="' + p.name.replace(/"/g, '') + '"'
           + ' onclick="toggleFavBtn(this)">' + (saved ? '♥ 저장됨' : '♡ 저장') + '</button>';

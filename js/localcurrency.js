@@ -200,9 +200,11 @@ function showLcSlide(p) {
         var fid = 'lc-' + p.id;
         var saved = typeof isFav !== 'undefined' && isFav(fid);
         return '<button class="sl-btn fav-btn' + (saved ? ' saved' : '') + '" id="slide-fav-btn"'
-          + ' data-fid="' + fid + '" data-type="lc"'
+          + ' data-fid="' + fid + '" data-type="lc" data-pid="' + p.id + '"'
           + ' data-lat="' + p.lat + '" data-lng="' + p.lng + '"'
           + ' data-name="' + (p.n || '').replace(/"/g, '') + '"'
+          + ' data-lcat="' + (p.c || '').replace(/"/g, '') + '"'
+          + ' data-laddr="' + (p.a || '').replace(/"/g, '') + '"'
           + ' onclick="toggleFavBtn(this)">' + (saved ? '♥ 저장됨' : '♡ 저장') + '</button>';
       })()
     + '</div>';
