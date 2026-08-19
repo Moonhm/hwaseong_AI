@@ -319,7 +319,7 @@ python tools/regeocode.py --key 1bd845da5756d1c78955463b800731ef
 | 항목 | 현황 | 개선 방향 |
 |------|------|---------|
 | 별점 데이터 | 알고리즘 생성 (Selenium 환경 없음) | Kakao Place API 실제 별점 연동 |
-| 장소 사진 | git 미포함, 배포 서버 전용 | CDN 적용 또는 Cloudflare Images |
+| 장소 사진 | git 추적 중 (~59MB) — 필요 시 제거 가능 (아래 참고) | CDN 적용 또는 Cloudflare Images |
 | Geocoder 캐싱 | 편의시설 칩 클릭마다 157건 API 호출 | localStorage 1회 캐싱 |
 | 달력 날짜 연동 | has-event 클래스 하드코딩 일부 | PLACES 배열의 date 필드 기반 동적 마킹 |
 | 맛집 지도 칩 | 실제 restaurant 데이터 없음 | 모범음식점(conv_map.js)으로 리다이렉트 |
@@ -363,6 +363,22 @@ python tools/regeocode.py --key 1bd845da5756d1c78955463b800731ef
 | `_applyRealtime(data)` | 실시간 데이터 → parkingData 병합 |
 | `pinColorCached(p)` | 여유율 기반 색상 (캐시) |
 | `updateParkingDisplay()` | 100ms 디바운스 주차장 렌더링 |
+
+---
+
+---
+
+## 11. assets/ 이미지 git 관리 참고
+
+`assets/images/` (관광지 사진 159장 · 약 59MB)는 현재 git에 추적 중입니다.  
+저장소 용량이 부담될 경우 아래 명령어로 **로컬 파일은 유지한 채** git에서만 제거할 수 있습니다.
+
+```bash
+git rm -r --cached assets/
+# .gitignore 에 assets/ 한 줄 추가 후
+git commit -m "chore: assets 이미지 git 추적 제거"
+git push
+```
 
 ---
 

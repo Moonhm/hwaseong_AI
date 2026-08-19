@@ -109,20 +109,6 @@ hwaseong_AI/
 
 ---
 
-## 이미지 용량 관련 참고
-
-`assets/images/` 폴더(관광지 사진 159장 · 약 59 MB)가 현재 git에 추적되고 있습니다.
-저장소 용량이 부담될 경우 아래 명령어로 git에서만 제거할 수 있습니다 — **로컬 파일은 그대로 유지됩니다.**
-
-```bash
-git rm -r --cached assets/
-# .gitignore 에 assets/ 다시 추가 후
-git commit -m "chore: assets 이미지 git 추적 제거"
-git push
-```
-
----
-
 ## Running Locally
 
 ```bash
