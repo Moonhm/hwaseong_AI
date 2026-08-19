@@ -3,80 +3,113 @@
 var lcData      = [];
 var lcClusterer = null;
 var lcMap       = null;
+var lcBuilt     = false;
+var lcBuilding  = false;
 
-/* ── 초기화 ── */
+/* ── 데이터만 미리 로드 (마커 생성은 지연) ── */
 function initLocalCurrency(map) {
   lcMap = map;
   fetch('js/localcurrency-static.json')
     .then(function (r) { return r.json(); })
-    .then(function (data) {
-      lcData = data;
-      buildLcClusterer();
-    })
+    .then(function (data) { lcData = data; })
     .catch(function (e) { console.warn('[가맹점] 로드 실패:', e); });
-}
-
-/* ── 클러스터러 생성 ── */
-function buildLcClusterer() {
-  if (!lcMap || !lcData.length) return;
-
-  var markers = lcData.map(function (p) {
-    var marker = new kakao.maps.Marker({
-      position: new kakao.maps.LatLng(p.lat, p.lng),
-    });
-    kakao.maps.event.addListener(marker, 'click', function () {
-      showLcSlide(p);
-    });
-    return marker;
-  });
-
-  lcClusterer = new kakao.maps.MarkerClusterer({
-    map:           null,          /* 처음엔 숨김 */
-    averageCenter: true,
-    minLevel:      7,             /* level 7 이하에서 개별 마커 표시 */
-    disableClickZoom: false,
-    markers:       markers,
-    styles: [{
-      width: '44px', height: '44px',
-      background: 'rgba(22,163,74,0.82)',
-      borderRadius: '50%',
-      color: '#fff',
-      textAlign: 'center',
-      lineHeight: '44px',
-      fontSize: '13px',
-      fontWeight: '700',
-      border: '2.5px solid #fff',
-      boxSizing: 'border-box',
-    }, {
-      width: '52px', height: '52px',
-      background: 'rgba(22,163,74,0.88)',
-      borderRadius: '50%',
-      color: '#fff',
-      textAlign: 'center',
-      lineHeight: '52px',
-      fontSize: '14px',
-      fontWeight: '700',
-      border: '2.5px solid #fff',
-      boxSizing: 'border-box',
-    }, {
-      width: '60px', height: '60px',
-      background: 'rgba(15,118,56,0.9)',
-      borderRadius: '50%',
-      color: '#fff',
-      textAlign: 'center',
-      lineHeight: '60px',
-      fontSize: '15px',
-      fontWeight: '700',
-      border: '2.5px solid #fff',
-      boxSizing: 'border-box',
-    }],
-  });
 }
 
 /* ── 표시 / 숨김 ── */
 function setLcVisible(visible) {
-  if (!lcClusterer) return;
-  lcClusterer.setMap(visible ? lcMap : null);
+  if (!visible) {
+    if (lcClusterer) lcClusterer.setMap(null);
+    return;
+  }
+  /* 이미 완성됐으면 바로 표시 */
+  if (lcBuilt && lcClusterer) {
+    lcClusterer.setMap(lcMap);
+    return;
+  }
+  /* 아직 만들지 않았으면 청크 빌드 시작 */
+  if (!lcBuilding) buildLcClusterer();
+}
+
+/* ── 클러스터러 + 마커를 500개씩 청크로 비동기 생성 ── */
+function buildLcClusterer() {
+  if (!lcMap || !lcData.length || lcBuilding) return;
+  lcBuilding = true;
+
+  lcClusterer = new kakao.maps.MarkerClusterer({
+    map:              lcMap,
+    averageCenter:    true,
+    minLevel:         7,
+    disableClickZoom: false,
+    styles: [{
+      width: '42px', height: '42px',
+      background: 'rgba(22,163,74,0.38)',
+      borderRadius: '50%',
+      color: '#fff',
+      textAlign: 'center',
+      lineHeight: '42px',
+      fontSize: '12px',
+      fontWeight: '700',
+      border: '2px solid rgba(255,255,255,0.7)',
+      boxSizing: 'border-box',
+      boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+    }, {
+      width: '50px', height: '50px',
+      background: 'rgba(22,163,74,0.44)',
+      borderRadius: '50%',
+      color: '#fff',
+      textAlign: 'center',
+      lineHeight: '50px',
+      fontSize: '13px',
+      fontWeight: '700',
+      border: '2px solid rgba(255,255,255,0.7)',
+      boxSizing: 'border-box',
+      boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+    }, {
+      width: '58px', height: '58px',
+      background: 'rgba(15,118,56,0.48)',
+      borderRadius: '50%',
+      color: '#fff',
+      textAlign: 'center',
+      lineHeight: '58px',
+      fontSize: '14px',
+      fontWeight: '700',
+      border: '2px solid rgba(255,255,255,0.7)',
+      boxSizing: 'border-box',
+      boxShadow: '0 1px 6px rgba(0,0,0,0.18)',
+    }],
+  });
+
+  var CHUNK = 500;
+  var allMarkers = [];
+
+  function addChunk(start) {
+    var end = Math.min(start + CHUNK, lcData.length);
+    var chunk = [];
+    for (var i = start; i < end; i++) {
+      var p = lcData[i];
+      var marker = new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(p.lat, p.lng),
+      });
+      /* IIFE로 클로저 캡처 */
+      (function (pp) {
+        kakao.maps.event.addListener(marker, 'click', function () {
+          showLcSlide(pp);
+        });
+      })(p);
+      chunk.push(marker);
+    }
+    allMarkers = allMarkers.concat(chunk);
+    lcClusterer.addMarkers(chunk, end < lcData.length); /* 마지막 청크만 redraw */
+
+    if (end < lcData.length) {
+      setTimeout(function () { addChunk(end); }, 0);
+    } else {
+      lcBuilt     = true;
+      lcBuilding  = false;
+    }
+  }
+
+  addChunk(0);
 }
 
 /* ── 가맹점 슬라이드 카드 ── */
