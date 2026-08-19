@@ -65,7 +65,7 @@
       position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 100%; max-width: 480px; z-index: 300;
       background: var(--white); border-top: 1px solid var(--border);
-      display: flex; align-items: flex-end;
+      display: flex; align-items: stretch;
       padding-bottom: env(safe-area-inset-bottom);
     }
     .nav-item {
@@ -76,22 +76,6 @@
     }
     .nav-item.active { color: var(--primary); }
     .nav-item svg { width: 22px; height: 22px; }
-    /* 중앙 브랜드 버튼 */
-    .nav-brand {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: flex-end; padding-bottom: 6px; height: 52px;
-      color: var(--text-muted); font-size: 10px; font-weight: 700;
-      position: relative;
-    }
-    .nav-brand-circle {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: var(--primary);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 14px rgba(37,99,235,0.4);
-      position: absolute; top: -14px;
-    }
-    .nav-brand-circle svg { width: 26px; height: 26px; }
-    .nav-brand-label { margin-top: 34px; font-size: 9px; color: var(--text-muted); }
 
     /* ── PAGE HEADER ── */
     .page-header {
@@ -1611,15 +1595,6 @@
   <button class="nav-item" data-page="tourism" onclick="go('tourism')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
     <span>관광</span>
-  </button>
-  <button class="nav-brand" onclick="go('home')">
-    <div class="nav-brand-circle">
-      <img src="assets/images/로고_이미지.png" alt="화성잇다"
-           style="width:30px;height:30px;object-fit:contain;border-radius:50%;"
-           onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-      <svg style="display:none" viewBox="0 0 24 24" fill="white"><path d="M12 3L1 9l4 2.18V17h2v-4.82l2 1.09V17c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-3.73l2-1.09V17h2v-5.82L23 9 12 3zm4 14h-2v-3.95l2 1.09V17zM12 14.5L6.5 11.5 12 5l5.5 6.5L12 14.5z"/></svg>
-    </div>
-    <span class="nav-brand-label">화성잇다</span>
   </button>
   <button class="nav-item" data-page="living" onclick="go('living')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
