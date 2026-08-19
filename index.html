@@ -264,7 +264,7 @@
       opacity: 0; pointer-events: none;
       transition: opacity 0.18s;
     }
-    .fscroll-wrap:hover .fsc-arr.visible { opacity: 1; pointer-events: auto; }
+    .fsc-arr.visible { opacity: 1; pointer-events: auto; }
     .fsc-arr:hover { background: #F5F5F5; }
     .fsc-arr-left  { left: 4px; }
     .fsc-arr-right { right: 4px; }
@@ -509,6 +509,7 @@
       color: rgba(30,30,30,0.65);
     }
     .chip-arrow.visible { opacity: 1; pointer-events: auto; }
+    @media (hover: none) { #chip-arrow-right { opacity: 0.75; pointer-events: auto; } }
     .chip-arrow:hover { color: rgba(30,30,30,0.9); }
     #chip-arrow-left  {
       left: 0;
@@ -2777,7 +2778,7 @@ function renderHotels() {
     + '</div>'
     + CONVENIENCE.hotels.map(function(h) {
         var gradeClass = h.grade === '4성급' ? 'grade-4' : h.grade === '3성급' ? 'grade-3' : h.grade === '2성급' ? 'grade-2' : h.grade === '1성급' ? 'grade-1' : 'grade-0';
-        return '<div class="hotel-item">'
+        return '<div class="hotel-item" onclick="goMapCat(\'hotel\')">'
           + '<div class="hotel-icon">🏨</div>'
           + '<div class="pi-content">'
           + '<div class="pi-name" style="flex-wrap:nowrap;gap:8px">' + h.name
@@ -2846,7 +2847,7 @@ function renderCamping() {
     + '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">화성시 등록 캠핑장 ' + CONVENIENCE.camping.length + '곳</div>'
     + '</div>'
     + CONVENIENCE.camping.map(function(c) {
-        return '<div class="camp-item">'
+        return '<div class="camp-item" onclick="goMapCat(\'camping\')">'
           + '<div class="camp-icon">⛺</div>'
           + '<div style="flex:1;min-width:0">'
           + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">'
@@ -3050,7 +3051,7 @@ function showFestivalDetail(id) {
     </div>
     <div class="fd-nearby">
       <button class="fd-nearby-btn" onclick="goMapFocus(${place.lat},${place.lng},5,${place.id})">
-        <span class="nb-icon">🗺</span>지도 보기
+        <span class="nb-icon"><svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg></span>지도 보기
       </button>
       <button class="fd-nearby-btn" onclick="goMapCat('mobeom')">
         <span class="nb-icon">🍽</span>주변 맛집
@@ -3063,7 +3064,7 @@ function showFestivalDetail(id) {
       </button>
     </div>
     <div class="fd-cta">
-      <div class="fd-cta-btn outline" onclick="goMapFocus(${place.lat},${place.lng},5,${place.id})">🗺 지도 보기</div>
+      <div class="fd-cta-btn outline" onclick="goMapFocus(${place.lat},${place.lng},5,${place.id})"><svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg> 지도 보기</div>
       <a class="fd-cta-btn" href="${YEYAK_URL}" target="_blank" rel="noopener">🎪 예약하기</a>
     </div>`;
 
