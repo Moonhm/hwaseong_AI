@@ -2946,6 +2946,7 @@ function toggleJebuList() {
 function renderCamping() {
   var el = document.getElementById('tourism-camp');
   if (!el || typeof CONVENIENCE === 'undefined') return;
+  if (!CONVENIENCE.camping) { el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
   el.innerHTML = '<div style="padding:16px var(--px) 8px;border-bottom:1px solid var(--border)">'
     + '<div class="section-title">캠핑장</div>'
     + '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">화성시 등록 캠핑장 ' + CONVENIENCE.camping.length + '곳</div>'
@@ -2973,6 +2974,7 @@ function renderTempleStay() {
   var el = document.getElementById('tourism-temple');
   if (!el || typeof CONVENIENCE === 'undefined') return;
   var t = CONVENIENCE.templeStay;
+  if (!t) { el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
   el.innerHTML = '<div style="padding:16px var(--px) 0">'
     + '<div class="section-title">템플스테이</div>'
     + '</div>'
@@ -3004,7 +3006,7 @@ function pickTheme(el, theme) {
 
 function renderTourismList(theme, expanded) {
   const list = document.getElementById('tourism-place-list');
-  if (!list || typeof PLACES === 'undefined') return;
+  if (!list || typeof PLACES === 'undefined' || typeof CATEGORY_CONFIG === 'undefined') return;
   let items;
   if (theme === 'festival-only') {
     items = PLACES.filter(p => p.category === 'festival');
@@ -3211,6 +3213,7 @@ function renderLivingCatList(cat) {
   if (cat === 'restaurant') {
     if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
     items = CONVENIENCE.restaurants;
+    if (!items) { list.innerHTML = empty; return; }
     if (titleEl) titleEl.textContent = '모범음식점';
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
@@ -3225,6 +3228,7 @@ function renderLivingCatList(cat) {
   } else if (cat === 'touristrest') {
     if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
     items = CONVENIENCE.touristRestaurants;
+    if (!items) { list.innerHTML = empty; return; }
     if (titleEl) titleEl.textContent = '관광식당업';
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {

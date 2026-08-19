@@ -156,7 +156,7 @@ function buildOverlays() {
 
     var color = CAT_COLOR[p.category] || '#6B7280';
     var cfg   = CATEGORY_CONFIG[p.category] || {};
-    var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
+    var label = (p.name || '').length > 6 ? (p.name || '').slice(0, 5) + '…' : (p.name || '');
     var wrap  = _mkCmPin(color, cfg.emoji || '📍', label);
 
     /* 클로저로 place id 캡처 */
@@ -229,7 +229,7 @@ function showTkViewport(bounds) {
     if (p.lat < sw.getLat() || p.lat > ne.getLat()) return;
     if (p.lng < sw.getLng() || p.lng > ne.getLng()) return;
 
-    var label = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
+    var label = (p.name || '').length > 6 ? (p.name || '').slice(0, 5) + '…' : (p.name || '');
     var wrap  = _mkCmPin(color, cfg.emoji || '🌟', label);
 
     if (p.id === selectedId) wrap.classList.add('selected');
@@ -597,7 +597,7 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
 function goNearestParking(placeLat, placeLng, placeId) {
   var tPlace = PLACES.find(function (pl) { return pl.id === placeId; });
   _goNPCore(placeLat, placeLng, tPlace ? tPlace.name : '관광지', '🌟',
-    function () { setTouristVisible(true); setTimeout(function () { onPinClick(placeId); }, 120); });
+    function () { setTouristVisible(true); setTimeout(function () { onPinClick(placeId); }, 350); });
 }
 
 /* ── 편의정보(conv) 핀에서 호출 ── */

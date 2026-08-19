@@ -233,6 +233,7 @@ function _geocodeCat(cat) {
 
 /* ── 오버레이 생성 ── */
 function _buildOverlays(cat, places) {
+  if (!kakaoMap) return;
   var cfg = CONV_CAT_CFG[cat];
   places.forEach(function (p) {
     if (CONV_OVMAP[p.id]) { CONV_OVMAP[p.id].setMap(kakaoMap); return; }
@@ -344,8 +345,10 @@ function _showJebuMarker() {
 
 /* ── 슬라이드 카드: 편의정보 장소 ── */
 function _showConvSlide(place) {
-  var cfg = CONV_CAT_CFG[place.category];
-  var ex  = place.extra || {};
+  var cfg      = CONV_CAT_CFG[place.category];
+  var ex       = place.extra || {};
+  var safeName = (place.name || '').replace(/['"\\]/g, '');
+  var addr     = place.address || '';
 
   var html =
     '<div style="width:100%;height:80px;border-radius:12px;background:' + cfg.bg + ';' +
@@ -353,17 +356,17 @@ function _showConvSlide(place) {
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
     '<span class="sl-cat" style="background:' + cfg.bg + ';color:' + cfg.color + '">' + cfg.emoji + ' ' + cfg.label + '</span>' +
     '</div>' +
-    '<div class="sl-name">' + place.name + '</div>' +
-    '<div class="sl-addr" data-addr="' + place.address.replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + place.address + '</div>' +
+    '<div class="sl-name">' + (place.name || '') + '</div>' +
+    '<div class="sl-addr" data-addr="' + addr.replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + addr + '</div>' +
     (ex.tel ? '<div class="sl-addr">📞 ' + ex.tel + '</div>' : '') +
     cfg.extraHtml(ex) +
     '<div class="sl-actions">' +
     (place.lat && place.lng
-      ? '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name.replace(/'/g, '') + '\')">🗺 길찾기</button>'
+      ? '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺 길찾기</button>'
       : '') +
-    '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' + encodeURIComponent(place.name) + '\',\'_blank\')">🔍 카카오지도</button>' +
+    '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' + encodeURIComponent(place.name || '') + '\',\'_blank\')">🔍 카카오지도</button>' +
     (place.lat && place.lng
-      ? '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingConv(' + place.lat + ',' + place.lng + ',\'' + place.category + '\',\'' + place.name.replace(/'/g, '') + '\')">🅿 가장 가까운 공영주차장 찾기</button>'
+      ? '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingConv(' + place.lat + ',' + place.lng + ',\'' + place.category + '\',\'' + safeName + '\')">🅿 가장 가까운 공영주차장 찾기</button>'
       : '') +
     '</div>';
 
@@ -411,7 +414,7 @@ function _showJebuSlide() {
     '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + s.pension_outside + '</div><div style="font-size:10px;color:#6b7280">관광펜션</div></div>' +
     '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + s.inside + '</div><div style="font-size:10px;color:#6b7280">내부숙박</div></div>' +
     '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + s.minbak_inside + '</div><div style="font-size:10px;color:#6b7280">민박(내)</div></div>' +
-    '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + (s.minbak_nearby + s.nearby) + '</div><div style="font-size:10px;color:#6b7280">인근</div></div>' +
+    '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + ((s.minbak_nearby || 0) + (s.nearby || 0)) + '</div><div style="font-size:10px;color:#6b7280">인근</div></div>' +
     '</div>' +
     '<div class="sl-actions">' +
     '<button class="sl-btn" onclick="openRoute(37.1578,126.5764,\'제부도\')">🗺 길찾기</button>' +
