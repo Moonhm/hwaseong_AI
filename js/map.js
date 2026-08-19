@@ -296,6 +296,8 @@ function openRoute(lat, lng, name) {
 }
 
 /* ── 내 위치 버튼 ── */
+var myLocationOverlay = null;
+
 function setupMyLocation() {
   document.getElementById('btn-mylocation').addEventListener('click', function () {
     if (!navigator.geolocation) {
@@ -304,10 +306,73 @@ function setupMyLocation() {
     }
     navigator.geolocation.getCurrentPosition(
       function (pos) {
-        kakaoMap.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
-        kakaoMap.setLevel(7);
+        var latlng = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
+        kakaoMap.setCenter(latlng);
+        kakaoMap.setLevel(5);
+        showMyLocationDot(latlng);
       },
       function () { showToast('위치 권한을 허용해 주세요.'); }
     );
   });
+}
+
+function showMyLocationDot(latlng) {
+  /* 이전 내 위치 마커 제거 */
+  if (myLocationOverlay) {
+    myLocationOverlay.setMap(null);
+    myLocationOverlay = null;
+  }
+
+  var dot = document.createElement('div');
+  dot.style.cssText = [
+    'position:relative',
+    'width:14px',
+    'height:14px',
+  ].join(';');
+
+  /* 외부 pulse 링 */
+  var ring = document.createElement('div');
+  ring.style.cssText = [
+    'position:absolute',
+    'inset:-6px',
+    'border-radius:50%',
+    'background:rgba(239,68,68,0.22)',
+    'animation:my-loc-pulse 1.8s ease-out infinite',
+  ].join(';');
+
+  /* 빨간 점 본체 */
+  var core = document.createElement('div');
+  core.style.cssText = [
+    'width:14px',
+    'height:14px',
+    'border-radius:50%',
+    'background:#EF4444',
+    'border:2.5px solid #fff',
+    'box-shadow:0 1px 6px rgba(239,68,68,0.55)',
+    'position:relative',
+    'z-index:1',
+  ].join(';');
+
+  dot.appendChild(ring);
+  dot.appendChild(core);
+
+  /* pulse 키프레임이 없으면 한 번만 주입 */
+  if (!document.getElementById('my-loc-style')) {
+    var style = document.createElement('style');
+    style.id = 'my-loc-style';
+    style.textContent =
+      '@keyframes my-loc-pulse{' +
+      '0%{transform:scale(0.6);opacity:0.9}' +
+      '70%{transform:scale(1.8);opacity:0}' +
+      '100%{transform:scale(1.8);opacity:0}}';
+    document.head.appendChild(style);
+  }
+
+  myLocationOverlay = new kakao.maps.CustomOverlay({
+    position: latlng,
+    content:  dot,
+    yAnchor:  0.5,
+    zIndex:   50,
+  });
+  myLocationOverlay.setMap(kakaoMap);
 }
