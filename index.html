@@ -803,14 +803,15 @@
 
     /* ── 관광지 추천 퀴즈 오버레이 ── */
     #quiz-overlay {
-      position: fixed; inset: 0; z-index: 700;
+      position: fixed; top: 0; bottom: 0; left: 50%; z-index: 700;
+      width: min(100vw, 480px);
       background: #F0F2F8;
       display: flex; flex-direction: column;
-      transform: translateX(100%);
+      transform: translateX(-50%) translateX(100%);
       transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
       overflow-y: auto;
     }
-    #quiz-overlay.open { transform: translateX(0); }
+    #quiz-overlay.open { transform: translateX(-50%); }
     .quiz-header {
       position: sticky; top: 0; z-index: 10;
       display: flex; align-items: center; justify-content: space-between;
@@ -903,9 +904,17 @@
       overflow: hidden; margin-bottom: 18px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.07);
       animation: quiz-enter 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
-      cursor: pointer; transition: transform 0.12s, box-shadow 0.12s;
+      cursor: pointer;
+      transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.28s ease;
     }
-    .rec-card:active { transform: scale(0.985); }
+    .rec-card:hover {
+      transform: translateY(-6px) scale(1.012);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.13);
+    }
+    .rec-card.rank-1:hover {
+      box-shadow: 0 20px 52px rgba(34,197,94,0.26);
+    }
+    .rec-card:active { transform: scale(0.975); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
     /* 1위 강조 — 초록 (참고 깃 동일) */
     .rec-card.rank-1 {
       border: 2.5px solid #22c55e;
