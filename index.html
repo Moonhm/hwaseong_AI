@@ -703,6 +703,65 @@
     .stat-val-sm { font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
     .stat-lbl-sm { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
+    /* ── 내 위치 추천 카드 ── */
+    .nearby-wrap { padding: 0 var(--px) 0; margin-top: 4px; }
+    .nearby-cta {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+      border: 1.5px dashed #93C5FD; border-radius: var(--r-md);
+      padding: 18px 16px; cursor: pointer; transition: box-shadow 0.15s;
+    }
+    .nearby-cta:active { transform: scale(0.98); }
+    .nearby-cta-icon { font-size: 28px; }
+    .nearby-cta-text { font-size: 14px; font-weight: 700; color: var(--primary); line-height: 1.4; }
+    .nearby-cta-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    /* 결과 카드 */
+    .nearby-card { border-radius: var(--r-md); overflow: hidden; box-shadow: var(--shadow-md); background: var(--white); border: 1px solid var(--border); }
+    .nearby-photo {
+      position: relative; width: 100%; height: 180px; overflow: hidden;
+      background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nearby-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .nearby-photo-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0) 55%);
+    }
+    .nearby-photo-info { position: absolute; bottom: 12px; left: 14px; right: 14px; color: #fff; }
+    .nearby-photo-cat  { font-size: 11px; font-weight: 700; opacity: 0.9; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .nearby-photo-name { font-size: 18px; font-weight: 800; line-height: 1.25; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    .nearby-dist-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      color: #fff; font-size: 11px; font-weight: 700;
+      padding: 3px 9px; border-radius: 20px;
+    }
+    .nearby-body { padding: 14px 16px; }
+    .nearby-addr { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .nearby-actions { display: flex; gap: 8px; }
+    .nearby-btn {
+      flex: 1; padding: 9px 0; border-radius: 10px; font-size: 13px; font-weight: 700;
+      border: 1.5px solid var(--border); background: var(--white); color: var(--text);
+      cursor: pointer; text-align: center; transition: background 0.12s;
+    }
+    .nearby-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .nearby-btn:active  { transform: scale(0.97); }
+    /* 주차 연결 카드 */
+    .nearby-park {
+      margin-top: 10px; border-radius: var(--r-md); padding: 14px 16px;
+      background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 12px; cursor: pointer; transition: box-shadow 0.15s;
+    }
+    .nearby-park:active { transform: scale(0.98); }
+    .nearby-park-icon {
+      width: 42px; height: 42px; border-radius: 12px; background: #DBEAFE;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 900; color: var(--primary); flex-shrink: 0;
+    }
+    .nearby-park-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .nearby-park-meta { font-size: 12px; color: var(--text-muted); }
+    .nearby-loading { text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px; }
+
     /* ── TOAST ── */
     #toast {
       position: fixed; bottom: calc(52px + env(safe-area-inset-bottom) + 14px); left: 50%;
@@ -750,13 +809,24 @@
     <button class="ttab"        onclick="switchHomeTab(this,'living')">생활</button>
   </div>
 
+  <!-- 내 위치 추천 (항상 표시) -->
+  <div class="nearby-wrap" id="home-nearby-section">
+    <div class="nearby-cta" onclick="requestNearbyRec()">
+      <div class="nearby-cta-icon">📍</div>
+      <div>
+        <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 주차장</div>
+        <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
+      </div>
+    </div>
+  </div>
+
   <!-- 관광 탭 콘텐츠 (JS 렌더) -->
-  <div id="home-tourism">
+  <div id="home-tourism" style="margin-top:16px">
     <div id="home-tourism-content"></div>
   </div>
 
   <!-- 생활 탭 콘텐츠 (JS 렌더) -->
-  <div id="home-living" style="display:none">
+  <div id="home-living" style="display:none;margin-top:16px">
     <div id="home-living-content"></div>
   </div>
 
@@ -1062,6 +1132,126 @@ function closeMenu() {
 function goMapCat(cat) {
   go('map');
   setTimeout(() => setFilter(cat), 200);
+}
+
+/* ── 내 위치 추천 ── */
+var _nearbyDone = false;
+
+function requestNearbyRec() {
+  var sec = document.getElementById('home-nearby-section');
+  if (!sec) return;
+
+  if (!navigator.geolocation) {
+    sec.innerHTML = '<div class="nearby-loading">위치 정보를 지원하지 않는 브라우저입니다.</div>';
+    return;
+  }
+
+  sec.innerHTML = '<div class="nearby-loading">📡 위치 확인 중...</div>';
+
+  navigator.geolocation.getCurrentPosition(
+    function (pos) { renderNearbyResult(pos.coords.latitude, pos.coords.longitude); },
+    function ()    {
+      sec.innerHTML =
+        '<div class="nearby-cta" onclick="requestNearbyRec()" style="border-color:#FCA5A5;background:linear-gradient(135deg,#FEF2F2,#FEE2E2)">' +
+        '<div class="nearby-cta-icon">⚠️</div>' +
+        '<div><div class="nearby-cta-text" style="color:#DC2626">위치 접근 권한이 필요합니다</div>' +
+        '<div class="nearby-cta-sub">탭하여 다시 시도</div></div></div>';
+    },
+    { timeout: 8000, maximumAge: 60000 }
+  );
+}
+
+function _distKm(lat1, lng1, lat2, lng2) {
+  var R = 6371;
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLng = (lng2 - lng1) * Math.PI / 180;
+  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+        * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function _distLabel(km) {
+  return km < 1 ? Math.round(km * 1000) + 'm' : km.toFixed(1) + 'km';
+}
+
+function renderNearbyResult(myLat, myLng) {
+  if (typeof PLACES === 'undefined') return;
+  var sec = document.getElementById('home-nearby-section');
+  if (!sec) return;
+
+  /* 가장 가까운 관광지 */
+  var tourists = PLACES.filter(function (p) { return p.category === 'tourist'; });
+  var nearestTourist = null, minTDist = Infinity;
+  tourists.forEach(function (p) {
+    var d = _distKm(myLat, myLng, p.lat, p.lng);
+    if (d < minTDist) { minTDist = d; nearestTourist = p; }
+  });
+
+  /* 가장 가까운 주차장 */
+  var parks = PLACES.filter(function (p) { return p.category === 'parking'; });
+  var nearestPark = null, minPDist = Infinity;
+  parks.forEach(function (p) {
+    var d = _distKm(myLat, myLng, p.lat, p.lng);
+    if (d < minPDist) { minPDist = d; nearestPark = p; }
+  });
+
+  if (!nearestTourist) {
+    sec.innerHTML = '<div class="nearby-loading">관광지 데이터를 불러오는 중입니다.</div>';
+    return;
+  }
+
+  var tName  = nearestTourist.name;
+  var tAddr  = nearestTourist.address.split(' ').slice(1).join(' ');
+  var imgSrc = 'assets/images/places/' + tName + '.jpg';
+  var free   = nearestPark && nearestPark.tags.includes('무료');
+
+  var parkHtml = nearestPark
+    ? '<div class="nearby-park" onclick="goMapCat(\'parking\')">'
+      + '<div class="nearby-park-icon">P</div>'
+      + '<div style="flex:1;min-width:0">'
+      + '<div class="nearby-park-name">' + nearestPark.name + '</div>'
+      + '<div class="nearby-park-meta">직선거리 ' + _distLabel(minPDist)
+      + ' · <span style="color:' + (free ? 'var(--green)' : 'var(--primary)') + ';font-weight:700">'
+      + (free ? '무료' : '유료') + '</span></div>'
+      + '</div>'
+      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '</div>'
+    : '';
+
+  sec.innerHTML =
+    '<div class="nearby-card">'
+
+    /* 사진 영역 */
+    + '<div class="nearby-photo" onclick="goMapCat(\'tourist\')">'
+    + '<img src="' + imgSrc + '" alt="' + tName + '" onerror="this.style.display=\'none\'">'
+    + '<div class="nearby-photo-overlay"></div>'
+    + '<div class="nearby-dist-badge">📍 ' + _distLabel(minTDist) + '</div>'
+    + '<div class="nearby-photo-info">'
+    + '<div class="nearby-photo-cat">★ 가장 가까운 관광지</div>'
+    + '<div class="nearby-photo-name">' + tName + '</div>'
+    + '</div>'
+    + '</div>'
+
+    /* 하단 정보 */
+    + '<div class="nearby-body">'
+    + '<div class="nearby-addr">📍 화성시 ' + tAddr + '</div>'
+    + '<div class="nearby-actions">'
+    + '<button class="nearby-btn primary" onclick="goMapCat(\'tourist\')">🗺 지도에서 보기</button>'
+    + '<button class="nearby-btn" onclick="openRoute(' + nearestTourist.lat + ',' + nearestTourist.lng + ',\'' + tName.replace(/'/g,'') + '\')">길찾기</button>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+
+    /* 주차장 카드 */
+    + parkHtml
+
+    /* 다시 검색 */
+    + '<div style="text-align:right;margin-top:6px;padding:0 2px">'
+    + '<button onclick="requestNearbyRec()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:4px">🔄 위치 다시 확인</button>'
+    + '</div>';
+
+  _nearbyDone = true;
 }
 
 /* ── 홈 페이지 렌더 ── */
