@@ -607,8 +607,9 @@
     }
     #menu-dim.open { opacity: 1; pointer-events: auto; }
     #menu-drawer {
-      position: fixed; top: 0; right: 0;
-      width: 67%; max-width: 320px; height: 100%;
+      position: fixed; top: 0; height: 100%;
+      right: max(0px, calc((100vw - 480px) / 2));
+      width: min(72vw, 320px);
       background: var(--white); z-index: 601;
       transform: translateX(100%);
       transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
