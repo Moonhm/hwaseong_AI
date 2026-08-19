@@ -684,10 +684,9 @@ function _makeNpParkPin(pkData, onClickFn) {
   pill.className = 'np-pill';
   pill.style.background = color;
 
-  var badge = document.createElement('div');
-  badge.className = 'np-p-badge';
-  badge.style.color = color;
-  badge.textContent = 'P';
+  var badge = document.createElement('span');
+  badge.style.cssText = 'font-size:22px;line-height:1;flex-shrink:0';
+  badge.textContent = '🅿️';
 
   var countSpan = document.createElement('span');
   countSpan.style.cssText = 'font-size:15px;font-weight:900';
