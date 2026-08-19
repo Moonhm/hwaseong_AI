@@ -448,7 +448,8 @@ function showPlaceSlide(place) {
   var ratingHtml = '';
   if (isTourist && place.rating) {
     var full = Math.floor(place.rating), half = (place.rating - full) >= 0.3 ? 1 : 0;
-    var stars = '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - half);
+    var _hs = '<span style="position:relative;display:inline-block;letter-spacing:0">☆<span style="position:absolute;inset:0;overflow:hidden;width:50%">★</span></span>';
+    var stars = '★'.repeat(full) + (half ? _hs : '') + '☆'.repeat(5 - full - half);
     ratingHtml =
       '<div class="sl-rating">' +
       '<span class="sl-stars">' + stars + '</span>' +
