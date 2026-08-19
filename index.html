@@ -2077,15 +2077,26 @@ function goMapFocus(lat, lng, level, placeId) {
   }, 350);
 }
 
-/* ── 주차장 위치로 지도 이동 (주차장 칩 강제 활성화) ── */
-function goMapPark(lat, lng) {
+/* ── 주차장 위치로 지도 이동 + 슬라이드 오픈 ── */
+function goMapPark(lat, lng, parkId) {
   go('map');
   setTimeout(function () {
     if (!kakaoMap) return;
     if (typeof activateParking === 'function') activateParking();
     setTimeout(function () {
-      kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
       kakaoMap.setLevel(4);
+      if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(lat, lng, 150);
+      /* 주차장 슬라이드 카드 오픈 */
+      var pk = null;
+      if (parkId != null && typeof parkingData !== 'undefined') {
+        pk = parkingData.find(function (p) { return p.id === parkId; });
+      }
+      if (!pk && typeof parkingData !== 'undefined') {
+        pk = parkingData.find(function (p) { return p.lat === lat && p.lng === lng; });
+      }
+      if (pk && typeof showParkingSlide === 'function') {
+        setTimeout(function () { showParkingSlide(pk); }, 160);
+      }
     }, 150);
   }, 350);
 }
@@ -2205,7 +2216,7 @@ function renderNearbyResult(myLat, myLng) {
   }
 
   var parkClickFn = nearestPark
-    ? 'goMapPark(' + nearestPark.lat + ',' + nearestPark.lng + ')'
+    ? 'goMapPark(' + nearestPark.lat + ',' + nearestPark.lng + ',' + nearestPark.id + ')'
     : 'goMapCat(\'parking\')';
 
   var parkHtml = nearestPark
@@ -2348,7 +2359,7 @@ function doHomeSearch(q) {
       if ((p.name || '').toLowerCase().includes(ql)) {
         var isFree = p.free || (p.tags && p.tags.includes('무료'));
         var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + addr, em: '🅿', bg: '#EFF6FF', lat: p.lat, lng: p.lng });
+        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + addr, em: '🅿', bg: '#EFF6FF', lat: p.lat, lng: p.lng, id: p.id });
       }
     });
   }
@@ -2400,7 +2411,7 @@ function _srClick(idx) {
   if (r.type === 'place' && r.lat && r.lng) {
     goMapFocus(r.lat, r.lng, 4, r.id != null ? r.id : null);
   } else if (r.type === 'parking' && r.lat) {
-    goMapPark(r.lat, r.lng);
+    goMapPark(r.lat, r.lng, r.id);
   } else if (r.type === 'lc' && r.lat) {
     go('map');
     setTimeout(function() {
@@ -3086,7 +3097,7 @@ function renderLivingCatList(cat) {
           var addr = (p.address || '').replace('경기도 화성시 ','');
           var hasCoord = p.lat && p.lng;
           var clickFn = hasCoord
-            ? 'goMapPark(' + p.lat + ',' + p.lng + ')'
+            ? 'goMapPark(' + p.lat + ',' + p.lng + ',' + p.id + ')'
             : 'goMapCat(\'parking\')';
           return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.04) + 's;cursor:pointer" onclick="' + clickFn + '">'
             + '<div class="pi pi-parking">P</div>'
