@@ -1613,6 +1613,49 @@ function goMapCat(cat) {
   setTimeout(() => setFilter(cat), 200);
 }
 
+/* ── 특정 장소로 지도 이동 + 슬라이드 오픈 ──
+ * placeId: PLACES 배열의 id (PLACES-기반 장소만, 없으면 null)
+ * level  : zoom level (작을수록 확대, 기본 4)
+ */
+function goMapFocus(lat, lng, level, placeId) {
+  go('map');
+  setTimeout(function () {
+    if (!kakaoMap) return;
+    kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
+    kakaoMap.setLevel(level || 4);
+    if (placeId != null) {
+      /* 핀이 렌더된 후에 클릭 이벤트 */
+      setTimeout(function () { if (typeof onPinClick === 'function') onPinClick(placeId); }, 120);
+    }
+  }, 350);
+}
+
+/* ── 주차장 위치로 지도 이동 ── */
+function goMapPark(lat, lng) {
+  go('map');
+  setTimeout(function () {
+    if (!kakaoMap) return;
+    setFilter('parking');
+    setTimeout(function () {
+      kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
+      kakaoMap.setLevel(4);
+    }, 150);
+  }, 350);
+}
+
+/* ── 지역화폐 위치로 지도 이동 ── */
+function goMapLc(lat, lng) {
+  go('map');
+  setTimeout(function () {
+    if (!kakaoMap) return;
+    setFilter('localcurrency');
+    setTimeout(function () {
+      kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
+      kakaoMap.setLevel(4);
+    }, 150);
+  }, 350);
+}
+
 /* ── 내 위치 추천 ── */
 var _nearbyDone = false;
 
@@ -1683,26 +1726,36 @@ function renderNearbyResult(myLat, myLng) {
   var tName  = nearestTourist.name;
   var tAddr  = nearestTourist.address.split(' ').slice(1).join(' ');
   var imgSrc = 'assets/images/places/' + tName + '.jpg';
-  var free   = nearestPark && nearestPark.tags.includes('무료');
+  var isFree = nearestPark && (nearestPark.free === true);
+  /* 실시간 대수 우선, 없으면 total */
+  var availSpots = nearestPark ? (nearestPark.avail != null ? nearestPark.avail : nearestPark.total) : null;
+
+  var parkClickFn = nearestPark
+    ? 'goMapPark(' + nearestPark.lat + ',' + nearestPark.lng + ')'
+    : 'goMapCat(\'parking\')';
 
   var parkHtml = nearestPark
-    ? '<div class="nearby-park" onclick="goMapCat(\'parking\')">'
+    ? '<div class="nearby-park" onclick="' + parkClickFn + '">'
       + '<div class="nearby-park-icon">P</div>'
       + '<div style="flex:1;min-width:0">'
       + '<div class="nearby-park-name">' + nearestPark.name + '</div>'
-      + '<div class="nearby-park-meta">직선거리 ' + _distLabel(minPDist)
-      + ' · <span style="color:' + (free ? 'var(--green)' : 'var(--primary)') + ';font-weight:700">'
-      + (free ? '무료' : '유료') + '</span></div>'
+      + '<div class="nearby-park-meta">직선거리 ' + _distLabel(minPDist) + ' · '
+      + nearestPark.type
+      + ' · <span style="color:' + (isFree ? 'var(--green)' : 'var(--primary)') + ';font-weight:700">'
+      + (isFree ? '무료' : '유료') + '</span></div>'
       + '</div>'
-      + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '<div style="text-align:right;flex-shrink:0">'
+      + '<div style="font-size:15px;font-weight:900;color:var(--text)">' + availSpots + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">주차 가능</div>'
+      + '</div>'
       + '</div>'
     : '';
 
   sec.innerHTML =
     '<div class="nearby-card">'
 
-    /* 사진 영역 */
-    + '<div class="nearby-photo" onclick="goMapCat(\'tourist\')">'
+    /* 사진 영역 — 클릭 시 해당 관광지로 지도 포커스 */
+    + '<div class="nearby-photo" onclick="goMapFocus(' + nearestTourist.lat + ',' + nearestTourist.lng + ',4,' + nearestTourist.id + ')">'
     + '<img src="' + imgSrc + '" alt="' + tName + '" onerror="this.style.display=\'none\'">'
     + '<div class="nearby-photo-overlay"></div>'
     + '<div class="nearby-dist-badge">📍 ' + _distLabel(minTDist) + '</div>'
@@ -1716,7 +1769,7 @@ function renderNearbyResult(myLat, myLng) {
     + '<div class="nearby-body">'
     + '<div class="nearby-addr">📍 화성시 ' + tAddr + '</div>'
     + '<div class="nearby-actions">'
-    + '<button class="nearby-btn primary" onclick="goMapCat(\'tourist\')">🗺 지도에서 보기</button>'
+    + '<button class="nearby-btn primary" onclick="goMapFocus(' + nearestTourist.lat + ',' + nearestTourist.lng + ',4,' + nearestTourist.id + ')">🗺 지도에서 보기</button>'
     + '<button class="nearby-btn" onclick="openRoute(' + nearestTourist.lat + ',' + nearestTourist.lng + ',\'' + tName.replace(/'/g,'') + '\')">길찾기</button>'
     + '</div>'
     + '</div>'
@@ -2107,7 +2160,10 @@ function renderTourismList(theme) {
     const cfg = CATEGORY_CONFIG[p.category];
     const isCurrency = p.tags.includes('가맹점');
     return `
-      <div class="place-item" style="animation-delay:${i * 0.045}s" onclick="${p.category === 'festival' ? 'showFestivalDetail(' + p.id + ')' : 'goMapCat(\'' + p.category + '\')'}">
+      <div class="place-item" style="animation-delay:${i * 0.045}s"
+        onclick="${p.category === 'festival'
+          ? 'showFestivalDetail(' + p.id + ')'
+          : 'goMapFocus(' + p.lat + ',' + p.lng + ',4,' + p.id + ')'}">
         <div class="pi ${iconClass(p.category)}">${iconContent(p.category)}</div>
         <div class="pi-content">
           <div class="pi-name">
@@ -2116,7 +2172,10 @@ function renderTourismList(theme) {
           </div>
           <div class="pi-meta">${p.address.split(' ').slice(1,3).join(' ')} · ${cfg.label}</div>
         </div>
-        <div class="pi-right">${p.date ? p.date.split('~')[0].trim().replace('2026-','') : ''}</div>
+        <div class="pi-right" style="display:flex;align-items:center;gap:4px">
+          ${p.date ? '<span style="font-size:11px;color:var(--text-muted)">' + p.date.split('~')[0].trim().replace('2026-','') + '</span>' : ''}
+          ${p.category === 'tourist' ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>' : ''}
+        </div>
       </div>`;
   }).join('');
 }
@@ -2179,7 +2238,7 @@ function showFestivalDetail(id) {
       <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})"><span class="nb-icon">💳</span>가맹점</button>
     </div>
     <div class="fd-cta">
-      <div class="fd-cta-btn" onclick="goMapCat('festival')">🗺 지도에서 위치 확인</div>
+      <div class="fd-cta-btn" onclick="goMapFocus(${place.lat},${place.lng},5,${place.id})">🗺 지도에서 위치 확인</div>
     </div>`;
 
   document.getElementById('page-tourism').scrollTop = 0;
@@ -2255,9 +2314,21 @@ function renderLivingCatList(cat) {
     if (countEl) countEl.textContent = lcArr.length + '곳';
     list.innerHTML = lcArr.length
       ? lcArr.map(function(p, i) {
-          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's" onclick="goMapCat(\'localcurrency\')">'
+          /* lcData 필드: n=이름, c=업종, a=주소, lat, lng */
+          var name = p.n || p.name || '';
+          var addr = (p.a || p.address || '').replace('경기도 화성시 ','');
+          var cat2 = p.c || '';
+          var hasCoord = p.lat && p.lng;
+          var clickFn = hasCoord
+            ? 'goMapLc(' + p.lat + ',' + p.lng + ')'
+            : 'goMapCat(\'localcurrency\')';
+          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's;cursor:pointer" onclick="' + clickFn + '">'
             + '<div class="pi pi-currency">₩</div>'
-            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + (p.address || '') + '</div></div>'
+            + '<div class="pi-content">'
+            + '<div class="pi-name">' + name + '</div>'
+            + '<div class="pi-meta">' + (cat2 ? cat2 + ' · ' : '') + addr + '</div>'
+            + '</div>'
+            + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
             + '</div>';
         }).join('')
       : empty;
@@ -2268,11 +2339,23 @@ function renderLivingCatList(cat) {
     if (countEl) countEl.textContent = pkArr.length + '곳';
     list.innerHTML = pkArr.length
       ? pkArr.map(function(p, i) {
-          var free = p.tags && p.tags.includes('무료');
-          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's" onclick="goMapCat(\'parking\')">'
+          var isFree = p.free === true;
+          var avail = (p.avail != null) ? p.avail : p.total;
+          var addr = (p.address || '').replace('경기도 화성시 ','');
+          var hasCoord = p.lat && p.lng;
+          var clickFn = hasCoord
+            ? 'goMapPark(' + p.lat + ',' + p.lng + ')'
+            : 'goMapCat(\'parking\')';
+          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's;cursor:pointer" onclick="' + clickFn + '">'
             + '<div class="pi pi-parking">P</div>'
-            + '<div class="pi-content"><div class="pi-name">' + p.name + '</div><div class="pi-meta">' + (p.address || '') + '</div></div>'
-            + '<div class="pi-right"><span class="park-badge ' + (free ? 'pb-free' : 'pb-paid') + '">' + (free ? '무료' : '유료') + '</span></div>'
+            + '<div class="pi-content">'
+            + '<div class="pi-name">' + p.name + '</div>'
+            + '<div class="pi-meta">' + addr + ' · ' + p.type + '</div>'
+            + '</div>'
+            + '<div class="pi-right" style="text-align:right;flex-shrink:0">'
+            + '<span class="park-badge ' + (isFree ? 'pb-free' : 'pb-paid') + '">' + (isFree ? '무료' : '유료') + '</span>'
+            + '<div style="font-size:10px;color:var(--text-muted);margin-top:3px">' + avail + '대</div>'
+            + '</div>'
             + '</div>';
         }).join('')
       : empty;
