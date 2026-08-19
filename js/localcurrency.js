@@ -65,7 +65,12 @@ function setLcVisible(visible) {
 
 /* ── 현재 표시 중인 것 전부 제거 ── */
 function clearLcDisplay() {
-  lcDisplayItems.forEach(function (item) { item.setMap(null); });
+  lcDisplayItems.forEach(function (item) {
+    if (item._clickHandler) {
+      kakao.maps.event.removeListener(item, 'click', item._clickHandler);
+    }
+    item.setMap(null);
+  });
   lcDisplayItems = [];
 }
 
@@ -101,9 +106,10 @@ function showViewportMarkers(bounds) {
       position: new kakao.maps.LatLng(p.lat, p.lng),
       map: lcMap,
     });
-    kakao.maps.event.addListener(marker, 'click', (function (pp) {
+    marker._clickHandler = (function (pp) {
       return function () { showLcSlide(pp); };
-    })(p));
+    })(p);
+    kakao.maps.event.addListener(marker, 'click', marker._clickHandler);
     lcDisplayItems.push(marker);
   });
 }

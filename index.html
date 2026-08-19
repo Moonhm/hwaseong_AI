@@ -1422,12 +1422,12 @@
       </div>
       <!-- 서브탭 -->
       <div class="tourism-subnav">
-        <div class="chip active" onclick="switchTourismSub(this,'all')">전체</div>
-        <div class="chip" onclick="switchTourismSub(this,'festival')">축제</div>
-        <div class="chip" onclick="switchTourismSub(this,'spot')">관광지</div>
-        <div class="chip" onclick="switchTourismSub(this,'stay')">숙박</div>
-        <div class="chip" onclick="switchTourismSub(this,'camp')">캠핑</div>
-        <div class="chip" onclick="switchTourismSub(this,'temple')">템플스테이</div>
+        <div class="chip active" data-sub="all" onclick="switchTourismSub(this,'all')">전체</div>
+        <div class="chip" data-sub="festival" onclick="switchTourismSub(this,'festival')">축제</div>
+        <div class="chip" data-sub="spot" onclick="switchTourismSub(this,'spot')">관광지</div>
+        <div class="chip" data-sub="stay" onclick="switchTourismSub(this,'stay')">숙박</div>
+        <div class="chip" data-sub="camp" onclick="switchTourismSub(this,'camp')">캠핑</div>
+        <div class="chip" data-sub="temple" onclick="switchTourismSub(this,'temple')">템플스테이</div>
       </div>
     </div>
 
@@ -2039,7 +2039,7 @@ function menuGoTourism(sub) {
   closeMenu();
   go('tourism');
   setTimeout(function() {
-    var chip = document.querySelector('.tourism-subnav .chip[onclick*="' + sub + '"]');
+    var chip = document.querySelector('.tourism-subnav .chip[data-sub="' + sub + '"]');
     if (chip && typeof switchTourismSub === 'function') switchTourismSub(chip, sub);
   }, 250);
 }
@@ -2197,8 +2197,6 @@ function goMapLc(lat, lng) {
 }
 
 /* ── 내 위치 추천 ── */
-var _nearbyDone = false;
-
 function requestNearbyRec() {
   var sec = document.getElementById('home-nearby-section');
   if (!sec) return;
@@ -2259,6 +2257,7 @@ function renderNearbyResult(myLat, myLng) {
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
       if (parkingData.length) renderNearbyResult(myLat, myLng);
     }).catch(function () {});
+    return;
   }
 
   var nearestPark = null, minPDist = Infinity;
@@ -2352,7 +2351,6 @@ function renderNearbyResult(myLat, myLng) {
     + '<button onclick="requestNearbyRec()" style="font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:4px">🔄 위치 다시 확인</button>'
     + '</div>';
 
-  _nearbyDone = true;
 }
 
 /* ── 홈 페이지 렌더 ── */
@@ -3270,10 +3268,6 @@ function renderLivingPage() {
   switchLivingCat(firstCat, 'restaurant');
 }
 
-function switchLiving(type) {
-  showToast(type === 'food' ? '음식점 가맹점을 지도에서 확인하세요' : '업종별 가맹점을 지도에서 확인하세요');
-  goMapCat('localcurrency');
-}
 
 /* ── 즐겨찾기 ── */
 var _FAV_KEY = 'hsida_favs';
@@ -3673,10 +3667,8 @@ window.addEventListener('DOMContentLoaded', () => {
   }).catch(function() {});
   /* localcurrency-static.json(4.2MB)은 탭 클릭 시 지연 로드 */
 
-  setTimeout(() => {
-    renderHomePage();
-    renderFestivalScroll();
-  }, 100);
+  renderHomePage();
+  renderFestivalScroll();
 });
 </script>
 

@@ -104,6 +104,9 @@ function _saveConvCache(cat, places) {
 function showConvCat(cat) {
   if (!kakaoMap) return;
 
+  /* 제부도: 115개 geocoding 대신 단일 요약 마커 표시 */
+  if (cat === 'jebu') { _showJebuMarker(); return; }
+
   var status = CONV_STATUS[cat] || 'idle';
 
   if (status === 'done') {

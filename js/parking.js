@@ -289,7 +289,7 @@ function feeSection(p) {
 function showParkingSlide(p) {
   var color   = pinColorCached(p);
   var avail   = p.open ? p.avail : '-';
-  var ratio   = p.total > 0 ? Math.round((p.avail / p.total) * 100) : 0;
+  var ratio   = (p.open && p.total > 0) ? Math.round((p.avail / p.total) * 100) : 0;
   var freeTag = p.free
     ? '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">무료</span>'
     : '<span style="background:#DBEAFE;color:#2563EB;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">유료</span>';
