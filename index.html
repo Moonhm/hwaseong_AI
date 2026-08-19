@@ -662,6 +662,11 @@
       z-index: 600; opacity: 0; pointer-events: none; transition: opacity 0.28s;
     }
     #menu-dim.open { opacity: 1; pointer-events: auto; }
+    #quiz-dim {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 690; opacity: 0; pointer-events: none; transition: opacity 0.28s;
+    }
+    #quiz-dim.open { opacity: 1; pointer-events: auto; }
     #menu-drawer {
       position: fixed; top: 0; height: 100%;
       right: max(0px, calc((100vw - 480px) / 2));
@@ -1538,6 +1543,7 @@
 
 <!-- ── 사이드 메뉴 드로어 ── -->
 <div id="menu-dim" onclick="closeMenu()"></div>
+<div id="quiz-dim" onclick="closeQuiz()"></div>
 <div id="menu-drawer">
   <div class="menu-header">
     <div style="font-size:16px;font-weight:800;color:var(--text);">화성잇다 메뉴</div>
@@ -1633,6 +1639,7 @@
 <script>
 /* ── 페이지 전환 ── */
 function go(page) {
+  closeQuiz();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item[data-page]').forEach(b => b.classList.remove('active'));
   var newPage = document.getElementById('page-' + page);
@@ -1773,11 +1780,14 @@ function openQuiz() {
   var ov = document.getElementById('quiz-overlay');
   ov.classList.add('open');
   ov.scrollTop = 0;
+  document.getElementById('quiz-dim').classList.add('open');
   _renderQuizBody();
 }
 
 function closeQuiz() {
   document.getElementById('quiz-overlay').classList.remove('open');
+  var dim = document.getElementById('quiz-dim');
+  if (dim) dim.classList.remove('open');
 }
 
 function _renderQuizBody() {
