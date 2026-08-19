@@ -442,11 +442,11 @@ function showPlaceSlide(place) {
   var actionsHtml;
   if (isTourist) {
     actionsHtml =
-      '<button class="sl-btn" style="width:100%;background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" ' +
-      'onclick="goNearestParking(' + place.lat + ',' + place.lng + ',' + place.id + ')">🅿 가장 가까운 공영주차장 찾기</button>' +
       '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' +
       encodeURIComponent(place.name) + '\',\'_blank\')">🔍 카카오지도</button>' +
-      routeBtn;
+      routeBtn +
+      '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" ' +
+      'onclick="goNearestParking(' + place.lat + ',' + place.lng + ',' + place.id + ')">🅿 가장 가까운 공영주차장 찾기</button>';
   } else {
     actionsHtml =
       '<button class="sl-btn primary" onclick="findNearby(' + place.lat + ',' + place.lng + ')">💳 반경 500m 가맹점</button>' +

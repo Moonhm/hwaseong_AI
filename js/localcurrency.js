@@ -163,7 +163,7 @@ function showLcSlide(p) {
     + '<div class="sl-actions">'
     + '<button class="sl-btn primary" onclick="openRoute('
     + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🗺 길찾기</button>'
-    + '<button class="sl-btn" style="width:100%;background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingLc('
+    + '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingLc('
     + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🅿 가장 가까운 공영주차장 찾기</button>'
     + '</div>';
 
