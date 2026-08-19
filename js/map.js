@@ -494,9 +494,10 @@ function toggleTouristDesc() {
    가장 가까운 공영주차장 모드 (NP Mode)
    ── 두 핀만 강조 표시, 나머지 레이어 숨김
    ══════════════════════════════════════════ */
-var _npMode = null; /* { placeId, touristOv, parkOv, backBtn } */
+var _npMode = null; /* { onBack, touristOv, parkOv, backBtn } */
 
-function goNearestParking(placeLat, placeLng, placeId) {
+/* ── 공통 핵심 로직 ── */
+function _goNPCore(placeLat, placeLng, label, icon, onBack) {
   if (typeof parkingData === 'undefined' || !parkingData.length) {
     if (typeof showToast === 'function') showToast('주차장 정보를 불러오는 중입니다.');
     return;
@@ -527,9 +528,8 @@ function goNearestParking(placeLat, placeLng, placeId) {
   document.querySelectorAll('#map-chips .chip').forEach(function (c) { c.classList.remove('active'); });
   Object.keys(overlayMap).forEach(function (id) { overlayMap[id].setMap(null); });
 
-  /* 관광지 하이라이트 핀 */
-  var tPlace = PLACES.find(function (pl) { return pl.id === placeId; });
-  var touristEl = _makeNpPin('#FB923C', '🌟', tPlace ? tPlace.name : '관광지', function () {
+  /* 장소 하이라이트 핀 */
+  var touristEl = _makeNpPin('#FB923C', icon || '🌟', label || '장소', function () {
     exitNearestParkMode();
   });
   var touristOv = new kakao.maps.CustomOverlay({
@@ -558,7 +558,7 @@ function goNearestParking(placeLat, placeLng, placeId) {
   backBtn.onclick = exitNearestParkMode;
   document.body.appendChild(backBtn);
 
-  _npMode = { placeId: placeId, touristOv: touristOv, parkOv: parkOv, backBtn: backBtn };
+  _npMode = { onBack: onBack || null, touristOv: touristOv, parkOv: parkOv, backBtn: backBtn };
 
   /* 두 핀 모두 보이도록 bounds 조정 */
   setTimeout(function () {
@@ -573,6 +573,33 @@ function goNearestParking(placeLat, placeLng, placeId) {
       if (lv > 8) kakaoMap.setLevel(8);
     }, 200);
   }, 320);
+}
+
+/* ── 관광지 핀에서 호출 ── */
+function goNearestParking(placeLat, placeLng, placeId) {
+  var tPlace = PLACES.find(function (pl) { return pl.id === placeId; });
+  _goNPCore(placeLat, placeLng, tPlace ? tPlace.name : '관광지', '🌟',
+    function () { setTouristVisible(true); setTimeout(function () { onPinClick(placeId); }, 60); });
+}
+
+/* ── 편의정보(conv) 핀에서 호출 ── */
+function goNearestParkingConv(placeLat, placeLng, convCat, convName) {
+  var cfg = (typeof CONV_CAT_CFG !== 'undefined') && CONV_CAT_CFG[convCat];
+  var icon = cfg ? cfg.emoji : '🍽';
+  _goNPCore(placeLat, placeLng, convName, icon, function () {
+    var p = ((typeof CONV_PLACES !== 'undefined' && CONV_PLACES[convCat]) || [])
+      .find(function (x) { return x.name === convName; });
+    if (p && typeof _showConvSlide === 'function') _showConvSlide(p);
+  });
+}
+
+/* ── 지역화폐 가맹점 핀에서 호출 ── */
+function goNearestParkingLc(placeLat, placeLng, lcName) {
+  _goNPCore(placeLat, placeLng, lcName, '🏪', function () {
+    var p = (typeof lcData !== 'undefined' ? lcData : [])
+      .find(function (x) { return x.n === lcName; });
+    if (p && typeof showLcSlide === 'function') showLcSlide(p);
+  });
 }
 
 /* 관광지 하이라이트 핀 — 타원형 pill */
@@ -683,10 +710,9 @@ function _makeNpParkPin(pkData, onClickFn) {
 /* NP 모드 종료 + 관광지 슬라이드 복원 */
 function exitNearestParkMode() {
   if (!_npMode) return;
-  var pid = _npMode.placeId;
+  var cb = _npMode.onBack;
   _exitNpMode(false);
-  setTouristVisible(true);
-  if (pid != null) setTimeout(function () { onPinClick(pid); }, 120);
+  if (cb) setTimeout(cb, 120);
 }
 
 /* NP 모드 오버레이·버튼만 정리 */
