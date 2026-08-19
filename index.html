@@ -2172,7 +2172,10 @@ function _zoomAndShowConv(place) {
 function goMapFocus(lat, lng, level, placeId) {
   go('map');
   setTimeout(function () {
-    if (!kakaoMap) return;
+    if (!kakaoMap) {
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중입니다. 잠시 후 다시 눌러주세요.');
+      return;
+    }
     /* 카테고리 필터 활성화 (이미 활성화된 경우 토글 방지) */
     if (placeId != null && typeof PLACES !== 'undefined') {
       var _p = PLACES.find(function(x) { return x.id === placeId; });
@@ -2426,7 +2429,7 @@ var _REGIONS = [
   { name: '송산',   lat: 37.2152, lng: 126.6774, level: 6 },
   { name: '화성',   lat: 37.1996, lng: 126.8316, level: 9 },
   { name: '제부도', lat: 37.1578, lng: 126.5764, level: 7 },
-  { name: '공룡알화석지', lat: 37.1928, lng: 126.6574, level: 5 },
+  { name: '공룡알화석지', lat: 37.2441, lng: 126.7498, level: 5 },
   { name: '화성행궁', lat: 37.2844, lng: 127.0130, level: 5 },
 ];
 
@@ -3203,9 +3206,10 @@ function renderLivingCatList(cat) {
   if (!list) return;
   var empty = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
 
+  var items;
   if (cat === 'restaurant') {
     if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
-    var items = CONVENIENCE.restaurants;
+    items = CONVENIENCE.restaurants;
     if (titleEl) titleEl.textContent = '모범음식점';
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
@@ -3219,7 +3223,7 @@ function renderLivingCatList(cat) {
 
   } else if (cat === 'touristrest') {
     if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
-    var items = CONVENIENCE.touristRestaurants;
+    items = CONVENIENCE.touristRestaurants;
     if (titleEl) titleEl.textContent = '관광식당업';
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
@@ -3706,7 +3710,7 @@ function goLivingCat(cat) {
 
 /* ── Escape 키로 슬라이드 닫기 ── */
 document.addEventListener('keydown', function (e) {
-  if (e.key === 'Escape') closePlaceSlide();
+  if (e.key === 'Escape' && document.getElementById('place-slide').classList.contains('open')) closePlaceSlide();
 });
 
 /* ── 지도 필터 칩 — 화살표 + 마우스 드래그 스크롤 ── */

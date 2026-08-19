@@ -343,6 +343,7 @@ function _panPinAboveSlide(lat, lng, delay) {
   if (!kakaoMap || !lat || !lng) return;
   kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
   setTimeout(function () {
+    if (!kakaoMap) return;
     var h        = mapH();
     var slideH   = Math.min(h * 0.6, 420);
     var visibleH = h - slideH;
@@ -434,7 +435,7 @@ function showPlaceSlide(place) {
     : '';
 
   /* 액션 버튼 — 이름에 작은따옴표 포함 시 onclick 오류 방지 */
-  var safeName = place.name.replace(/'/g, '');
+  var safeName = place.name.replace(/['"]/g, '');
   var routeBtn = '<button class="sl-btn" style="' +
     (isTourist ? 'background:' + color + ';color:#fff;border-color:' + color : '') +
     '" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺 길찾기</button>';

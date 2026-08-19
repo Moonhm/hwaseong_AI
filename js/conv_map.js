@@ -198,6 +198,7 @@ function _geocodeCat(cat) {
 
     setTimeout(function () {
       geocoder.addressSearch(fullAddr, function (data, status) {
+        if (_done) return;
         if (status === 'OK' && data.length > 0) {
           results.push({
             id:       'conv_' + cat + '_' + i,

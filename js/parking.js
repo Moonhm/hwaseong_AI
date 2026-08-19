@@ -44,11 +44,14 @@ function _applyRealtime(data) {
 
 /* ── 정적 + 실시간 데이터 로드 ── */
 function fetchParkingAll() {
-  fetch('js/parking-static.json')
-    .then(function (r) { return r.json(); })
+  /* DOMContentLoaded에서 이미 static JSON을 로드했으면 재사용 */
+  var staticP = parkingData.length
+    ? Promise.resolve(null)
+    : fetch('js/parking-static.json').then(function (r) { return r.json(); });
+
+  staticP
     .then(function (list) {
-      mergeParkingData(list, []);
-      updateParkingCount();
+      if (list) { mergeParkingData(list, []); updateParkingCount(); }
       return fetch('/api/parking/realtime')
         .then(function (r) { return r.json(); })
         .catch(function () { return null; });
