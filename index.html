@@ -2330,9 +2330,8 @@ function renderHomeTourism() {
   if (!el || typeof PLACES === 'undefined') return;
 
   const festivals   = PLACES.filter(p => p.category === 'festival');
-  const restaurants = PLACES.filter(p => p.category === 'restaurant').slice(0, 4);
-  const parkings    = PLACES.filter(p => p.category === 'parking').slice(0, 1);
-  const currencies  = PLACES.filter(p => p.category === 'localcurrency');
+  const restaurants = (typeof CONVENIENCE !== 'undefined' && CONVENIENCE.restaurants) ? CONVENIENCE.restaurants.slice(0, 4) : [];
+  const parkings    = (typeof parkingData  !== 'undefined' && parkingData.length)      ? parkingData.slice(0, 1) : [];
 
   const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>`;
 
@@ -2344,7 +2343,7 @@ function renderHomeTourism() {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
             <span class="badge badge-${festivals[0].status === 'ongoing' ? 'ongoing' : 'upcoming'}">${festivals[0].status === 'ongoing' ? '진행중' : '예정'}</span>
-            <span style="font-size:11px;color:var(--text-muted);">${festivals[0].date ? festivals[0].date.replace('2026-','').replaceAll('-','.') : ''}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${festivals[0].date ? festivals[0].date.replace(/^\d{4}-/,'').replace(/-/g,'.') : ''}</span>
           </div>
           <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${festivals[0].name}</div>
           <div style="font-size:12px;color:var(--text-muted);">${festivals[0].address.split(' ').slice(0,3).join(' ')}</div>
@@ -2354,19 +2353,19 @@ function renderHomeTourism() {
     : emptyCard;
 
   const restaurantGrid = restaurants.length
-    ? `<div class="place-grid" style="margin-bottom:10px">${restaurants.map(p => `
-        <div class="place-card-sm" onclick="goMapCat('restaurant')">
+    ? `<div class="place-grid" style="margin-bottom:10px">${restaurants.map(r => `
+        <div class="place-card-sm" onclick="goMapCat('mobeom')">
           <div style="display:flex;align-items:center;gap:8px">
             <div class="pi pi-food">🍽</div>
-            <div><div class="place-card-sm-name">${p.name}</div><div class="place-card-sm-addr">${p.address.split(' ').slice(1).join(' ')}</div></div>
+            <div><div class="place-card-sm-name">${r.name}</div><div class="place-card-sm-addr">${(r.addr||'').split(' ').slice(0,3).join(' ')}</div></div>
           </div>
         </div>`).join('')}</div>` : '';
 
   const parkingCard = parkings.length
     ? `<div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
         <div class="pi pi-parking">P</div>
-        <div style="flex:1"><div class="place-card-sm-name">${parkings[0].name}</div><div class="place-card-sm-addr">${parkings[0].address}</div></div>
-        <span class="park-badge ${parkings[0].tags.includes('무료') ? 'pb-free' : 'pb-paid'}">${parkings[0].tags.includes('무료') ? '무료' : '유료'}</span>
+        <div style="flex:1"><div class="place-card-sm-name">${parkings[0].name}</div><div class="place-card-sm-addr">${(parkings[0].address||'').replace('경기도 화성시 ','')}</div></div>
+        <span class="park-badge ${(parkings[0].tags||[]).includes('무료') ? 'pb-free' : 'pb-paid'}">${(parkings[0].tags||[]).includes('무료') ? '무료' : '유료'}</span>
       </div>` : '';
 
   el.innerHTML = `
@@ -2526,7 +2525,9 @@ function renderFestivalScroll() {
   el.innerHTML = festivals.map((p, i) => {
     const img = IMG_CLASSES[i % IMG_CLASSES.length];
     const badge = p.status === 'ongoing' ? '<span class="badge badge-ongoing fsc-badge">진행중</span>' : '<span class="badge badge-upcoming fsc-badge">예정</span>';
-    const dateStr = p.date ? p.date.split('~')[0].trim().replace('2026-','').replaceAll('-','.') + ' ~' : '';
+    const dateStr = p.date ? (p.date.includes('~')
+      ? p.date.split('~')[0].trim().replace(/^\d{4}-/,'').replace(/-/g,'.') + ' ~'
+      : p.date.trim().replace(/^\d{4}-/,'').replace(/-/g,'.')) : '';
     return `<div class="festival-scroll-card" onclick="showFestivalDetail(${p.id})">
       <div class="fsc-img ${img}">${badge}</div>
       <div class="fsc-body"><div class="fsc-date">${dateStr}</div><div class="fsc-title">${p.name}</div></div>
@@ -2780,7 +2781,7 @@ function renderTourismList(theme, expanded) {
           ${p.rating ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span class="pi-stars">${ratingStars(p.rating)}</span><span class="pi-rating">${p.rating}</span><span style="font-size:10px;color:var(--text-muted)">(${(p.reviewCount||0).toLocaleString()})</span></div>` : ''}
         </div>
         <div class="pi-right" style="display:flex;align-items:center;gap:4px">
-          ${p.date ? '<span style="font-size:11px;color:var(--text-muted)">' + p.date.split('~')[0].trim().replace('2026-','') + '</span>' : ''}
+          ${p.date ? '<span style="font-size:11px;color:var(--text-muted)">' + p.date.split('~')[0].trim().replace(/^\d{4}-/,'').replace(/-/g,'.') + '</span>' : ''}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>`;
@@ -3145,7 +3146,7 @@ function renderCalEventList(festivals, labelText) {
       ? 'background:#DCFCE7;color:#16A34A'
       : 'background:#FFF7ED;color:#F59E0B';
     var badgeText  = isOngoing ? '진행중' : '예정';
-    var dateStr = (p.date || '').replace('2026-','').replaceAll('-','.').replace(' ~ ',' ~ ');
+    var dateStr = (p.date || '').replace(/^\d{4}-/,'').replace(/-/g,'.').replace(' ~ ',' ~ ');
     return '<div class="cal-event-item" onclick="hideCalendar();showFestivalDetail(' + p.id + ')">'
       + '<div class="cal-ev-dot"></div>'
       + '<div class="cal-ev-body">'

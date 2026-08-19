@@ -72,14 +72,13 @@ function initMap() {
     level:  9,
   });
 
-  mapReady = true;
-
   buildOverlays();
   setupMyLocation();
   setupSlideCardDrag();
   setupZoomSlider();
   if (typeof initParking       === 'function') initParking(kakaoMap);
   if (typeof initLocalCurrency === 'function') initLocalCurrency(kakaoMap);
+  mapReady = true;
   /* 최초 진입 시 아무것도 표시하지 않음 */
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
   kakao.maps.event.addListener(kakaoMap, 'idle', function () {
@@ -105,9 +104,11 @@ function initMap() {
 
 /* ── 특정 카테고리 장소 범위로 맞춤 (필터 전용) ── */
 function fitPlaces(list) {
-  if (!list || !list.length) return;
+  if (!list || !list.length || !kakaoMap || typeof kakao === 'undefined') return;
+  var valid = list.filter(function (p) { return p.lat && p.lng; });
+  if (!valid.length) return;
   var bounds = new kakao.maps.LatLngBounds();
-  list.forEach(function (p) { bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)); });
+  valid.forEach(function (p) { bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)); });
   kakaoMap.setBounds(bounds, 80);
   setTimeout(function () {
     if (kakaoMap.getLevel() > 9) kakaoMap.setLevel(9);

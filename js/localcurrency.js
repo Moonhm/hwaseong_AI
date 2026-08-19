@@ -20,6 +20,7 @@ function initLocalCurrency(map) {
     .then(function (r) { return r.json(); })
     .then(function (data) {
       lcData = data;
+      if (lcVisible) updateLcDisplay();   /* 로딩 전에 setVisible 됐을 경우 즉시 렌더 */
       kakao.maps.event.addListener(map, 'idle', onLcMapIdle);
     })
     .catch(function (e) { console.warn('[가맹점]', e); });
@@ -94,6 +95,7 @@ function showClusters(bounds, level) {
   /* 뷰포트 내 데이터를 격자 셀로 묶기 */
   var cells = {};
   lcData.forEach(function (p) {
+    if (!p.lat || !p.lng) return;
     if (p.lat < minLat || p.lat > maxLat ||
         p.lng < minLng || p.lng > maxLng) return;
     var key = Math.floor(p.lat / grid) + ',' + Math.floor(p.lng / grid);
@@ -127,9 +129,9 @@ function showClusters(bounds, level) {
       return function () {
         var dest = new kakao.maps.LatLng(clat, clng);
         var targetLevel = Math.max(1, lv - 2);
-        kakaoMap.panTo(dest);
+        lcMap.panTo(dest);
         setTimeout(function () {
-          kakaoMap.setLevel(targetLevel, { animate: { duration: 400 } });
+          lcMap.setLevel(targetLevel, { animate: { duration: 400 } });
         }, 180);
       };
     })(lat, lng, level);

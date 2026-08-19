@@ -78,16 +78,21 @@ function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + c
 
 /* 캐시에서 좌표 로드 시도 → 성공하면 true */
 function _loadConvCache(cat) {
-  try {
-    var raw = localStorage.getItem(_convCacheKey(cat));
-    if (!raw) return false;
-    var places = JSON.parse(raw);
-    if (!places || !places.length) return false;
-    CONV_PLACES[cat] = places;
-    CONV_STATUS[cat] = 'done';
-    _buildOverlays(cat, places);
-    return true;
-  } catch (e) { return false; }
+  var raw, places;
+  try { raw = localStorage.getItem(_convCacheKey(cat)); } catch (e) { return false; }
+  if (!raw) return false;
+  try { places = JSON.parse(raw); } catch (e) { return false; }
+  if (!places || !places.length) return false;
+  CONV_PLACES[cat] = places;
+  CONV_STATUS[cat] = 'done';
+  try { _buildOverlays(cat, places); } catch (e) {
+    /* 오버레이 생성 실패 시 캐시 무효화하고 재Geocoding 유도 */
+    CONV_STATUS[cat] = 'idle';
+    CONV_PLACES[cat] = [];
+    try { localStorage.removeItem(_convCacheKey(cat)); } catch (_) {}
+    return false;
+  }
+  return true;
 }
 
 /* 좌표 결과를 캐시에 저장 */
@@ -184,10 +189,15 @@ function _geocodeCat(cat) {
         if (finished === total) {
           CONV_STATUS[cat] = 'done';
           CONV_PLACES[cat] = results;
-          _buildOverlays(cat, results);
           _saveConvCache(cat, results); /* 다음 방문 시 재사용 */
-          showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨');
-          _fitConv(cat);
+          /* 제오코딩 중 사용자가 다른 필터로 전환했으면 표시 안 함 */
+          var activeChip = document.querySelector('#map-chips .chip.active');
+          var activeCat  = activeChip ? activeChip.getAttribute('data-cat') : null;
+          if (activeCat === cat) {
+            _buildOverlays(cat, results);
+            showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨');
+            _fitConv(cat);
+          }
         }
       });
     }, delay);
