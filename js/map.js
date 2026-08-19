@@ -858,7 +858,7 @@ function setFilter(cat) {
 
   setTouristVisible(cat === 'all' || cat === 'tourist');
   if (typeof setLcVisible === 'function') setLcVisible(cat === 'all' || cat === 'localcurrency');
-  if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive || cat === 'all');
+  if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive && (cat === 'all' || cat === 'parking'));
   if (typeof updateParkingCount === 'function') updateParkingCount();
 
   /* LC 칩 단독 선택 시에만 업종 필터 바 표시 */

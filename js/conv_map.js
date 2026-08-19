@@ -238,7 +238,8 @@ function _buildOverlays(cat, places) {
   places.forEach(function (p) {
     if (CONV_OVMAP[p.id]) { CONV_OVMAP[p.id].setMap(kakaoMap); return; }
 
-    var label  = p.name.length > 6 ? p.name.slice(0, 5) + '…' : p.name;
+    var name   = p.name || '';
+    var label  = name.length > 6 ? name.slice(0, 5) + '…' : name;
     var wrap   = document.createElement('div');
     wrap.className = 'cm-pin';
     var circle = document.createElement('div');
