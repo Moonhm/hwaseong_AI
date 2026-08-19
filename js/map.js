@@ -176,8 +176,12 @@ function buildOverlays() {
 /* ── 관광지 클러스터/뷰포트 렌더링 (parking 동일 패턴) ── */
 function setTouristVisible(visible) {
   touristVisible = visible;
-  if (!visible) clearTouristDisplay();
-  else          updateTouristDisplay();
+  if (!visible) {
+    clearTimeout(_tkTimer);
+    clearTouristDisplay();
+  } else {
+    updateTouristDisplay();
+  }
 }
 
 function clearTouristDisplay() {
@@ -186,13 +190,17 @@ function clearTouristDisplay() {
   touristOverlayMap   = {};
 }
 
+var _tkTimer = null;
 function updateTouristDisplay() {
-  if (!kakaoMap) return;
-  clearTouristDisplay();
-  var level  = kakaoMap.getLevel();
-  var bounds = kakaoMap.getBounds();
-  if (level <= LC_PIN_LEVEL) showTkViewport(bounds);
-  else                       showTkClusters(bounds, level);
+  clearTimeout(_tkTimer);
+  _tkTimer = setTimeout(function () {
+    if (!kakaoMap) return;
+    clearTouristDisplay();
+    var level  = kakaoMap.getLevel();
+    var bounds = kakaoMap.getBounds();
+    if (level <= LC_PIN_LEVEL) showTkViewport(bounds);
+    else                       showTkClusters(bounds, level);
+  }, 100);
 }
 
 /* 줌인 상태: 뷰포트 내 개별 핀 */
