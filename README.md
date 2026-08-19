@@ -47,8 +47,8 @@ The name *화성잇다* means **"connecting Hwaseong"** — linking tourists to 
 - Filterable by theme: nature (자연), history (역사), festival (축제), and more
 - **Festival calendar** with month navigation and event detail pages
 
-### 🧭 Tourist Recommendation Quiz (관광지 추천 퀴즈)
-- 5-question quiz matching user preferences to the best-fit tourist spots
+### 🧭 AI-Based Tourist Recommendation (AI기반 관광지 추천)
+- 5-question preference survey powered by AI to match the best-fit tourist spots
 - Top-3 results with photo cards, tags, and direct map focus
 
 ### ⭐ Star Rating System (별점)
