@@ -1732,6 +1732,15 @@ function renderNearbyResult(myLat, myLng) {
 
   /* 가장 가까운 주차장 — parkingData 사용 */
   var parks = (typeof parkingData !== 'undefined') ? parkingData : [];
+
+  /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
+  if (!parks.length) {
+    fetch('js/parking-static.json').then(function (r) { return r.json(); }).then(function (d) {
+      if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
+      if (parkingData.length) renderNearbyResult(myLat, myLng);
+    }).catch(function () {});
+  }
+
   var nearestPark = null, minPDist = Infinity;
   parks.forEach(function (p) {
     var d = _distKm(myLat, myLng, p.lat, p.lng);
@@ -1750,23 +1759,42 @@ function renderNearbyResult(myLat, myLng) {
   /* 실시간 대수 우선, 없으면 total */
   var availSpots = nearestPark ? (nearestPark.avail != null ? nearestPark.avail : nearestPark.total) : null;
 
+  /* ── 주차 여유 색상 계산 (빨강→녹색) ── */
+  var parkColor = '#9CA3AF';
+  var parkGlow  = 'rgba(156,163,175,0.18)';
+  if (nearestPark) {
+    if (nearestPark.open === false) {
+      parkColor = '#9CA3AF'; parkGlow = 'rgba(156,163,175,0.18)';
+    } else if (availSpots <= 0) {
+      parkColor = '#EF4444'; parkGlow = 'rgba(239,68,68,0.18)';
+    } else {
+      var ratio = nearestPark.total > 0 ? Math.min(1, availSpots / nearestPark.total) : 1;
+      var hue   = Math.round(ratio * 118);
+      parkColor = 'hsl(' + hue + ',68%,40%)';
+      parkGlow  = 'hsla(' + hue + ',68%,50%,0.20)';
+    }
+  }
+
   var parkClickFn = nearestPark
     ? 'goMapPark(' + nearestPark.lat + ',' + nearestPark.lng + ')'
     : 'goMapCat(\'parking\')';
 
   var parkHtml = nearestPark
-    ? '<div class="nearby-park" onclick="' + parkClickFn + '">'
-      + '<div class="nearby-park-icon">P</div>'
+    ? '<div class="nearby-park" onclick="' + parkClickFn + '" style="border-left:3px solid ' + parkColor + '">'
+      + '<div class="nearby-park-icon" style="background:' + parkGlow + ';color:' + parkColor + ';box-shadow:0 0 0 3px ' + parkGlow + '">'
+      + 'P</div>'
       + '<div style="flex:1;min-width:0">'
       + '<div class="nearby-park-name">' + nearestPark.name + '</div>'
       + '<div class="nearby-park-meta">직선거리 ' + _distLabel(minPDist) + ' · '
-      + nearestPark.type
-      + ' · <span style="color:' + (isFree ? 'var(--green)' : 'var(--primary)') + ';font-weight:700">'
+      + (nearestPark.type || '') + (nearestPark.type ? ' · ' : '')
+      + '<span style="color:' + (isFree ? 'var(--green)' : 'var(--primary)') + ';font-weight:700">'
       + (isFree ? '무료' : '유료') + '</span></div>'
       + '</div>'
       + '<div style="text-align:right;flex-shrink:0">'
-      + '<div style="font-size:15px;font-weight:900;color:var(--text)">' + availSpots + '</div>'
-      + '<div style="font-size:10px;color:var(--text-muted)">주차 가능</div>'
+      + '<div style="font-size:15px;font-weight:900;color:' + parkColor + '">'
+      + (nearestPark.open === false ? '-' : availSpots) + '</div>'
+      + '<div style="font-size:10px;color:var(--text-muted)">'
+      + (nearestPark.open === false ? '미운영' : '주차 가능') + '</div>'
       + '</div>'
       + '</div>'
     : '';
