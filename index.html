@@ -129,7 +129,7 @@
       background: var(--white); color: var(--text-muted);
       transition: all 0.15s;
     }
-    .ttab.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+    .ttab.active { background: var(--orange); color: var(--white); border-color: var(--orange); }
 
     /* ── SECTION ── */
     .section { padding: 20px var(--px) 0; }
@@ -1925,9 +1925,33 @@ function renderHomeLiving() {
   const currencies = (typeof lcData !== 'undefined') ? lcData : [];
   const parkings   = (typeof parkingData !== 'undefined') ? parkingData : [];
 
+  const currencyItems = currencies.length
+    ? currencies.slice(0, 5).map(p => {
+        const name = p.n || p.name || '';
+        const addr = (p.a || p.address || '').replace('경기도 화성시 ', '');
+        return `<div class="place-item" onclick="goLivingCat('currency')">
+          <div class="pi pi-currency">₩</div>
+          <div class="pi-content"><div class="pi-name">${name}</div><div class="pi-meta">${addr}</div></div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+
+  const parkingItems = parkings.length
+    ? parkings.slice(0, 3).map(p => {
+        const freeTag = p.free ? ' · <span style="color:#16A34A;font-weight:600">무료</span>' : '';
+        const availTxt = p.open === false ? '미운영'
+          : (p.avail !== undefined ? p.avail + '대 여유' : '운영중');
+        const addr = (p.address || '').replace('경기도 화성시 ', '');
+        return `<div class="place-item" onclick="goLivingCat('parking')">
+          <div class="pi pi-parking">P</div>
+          <div class="pi-content"><div class="pi-name">${p.name}${freeTag}</div><div class="pi-meta">${availTxt} · ${addr}</div></div>
+        </div>`;
+      }).join('')
+    : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+
   el.innerHTML = `
     <div class="living-stats" style="margin-top:4px">
-      <div class="stat-card"><div class="stat-val">${currencies.length}</div><div class="stat-lbl">등록 가맹점</div></div>
+      <div class="stat-card"><div class="stat-val">${currencies.length.toLocaleString()}</div><div class="stat-lbl">등록 가맹점</div></div>
       <div class="stat-card"><div class="stat-val">${parkings.length}</div><div class="stat-lbl">이용 가능 주차장</div></div>
     </div>
     <div style="margin-top:16px">
@@ -1938,16 +1962,19 @@ function renderHomeLiving() {
         <div class="cat-icon-item" onclick="goLivingCat('parking')"><div class="cat-icon-circle ci-etc">P</div><span class="cat-icon-label">주차장</span></div>
       </div>
     </div>
+    <div class="section" style="padding-bottom:8px">
+      <div class="section-header" style="margin-top:20px">
+        <div class="section-title">희망화성지역화폐 가맹점</div>
+        <button class="section-link" onclick="goLivingCat('currency')">전체보기</button>
+      </div>
+      <div class="place-list">${currencyItems}</div>
+    </div>
     <div class="section" style="padding-bottom:24px">
-      <div class="section-header" style="margin-top:20px"><div class="section-title">희망화성지역화폐 가맹점</div></div>
-      <div class="place-list">${currencies.length
-        ? currencies.slice(0,5).map(p => `
-          <div class="place-item" onclick="goMapCat('localcurrency')">
-            <div class="pi pi-currency">₩</div>
-            <div class="pi-content"><div class="pi-name">${p.name}</div><div class="pi-meta">${p.address}</div></div>
-          </div>`).join('')
-        : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'
-      }</div>
+      <div class="section-header" style="margin-top:20px">
+        <div class="section-title">공영주차장</div>
+        <button class="section-link" onclick="goLivingCat('parking')">전체보기</button>
+      </div>
+      <div class="place-list">${parkingItems}</div>
     </div>`;
 }
 
@@ -1975,6 +2002,7 @@ function switchHomeTab(el, tab) {
   el.classList.add('active');
   document.getElementById('home-tourism').style.display = tab === 'tourism' ? 'block' : 'none';
   document.getElementById('home-living').style.display  = tab === 'living'  ? 'block' : 'none';
+  if (tab === 'living') renderHomeLiving();
 }
 
 /* ── 관광 서브탭 전환 ── */
@@ -2574,6 +2602,16 @@ function scrollChips(dir) {
 
 /* ── 초기 렌더 ── */
 window.addEventListener('DOMContentLoaded', () => {
+  /* 홈 생활탭 데이터 사전 로드 — initMap() 이전에도 카운트/목록이 표시되도록 */
+  fetch('js/parking-static.json').then(r => r.json()).then(d => {
+    if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
+    renderHomeLiving();
+  }).catch(() => {});
+  fetch('js/localcurrency-static.json').then(r => r.json()).then(d => {
+    if (typeof lcData !== 'undefined' && !lcData.length) lcData = d;
+    renderHomeLiving();
+  }).catch(() => {});
+
   setTimeout(() => {
     renderHomePage();
     renderFestivalScroll();
