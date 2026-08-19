@@ -18,6 +18,10 @@ const CAT_COLOR = {
   localcurrency: '#16A34A',
 };
 
+/* ── 실제 컨테이너 너비 계산 (max-width:480px 반영) ── */
+function mapW() { return Math.min(window.innerWidth, 480); }
+function mapH() { return window.innerHeight - 52; }
+
 /* ── 지도 초기화 ── */
 function initMap() {
   var container = document.getElementById('kakao-map');
@@ -25,8 +29,8 @@ function initMap() {
 
   /* 이미 초기화된 경우: 크기 재계산만 */
   if (mapReady) {
-    container.style.width  = window.innerWidth  + 'px';
-    container.style.height = (window.innerHeight - 52) + 'px';
+    container.style.width  = mapW() + 'px';
+    container.style.height = mapH() + 'px';
     kakaoMap.relayout();
     return;
   }
@@ -39,50 +43,48 @@ function initMap() {
   var loader = document.getElementById('map-loader');
   if (loader) loader.remove();
 
-  container.style.width  = window.innerWidth  + 'px';
-  container.style.height = (window.innerHeight - 52) + 'px';
+  /* 실제 보이는 영역 기준으로 컨테이너 크기 설정
+   * (window.innerWidth 대신 min(innerWidth, 480) — page max-width 반영) */
+  container.style.width  = mapW() + 'px';
+  container.style.height = mapH() + 'px';
 
-  /* 참고 깃 패턴: kakao.maps.load() 콜백 안에서 지도 생성 */
-  kakao.maps.load(function () {
-    kakaoMap = new kakao.maps.Map(container, {
-      center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
-      level:  10,
-    });
+  kakaoMap = new kakao.maps.Map(container, {
+    center: new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng),
+    level:  9,
+  });
 
-    kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-    mapReady = true;
+  kakaoMap.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+  mapReady = true;
 
-    buildOverlays();
-    setupMyLocation();
-    setupSlideCardDrag();
-    if (typeof initParking === 'function') initParking(kakaoMap);
-    kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
+  buildOverlays();
+  setupMyLocation();
+  setupSlideCardDrag();
+  if (typeof initParking === 'function') initParking(kakaoMap);
+  kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
 
-    /* display:none → block 전환 후 크기 재계산 + 화성시 전체 범위 자동 맞춤 */
-    setTimeout(function () {
-      container.style.width  = window.innerWidth  + 'px';
-      container.style.height = (window.innerHeight - 52) + 'px';
-      kakaoMap.relayout();
-      fitAllPlaces();
-    }, 300);
+  /* display:none → block 전환 후 크기 재계산 */
+  setTimeout(function () {
+    container.style.width  = mapW() + 'px';
+    container.style.height = mapH() + 'px';
+    kakaoMap.relayout();
+  }, 300);
 
-    window.addEventListener('resize', function () {
-      if (!mapReady) return;
-      container.style.width  = window.innerWidth  + 'px';
-      container.style.height = (window.innerHeight - 52) + 'px';
-      kakaoMap.relayout();
-    });
+  window.addEventListener('resize', function () {
+    if (!mapReady) return;
+    var c = document.getElementById('kakao-map');
+    if (!c) return;
+    c.style.width  = mapW() + 'px';
+    c.style.height = mapH() + 'px';
+    kakaoMap.relayout();
   });
 }
 
-/* ── 화성시 전체 장소 범위로 자동 맞춤 ── */
-function fitAllPlaces() {
+/* ── 특정 카테고리 장소 범위로 맞춤 (필터 전용) ── */
+function fitPlaces(list) {
+  if (!list || !list.length) return;
   var bounds = new kakao.maps.LatLngBounds();
-  PLACES.forEach(function (p) {
-    bounds.extend(new kakao.maps.LatLng(p.lat, p.lng));
-  });
-  kakaoMap.setBounds(bounds, 60);
-  /* 너무 축소되지 않도록 최대 레벨 9 제한 */
+  list.forEach(function (p) { bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)); });
+  kakaoMap.setBounds(bounds, 80);
   setTimeout(function () {
     if (kakaoMap.getLevel() > 9) kakaoMap.setLevel(9);
   }, 150);
@@ -162,19 +164,17 @@ function onPinClick(id) {
   /* 슬라이드 카드 표시 */
   showPlaceSlide(place);
 
-  /* ① panTo로 핀을 지도 중심으로 이동
-   * ② 350ms 후 panBy로 슬라이드 위 가시 영역에 핀 위치 조정
-   * 참고 깃 패턴 — panBy 양수(+) = 핀이 화면 위쪽으로 이동 */
-  kakaoMap.panTo(new kakao.maps.LatLng(place.lat, place.lng));
-  setTimeout(function () {
-    var navH     = 52;
-    var mapH     = window.innerHeight - navH;
-    var slideH   = Math.min(mapH * 0.6, 420);
-    var visibleH = mapH - slideH;
-    var targetY  = visibleH * 0.42;               /* 슬라이드 위 가시 영역 42% 위치 */
-    var delta    = Math.round(mapH / 2 - targetY); /* 이동해야 할 픽셀 (항상 양수) */
-    kakaoMap.panBy(0, delta);                      /* 양수 = 핀이 화면 위쪽으로 */
-  }, 350);
+  /* setCenter(즉시 이동) → panBy로 슬라이드 위 가시 영역에 핀 배치
+   * panTo(애니메이션) + setTimeout panBy 는 두 애니메이션이 겹쳐 오작동
+   * setCenter는 즉시 완료되므로 panBy 를 바로 호출해도 정확 */
+  kakaoMap.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
+
+  var h        = mapH();                       /* 지도 높이 (px) */
+  var slideH   = Math.min(h * 0.6, 420);       /* 슬라이드 카드 최대 높이 */
+  var visibleH = h - slideH;                   /* 슬라이드 위 가시 영역 */
+  var targetY  = visibleH * 0.42;              /* 핀 목표: 가시 영역 42% 위치 */
+  var delta    = Math.round(h / 2 - targetY);  /* 이동 픽셀 (양수) */
+  kakaoMap.panBy(0, delta);                    /* 양수 = 핀이 화면 위쪽으로 */
 }
 
 /* ── 슬라이드 카드 드래그-투-클로즈 (참고 깃 패턴) ── */
@@ -268,11 +268,7 @@ function setFilter(cat) {
   }
 
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
-  if (targets.length) {
-    var bounds = new kakao.maps.LatLngBounds();
-    targets.forEach(function (p) { bounds.extend(new kakao.maps.LatLng(p.lat, p.lng)); });
-    kakaoMap.setBounds(bounds, 80);
-  }
+  fitPlaces(targets);
 
   if (typeof updateParkingCount === 'function') updateParkingCount();
 }
