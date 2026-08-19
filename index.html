@@ -903,18 +903,26 @@
       background: #fff; border-radius: 20px;
       overflow: hidden; margin-bottom: 18px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-      animation: quiz-enter 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
       cursor: pointer;
-      transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.28s ease;
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.38s ease,
+                  transform 0.45s cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 0.28s ease;
     }
-    .rec-card:hover {
-      transform: translateY(-6px) scale(1.012);
-      box-shadow: 0 18px 44px rgba(0,0,0,0.13);
+    .rec-card.visible {
+      opacity: 1; transform: translateY(0);
     }
-    .rec-card.rank-1:hover {
-      box-shadow: 0 20px 52px rgba(34,197,94,0.26);
+    .rec-card.visible:hover {
+      transform: translateY(-7px) scale(1.013);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.14);
     }
-    .rec-card:active { transform: scale(0.975); box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    .rec-card.rank-1.visible:hover {
+      box-shadow: 0 22px 56px rgba(34,197,94,0.28);
+    }
+    .rec-card.visible:active {
+      transform: scale(0.972);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
     /* 1위 강조 — 초록 (참고 깃 동일) */
     .rec-card.rank-1 {
       border: 2.5px solid #22c55e;
@@ -1699,7 +1707,9 @@ function openQuiz() {
   _quizStep   = 0;
   _quizTags   = [];
   _quizScreen = 'intro';
-  document.getElementById('quiz-overlay').classList.add('open');
+  var ov = document.getElementById('quiz-overlay');
+  ov.classList.add('open');
+  ov.scrollTop = 0;
   _renderQuizBody();
 }
 
@@ -1741,6 +1751,7 @@ function _quizSelectOpt(idx) {
     _quizScreen = 'result';
   }
   _renderQuizBody();
+  document.getElementById('quiz-overlay').scrollTop = 0;
 }
 
 function _renderQuizQuestion() {
@@ -1815,6 +1826,14 @@ function _renderQuizResult() {
     + '<div class="rec-restart-wrap">'
     + '  <button class="rec-restart-btn" onclick="_quizBegin()">🔄 다시 테스트하기</button>'
     + '</div>';
+
+  /* 스크롤 상단 + 카드 순차 등장 */
+  document.getElementById('quiz-overlay').scrollTop = 0;
+  requestAnimationFrame(function() {
+    document.querySelectorAll('#quiz-body .rec-card').forEach(function(card, i) {
+      setTimeout(function() { card.classList.add('visible'); }, 80 + i * 150);
+    });
+  });
 }
 
 function _quizShowStored() {
@@ -1826,6 +1845,7 @@ function _quizShowStored() {
   _quizResults = _computeRec(_quizTags);
   _quizScreen  = 'result';
   _renderQuizBody();
+  document.getElementById('quiz-overlay').scrollTop = 0;
 }
 
 function goMapCat(cat) {
