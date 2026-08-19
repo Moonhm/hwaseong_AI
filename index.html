@@ -130,6 +130,7 @@
       transition: all 0.15s;
     }
     .ttab.active { background: var(--orange); color: var(--white); border-color: var(--orange); }
+    .ttab[data-tab="tourism"].active { background: #2563EB; border-color: #2563EB; }
 
     /* ── SECTION ── */
     .section { padding: 20px var(--px) 0; }
@@ -1086,8 +1087,8 @@
 
   <!-- 관광/생활 토글 -->
   <div class="toggle-tabs">
-    <button class="ttab active" onclick="switchHomeTab(this,'tourism')">관광</button>
-    <button class="ttab"        onclick="switchHomeTab(this,'living')">생활</button>
+    <button class="ttab active" data-tab="tourism" onclick="switchHomeTab(this,'tourism')">관광</button>
+    <button class="ttab"        data-tab="living"  onclick="switchHomeTab(this,'living')">생활</button>
   </div>
 
   <!-- 내 위치 추천 (항상 표시) -->
@@ -2050,22 +2051,6 @@ function renderHomeTourism() {
       </div>
       ${festivalBig}${restaurantGrid}${parkingCard}
     </div>
-    <div class="section">
-      <div class="section-header">
-        <div class="section-title">생활</div>
-        <div style="font-size:12px;color:var(--text-muted)">가맹점 · 주차 정보</div>
-      </div>
-      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px;margin-bottom:8px" onclick="goMapCat('localcurrency')">
-        <div class="pi pi-currency">₩</div>
-        <div style="flex:1"><div class="place-card-sm-name">희망화성지역화폐 가맹점</div><div class="place-card-sm-addr">가맹점 ${currencies.length}곳</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-      <div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
-        <div class="pi pi-parking">P</div>
-        <div style="flex:1"><div class="place-card-sm-name">주차장 정보</div><div class="place-card-sm-addr">총 ${PLACES.filter(p=>p.category==='parking').length}곳</div></div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </div>
-    </div>
     <div class="section" style="padding-bottom:24px">
       <div class="section-header">
         <div class="section-title">편의정보</div>
@@ -2109,34 +2094,52 @@ function renderHomeLiving() {
 
   const currencyItems = currencies.length
     ? currencies.slice(0, 5).map(p => {
-        const name = p.n || p.name || '';
-        const addr = (p.a || p.address || '').replace('경기도 화성시 ', '');
-        return `<div class="place-item" onclick="goLivingCat('currency')">
-          <div class="pi pi-currency">₩</div>
-          <div class="pi-content"><div class="pi-name">${name}</div><div class="pi-meta">${addr}</div></div>
+        const name = (p.n || p.name || '').trim();
+        const cat  = (p.c || '').trim();
+        const addr = (p.a || p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+        return `<div class="place-item" onclick="goLivingCat('currency')" style="gap:10px">
+          <div style="width:38px;height:38px;border-radius:12px;background:#F0FDF4;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#16a34a;flex-shrink:0">₩</div>
+          <div class="pi-content" style="min-width:0">
+            <div class="pi-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
+            <div class="pi-meta">${cat}${addr ? ' · ' + addr : ''}</div>
+          </div>
         </div>`;
       }).join('')
     : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
 
   const parkingItems = parkings.length
     ? parkings.slice(0, 3).map(p => {
-        const freeTag = p.free ? ' · <span style="color:#16A34A;font-weight:600">무료</span>' : '';
+        const isFree  = p.free || (p.tags && p.tags.includes('무료'));
         const availTxt = p.open === false ? '미운영'
           : (p.avail !== undefined ? p.avail + '대 여유' : '운영중');
-        const addr = (p.address || '').replace('경기도 화성시 ', '');
-        return `<div class="place-item" onclick="goLivingCat('parking')">
-          <div class="pi pi-parking">P</div>
-          <div class="pi-content"><div class="pi-name">${p.name}${freeTag}</div><div class="pi-meta">${availTxt} · ${addr}</div></div>
+        const addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+        return `<div class="place-item" onclick="goLivingCat('parking')" style="gap:10px">
+          <div style="width:38px;height:38px;border-radius:12px;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#2563EB;flex-shrink:0">P</div>
+          <div class="pi-content" style="min-width:0;flex:1">
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="pi-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+              <span style="font-size:10px;padding:1px 6px;border-radius:20px;font-weight:600;flex-shrink:0;${isFree ? 'background:#DCFCE7;color:#16a34a' : 'background:#FEE2E2;color:#DC2626'}">${isFree ? '무료' : '유료'}</span>
+            </div>
+            <div class="pi-meta">${availTxt} · ${addr}</div>
+          </div>
         </div>`;
       }).join('')
     : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
 
   el.innerHTML = `
-    <div class="living-stats" style="margin-top:4px">
-      <div class="stat-card"><div class="stat-val">${currencies.length.toLocaleString()}</div><div class="stat-lbl">등록 가맹점</div></div>
-      <div class="stat-card"><div class="stat-val">${parkings.length}</div><div class="stat-lbl">이용 가능 주차장</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border-radius:14px;padding:14px;cursor:pointer" onclick="goLivingCat('currency')">
+        <div style="font-size:22px;margin-bottom:6px">₩</div>
+        <div style="font-size:20px;font-weight:800;color:#1d4ed8">${currencies.length.toLocaleString()}</div>
+        <div style="font-size:11px;color:#3b82f6;margin-top:2px">지역화폐 가맹점</div>
+      </div>
+      <div style="background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-radius:14px;padding:14px;cursor:pointer" onclick="goLivingCat('parking')">
+        <div style="font-size:22px;margin-bottom:6px">🅿</div>
+        <div style="font-size:20px;font-weight:800;color:#15803d">${parkings.length}</div>
+        <div style="font-size:11px;color:#22c55e;margin-top:2px">공영주차장</div>
+      </div>
     </div>
-    <div style="margin-top:16px">
+    <div style="margin-top:14px">
       <div class="category-icons">
         <div class="cat-icon-item" onclick="goLivingCat('restaurant')"><div class="cat-icon-circle ci-food">🍴</div><span class="cat-icon-label">모범음식점</span></div>
         <div class="cat-icon-item" onclick="goLivingCat('touristrest')"><div class="cat-icon-circle ci-cafe">🥢</div><span class="cat-icon-label">관광식당</span></div>
@@ -2145,14 +2148,14 @@ function renderHomeLiving() {
       </div>
     </div>
     <div class="section" style="padding-bottom:8px">
-      <div class="section-header" style="margin-top:20px">
+      <div class="section-header" style="margin-top:16px">
         <div class="section-title">희망화성지역화폐 가맹점</div>
         <button class="section-link" onclick="goLivingCat('currency')">전체보기</button>
       </div>
       <div class="place-list">${currencyItems}</div>
     </div>
     <div class="section" style="padding-bottom:24px">
-      <div class="section-header" style="margin-top:20px">
+      <div class="section-header" style="margin-top:16px">
         <div class="section-title">공영주차장</div>
         <button class="section-link" onclick="goLivingCat('parking')">전체보기</button>
       </div>
