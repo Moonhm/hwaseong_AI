@@ -1103,13 +1103,7 @@
     </div>
     <div class="calendar-grid" id="calendar-grid">
       <div class="cal-day-hd">일</div><div class="cal-day-hd">월</div><div class="cal-day-hd">화</div><div class="cal-day-hd">수</div><div class="cal-day-hd">목</div><div class="cal-day-hd">금</div><div class="cal-day-hd">토</div>
-      <div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div><div class="cal-day" style="color:var(--text-muted)"></div>
-      <div class="cal-day">1</div>
-      <div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div>
-      <div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div>
-      <div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day today">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div>
-      <div class="cal-day event-range has-event">23</div><div class="cal-day event-range has-event">24</div><div class="cal-day event-range has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div>
-      <div class="cal-day">30</div><div class="cal-day">31</div>
+      <!-- 날짜 칸은 showCalendar() 시 _renderCalendar()로 동적 생성 -->
     </div>
     <div style="padding:12px var(--px)">
       <div id="calendar-event-list"></div>
@@ -1188,8 +1182,7 @@
     <div class="chip" data-cat="festival"             onclick="setFilter('festival')">축제</div>
     <div class="chip" data-cat="tourist"              onclick="setFilter('tourist')">관광지</div>
     <div class="chip" data-cat="mobeom"               onclick="setFilter('mobeom')">모범음식점</div>
-    <div class="chip" data-cat="touristrest"          onclick="setFilter('touristrest')">관광식당업</div>
-    <div class="chip" data-cat="restaurant"           onclick="setFilter('restaurant')">맛집</div>
+    <div class="chip" data-cat="touristrest"           onclick="setFilter('touristrest')">관광식당업</div>
     <div class="chip" data-cat="hotel"                onclick="setFilter('hotel')">관광호텔</div>
     <div class="chip" data-cat="camping"              onclick="setFilter('camping')">캠핑장</div>
     <div class="chip" data-cat="temple"               onclick="setFilter('temple')">템플스테이</div>
@@ -2201,6 +2194,8 @@ function showCalendar() {
   document.getElementById('view-tourism-list').style.display = 'none';
   document.getElementById('view-calendar').style.display = 'block';
   document.getElementById('view-festival-detail').style.display = 'none';
+  /* 초기 진입 시 동적 렌더 (하드코딩된 날짜 제거 후 첫 호출) */
+  if (!_calInitDone) { _calInitDone = true; _renderCalendar(); }
 }
 function hideCalendar() {
   document.getElementById('view-calendar').style.display = 'none';
@@ -2314,11 +2309,25 @@ function showToast(msg) {
 
 /* ── 달력 월 탐색 (BUG-8) ── */
 var _calYear = 2026, _calMonth = 7; /* 0-indexed: 7=8월 */
-function calNav(dir) {
-  _calMonth += dir;
-  if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
-  if (_calMonth > 11) { _calMonth = 0;  _calYear++; }
+var _calInitDone = false;
 
+/* 축제 날짜 Set 반환 — 현재 보여주는 연월 기준 */
+function _getFestDays(year, month) {
+  var days = {};
+  if (typeof PLACES === 'undefined') return days;
+  PLACES.filter(function(p) { return p.category === 'festival' && p.date; })
+    .forEach(function(p) {
+      var parts = p.date.split('-');
+      if (parts.length === 3) {
+        var y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, d = parseInt(parts[2]);
+        if (y === year && m === month) days[d] = (days[d] || []).concat(p.name);
+      }
+    });
+  return days;
+}
+
+/* 실제 달력 렌더링 — calNav + showCalendar 에서 공유 */
+function _renderCalendar() {
   var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   var lbl = document.getElementById('cal-month-label');
   if (lbl) lbl.textContent = _calYear + '년 ' + MONTHS[_calMonth];
@@ -2326,31 +2335,46 @@ function calNav(dir) {
   var grid = document.getElementById('calendar-grid');
   if (!grid) return;
 
-  /* 기존 날짜 칸 제거 (헤더 .cal-day-hd 7개는 유지) */
   var dayCells = grid.querySelectorAll('.cal-day');
-  dayCells.forEach(function (c) { grid.removeChild(c); });
-  /* 날짜 div 새로 삽입 */
-  var firstDay   = new Date(_calYear, _calMonth, 1).getDay(); /* 0=일 */
+  dayCells.forEach(function(c) { grid.removeChild(c); });
+
+  var firstDay    = new Date(_calYear, _calMonth, 1).getDay();
   var daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
-  var todayYear  = 2026, todayMonth = 7, todayDay = 19;
+  var nowY = 2026, nowM = 7, nowD = 19; /* 현재 날짜 고정 */
+  var festDays = _getFestDays(_calYear, _calMonth);
   var frag = document.createDocumentFragment();
 
-  /* 앞쪽 빈 칸 */
   for (var b = 0; b < firstDay; b++) {
     var blank = document.createElement('div');
-    blank.className = 'cal-day';
-    blank.style.color = 'var(--text-muted)';
+    blank.className = 'cal-day'; blank.style.color = 'var(--text-muted)';
     frag.appendChild(blank);
   }
-  /* 날짜 칸 */
   for (var d = 1; d <= daysInMonth; d++) {
     var cell = document.createElement('div');
-    var isToday = _calYear === todayYear && _calMonth === todayMonth && d === todayDay;
-    cell.className = 'cal-day' + (isToday ? ' today' : '');
+    var isToday = (_calYear === nowY && _calMonth === nowM && d === nowD);
+    var hasFest = !!festDays[d];
+    cell.className = 'cal-day'
+      + (isToday ? ' today' : '')
+      + (hasFest && !isToday ? ' has-event' : '');
     cell.textContent = d;
+    if (hasFest) {
+      /* 클릭하면 해당 날의 축제 목록 표시 */
+      (function(names) {
+        cell.addEventListener('click', function() {
+          showToast(names.join(', '));
+        });
+      })(festDays[d]);
+    }
     frag.appendChild(cell);
   }
   grid.appendChild(frag);
+}
+
+function calNav(dir) {
+  _calMonth += dir;
+  if (_calMonth < 0)  { _calMonth = 11; _calYear--; }
+  if (_calMonth > 11) { _calMonth = 0;  _calYear++; }
+  _renderCalendar();
 }
 
 /* ── 홈탭 생활 아이콘 → 생활 탭 + 특정 카테고리 (BUG-12) ── */

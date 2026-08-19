@@ -51,6 +51,30 @@ var CONV_ELMAP  = {};   /* id  → DOM el */
 var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
 var _jebuOv     = null;
 
+var CONV_CACHE_VER = 'v2'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
+
+/* localStorage 캐시 키 */
+function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat; }
+
+/* 캐시에서 좌표 로드 시도 → 성공하면 true */
+function _loadConvCache(cat) {
+  try {
+    var raw = localStorage.getItem(_convCacheKey(cat));
+    if (!raw) return false;
+    var places = JSON.parse(raw);
+    if (!places || !places.length) return false;
+    CONV_PLACES[cat] = places;
+    CONV_STATUS[cat] = 'done';
+    _buildOverlays(cat, places);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* 좌표 결과를 캐시에 저장 */
+function _saveConvCache(cat, places) {
+  try { localStorage.setItem(_convCacheKey(cat), JSON.stringify(places)); } catch (e) {}
+}
+
 /* ── 외부 진입점: 카테고리 표시 ── */
 function showConvCat(cat) {
   if (!kakaoMap) return;
@@ -68,6 +92,15 @@ function showConvCat(cat) {
   }
 
   if (status === 'loading') return;
+
+  /* 캐시 우선 — 없으면 Geocoder 호출 */
+  if (_loadConvCache(cat)) {
+    (CONV_PLACES[cat] || []).forEach(function (p) {
+      CONV_OVMAP[p.id] && CONV_OVMAP[p.id].setMap(kakaoMap);
+    });
+    _fitConv(cat);
+    return;
+  }
 
   _geocodeCat(cat);
 }
@@ -132,6 +165,7 @@ function _geocodeCat(cat) {
           CONV_STATUS[cat] = 'done';
           CONV_PLACES[cat] = results;
           _buildOverlays(cat, results);
+          _saveConvCache(cat, results); /* 다음 방문 시 재사용 */
           showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨');
           _fitConv(cat);
         }
