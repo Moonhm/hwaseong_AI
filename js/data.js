@@ -69,7 +69,7 @@ const PLACES = [
   { id:66, name:"제부리 마을", category:"tourist", lat:37.168554, lng:126.622557, address:"경기 화성시 서신면 해안길 421-12", tags:["체험마을", "체험"], desc:"화성시 제부리 마을" },
   { id:67, name:"궁평리 마을", category:"tourist", lat:37.133, lng:126.636, address:"경기 화성시 서신면 해안길 421-12", tags:["체험마을", "체험"], desc:"화성시 궁평리 마을" },
   { id:68, name:"전곡리 마을", category:"tourist", lat:37.126, lng:126.78, address:"경기 화성시 서신면 해안길 421-12", tags:["체험마을", "체험"], desc:"화성시 전곡리 마을" },
-  { id:69, name:"백미리 마을", category:"tourist", lat:37.04, lng:126.705, address:"경기 화성시 서신면 해안길 421-12", tags:["체험마을", "체험"], desc:"화성시 백미리 마을" },
+  { id:69, name:"백미리 마을", category:"tourist", lat:37.113, lng:126.655, address:"경기 화성시 서신면 해안길 421-12", tags:["체험마을", "체험"], desc:"화성시 백미리 마을" },
   { id:70, name:"국화리 마을", category:"tourist", lat:37.053, lng:126.512, address:"경기 화성시 서신면 해안길 421-12", tags:["체험마을", "체험"], desc:"화성시 국화리 마을" },
   { id:71, name:"상두리 마을", category:"tourist", lat:37.108, lng:126.789, address:"경기도 화성시", tags:["체험마을", "체험"], desc:"화성시 상두리 마을" },
   { id:72, name:"민들레연극 마을", category:"tourist", lat:37.095, lng:126.903, address:"경기도 화성시", tags:["체험마을", "체험"], desc:"화성시 민들레연극 마을" },
@@ -121,7 +121,7 @@ const PLACES = [
 
 // 카테고리 설정
 const CATEGORY_CONFIG = {
-  tourist:       { label: '관광지',   color: '#7C3AED', bg: '#EDE9FE', emoji: '🏛' },
+  tourist:       { label: '관광지',   color: '#F97316', bg: '#FFF7ED', emoji: '★' },
   restaurant:    { label: '맛집',     color: '#D97706', bg: '#FEF3C7', emoji: '🍽' },
   festival:      { label: '축제',     color: '#DC2626', bg: '#FEE2E2', emoji: '🎉' },
   parking:       { label: '주차장',   color: '#2563EB', bg: '#DBEAFE', emoji: '🅿' },

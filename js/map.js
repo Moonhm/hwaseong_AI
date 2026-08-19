@@ -11,7 +11,7 @@ let slideStartY = 0;   /* 드래그-투-클로즈용 */
 const HWASEONG = { lat: 37.199, lng: 126.831 };
 
 const CAT_COLOR = {
-  tourist:       '#7C3AED',
+  tourist:       '#F97316',
   restaurant:    '#EF4444',
   festival:      '#F97316',
   parking:       '#2563EB',
