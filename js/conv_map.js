@@ -71,7 +71,7 @@ var CONV_ELMAP  = {};   /* id  → DOM el */
 var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
 var _jebuOv     = null;
 
-var CONV_CACHE_VER = 'v4'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
+var CONV_CACHE_VER = 'v5'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
 
 /* localStorage 캐시 키 */
 function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat; }
