@@ -103,7 +103,7 @@ hwaseong_AI/
 ├── tools/
 │   ├── server.py                # Flask proxy server
 │   └── geocode.py               # Address → lat/lng converter
-└── assets/                      # Place photos (~59 MB, git-tracked)
+└── assets/                      # Place photos — deployment server only
     └── images/places/           # {name}.jpg × 159
 ```
 
