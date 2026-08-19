@@ -1625,47 +1625,37 @@
       <div class="menu-rec-banner-arrow">시작하기 →</div>
     </div>
 
-    <!-- 빠른 이동 -->
-    <div class="menu-section-title">빠른 이동</div>
-    <div class="menu-item" onclick="closeMenu();go('map')">
-      <div class="menu-item-icon" style="background:#EFF6FF;">🗺</div>
+    <!-- 바로가기 -->
+    <div class="menu-section-title">바로가기</div>
+    <div class="menu-item" onclick="menuGoTourism('festival')">
+      <div class="menu-item-icon" style="background:#FEF2F2;">🎉</div>
       <div class="menu-item-text">
-        <div class="menu-item-label">지도</div>
-        <div class="menu-item-sub">관광지·공영주차장·가맹점 지도</div>
+        <div class="menu-item-label">이번달 축제</div>
+        <div class="menu-item-sub">현재 진행 중인 화성 축제</div>
       </div>
     </div>
-    <div class="menu-item" onclick="closeMenu();go('tourism')">
-      <div class="menu-item-icon" style="background:#FFF7ED;">🎡</div>
+    <div class="menu-item" onclick="closeMenu();goMapCat('localcurrency')">
+      <div class="menu-item-icon" style="background:#F0FDF4;display:flex;align-items:center;justify-content:center;"><img src="img/gyeonggi_currency_logo.png" style="width:22px;height:22px;object-fit:contain"></div>
       <div class="menu-item-text">
-        <div class="menu-item-label">관광</div>
-        <div class="menu-item-sub">축제·관광지·숙박 정보</div>
+        <div class="menu-item-label">지역화폐 가맹점</div>
+        <div class="menu-item-sub">경기지역화폐 사용 가능 매장</div>
       </div>
     </div>
-    <div class="menu-item" onclick="closeMenu();go('living')">
-      <div class="menu-item-icon" style="background:#F0FDF4;">🛍</div>
-      <div class="menu-item-text">
-        <div class="menu-item-label">생활</div>
-        <div class="menu-item-sub">맛집·지역화폐·공영주차장</div>
-      </div>
-    </div>
-
-    <!-- 편의정보 -->
-    <div class="menu-section-title">편의정보</div>
-    <div class="menu-item" onclick="closeMenu();goMapCat('mobeom')">
+    <div class="menu-item" onclick="menuGoLiving('restaurant')">
       <div class="menu-item-icon" style="background:#FEF3C7;">🍽</div>
       <div class="menu-item-text">
         <div class="menu-item-label">모범음식점</div>
         <div class="menu-item-sub">화성시 인증 맛집 94곳</div>
       </div>
     </div>
-    <div class="menu-item" onclick="closeMenu();goMapCat('hotel')">
+    <div class="menu-item" onclick="menuGoTourism('stay')">
       <div class="menu-item-icon" style="background:#EDE9FE;">🏨</div>
       <div class="menu-item-text">
-        <div class="menu-item-label">관광호텔</div>
-        <div class="menu-item-sub">4·3성급 호텔 10곳</div>
+        <div class="menu-item-label">숙박</div>
+        <div class="menu-item-sub">관광호텔·리조트</div>
       </div>
     </div>
-    <div class="menu-item" onclick="closeMenu();goMapCat('camping')">
+    <div class="menu-item" onclick="menuGoTourism('camp')">
       <div class="menu-item-icon" style="background:#DCFCE7;">⛺</div>
       <div class="menu-item-text">
         <div class="menu-item-label">캠핑장</div>
@@ -1991,6 +1981,23 @@ function _quizShowStored() {
   _quizScreen  = 'result';
   _renderQuizBody();
   document.getElementById('quiz-overlay').scrollTop = 0;
+}
+
+function menuGoTourism(sub) {
+  closeMenu();
+  go('tourism');
+  setTimeout(function() {
+    var chip = document.querySelector('.tourism-subnav .chip[onclick*="' + sub + '"]');
+    if (chip && typeof switchTourismSub === 'function') switchTourismSub(chip, sub);
+  }, 250);
+}
+function menuGoLiving(cat) {
+  closeMenu();
+  go('living');
+  setTimeout(function() {
+    var el = document.getElementById('liv-cat-' + cat);
+    if (typeof switchLivingCat === 'function') switchLivingCat(el, cat);
+  }, 300);
 }
 
 function goMapCat(cat) {
