@@ -1988,7 +1988,9 @@ function goMapLc(lat, lng) {
   go('map');
   setTimeout(function () {
     if (!kakaoMap) return;
-    setFilter('localcurrency');
+    /* 이미 활성화된 경우 toggle 방지 */
+    var _lcChip = document.querySelector('#map-chips .chip[data-cat="localcurrency"]');
+    if (!_lcChip || !_lcChip.classList.contains('active')) setFilter('localcurrency');
     setTimeout(function () {
       kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
       kakaoMap.setLevel(4);
@@ -3053,14 +3055,25 @@ function _shareFallback(url) {
 /* BUG-11: 드래그 리스너는 map.js setupSlideCardDrag()에서만 등록 (중복 제거) */
 
 /* ── localcurrency 지연 로드 헬퍼 (4.2MB — 사용 시점에만 fetch) ── */
+var _lcLoading = false;
+var _lcCallbacks = [];
 function _loadLcData(callback) {
-  if (typeof lcData !== 'undefined' && lcData.length) return; /* 이미 로드됨 */
+  if (typeof lcData !== 'undefined' && lcData.length) { if (callback) callback(); return; }
+  if (callback) _lcCallbacks.push(callback);
+  if (_lcLoading) return; /* 이미 fetch 중 — 중복 요청 방지 */
+  _lcLoading = true;
   fetch('js/localcurrency-static.json').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     var sc = document.getElementById('stat-currency');
     if (sc) sc.textContent = lcData.length.toLocaleString();
-    if (callback) callback();
-  }).catch(function() { if (callback) callback(); });
+    _lcLoading = false;
+    var cbs = _lcCallbacks.splice(0);
+    cbs.forEach(function(cb) { try { cb(); } catch(e) {} });
+  }).catch(function() {
+    _lcLoading = false;
+    var cbs = _lcCallbacks.splice(0);
+    cbs.forEach(function(cb) { try { cb(); } catch(e) {} });
+  });
 }
 
 /* ── 달력 월 탐색 (BUG-8) ── */
@@ -3161,6 +3174,7 @@ function renderCalEventList(festivals, labelText) {
 /* 실제 달력 렌더링 — calNav + showCalendar 에서 공유 */
 function _renderCalendar() {
   var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  /* MONTHS는 이 함수 내 공유 — MONTHS2/MONTHS3 대신 동일 배열 재사용 */
   var lbl = document.getElementById('cal-month-label');
   if (lbl) lbl.textContent = _calYear + '년 ' + MONTHS[_calMonth];
 
@@ -3199,8 +3213,7 @@ function _renderCalendar() {
         });
         if (fests && fests.length) {
           this.classList.add('cal-selected');
-          var MONTHS2 = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-          renderCalEventList(fests, _calYear + '년 ' + MONTHS2[_calMonth] + ' ' + day + '일 축제');
+          renderCalEventList(fests, _calYear + '년 ' + MONTHS[_calMonth] + ' ' + day + '일 축제');
           document.getElementById('calendar-event-list').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
       });
@@ -3210,8 +3223,7 @@ function _renderCalendar() {
   grid.appendChild(frag);
 
   /* 이번 달 전체 축제 목록 */
-  var MONTHS3 = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
-  renderCalEventList(_getFestsInMonth(_calYear, _calMonth), _calYear + '년 ' + MONTHS3[_calMonth] + ' 축제');
+  renderCalEventList(_getFestsInMonth(_calYear, _calMonth), _calYear + '년 ' + MONTHS[_calMonth] + ' 축제');
 }
 
 function calNav(dir) {

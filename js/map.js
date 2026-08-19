@@ -621,7 +621,9 @@ function findNearby(lat, lng) {
     showToast('반경 500m 내 지역화폐 가맹점이 없습니다.');
     return;
   }
-  setFilter('localcurrency');
+  /* 이미 활성화된 경우 toggle 방지 */
+  var lcChip = document.querySelector('#map-chips .chip[data-cat="localcurrency"]');
+  if (!lcChip || !lcChip.classList.contains('active')) setFilter('localcurrency');
   showToast('반경 500m 내 가맹점 ' + nearby.length + '곳을 찾았어요');
 }
 
