@@ -334,18 +334,21 @@ function onPinClick(id) {
 
   /* 슬라이드 카드 표시 */
   showPlaceSlide(place);
+  _panPinAboveSlide(place.lat, place.lng, 50);
+}
 
-  /* setCenter(즉시 이동) → panBy로 슬라이드 위 가시 영역에 핀 배치
-   * panTo(애니메이션) + setTimeout panBy 는 두 애니메이션이 겹쳐 오작동
-   * setCenter는 즉시 완료되므로 panBy 를 바로 호출해도 정확 */
-  kakaoMap.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
-
-  var h        = mapH();                       /* 지도 높이 (px) */
-  var slideH   = Math.min(h * 0.6, 420);       /* 슬라이드 카드 최대 높이 */
-  var visibleH = h - slideH;                   /* 슬라이드 위 가시 영역 */
-  var targetY  = visibleH * 0.42;              /* 핀 목표: 가시 영역 42% 위치 */
-  var delta    = Math.round(h / 2 - targetY);  /* 이동 픽셀 (양수) */
-  kakaoMap.panBy(0, delta);                    /* 양수 = 핀이 화면 위쪽으로 */
+/* 핀을 슬라이드 카드 위 가시 영역 중앙으로 이동
+ * setCenter(즉시) 후 50ms 대기 → panBy (참고 레포 패턴) */
+function _panPinAboveSlide(lat, lng, delay) {
+  if (!kakaoMap || !lat || !lng) return;
+  kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
+  setTimeout(function () {
+    var h        = mapH();
+    var slideH   = Math.min(h * 0.6, 420);
+    var visibleH = h - slideH;
+    var targetY  = visibleH * 0.40;
+    kakaoMap.panBy(0, Math.round(h / 2 - targetY));
+  }, delay != null ? delay : 50);
 }
 
 /* ── 슬라이드 카드 드래그-투-클로즈 (참고 깃 패턴) ── */

@@ -2035,10 +2035,8 @@ function goConvItem(convCat, idx) {
 
 function _zoomAndShowConv(place) {
   if (place.lat && place.lng && kakaoMap) {
-    kakaoMap.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
     kakaoMap.setLevel(4);
-    var h = window.innerHeight - 52;
-    kakaoMap.panBy(0, Math.round(h * 0.15));
+    if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(place.lat, place.lng, 150);
   }
   setTimeout(function () {
     if (typeof _showConvSlide === 'function') _showConvSlide(place);
