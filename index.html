@@ -646,8 +646,9 @@
       border: 2.5px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       transition: transform 0.15s; white-space: nowrap; color: #fff;
     }
-    .cm-pin:hover .cm-circle { transform: scale(1.12); }
-    .cm-pin.selected .cm-circle { transform: scale(1.18); outline: 3px solid var(--primary); outline-offset: 1px; }
+    .cm-pin:hover .cm-circle { transform: scale(1.18); }
+    .cm-pin.selected .cm-circle { transform: scale(1.45); box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--primary), 0 4px 14px rgba(0,0,0,0.28); z-index: 1; }
+    .cm-pin.selected .cm-tail { border-top-color: var(--primary); }
     .cm-tail {
       width: 0; height: 0; margin-top: -2px;
       border-left: 5px solid transparent; border-right: 5px solid transparent;
@@ -714,7 +715,7 @@
     .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
     /* dim overlay */
-    .dim { position: fixed; inset: 0; background: rgba(0,0,0,0.18); z-index: 150; opacity: 0; pointer-events: none; transition: opacity 0.28s; }
+    .dim { position: fixed; inset: 0; background: transparent; z-index: 150; opacity: 0; pointer-events: none; }
     .dim.show { opacity: 1; pointer-events: auto; }
 
     /* ── 리스트 항목 입장 애니메이션 ── */
