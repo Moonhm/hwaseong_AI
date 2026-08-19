@@ -248,7 +248,7 @@ function pinHtml(p) {
 function onParkingClick(id) {
   var p = parkingData.find(function (x) { return x.id === id; });
   if (!p) return;
-  if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(p.lat, p.lng, 50);
+  if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(p.lat, p.lng, 50, 300);
   showParkingSlide(p);
 }
 

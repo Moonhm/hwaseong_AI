@@ -2158,7 +2158,7 @@ function goConvItem(convCat, idx) {
 function _zoomAndShowConv(place) {
   if (place.lat && place.lng && kakaoMap) {
     kakaoMap.setLevel(4);
-    if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(place.lat, place.lng, 150);
+    if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(place.lat, place.lng, 150, 280);
   }
   setTimeout(function () {
     if (typeof _showConvSlide === 'function') _showConvSlide(place);
@@ -2210,7 +2210,7 @@ function goMapPark(lat, lng, parkId) {
     if (typeof activateParking === 'function') activateParking();
     setTimeout(function () {
       kakaoMap.setLevel(4);
-      if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(lat, lng, 150);
+      if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(lat, lng, 150, 300);
       /* 주차장 슬라이드 카드 오픈 */
       var pk = null;
       if (parkId != null && typeof parkingData !== 'undefined') {
