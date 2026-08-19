@@ -198,6 +198,13 @@
     }
     .place-item:first-child { border-top: 1px solid var(--border); }
     .place-item:hover { background: #FAFAFA; }
+    .tourism-more-btn {
+      padding: 14px var(--px); text-align: center; font-size: 14px; font-weight: 600;
+      color: var(--text-sub); background: var(--white); cursor: pointer;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .tourism-more-btn:hover { background: #F5F5F5; }
 
     /* 아이콘 뱃지 */
     .pi {
@@ -2151,7 +2158,7 @@ function pickTheme(el, theme) {
   renderTourismList(theme);
 }
 
-function renderTourismList(theme) {
+function renderTourismList(theme, expanded) {
   const list = document.getElementById('tourism-place-list');
   if (!list || typeof PLACES === 'undefined') return;
   let items;
@@ -2168,10 +2175,14 @@ function renderTourismList(theme) {
     }
   }
   if (!items.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
-  list.innerHTML = items.map((p, i) => {
+
+  const PREVIEW = 5;
+  const collapsible = theme === 'all' && items.length > PREVIEW;
+  const visible = collapsible && !expanded ? items.slice(0, PREVIEW) : items;
+
+  function itemHtml(p, i) {
     const cfg = CATEGORY_CONFIG[p.category];
     const isCurrency = (p.tags || []).includes('가맹점');
-    /* 관광지: 썸네일 이미지 / 나머지: 이모지 아이콘 */
     const iconHtml = p.category === 'tourist'
       ? `<div style="width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;
                      background:#FFF7ED;position:relative;display:flex;align-items:center;
@@ -2200,7 +2211,17 @@ function renderTourismList(theme) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>`;
-  }).join('');
+  }
+
+  list.innerHTML = visible.map(itemHtml).join('');
+
+  if (collapsible && !expanded) {
+    const btn = document.createElement('div');
+    btn.className = 'tourism-more-btn';
+    btn.innerHTML = `더보기 <span style="color:var(--primary);font-weight:700">+${items.length - PREVIEW}</span>`;
+    btn.onclick = function() { renderTourismList(theme, true); };
+    list.appendChild(btn);
+  }
 }
 
 function iconClass(cat) {
