@@ -303,7 +303,9 @@ function _showConvSlide(place) {
     (ex.tel ? '<div class="sl-addr">📞 ' + ex.tel + '</div>' : '') +
     cfg.extraHtml(ex) +
     '<div class="sl-actions">' +
-    '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name.replace(/'/g, '') + '\')">🗺 길찾기</button>' +
+    (place.lat && place.lng
+      ? '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + place.name.replace(/'/g, '') + '\')">🗺 길찾기</button>'
+      : '') +
     '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' + encodeURIComponent(place.name) + '\',\'_blank\')">🔍 카카오지도</button>' +
     '</div>';
 

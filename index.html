@@ -1937,6 +1937,71 @@ function goMapCat(cat) {
   }, 200);
 }
 
+/* ── 생활탭 항목 클릭 → 지도에서 해당 위치 줌인 + 슬라이드 카드 표시 ── */
+function goConvItem(convCat, idx) {
+  /* CONVENIENCE 원본 데이터 참조 */
+  var srcMap = { mobeom: 'restaurants', touristrest: 'touristRestaurants' };
+  var arr = CONVENIENCE[srcMap[convCat]];
+  if (!arr || !arr[idx]) return;
+  var rawItem = arr[idx];
+
+  go('map');
+
+  setTimeout(function () {
+    if (!kakaoMap || typeof kakao === 'undefined') return;
+
+    /* 필터 활성화 (캐시 있으면 즉시, 없으면 geocoding 시작) */
+    setFilter(convCat);
+
+    /* CONV_PLACES에 이미 geocoding 완료된 항목이 있으면 바로 사용 */
+    var cached = (typeof CONV_PLACES !== 'undefined' ? CONV_PLACES[convCat] || [] : [])
+      .find(function (p) { return p.name === rawItem.name; });
+
+    if (cached) {
+      _zoomAndShowConv(cached);
+      return;
+    }
+
+    /* 없으면 이 항목만 단독 geocoding */
+    if (typeof kakao.maps.services === 'undefined') return;
+    var geocoder = new kakao.maps.services.Geocoder();
+    var cfg = typeof CONV_CAT_CFG !== 'undefined' && CONV_CAT_CFG[convCat];
+    if (!cfg) return;
+    var cleanAddr = (rawItem.addr || '')
+      .replace(/\s*\([^)]*\)\s*$/, '')
+      .replace(/\s+[가-힣A-Za-z][^\d]*$/, '')
+      .trim();
+    var fullAddr = cfg.getFullAddr
+      ? cfg.getFullAddr(Object.assign({}, rawItem, { addr: cleanAddr }))
+      : '경기도 화성시 ' + cleanAddr;
+
+    geocoder.addressSearch(fullAddr, function (data, status) {
+      var place = {
+        id:       'conv_' + convCat + '_single',
+        name:     rawItem.name,
+        category: convCat,
+        address:  '화성시 ' + (rawItem.addr || ''),
+        lat:      status === 'OK' && data.length ? parseFloat(data[0].y) : null,
+        lng:      status === 'OK' && data.length ? parseFloat(data[0].x) : null,
+        extra:    rawItem,
+      };
+      _zoomAndShowConv(place);
+    });
+  }, 300);
+}
+
+function _zoomAndShowConv(place) {
+  if (place.lat && place.lng && kakaoMap) {
+    kakaoMap.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
+    kakaoMap.setLevel(4);
+    var h = window.innerHeight - 52;
+    kakaoMap.panBy(0, Math.round(h * 0.15));
+  }
+  setTimeout(function () {
+    if (typeof _showConvSlide === 'function') _showConvSlide(place);
+  }, 120);
+}
+
 /* ── 특정 장소로 지도 이동 + 슬라이드 오픈 ──
  * placeId: PLACES 배열의 id (PLACES-기반 장소만, 없으면 null)
  * level  : zoom level (작을수록 확대, 기본 4)
@@ -2909,7 +2974,7 @@ function renderLivingCatList(cat) {
     if (titleEl) titleEl.textContent = '모범음식점';
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
-      return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.03) + 's" onclick="goMapCat(\'mobeom\')">'
+      return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.03) + 's" onclick="goConvItem(\'mobeom\',' + i + ')">'
         + '<div class="pi ci-food" style="border-radius:12px;background:#FEF3C7;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🍽️</div>'
         + '<div class="pi-content"><div class="pi-name">' + r.name + '</div>'
         + '<div class="pi-meta">화성시 ' + r.addr + '</div></div>'
@@ -2924,7 +2989,7 @@ function renderLivingCatList(cat) {
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
       var tagClass = r.cuisine.includes('네팔') ? 'cuisine-nepal' : r.cuisine.includes('러시아') ? 'cuisine-russia' : '';
-      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's" onclick="goMapCat(\'touristrest\')">'
+      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's" onclick="goConvItem(\'touristrest\',' + i + ')">'
         + '<div class="pi" style="border-radius:12px;background:#FEE2E2;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🥢</div>'
         + '<div class="pi-content">'
         + '<div class="pi-name" style="gap:6px">' + r.name
