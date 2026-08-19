@@ -2910,9 +2910,9 @@ function renderTourismList(theme, expanded) {
 }
 
 function ratingStars(r) {
-  var full = Math.floor(r), half = (r - full) >= 0.3 ? 1 : 0;
-  var hs = '<span style="position:relative;display:inline-block;letter-spacing:0">☆<span style="position:absolute;inset:0;overflow:hidden;width:50%">★</span></span>';
-  return '★'.repeat(full) + (half ? hs : '') + '☆'.repeat(5 - full - half);
+  var full = Math.floor(r), half = (r - full) >= 0.3 ? 1 : 0, empty = 5 - full - half;
+  var hs = '<span style="position:relative;display:inline-block"><span style="color:#D1D5DB">★</span><span style="position:absolute;top:0;left:0;width:50%;height:100%;overflow:hidden;color:#F59E0B">★</span></span>';
+  return '<span style="color:#F59E0B">' + '★'.repeat(full) + '</span>' + (half ? hs : '') + (empty ? '<span style="color:#D1D5DB">' + '★'.repeat(empty) + '</span>' : '');
 }
 function iconClass(cat) {
   const map = { tourist:'pi-tourist', restaurant:'pi-food', festival:'pi-festival', localcurrency:'pi-currency', parking:'pi-parking' };

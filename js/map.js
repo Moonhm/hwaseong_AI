@@ -362,11 +362,16 @@ function setupSlideCardDrag() {
     if (endY - slideStartY > 60) closePlaceSlide();
   });
 
+  var _dragFromHandle = false;
+
   dragZone.addEventListener('mousedown', function (e) {
     slideStartY = e.clientY;
+    _dragFromHandle = true;
   });
 
   document.addEventListener('mouseup', function (e) {
+    if (!_dragFromHandle) return;
+    _dragFromHandle = false;
     var slide = document.getElementById('place-slide');
     if (slide && slide.classList.contains('open') && e.clientY - slideStartY > 60) {
       closePlaceSlide();
@@ -447,9 +452,9 @@ function showPlaceSlide(place) {
 
   var ratingHtml = '';
   if (isTourist && place.rating) {
-    var full = Math.floor(place.rating), half = (place.rating - full) >= 0.3 ? 1 : 0;
-    var _hs = '<span style="position:relative;display:inline-block;letter-spacing:0">☆<span style="position:absolute;inset:0;overflow:hidden;width:50%">★</span></span>';
-    var stars = '★'.repeat(full) + (half ? _hs : '') + '☆'.repeat(5 - full - half);
+    var full = Math.floor(place.rating), half = (place.rating - full) >= 0.3 ? 1 : 0, empty = 5 - full - half;
+    var _hs = '<span style="position:relative;display:inline-block"><span style="color:#D1D5DB">★</span><span style="position:absolute;top:0;left:0;width:50%;height:100%;overflow:hidden;color:#F59E0B">★</span></span>';
+    var stars = '<span style="color:#F59E0B">' + '★'.repeat(full) + '</span>' + (half ? _hs : '') + (empty ? '<span style="color:#D1D5DB">' + '★'.repeat(empty) + '</span>' : '');
     ratingHtml =
       '<div class="sl-rating">' +
       '<span class="sl-stars">' + stars + '</span>' +
