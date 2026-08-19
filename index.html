@@ -1944,10 +1944,22 @@ function goMapFocus(lat, lng, level, placeId) {
   go('map');
   setTimeout(function () {
     if (!kakaoMap) return;
-    /* tourist 장소면 필터 먼저 활성화 → 핀 렌더 후 슬라이드 오픈 */
+    /* 카테고리 필터 활성화 (이미 활성화된 경우 토글 방지) */
     if (placeId != null && typeof PLACES !== 'undefined') {
       var _p = PLACES.find(function(x) { return x.id === placeId; });
-      if (_p && _p.category === 'tourist') setFilter('tourist');
+      if (_p) {
+        var _cat = _p.category;
+        if (_cat === 'tourist') {
+          var _tkChip = document.querySelector('#map-chips .chip[data-cat="tourist"]');
+          if (!_tkChip || !_tkChip.classList.contains('active')) setFilter('tourist');
+          else if (typeof setTouristVisible === 'function') setTouristVisible(true);
+        } else {
+          var _catChip = document.querySelector('#map-chips .chip[data-cat="' + _cat + '"]');
+          if (!_catChip || !_catChip.classList.contains('active')) {
+            if (typeof setFilter === 'function') setFilter(_cat);
+          }
+        }
+      }
     }
     kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
     kakaoMap.setLevel(level || 4);
