@@ -465,7 +465,7 @@ function showPlaceSlide(place) {
     '</div>' +
     '<div class="sl-name">' + place.name + '</div>' +
     ratingHtml +
-    '<div class="sl-addr" onclick="copyAddress(\'' + place.address.replace(/'/g, '') + '\')">📍 ' + place.address + '</div>' +
+    '<div class="sl-addr" data-addr="' + place.address.replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + place.address + '</div>' +
     (place.date ? '<div class="sl-date">📅 ' + place.date + '</div>' : '') +
     descHtml +
     '<div class="sl-tags">' +

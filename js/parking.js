@@ -301,7 +301,7 @@ function showParkingSlide(p) {
     + '<span style="background:#DBEAFE;color:#2563EB;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🅿 주차장</span>'
     + freeTag + openTag + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">' + p.name + '</div>'
-    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;cursor:pointer;display:inline-block;transition:transform 0.15s,color 0.15s" onmouseover="this.style.transform=\'scale(1.05)\';this.style.color=\'var(--primary)\'" onmouseout="this.style.transform=\'\';this.style.color=\'\'" onclick="copyAddress(\'' + p.address.replace(/'/g, '') + '\')">📍 ' + p.address + '</div>'
+    + '<div class="sl-addr" style="margin-bottom:12px" data-addr="' + p.address.replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + p.address + '</div>'
     + '<div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:12px">'
     + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'
     + '<span style="font-size:13px;color:var(--text-sub)">현재 여유</span>'
