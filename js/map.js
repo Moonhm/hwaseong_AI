@@ -728,3 +728,72 @@ function setupZoomSlider() {
     if (sl) sl.value = levelToSlider(kakaoMap.getLevel());
   });
 }
+
+/* ══════════════════════════════════════════════════════
+   반경 원(Radius Circle) 공유 시스템
+   parking.js / localcurrency.js에서 drawMapRadius / removeMapRadius 호출
+   ══════════════════════════════════════════════════════ */
+
+/* ── haversine 거리 (km) ── */
+function _mapDistKm(lat1, lng1, lat2, lng2) {
+  var R    = 6371;
+  var dLat = (lat2 - lat1) * Math.PI / 180;
+  var dLng = (lng2 - lng1) * Math.PI / 180;
+  var a    = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+           + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+           * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/* ── 현재 뷰포트에서 반경 계산 (화면 가로의 약 60%) ── */
+function _viewportRadiusKm() {
+  if (!kakaoMap) return 2;
+  var bounds = kakaoMap.getBounds();
+  var center = kakaoMap.getCenter();
+  var ne     = bounds.getNorthEast();
+  /* 중심 → 동쪽 끝까지 거리의 60% */
+  var halfW  = _mapDistKm(center.getLat(), center.getLng(),
+                           center.getLat(), ne.getLng());
+  return halfW * 0.60;
+}
+
+/* ── 반경 원 상태 ── */
+var _radiusCircleObj   = null;
+var _radiusCircleOwner = null;
+
+/* ── 반경 원 그리기/업데이트 ── */
+function drawMapRadius(cat, lat, lng, km) {
+  var color = CAT_COLOR[cat] || '#2563EB';
+  var center = new kakao.maps.LatLng(lat, lng);
+  if (_radiusCircleObj) {
+    _radiusCircleObj.setCenter(center);
+    _radiusCircleObj.setRadius(km * 1000);
+    _radiusCircleObj.setOptions({
+      strokeColor: color, fillColor: color,
+    });
+    _radiusCircleObj.setMap(kakaoMap);
+  } else {
+    _radiusCircleObj = new kakao.maps.Circle({
+      center:         center,
+      radius:         km * 1000,
+      strokeWeight:   1.5,
+      strokeColor:    color,
+      strokeOpacity:  0.55,
+      strokeStyle:    'dashed',
+      fillColor:      color,
+      fillOpacity:    0.055,
+      map:            kakaoMap,
+    });
+  }
+  _radiusCircleOwner = cat;
+}
+
+/* ── 반경 원 제거 ── */
+function removeMapRadius(cat) {
+  if (cat && _radiusCircleOwner !== cat) return;
+  if (_radiusCircleObj) {
+    _radiusCircleObj.setMap(null);
+    _radiusCircleObj = null;
+    _radiusCircleOwner = null;
+  }
+}

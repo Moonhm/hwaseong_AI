@@ -32,8 +32,12 @@ function onLcMapIdle() {
 /* ── 표시/숨김 ── */
 function setLcVisible(visible) {
   lcVisible = visible;
-  if (!visible) clearLcDisplay();
-  else          updateLcDisplay();
+  if (!visible) {
+    clearLcDisplay();
+    if (typeof removeMapRadius === 'function') removeMapRadius('localcurrency');
+  } else {
+    updateLcDisplay();
+  }
 }
 
 /* ── 현재 표시 중인 것 전부 제거 ── */
@@ -57,16 +61,22 @@ function updateLcDisplay() {
   }
 }
 
-/* ── 뷰포트 안 가맹점만 개별 마커로 표시 ── */
+/* ── 뷰포트 안 가맹점만 개별 마커로 표시 (반경 원 기반 필터) ── */
 function showViewportMarkers(bounds) {
-  var sw = bounds.getSouthWest();
-  var ne = bounds.getNorthEast();
-  var minLat = sw.getLat(), maxLat = ne.getLat();
-  var minLng = sw.getLng(), maxLng = ne.getLng();
+  var ctr  = lcMap.getCenter();
+  var cLat = ctr.getLat(), cLng = ctr.getLng();
+  var radius = typeof _viewportRadiusKm === 'function' ? _viewportRadiusKm() : 1;
+  var buf    = radius * 1.28;
+
+  if (typeof drawMapRadius === 'function') drawMapRadius('localcurrency', cLat, cLng, radius);
 
   lcData.filter(function (p) {
-    return p.lat >= minLat && p.lat <= maxLat &&
-           p.lng >= minLng && p.lng <= maxLng;
+    if (!p.lat || !p.lng) return false;
+    if (typeof _mapDistKm === 'function')
+      return _mapDistKm(cLat, cLng, p.lat, p.lng) <= buf;
+    var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
+    return p.lat >= sw.getLat() && p.lat <= ne.getLat() &&
+           p.lng >= sw.getLng() && p.lng <= ne.getLng();
   }).forEach(function (p) {
     var marker = new kakao.maps.Marker({
       position: new kakao.maps.LatLng(p.lat, p.lng),
@@ -79,8 +89,9 @@ function showViewportMarkers(bounds) {
   });
 }
 
-/* ── 격자 기반 클러스터 원 표시 ── */
+/* ── 격자 기반 클러스터 원 표시 (줌아웃 시 반경 원 제거) ── */
 function showClusters(bounds, level) {
+  if (typeof removeMapRadius === 'function') removeMapRadius('localcurrency');
   var sw  = bounds.getSouthWest();
   var ne  = bounds.getNorthEast();
   var pad = (LC_GRID[level] || 0.02) * 0.5;

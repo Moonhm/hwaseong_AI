@@ -104,8 +104,12 @@ function statusText(p) {
 /* ── 표시/숨김 ── */
 function setParkingVisible(visible) {
   parkingVisible = visible;
-  if (!visible) clearPkDisplay();
-  else          updateParkingDisplay();
+  if (!visible) {
+    clearPkDisplay();
+    if (typeof removeMapRadius === 'function') removeMapRadius('parking');
+  } else {
+    updateParkingDisplay();
+  }
 }
 
 function clearPkDisplay() {
@@ -125,16 +129,25 @@ function updateParkingDisplay() {
   updateParkingCount();
 }
 
-/* ── 뷰포트 개별 핀 ── */
+/* ── 뷰포트 개별 핀 (반경 원 기반 필터) ── */
 function showPkViewport(bounds) {
-  var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
-  var minLat = sw.getLat(), maxLat = ne.getLat();
-  var minLng = sw.getLng(), maxLng = ne.getLng();
+  var ctr  = parkingMap.getCenter();
+  var cLat = ctr.getLat(), cLng = ctr.getLng();
+  /* 뷰포트 크기 기반 반경 (map.js _viewportRadiusKm 공유) */
+  var radius = typeof _viewportRadiusKm === 'function' ? _viewportRadiusKm() : 2;
+  var buf    = radius * 1.28; /* 원 바깥 28% 버퍼 — 원 밖 조금만 핀 표시 */
+
+  /* 반경 원 그리기/업데이트 */
+  if (typeof drawMapRadius === 'function') drawMapRadius('parking', cLat, cLng, radius);
 
   parkingData.filter(function (p) {
-    return p.lat && p.lng &&
-           p.lat >= minLat && p.lat <= maxLat &&
-           p.lng >= minLng && p.lng <= maxLng;
+    if (!p.lat || !p.lng) return false;
+    if (typeof _mapDistKm === 'function')
+      return _mapDistKm(cLat, cLng, p.lat, p.lng) <= buf;
+    /* _mapDistKm 미로드 시 bounds 폴백 */
+    var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
+    return p.lat >= sw.getLat() && p.lat <= ne.getLat() &&
+           p.lng >= sw.getLng() && p.lng <= ne.getLng();
   }).forEach(function (p) {
     var overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
@@ -149,8 +162,9 @@ function showPkViewport(bounds) {
   });
 }
 
-/* ── 격자 기반 클러스터 원 ── */
+/* ── 격자 기반 클러스터 원 (줌아웃 시 반경 원 제거) ── */
 function showPkClusters(bounds, level) {
+  if (typeof removeMapRadius === 'function') removeMapRadius('parking');
   var sw   = bounds.getSouthWest(), ne = bounds.getNorthEast();
   var grid = PK_GRID[level] || 0.02;
   var pad  = grid * 0.5;
