@@ -39,9 +39,29 @@ var CONV_CAT_CFG = {
       return '<div class="sl-addr">⏰ ' + (ex.schedule || '') + '</div>';
     },
   },
+  jebu: {
+    label: '제부도 숙박', color: '#0284C7', bg: '#E0F2FE', emoji: '⛱',
+    getItems: function () {
+      var j = CONVENIENCE.jebu;
+      var all = [];
+      (j.pension_outside || []).forEach(function (x) { all.push(Object.assign({}, x, { type: '관광펜션' })); });
+      (j.inside          || []).forEach(function (x) { all.push(Object.assign({}, x, { type: '도서내 숙박' })); });
+      (j.nearby          || []).forEach(function (x) { all.push(Object.assign({}, x, { type: '인근 숙박' })); });
+      (j.minbak_inside   || []).forEach(function (x) { all.push(Object.assign({}, x, { type: '민박(도서내)' })); });
+      (j.minbak_nearby   || []).forEach(function (x) { all.push(Object.assign({}, x, { type: '민박(인근)' })); });
+      return all;
+    },
+    getFullAddr: function (item) {
+      /* 서신면 제부도 주소 — 면 이름 필수 */
+      return '경기도 화성시 서신면 ' + (item.addr || '');
+    },
+    extraHtml: function (ex) {
+      return '<div class="sl-addr">🏠 ' + (ex.type || '숙박') + (ex.tel ? ' · 📞 ' + ex.tel : '') + '</div>';
+    },
+  },
 };
 
-/* 제부도: 단일 마커 (115곳 클러스터) */
+/* 제부도: 지도 중심 좌표 (fitBounds 폴백용) */
 var JEBU_LAT = 37.1578, JEBU_LNG = 126.5764;
 
 /* state */
@@ -51,7 +71,7 @@ var CONV_ELMAP  = {};   /* id  → DOM el */
 var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
 var _jebuOv     = null;
 
-var CONV_CACHE_VER = 'v2'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
+var CONV_CACHE_VER = 'v3'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
 
 /* localStorage 캐시 키 */
 function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat; }
@@ -78,8 +98,6 @@ function _saveConvCache(cat, places) {
 /* ── 외부 진입점: 카테고리 표시 ── */
 function showConvCat(cat) {
   if (!kakaoMap) return;
-
-  if (cat === 'jebu') { _showJebuMarker(); return; }
 
   var status = CONV_STATUS[cat] || 'idle';
 
@@ -139,7 +157,9 @@ function _geocodeCat(cat) {
   rawItems.forEach(function (item, i) {
     /* 괄호 내 동명 제거 — 도로명만 남겨 geocoding 정확도 향상 */
     var cleanAddr = (item.addr || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
-    var fullAddr  = '경기도 화성시 ' + cleanAddr;
+    var fullAddr  = cfg.getFullAddr
+      ? cfg.getFullAddr(Object.assign({}, item, { addr: cleanAddr }))
+      : '경기도 화성시 ' + cleanAddr;
 
     /* 10개씩 배치로 나눠 200ms 간격 — API 부하 분산 */
     var delay = Math.floor(i / 10) * 200;
