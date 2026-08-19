@@ -75,7 +75,7 @@ function mergeParkingData(list, rt) {
     return {
       id: p.id, name: p.name, address: p.address,
       lat: p.lat, lng: p.lng, total: p.total,
-      free: p.free, type: p.type, tel: p.tel, zone: p.zone,
+      free: p.free, type: p.type, tel: p.tel, zone: p.zone, tags: p.tags || [],
       open:          r.open  !== undefined ? r.open  : p.open,
       used:          r.used  !== undefined ? r.used  : 0,
       avail:         r.avail !== undefined ? r.avail : p.total,

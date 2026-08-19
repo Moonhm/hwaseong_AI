@@ -1440,8 +1440,9 @@ var QUIZ_QS = [
   },
 ];
 
-/* 장소 이름/설명에서 태그 자동 추출 */
+/* 장소 태그 반환 — place.tags 우선, 없으면 텍스트 키워드 추출 */
 function _getSpotTags(place) {
+  if (place.tags && place.tags.length) return place.tags;
   var tags = [];
   var txt = ((place.name || '') + ' ' + (place.desc || '') + ' ' + (place.address || '')).toLowerCase();
   if (/해변|해안|해수욕|포구|항|제부도|섬|바다/.test(txt))      tags.push('바다', '해안');
@@ -1456,7 +1457,7 @@ function _getSpotTags(place) {
   if (/해산물|수산|어시장|생선|횟집/.test(txt))                   tags.push('해산물', '바다');
   if (/궁평|전곡|백미리|우음도|국화/.test(txt))                   tags.push('사진', '낭만');
   if (!tags.length) tags.push('자연', '힐링', '관광');
-  return tags.filter(function(t, i, arr) { return arr.indexOf(t) === i; }); /* 중복 제거 */
+  return tags.filter(function(t, i, arr) { return arr.indexOf(t) === i; });
 }
 
 function _recFbEmoji(tags) {
@@ -1621,11 +1622,16 @@ function goMapFocus(lat, lng, level, placeId) {
   go('map');
   setTimeout(function () {
     if (!kakaoMap) return;
+    /* tourist 장소면 필터 먼저 활성화 → 핀 렌더 후 슬라이드 오픈 */
+    if (placeId != null && typeof PLACES !== 'undefined') {
+      var _p = PLACES.find(function(x) { return x.id === placeId; });
+      if (_p && _p.category === 'tourist') setFilter('tourist');
+    }
     kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
     kakaoMap.setLevel(level || 4);
     if (placeId != null) {
-      /* 핀이 렌더된 후에 클릭 이벤트 */
-      setTimeout(function () { if (typeof onPinClick === 'function') onPinClick(placeId); }, 120);
+      /* 디바운스(100ms) + 렌더 여유 → 300ms 후 클릭 */
+      setTimeout(function () { if (typeof onPinClick === 'function') onPinClick(placeId); }, 300);
     }
   }, 350);
 }
@@ -2158,9 +2164,9 @@ function renderTourismList(theme) {
   if (!items.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
   list.innerHTML = items.map((p, i) => {
     const cfg = CATEGORY_CONFIG[p.category];
-    const isCurrency = p.tags.includes('가맹점');
+    const isCurrency = (p.tags || []).includes('가맹점');
     return `
-      <div class="place-item" style="animation-delay:${i * 0.045}s"
+      <div class="place-item" style="animation-delay:${Math.min(i, 12) * 0.045}s"
         onclick="${p.category === 'festival'
           ? 'showFestivalDetail(' + p.id + ')'
           : 'goMapFocus(' + p.lat + ',' + p.lng + ',4,' + p.id + ')'}">
@@ -2282,7 +2288,7 @@ function renderLivingCatList(cat) {
     if (titleEl) titleEl.textContent = '모범음식점';
     if (countEl) countEl.textContent = items.length + '곳';
     list.innerHTML = items.map(function(r, i) {
-      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's">'
+      return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.03) + 's">'
         + '<div class="pi ci-food" style="border-radius:12px;background:#FEF3C7;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🍽️</div>'
         + '<div class="pi-content"><div class="pi-name">' + r.name + '</div>'
         + '<div class="pi-meta">화성시 ' + r.addr + '</div></div>'
@@ -2310,10 +2316,11 @@ function renderLivingCatList(cat) {
 
   } else if (cat === 'currency') {
     var lcArr = (typeof lcData !== 'undefined') ? lcData : [];
+    var LC_SHOW = 80;
     if (titleEl) titleEl.textContent = '희망화성지역화폐 가맹점';
     if (countEl) countEl.textContent = lcArr.length + '곳';
     list.innerHTML = lcArr.length
-      ? lcArr.map(function(p, i) {
+      ? lcArr.slice(0, LC_SHOW).map(function(p, i) {
           /* lcData 필드: n=이름, c=업종, a=주소, lat, lng */
           var name = p.n || p.name || '';
           var addr = (p.a || p.address || '').replace('경기도 화성시 ','');
@@ -2322,7 +2329,7 @@ function renderLivingCatList(cat) {
           var clickFn = hasCoord
             ? 'goMapLc(' + p.lat + ',' + p.lng + ')'
             : 'goMapCat(\'localcurrency\')';
-          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's;cursor:pointer" onclick="' + clickFn + '">'
+          return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.04) + 's;cursor:pointer" onclick="' + clickFn + '">'
             + '<div class="pi pi-currency">₩</div>'
             + '<div class="pi-content">'
             + '<div class="pi-name">' + name + '</div>'
@@ -2331,6 +2338,10 @@ function renderLivingCatList(cat) {
             + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
             + '</div>';
         }).join('')
+      + (lcArr.length > LC_SHOW
+          ? '<div style="padding:16px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer" onclick="goMapCat(\'localcurrency\')">'
+            + '지도에서 ' + lcArr.length.toLocaleString() + '개 전체 보기 →</div>'
+          : '')
       : empty;
 
   } else if (cat === 'parking') {
@@ -2346,7 +2357,7 @@ function renderLivingCatList(cat) {
           var clickFn = hasCoord
             ? 'goMapPark(' + p.lat + ',' + p.lng + ')'
             : 'goMapCat(\'parking\')';
-          return '<div class="place-item" style="animation-delay:' + (i * 0.05) + 's;cursor:pointer" onclick="' + clickFn + '">'
+          return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.04) + 's;cursor:pointer" onclick="' + clickFn + '">'
             + '<div class="pi pi-parking">P</div>'
             + '<div class="pi-content">'
             + '<div class="pi-name">' + p.name + '</div>'
@@ -2394,16 +2405,25 @@ function showToast(msg) {
 var _calYear = 2026, _calMonth = 7; /* 0-indexed: 7=8월 */
 var _calInitDone = false;
 
-/* 축제 날짜 Set 반환 — 현재 보여주는 연월 기준 */
+/* 축제 날짜 Set 반환 — 날짜 범위("YYYY-MM-DD ~ YYYY-MM-DD") 전체 처리 */
 function _getFestDays(year, month) {
   var days = {};
   if (typeof PLACES === 'undefined') return days;
   PLACES.filter(function(p) { return p.category === 'festival' && p.date; })
     .forEach(function(p) {
-      var parts = p.date.split('-');
-      if (parts.length === 3) {
-        var y = parseInt(parts[0]), m = parseInt(parts[1]) - 1, d = parseInt(parts[2]);
-        if (y === year && m === month) days[d] = (days[d] || []).concat(p.name);
+      var ranges  = p.date.split('~');
+      var sp      = ranges[0].trim().split('-');
+      var ep      = (ranges[1] || ranges[0]).trim().split('-');
+      if (sp.length < 3 || ep.length < 3) return;
+      var start = new Date(parseInt(sp[0]), parseInt(sp[1]) - 1, parseInt(sp[2]));
+      var end   = new Date(parseInt(ep[0]), parseInt(ep[1]) - 1, parseInt(ep[2]));
+      var cur   = new Date(start);
+      while (cur <= end) {
+        if (cur.getFullYear() === year && cur.getMonth() === month) {
+          var d = cur.getDate();
+          days[d] = (days[d] || []).concat(p.name);
+        }
+        cur.setDate(cur.getDate() + 1);
       }
     });
   return days;
@@ -2423,7 +2443,7 @@ function _renderCalendar() {
 
   var firstDay    = new Date(_calYear, _calMonth, 1).getDay();
   var daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
-  var nowY = 2026, nowM = 7, nowD = 19; /* 현재 날짜 고정 */
+  var _td = new Date(); var nowY = _td.getFullYear(), nowM = _td.getMonth(), nowD = _td.getDate();
   var festDays = _getFestDays(_calYear, _calMonth);
   var frag = document.createDocumentFragment();
 

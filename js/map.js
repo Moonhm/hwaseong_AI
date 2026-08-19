@@ -457,7 +457,7 @@ function showPlaceSlide(place) {
     (place.date ? '<div class="sl-date">📅 ' + place.date + '</div>' : '') +
     descHtml +
     '<div class="sl-tags">' +
-    place.tags.map(function (t) { return '<span class="sl-tag" ' + tagStyle + '>' + t + '</span>'; }).join('') +
+    (place.tags || []).map(function (t) { return '<span class="sl-tag" ' + tagStyle + '>' + t + '</span>'; }).join('') +
     '</div>' +
     '<div class="sl-actions">' + actionsHtml + '</div>';
 
