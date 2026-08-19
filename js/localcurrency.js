@@ -5,6 +5,7 @@ var lcMap         = null;
 var lcVisible     = false;
 var lcDisplayItems = [];   /* 현재 지도에 올라간 Marker / CustomOverlay */
 var lcFilter      = 'all'; /* 업종 필터 */
+var _selectedLcEl = null;  /* 현재 selected 상태인 cm-pin DOM el */
 
 var LC_PIN_LEVEL  = 5;     /* 이 레벨 이하에서만 개별 핀 표시 */
 
@@ -63,6 +64,14 @@ function setLcVisible(visible) {
   updateLcDisplay();
 }
 
+/* ── 선택 상태 해제 (슬라이드 닫힐 때 호출) ── */
+function clearLcSelection() {
+  if (_selectedLcEl) {
+    _selectedLcEl.classList.remove('selected');
+    _selectedLcEl = null;
+  }
+}
+
 /* ── 현재 표시 중인 것 전부 제거 ── */
 function clearLcDisplay() {
   lcDisplayItems.forEach(function (item) {
@@ -102,15 +111,36 @@ function showViewportMarkers(bounds) {
     return p.lat >= sw.getLat() - latPad && p.lat <= ne.getLat() + latPad &&
            p.lng >= sw.getLng() - lngPad && p.lng <= ne.getLng() + lngPad;
   }).forEach(function (p) {
-    var marker = new kakao.maps.Marker({
+    var wrap = document.createElement('div');
+    wrap.className = 'cm-pin';
+    var circle = document.createElement('div');
+    circle.className = 'cm-circle';
+    circle.style.background = '#16A34A';
+    circle.textContent = '₩';
+    var tail = document.createElement('div');
+    tail.className = 'cm-tail';
+    tail.style.borderTopColor = '#16A34A';
+    wrap.appendChild(circle);
+    wrap.appendChild(tail);
+
+    (function (pp, el) {
+      el.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (_selectedLcEl) _selectedLcEl.classList.remove('selected');
+        _selectedLcEl = el;
+        el.classList.add('selected');
+        showLcSlide(pp);
+      });
+    })(p, wrap);
+
+    var overlay = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
-      map: lcMap,
+      content:  wrap,
+      yAnchor:  1.5,
+      zIndex:   5,
+      map:      lcMap,
     });
-    marker._clickHandler = (function (pp) {
-      return function () { showLcSlide(pp); };
-    })(p);
-    kakao.maps.event.addListener(marker, 'click', marker._clickHandler);
-    lcDisplayItems.push(marker);
+    lcDisplayItems.push(overlay);
   });
 }
 

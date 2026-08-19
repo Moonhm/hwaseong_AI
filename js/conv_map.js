@@ -65,11 +65,12 @@ var CONV_CAT_CFG = {
 var JEBU_LAT = 37.1578, JEBU_LNG = 126.5764;
 
 /* state */
-var CONV_PLACES = {};   /* cat → [{id, name, category, address, lat, lng, tags, desc, extra}] */
-var CONV_OVMAP  = {};   /* id  → kakao.maps.CustomOverlay */
-var CONV_ELMAP  = {};   /* id  → DOM el */
-var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
-var _jebuOv     = null;
+var CONV_PLACES    = {};   /* cat → [{id, name, category, address, lat, lng, tags, desc, extra}] */
+var CONV_OVMAP     = {};   /* id  → kakao.maps.CustomOverlay */
+var CONV_ELMAP     = {};   /* id  → DOM el */
+var CONV_STATUS    = {};   /* cat → 'idle'|'loading'|'done' */
+var _jebuOv        = null;
+var _selectedConvEl = null; /* 현재 selected 상태인 cm-pin DOM el */
 
 var CONV_CACHE_VER = 'v5'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
 
@@ -128,6 +129,14 @@ function showConvCat(cat) {
   }
 
   _geocodeCat(cat);
+}
+
+/* ── 선택 상태 해제 (슬라이드 닫힐 때 호출) ── */
+function clearConvSelection() {
+  if (_selectedConvEl) {
+    _selectedConvEl.classList.remove('selected');
+    _selectedConvEl = null;
+  }
 }
 
 /* ── 외부 진입점: 전체 숨기기 ── */
@@ -251,18 +260,22 @@ function _buildOverlays(cat, places) {
     wrap.appendChild(circle);
     wrap.appendChild(tail);
 
-    (function (place) {
-      wrap.addEventListener('click', function (e) {
+    (function (place, el) {
+      el.addEventListener('click', function (e) {
         e.stopPropagation();
+        if (_selectedConvEl) _selectedConvEl.classList.remove('selected');
+        _selectedConvEl = el;
+        el.classList.add('selected');
+        CONV_OVMAP[place.id] && CONV_OVMAP[place.id].setZIndex(200);
         _showConvSlide(place);
       });
-      wrap.addEventListener('mouseover', function () {
+      el.addEventListener('mouseover', function () {
         CONV_OVMAP[place.id] && CONV_OVMAP[place.id].setZIndex(100);
       });
-      wrap.addEventListener('mouseout', function () {
-        CONV_OVMAP[place.id] && CONV_OVMAP[place.id].setZIndex(1);
+      el.addEventListener('mouseout', function () {
+        if (_selectedConvEl !== el) CONV_OVMAP[place.id] && CONV_OVMAP[place.id].setZIndex(1);
       });
-    })(p);
+    })(p, wrap);
 
     var ov = new kakao.maps.CustomOverlay({
       position: new kakao.maps.LatLng(p.lat, p.lng),
