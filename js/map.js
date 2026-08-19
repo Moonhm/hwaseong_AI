@@ -452,6 +452,14 @@ function showPlaceSlide(place) {
       '<button class="sl-btn primary" onclick="findNearby(' + place.lat + ',' + place.lng + ')">💳 반경 500m 가맹점</button>' +
       routeBtn;
   }
+  var _favId = 'pl-' + place.id;
+  var _favSaved = typeof isFav !== 'undefined' && isFav(_favId);
+  actionsHtml +=
+    '<button class="sl-btn fav-btn' + (_favSaved ? ' saved' : '') + '" id="slide-fav-btn"' +
+    ' data-fid="' + _favId + '" data-type="place" data-pid="' + place.id + '"' +
+    ' data-cat="' + place.category + '" data-lat="' + place.lat + '" data-lng="' + place.lng + '"' +
+    ' data-name="' + safeName.replace(/"/g, '') + '"' +
+    ' onclick="toggleFavBtn(this)">' + (_favSaved ? '♥ 저장됨' : '♡ 저장') + '</button>';
 
   var ratingHtml = '';
   if (isTourist && place.rating) {
@@ -786,6 +794,14 @@ function setFilter(cat) {
 
   closePlaceSlide();
 
+  /* LC 업종 필터 바 항상 초기화 — localcurrency 활성화 시 마지막에 다시 표시 */
+  var _lcFBar = document.getElementById('lc-filter-bar');
+  if (_lcFBar) { _lcFBar.style.display = 'none'; }
+  if (typeof lcFilter !== 'undefined') { lcFilter = 'all'; }
+  document.querySelectorAll('.lc-fchip').forEach(function(c) {
+    c.classList.toggle('active', c.dataset.lcat === 'all');
+  });
+
   /* 주차장 칩 상태 보존 */
   var parkChip    = document.querySelector('.chip[data-cat="parking"]');
   var parkActive  = !!(parkChip && parkChip.classList.contains('active'));
@@ -843,6 +859,9 @@ function setFilter(cat) {
   if (typeof setLcVisible === 'function') setLcVisible(cat === 'all' || cat === 'localcurrency');
   if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive || cat === 'all');
   if (typeof updateParkingCount === 'function') updateParkingCount();
+
+  /* LC 칩 단독 선택 시에만 업종 필터 바 표시 */
+  if (cat === 'localcurrency' && _lcFBar) _lcFBar.style.display = 'block';
 
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
   fitPlaces(targets);

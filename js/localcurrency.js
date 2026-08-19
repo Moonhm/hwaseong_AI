@@ -4,8 +4,20 @@ var lcData        = [];
 var lcMap         = null;
 var lcVisible     = false;
 var lcDisplayItems = [];   /* 현재 지도에 올라간 Marker / CustomOverlay */
+var lcFilter      = 'all'; /* 업종 필터 */
 
 var LC_PIN_LEVEL  = 5;     /* 이 레벨 이하에서만 개별 핀 표시 */
+
+/* 업종 그룹 → 원본 업종명 배열 */
+var LC_CAT_MAP = {
+  food:   ['일반음식점','치킨전문점','중식전문점','일식전문점','서양식전문점','기타식음료품','식음료기타','일반주점'],
+  cafe:   ['커피전문점','제과.제빵'],
+  mart:   ['편의점','슈퍼마켓.마트'],
+  beauty: ['미용실두발전문','피부.체형미관리','화장품'],
+  health: ['약국','치과','한의원'],
+  car:    ['자동차정비','차량부품.용품','세차장'],
+  edu:    ['기타교육.교습.학원','입시학원,보습학원','예체능계열학원','무수도장 등학원','외국어학원']
+};
 
 /* 줌 레벨별 격자 크기(도 단위) — 격자 하나 = 클러스터 원 하나 */
 var LC_GRID = {
@@ -26,6 +38,15 @@ function onLcMapIdle() {
   _lcIdleTimer = setTimeout(function () {
     if (lcVisible) updateLcDisplay();
   }, 80);
+}
+
+/* ── 업종 필터 ── */
+function setLcFilter(cat) {
+  lcFilter = cat;
+  document.querySelectorAll('.lc-fchip').forEach(function(c) {
+    c.classList.toggle('active', c.dataset.lcat === cat);
+  });
+  if (lcVisible) updateLcDisplay();
 }
 
 /* ── 표시/숨김 ── */
@@ -68,9 +89,11 @@ function showViewportMarkers(bounds) {
   var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
   var latPad = (ne.getLat() - sw.getLat()) * 0.1;
   var lngPad = (ne.getLng() - sw.getLng()) * 0.1;
+  var activeCats = lcFilter !== 'all' ? (LC_CAT_MAP[lcFilter] || []) : null;
 
   lcData.filter(function (p) {
     if (!p.lat || !p.lng) return false;
+    if (activeCats && activeCats.indexOf(p.c) === -1) return false;
     return p.lat >= sw.getLat() - latPad && p.lat <= ne.getLat() + latPad &&
            p.lng >= sw.getLng() - lngPad && p.lng <= ne.getLng() + lngPad;
   }).forEach(function (p) {
@@ -96,8 +119,10 @@ function showClusters(bounds, level) {
 
   /* 뷰포트 내 데이터를 격자 셀로 묶기 */
   var cells = {};
+  var _activeCats = lcFilter !== 'all' ? (LC_CAT_MAP[lcFilter] || []) : null;
   lcData.forEach(function (p) {
     if (!p.lat || !p.lng) return;
+    if (_activeCats && _activeCats.indexOf(p.c) === -1) return;
     if (p.lat < minLat || p.lat > maxLat ||
         p.lng < minLng || p.lng > maxLng) return;
     var key = Math.floor(p.lat / grid) + ',' + Math.floor(p.lng / grid);
@@ -165,6 +190,15 @@ function showLcSlide(p) {
     + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🗺 길찾기</button>'
     + '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingLc('
     + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🅿 가장 가까운 공영주차장 찾기</button>'
+    + (function() {
+        var fid = 'lc-' + p.id;
+        var saved = typeof isFav !== 'undefined' && isFav(fid);
+        return '<button class="sl-btn fav-btn' + (saved ? ' saved' : '') + '" id="slide-fav-btn"'
+          + ' data-fid="' + fid + '" data-type="lc"'
+          + ' data-lat="' + p.lat + '" data-lng="' + p.lng + '"'
+          + ' data-name="' + (p.n || '').replace(/"/g, '') + '"'
+          + ' onclick="toggleFavBtn(this)">' + (saved ? '♥ 저장됨' : '♡ 저장') + '</button>';
+      })()
     + '</div>';
 
   requestAnimationFrame(function () {

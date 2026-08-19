@@ -511,6 +511,43 @@
     .chip-arrow.visible { opacity: 1; pointer-events: auto; }
     @media (hover: none) { #chip-arrow-right { opacity: 0.75; pointer-events: auto; } }
     .chip-arrow:hover { color: rgba(30,30,30,0.9); }
+
+    /* 지역화폐 업종 필터 바 */
+    #lc-filter-bar {
+      display: none; position: absolute; top: 60px; left: 0; right: 0; z-index: 9;
+      padding: 7px 14px; background: rgba(248,250,252,0.96);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto; white-space: nowrap;
+      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    }
+    #lc-filter-bar::-webkit-scrollbar { display: none; }
+    .lc-fchip {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 5px 13px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: #fff; color: var(--text-sub); font-size: 12px; font-weight: 600;
+      cursor: pointer; margin-right: 6px; white-space: nowrap; transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .lc-fchip.active { background: #DCFCE7; color: #15803D; border-color: #86EFAC; }
+
+    /* 즐겨찾기 버튼 */
+    .fav-btn { background: #FFF1F2; color: #E11D48; border-color: #FECDD3; }
+    .fav-btn.saved { background: #E11D48; color: #fff; border-color: #E11D48; }
+
+    /* 즐겨찾기 섹션 (홈탭) */
+    .fav-section { padding: 0 var(--px) 4px; }
+    .fav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 12px;
+      background: var(--white); border: 1px solid var(--border);
+      margin-bottom: 6px; cursor: pointer; transition: background 0.12s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .fav-item:active { background: #F9FAFB; }
+    .fav-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .fav-name { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fav-del { background: none; border: none; color: #9CA3AF; font-size: 20px; cursor: pointer; padding: 0 0 0 6px; line-height: 1; flex-shrink: 0; }
     #chip-arrow-left  {
       left: 0;
       background: linear-gradient(to right, rgba(245,246,248,0.88) 45%, transparent);
@@ -1283,6 +1320,9 @@
     <button class="ttab"        data-tab="living"  onclick="switchHomeTab(this,'living')">생활</button>
   </div>
 
+  <!-- 즐겨찾기 섹션 -->
+  <div id="home-favs-section" style="display:none;margin-top:16px"></div>
+
   <!-- 내 위치 추천 (항상 표시) -->
   <div class="nearby-wrap" id="home-nearby-section">
     <div class="nearby-cta" onclick="requestNearbyRec()">
@@ -1546,6 +1586,18 @@
   <button id="chip-arrow-right" class="chip-arrow" onclick="scrollChips(1)" aria-label="오른쪽">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
+
+  <!-- 지역화폐 업종 필터 바 -->
+  <div id="lc-filter-bar">
+    <button class="lc-fchip active" data-lcat="all"    onclick="setLcFilter('all')">전체</button>
+    <button class="lc-fchip"        data-lcat="food"   onclick="setLcFilter('food')">🍽 음식점</button>
+    <button class="lc-fchip"        data-lcat="cafe"   onclick="setLcFilter('cafe')">☕ 카페</button>
+    <button class="lc-fchip"        data-lcat="mart"   onclick="setLcFilter('mart')">🛒 마트·편의점</button>
+    <button class="lc-fchip"        data-lcat="beauty" onclick="setLcFilter('beauty')">💅 뷰티</button>
+    <button class="lc-fchip"        data-lcat="health" onclick="setLcFilter('health')">💊 의료</button>
+    <button class="lc-fchip"        data-lcat="car"    onclick="setLcFilter('car')">🚗 자동차</button>
+    <button class="lc-fchip"        data-lcat="edu"    onclick="setLcFilter('edu')">📚 학원</button>
+  </div>
 
   <!-- 실시간 주차 여유 뱃지 -->
   <div id="parking-count-badge" style="
@@ -2307,6 +2359,7 @@ function renderNearbyResult(myLat, myLng) {
 function renderHomePage() {
   renderHomeTourism();
   renderHomeLiving();
+  if (typeof renderFavSection === 'function') renderFavSection();
 }
 
 /* ══════════════════════════════════════════════════
@@ -3220,6 +3273,91 @@ function renderLivingPage() {
 function switchLiving(type) {
   showToast(type === 'food' ? '음식점 가맹점을 지도에서 확인하세요' : '업종별 가맹점을 지도에서 확인하세요');
   goMapCat('localcurrency');
+}
+
+/* ── 즐겨찾기 ── */
+var _FAV_KEY = 'hsida_favs';
+function getFavs() {
+  try { return JSON.parse(localStorage.getItem(_FAV_KEY) || '[]'); } catch(e) { return []; }
+}
+function isFav(id) {
+  return getFavs().some(function(f) { return f.id === id; });
+}
+function toggleFav(fav) {
+  var favs = getFavs();
+  var idx = favs.findIndex(function(f) { return f.id === fav.id; });
+  if (idx >= 0) favs.splice(idx, 1); else favs.unshift(fav);
+  localStorage.setItem(_FAV_KEY, JSON.stringify(favs));
+  renderFavSection();
+}
+function toggleFavBtn(btn) {
+  var fid = btn.dataset.fid;
+  var fav = {
+    id: fid,
+    type: btn.dataset.type || 'place',
+    placeId: btn.dataset.pid ? +btn.dataset.pid : null,
+    cat: btn.dataset.cat || '',
+    lat: +btn.dataset.lat,
+    lng: +btn.dataset.lng,
+    name: btn.dataset.name || ''
+  };
+  toggleFav(fav);
+  var saved = isFav(fid);
+  btn.textContent = saved ? '♥ 저장됨' : '♡ 저장';
+  btn.classList.toggle('saved', saved);
+}
+function removeFav(id) {
+  var favs = getFavs().filter(function(f) { return f.id !== id; });
+  localStorage.setItem(_FAV_KEY, JSON.stringify(favs));
+  renderFavSection();
+}
+function clearFavs() {
+  if (!confirm('즐겨찾기를 모두 삭제할까요?')) return;
+  localStorage.removeItem(_FAV_KEY);
+  renderFavSection();
+}
+function navToFav(id) {
+  var f = getFavs().find(function(x) { return x.id === id; });
+  if (!f || !f.lat || !f.lng) return;
+  go('map');
+  setTimeout(function() {
+    if (!kakaoMap || typeof kakao === 'undefined') return;
+    kakaoMap.setLevel(4);
+    kakaoMap.setCenter(new kakao.maps.LatLng(f.lat, f.lng));
+    if (f.type === 'lc') {
+      if (typeof setFilter === 'function') setFilter('localcurrency');
+    } else if (f.type === 'parking') {
+      if (typeof activateParking === 'function') activateParking();
+    } else if (f.placeId) {
+      if (typeof goMapFocus === 'function') goMapFocus(f.lat, f.lng, 4, f.placeId);
+    }
+  }, 260);
+}
+function renderFavSection() {
+  var sec = document.getElementById('home-favs-section');
+  if (!sec) return;
+  var favs = getFavs();
+  if (!favs.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  var TYPE_EMOJI = { place:'★', lc:'💳', parking:'🅿' };
+  var TYPE_BG    = { place:'#FEF3C7', lc:'#DCFCE7', parking:'#DBEAFE' };
+  sec.innerHTML =
+    '<div style="padding:0 var(--px) 8px;display:flex;align-items:center;justify-content:space-between">' +
+    '<div class="section-title" style="font-size:15px">♥ 즐겨찾기</div>' +
+    '<button style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer" ' +
+    'onclick="clearFavs()">전체 삭제</button></div>' +
+    '<div class="fav-section">' +
+    favs.slice(0, 6).map(function(f) {
+      var emoji = TYPE_EMOJI[f.type] || '★';
+      var bg    = TYPE_BG[f.type] || '#F3F4F6';
+      return '<div class="fav-item" onclick="navToFav(\'' + f.id.replace(/'/g,'') + '\')">' +
+        '<div class="fav-icon" style="background:' + bg + '">' + emoji + '</div>' +
+        '<div style="flex:1;min-width:0"><div class="fav-name">' + (f.name || '') + '</div></div>' +
+        '<button class="fav-del" onclick="event.stopPropagation();removeFav(\'' + f.id.replace(/'/g,'') + '\')">×</button>' +
+        '</div>';
+    }).join('') +
+    (favs.length > 6 ? '<div style="text-align:center;font-size:12px;color:var(--primary);padding:4px 0">+' + (favs.length - 6) + '개 더</div>' : '') +
+    '</div>';
 }
 
 /* ── 토스트 ── */

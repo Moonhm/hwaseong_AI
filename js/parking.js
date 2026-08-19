@@ -317,6 +317,15 @@ function showParkingSlide(p) {
     + '<div class="sl-actions">'
     + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + p.name.replace(/'/g, '') + '\')">🗺 길찾기</button>'
     + '<button class="sl-btn" onclick="refreshParking();showToast(\'새로고침 완료\')">🔄 새로고침</button>'
+    + (function() {
+        var fid = 'park-' + p.id;
+        var saved = typeof isFav !== 'undefined' && isFav(fid);
+        return '<button class="sl-btn fav-btn' + (saved ? ' saved' : '') + '" id="slide-fav-btn"'
+          + ' data-fid="' + fid + '" data-type="parking"'
+          + ' data-lat="' + p.lat + '" data-lng="' + p.lng + '"'
+          + ' data-name="' + p.name.replace(/"/g, '') + '"'
+          + ' onclick="toggleFavBtn(this)">' + (saved ? '♥ 저장됨' : '♡ 저장') + '</button>';
+      })()
     + '</div>';
 
   requestAnimationFrame(function () {
