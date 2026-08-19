@@ -158,7 +158,7 @@ function showLcSlide(p) {
     + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:4px">' + p.n + '</div>'
     + '<div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:6px">' + p.c + '</div>'
-    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px">📍 ' + p.a + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:16px;cursor:pointer;display:inline-block;transition:transform 0.15s,color 0.15s" onmouseover="this.style.transform=\'scale(1.05)\';this.style.color=\'var(--primary)\'" onmouseout="this.style.transform=\'\';this.style.color=\'\'" onclick="copyAddress(\'' + (p.a || '').replace(/'/g, '') + '\')">📍 ' + p.a + '</div>'
     + '<div class="sl-actions">'
     + '<button class="sl-btn primary" onclick="openRoute('
     + p.lat + ',' + p.lng + ',\'' + p.n.replace(/'/g, '') + '\')">🗺 길찾기</button>'

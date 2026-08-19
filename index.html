@@ -601,7 +601,8 @@
     .sl-rating-cnt { font-size:11px;color:var(--text-muted) }
     .pi-stars { color:#F59E0B;font-size:11px;letter-spacing:0.5px }
     .pi-rating { font-size:11px;font-weight:700;color:#D97706 }
-    .sl-addr { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .sl-addr { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; cursor: pointer; display: inline-block; transition: transform 0.15s, color 0.15s; }
+    .sl-addr:hover { transform: scale(1.05); color: var(--primary); }
     .sl-date { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
     .sl-desc { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 12px; }
     .sl-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
@@ -3042,6 +3043,26 @@ function shareApp() {
     copyAppUrl();
   }
 }
+/* ── 주소 복사 ── */
+function copyAddress(addr) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(addr).then(function () {
+      showToast('📍 주소가 복사되었어요!');
+    }).catch(function () { _copyAddrFallback(addr); });
+  } else {
+    _copyAddrFallback(addr);
+  }
+}
+function _copyAddrFallback(addr) {
+  try {
+    var el = document.createElement('textarea');
+    el.value = addr; el.style.position = 'fixed'; el.style.opacity = '0';
+    document.body.appendChild(el); el.select(); document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('📍 주소가 복사되었어요!');
+  } catch (e) { showToast('주소: ' + addr); }
+}
+
 function _shareFallback(url) {
   try {
     var el = document.createElement('textarea');

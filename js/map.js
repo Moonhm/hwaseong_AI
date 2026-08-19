@@ -465,7 +465,7 @@ function showPlaceSlide(place) {
     '</div>' +
     '<div class="sl-name">' + place.name + '</div>' +
     ratingHtml +
-    '<div class="sl-addr">📍 ' + place.address + '</div>' +
+    '<div class="sl-addr" onclick="copyAddress(\'' + place.address.replace(/'/g, '') + '\')">📍 ' + place.address + '</div>' +
     (place.date ? '<div class="sl-date">📅 ' + place.date + '</div>' : '') +
     descHtml +
     '<div class="sl-tags">' +
