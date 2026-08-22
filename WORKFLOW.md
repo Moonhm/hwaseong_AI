@@ -385,17 +385,19 @@ python tools/regeocode.py --key 1bd845da5756d1c78955463b800731ef
 
 ---
 
-## 11. assets/ 이미지 git 관리 참고
+## 11. assets/ 이미지 관리 정책
 
-`assets/images/` (관광지 사진 159장 · 약 59MB)는 현재 git에 추적 중입니다.  
-저장소 용량이 부담될 경우 아래 명령어로 **로컬 파일은 유지한 채** git에서만 제거할 수 있습니다.
+`assets/images/` (관광지 사진 159장 · 약 59MB)는 **git 추적 제외** — `.gitignore`에 등록됨.  
+사진 파일은 **로컬 및 배포 서버에만 보관**하며, git push 대상이 아닙니다.
 
-```bash
-git rm -r --cached assets/
-# .gitignore 에 assets/ 한 줄 추가 후
-git commit -m "chore: assets 이미지 git 추적 제거"
-git push
 ```
+assets/images/places/{name}.jpg   — data.js의 name 필드와 정확히 일치해야 함
+assets/images/로고_이름.png       — 앱 로고
+```
+
+- 배포 서버(배포 Claude 환경)에 직접 보관
+- git clone 후에는 사진 없이 동작 (onerror fallback: 주황 그라데이션 + 🏞️ 표시)
+- **앞으로 assets/ 및 용량 큰 파일은 절대 git push 금지**
 
 ---
 
