@@ -151,6 +151,23 @@ Playwright/Selenium 환경 미지원 → 알고리즘 기반 생성:
 
 ## 5. 세션별 작업 이력
 
+### Session 4 — 버그 검수 및 편의정보 개선 (2026-08-19 ~ 08-22)
+
+| 커밋 | 내용 |
+|------|------|
+| `489e68f` | docs: README 영어 작성 + 한국어 용어 괄호 병기, 연락처 원상복구 |
+| `9fb4e9d` | fix: conv_map.js p.name null 접근 / map.js 주차장 강제 활성화 수정 (사용자 직접 push) |
+| `d836c7a` | fix: 버그 7건 — data.data null guard, ratio 음수, setParkingVisible 독립 토글, templeStay/jebu null guard, renderHotels 조기 return, 비ISO 날짜 캘린더 파싱 |
+
+**주요 변경 내역:**
+- `_parseFestDate()` 헬퍼 추가 — "2026년 N월 중" 형식을 해당 월 1일로 변환해 캘린더 점 표시
+- `renderHotels()` 조기 return 버그 수정 — jebu 없어도 호텔 목록은 렌더
+- `conv_map.js` templeStay/jebu null guard 추가
+- `parking.js` data.data Array 검증, ratio `Math.max(0)` 보정
+- `map.js` setFilter에서 주차장 독립 토글 완전 복원 (`setParkingVisible(parkActive)`)
+
+
+
 ### Session 1 — 기초 구축
 
 | 커밋 | 내용 |
@@ -382,4 +399,71 @@ git push
 
 ---
 
-*기록 종료: 2026년 8월 19일*
+## 12. 새 Claude 세션 진입 체크리스트
+
+> 새 컨텍스트로 접속한 Claude는 이 체크리스트를 순서대로 따라 즉시 작업을 이어갈 수 있습니다.
+
+### 필수 확인 (작업 시작 전)
+
+```bash
+# 1. 최신 코드 확인
+git log --oneline -5
+
+# 2. 변경 사항 없는지 확인
+git status
+
+# 3. 원격과 동기화
+git pull
+```
+
+### 이 프로젝트에서 반드시 지켜야 할 규칙
+
+| 규칙 | 내용 |
+|------|------|
+| 언어 | **항상 한국어 경어체** |
+| assets push 금지 | `assets/images/` 는 push 금지 — 사용자 명시 허가 시에만 예외 |
+| README 수정 금지 | README는 서비스 소개 전용. 개발 메모는 반드시 이 파일(WORKFLOW.md)에 |
+| 수정 전 허락 | 검수·분석 결과는 먼저 보고 → 사용자 허락 후 수정 진행 |
+| git pull/push | 작업 전 pull, 작업 후 push. 사용자가 "깃 풀 푸쉬"라고 하면 pull → push 순서 |
+
+### 핵심 현황 (최신 기준)
+
+| 항목 | 값 |
+|------|----|
+| CONV_CACHE_VER | `v5` (localStorage 캐시 버전) |
+| 관광지 | 159개 (id: 1–41, 66–83, 134–200, 201–233) |
+| 축제 | 48개 (id: 42–133) |
+| 주차장 | 131개 |
+| 제부도 숙박 | 115개 (lat/lng 하드코딩, convenience.js) |
+| 편의정보 | 모범음식점 94, 관광식당 35, 호텔 14, 캠핑 11, 템플스테이 1 |
+
+### Kakao API
+
+| 종류 | 키 |
+|------|-----|
+| JS 앱 키 (지도 표시용) | HTML `<script>` appkey 파라미터 확인 |
+| REST API 키 (지오코딩용) | `1bd845da5756d1c78955463b800731ef` |
+
+### 개발 환경 실행
+
+```bash
+python tools/server.py --port 8080
+# → http://localhost:8080 에서 앱 확인
+```
+
+---
+
+## 13. 현재 알려진 미해결 항목 (다음 세션 참고)
+
+| 항목 | 설명 |
+|------|------|
+| 비ISO 날짜 축제 캘린더 | "2026년 N월 중" 형식은 해당 월 1일로 처리됨 (Session 4에서 수정 완료) |
+| 미정 장소 placeholder 좌표 | `lat:37.199, lng:126.831` — 미정 축제 23개. 데이터 자체 문제, 코드 수정 불가 |
+| 작은섬1·2, 양지팬션·리조텔 | convenience.js에서 동일 좌표 중복 — 마커 겹침, 데이터 보정 필요 |
+| id:41 화성예술의전당 | 주소(향남읍)와 좌표(동탄) 불일치 — 수동 수정 필요 |
+| id:102 송산포도축제 | date 필드에 종료일(9/7)만 기재, 시작일(9/6) 누락 |
+| convenience.js 대부분 lat/lng 없음 | restaurants/hotels/camping 대부분 좌표 미입력 — 지도 핀 미표시 (제부도는 완료) |
+
+---
+
+*최종 업데이트: 2026년 8월 22일*
