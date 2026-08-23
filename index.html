@@ -99,9 +99,10 @@
     }
     .search-bar input {
       border: none; outline: none; flex: 1;
-      font-size: 14px; color: var(--text-muted);
+      font-size: 14px; color: var(--text);
       background: transparent; font-family: inherit;
     }
+    .search-bar input::placeholder { color: var(--text-muted); }
 
     /* ── SEARCH RESULTS ── */
     .home-search-results {
@@ -131,6 +132,9 @@
       display: none; align-items: center; justify-content: center;
       width: 20px; height: 20px; border-radius: 50%; background: #E5E7EB;
       cursor: pointer; flex-shrink: 0; font-size: 11px; color: #6B7280;
+      /* 히트영역만 36x36 으로 넓히고 레이아웃 점유는 20x20 유지 —
+       * 패딩만 주면 버튼이 나타나는 순간 검색바 높이가 점프한다. */
+      padding: 8px; box-sizing: content-box; background-clip: content-box; margin: -8px;
     }
 
     /* ── TOGGLE TABS ── */
@@ -249,7 +253,7 @@
     .fscroll-wrap { position: relative; margin-bottom: 8px; }
     .festival-scroll {
       display: flex; gap: 10px;
-      overflow-x: auto; padding: 0 var(--px) 4px;
+      overflow-x: auto; overscroll-behavior-x: contain; padding: 0 var(--px) 4px;
       scrollbar-width: none;
     }
     .festival-scroll::-webkit-scrollbar { display: none; }
@@ -282,7 +286,7 @@
 
     /* ── 테마 칩 ── */
     .theme-chips {
-      display: flex; gap: 8px; overflow-x: auto; padding: var(--px) var(--px) 0;
+      display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; padding: var(--px) var(--px) 0;
       scrollbar-width: none;
     }
     .theme-chips::-webkit-scrollbar { display: none; }
@@ -359,7 +363,9 @@
 
     /* CTA */
     .fd-cta {
-      margin: 0; padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+      /* .page 가 이미 bottom: calc(46px + env(safe-area-inset-bottom)) 이라
+       * 여기서 다시 더하면 아이폰에서 34px 빈 띠가 생긴다. */
+      margin: 0; padding: 14px 18px;
       background: var(--white); border-top: 1px solid var(--border);
       position: sticky; bottom: 0; display: flex; gap: 10px;
     }
@@ -490,7 +496,7 @@
     .map-chips {
       position: absolute; top: 12px; left: 0; right: 0; z-index: 10;
       display: flex; gap: 8px; padding: 0 16px;
-      overflow-x: auto; scrollbar-width: none;
+      overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
     }
     .map-chips::-webkit-scrollbar { display: none; }
     .map-chips .chip {
@@ -509,7 +515,9 @@
       color: rgba(30,30,30,0.65);
     }
     .chip-arrow.visible { opacity: 1; pointer-events: auto; }
-    @media (hover: none) { #chip-arrow-right { opacity: 0.75; pointer-events: auto; } }
+    /* .visible 로 한정하지 않으면 스크롤이 끝에 닿아도 화살표가 계속 클릭을 가로채
+     * 마지막 칩의 오른쪽 32px 가 눌리지 않는다. */
+    @media (hover: none) { #chip-arrow-right.visible { opacity: 0.75; } }
     .chip-arrow:hover { color: rgba(30,30,30,0.9); }
 
     /* 지역화폐 업종 필터 바 */
@@ -519,7 +527,7 @@
     }
     #lc-filter-scroll {
       display: flex; gap: 7px; padding: 0 44px 0 44px;
-      overflow-x: auto; scrollbar-width: none;
+      overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
       -webkit-overflow-scrolling: touch; white-space: nowrap;
       cursor: grab; user-select: none; touch-action: pan-x;
     }
@@ -543,7 +551,7 @@
       color: rgba(30,30,30,0.7);
     }
     .lc-arr.visible { opacity: 1; pointer-events: auto; }
-    @media (hover: none) { #lc-arr-right { opacity: 0.75; pointer-events: auto; } }
+    @media (hover: none) { #lc-arr-right.visible { opacity: 0.75; } }
     #lc-arr-left  { left: 0;  background: linear-gradient(to right, rgba(245,246,248,0.92) 50%, transparent); }
     #lc-arr-right { right: 0; background: linear-gradient(to left,  rgba(245,246,248,0.92) 50%, transparent); }
 
@@ -563,7 +571,8 @@
     .fav-item:active { background: #F9FAFB; }
     .fav-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
     .fav-name { font-size: 14px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .fav-del { background: none; border: none; color: #9CA3AF; font-size: 20px; cursor: pointer; padding: 0 0 0 6px; line-height: 1; flex-shrink: 0; }
+    /* 행 전체가 탭 가능하므로 히트영역이 작으면 삭제 대신 이동이 된다. 36x36 확보 + 대비 4.8:1 */
+    .fav-del { background: none; border: none; color: #6B7280; font-size: 20px; cursor: pointer; padding: 8px 8px 8px 14px; line-height: 1; flex-shrink: 0; }
     #chip-arrow-left  {
       left: 0;
       background: linear-gradient(to right, rgba(245,246,248,0.88) 45%, transparent);
@@ -705,7 +714,7 @@
     .sl-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
     .sl-btn.primary:hover { background: #1D4ED8; }
     .sl-close {
-      position: absolute; top: 14px; right: 16px; width: 28px; height: 28px;
+      position: absolute; top: 8px; right: 10px; width: 36px; height: 36px;
       border-radius: 50%; background: var(--bg); border: none; font-size: 14px;
       color: var(--text-muted); display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: transform 0.1s;
@@ -778,8 +787,9 @@
       font-size: 15px; color: var(--text-muted); cursor: pointer;
     }
     .hamburger-btn {
-      display: flex; flex-direction: column; justify-content: center;
-      gap: 4px; padding: 5px; cursor: pointer; border: none; background: none;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      gap: 4px; padding: 6px 8px; cursor: pointer; border: none; background: none;
+      min-width: 36px; min-height: 36px;   /* 메뉴 유일 진입점 — 터치 타겟 확보 */
     }
     .hamburger-btn span {
       display: block; width: 19px; height: 2px;
@@ -788,7 +798,7 @@
 
     /* ── 관광 서브탭 ── */
     .tourism-subnav {
-      display: flex; gap: 8px; overflow-x: auto; padding: 10px var(--px) 12px;
+      display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; padding: 10px var(--px) 12px;
       scrollbar-width: none; background: var(--white);
       border-bottom: 1px solid var(--border);
     }
@@ -1058,7 +1068,7 @@
       -webkit-backdrop-filter:blur(10px);
       color:#fff; font-size:22px;
       display:flex; align-items:center; justify-content:center;
-      cursor:pointer; z-index:450;
+      cursor:pointer; z-index:190;   /* .place-slide(200) 보다 낮춰 슬라이드에 가리도록 */
       box-shadow:0 2px 12px rgba(0,0,0,0.28);
       transition:background .15s, transform .1s;
       border:1.5px solid rgba(255,255,255,0.22);
@@ -1245,7 +1255,8 @@
       position: fixed; bottom: calc(46px + env(safe-area-inset-bottom) + 14px); left: 50%;
       transform: translateX(-50%) translateY(20px) scale(0.88);
       background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
-      padding: 10px 20px; border-radius: 24px; white-space: nowrap;
+      padding: 10px 20px; border-radius: 24px;
+      max-width: calc(100vw - 32px); text-align: center;  /* 320px 화면에서 넘치지 않도록 */
       box-shadow: var(--shadow-md); z-index: 999;
       opacity: 0; pointer-events: none;
       transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -1640,7 +1651,8 @@
 
   <!-- 실시간 주차 여유 뱃지 -->
   <div id="parking-count-badge" style="
-    display:none; position:absolute; top:56px; left:50%; transform:translateX(-50%); z-index:10;
+    display:none; position:absolute; top:96px; left:50%; transform:translateX(-50%); z-index:10;
+    pointer-events:none;
     color:#fff; font-size:11px; font-weight:700; white-space:nowrap;
     padding:4px 14px; border-radius:20px; box-shadow:0 2px 8px rgba(0,0,0,0.2);
   "></div>
@@ -1729,7 +1741,7 @@
       </div>
     </div>
     <div class="menu-item" onclick="closeMenu();goMapCat('localcurrency')">
-      <div class="menu-item-icon" style="background:#F0FDF4;display:flex;align-items:center;justify-content:center;"><img src="img/gyeonggi_currency_logo.png" style="width:22px;height:22px;object-fit:contain"></div>
+      <div class="menu-item-icon" style="background:#F0FDF4;display:flex;align-items:center;justify-content:center;"><img src="img/gyeonggi_currency_logo.png" alt="" style="width:22px;height:22px;object-fit:contain"></div>
       <div class="menu-item-text">
         <div class="menu-item-label">지역화폐 가맹점</div>
         <div class="menu-item-sub">경기지역화폐 사용 가능 매장</div>
@@ -1805,6 +1817,14 @@ function go(page) {
   if (page === 'living')  renderLivingPage();
   /* BUG-7: 서브탭 상태 유지 — 'all'로 강제 리셋하지 않음 */
   if (page === 'tourism') {
+    /* 축제 상세·캘린더를 연 채 탭을 벗어나면 인라인 display 가 남아
+     * 재진입 시 목록 대신 그 화면이 그대로 보인다. 목록 뷰로 되돌린다. */
+    var _fd = document.getElementById('view-festival-detail');
+    var _cv = document.getElementById('view-calendar');
+    var _vl = document.getElementById('view-tourism-list');
+    if (_fd) _fd.style.display = 'none';
+    if (_cv) _cv.style.display = 'none';
+    if (_vl) _vl.style.display = 'block';
     var sub = _tourismSub || 'all';
     if (sub === 'stay' || sub === 'camp' || sub === 'temple') {
       /* 비리스트 서브탭은 switchTourismSub로 상태 복원 */
@@ -1812,6 +1832,7 @@ function go(page) {
       if (chip) switchTourismSub(chip, sub);
       else renderTourismList('all');
     } else {
+      _resetThemeChips();
       renderTourismList(sub === 'festival' ? 'festival-only' : sub === 'spot' ? 'tourist-only' : 'all');
     }
     setTimeout(updateFestArrows, 60);
@@ -1846,7 +1867,7 @@ var QUIZ_QS = [
     q: '누구와 함께 가시나요?',
     opts: [
       { label: '👫\n연인과 둘이', tags: ['낭만','일몰','사진','힐링'] },
-      { label: '👨‍👩‍👧\n가족 나들이', tags: ['가족','체험','넓은'] },
+      { label: '👨‍👩‍👧\n가족 나들이', tags: ['가족','체험','자연'] },
       { label: '👭\n친구들과', tags: ['사진','이색','바다'] },
       { label: '🧘\n혼자서', tags: ['조용한','역사','자연','힐링'] },
     ]
@@ -1950,7 +1971,8 @@ function closeQuiz() {
 function _renderQuizBody() {
   var body = document.getElementById('quiz-body');
   if (_quizScreen === 'intro') {
-    var stored = localStorage.getItem('hwaseong_rec');
+    var stored = null;
+    try { stored = localStorage.getItem('hwaseong_rec'); } catch (e) {}
     body.innerHTML =
       '<div class="quiz-intro">'
       + '<div class="quiz-intro-icon">🗺️</div>'
@@ -1977,7 +1999,8 @@ function _quizSelectOpt(idx) {
   _quizStep++;
   if (_quizStep >= QUIZ_QS.length) {
     _quizResults = _computeRec(_quizTags);
-    localStorage.setItem('hwaseong_rec', JSON.stringify({ tags: _quizTags }));
+    /* 쿠키 차단·저장소 초과 시 setItem 이 예외를 던져 결과 화면 전환이 통째로 중단된다. */
+    try { localStorage.setItem('hwaseong_rec', JSON.stringify({ tags: _quizTags })); } catch (e) {}
     _quizScreen = 'result';
   }
   _renderQuizBody();
@@ -2067,7 +2090,8 @@ function _renderQuizResult() {
 }
 
 function _quizShowStored() {
-  var stored = localStorage.getItem('hwaseong_rec');
+  var stored = null;
+  try { stored = localStorage.getItem('hwaseong_rec'); } catch (e) {}
   _quizTags = [];
   if (stored) {
     try { var d = JSON.parse(stored); _quizTags = d.tags || []; } catch (e) {}
@@ -2095,11 +2119,18 @@ function menuGoLiving(cat) {
   }, 300);
 }
 
+/* setFilter 는 같은 칩 재클릭 시 해제하는 토글이다.
+ * 이미 켜져 있는 칩에 다시 호출하면 필터가 꺼져 빈 지도가 되므로 상태를 먼저 확인한다. */
+function _ensureFilter(cat) {
+  var chip = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
+  if (!chip || !chip.classList.contains('active')) setFilter(cat);
+}
+
 function goMapCat(cat) {
   go('map');
   setTimeout(function () {
     if (cat === 'parking') { if (typeof activateParking === 'function') activateParking(); }
-    else setFilter(cat);
+    else _ensureFilter(cat);
   }, 200);
 }
 
@@ -2117,7 +2148,7 @@ function goConvItem(convCat, idx) {
     if (!kakaoMap || typeof kakao === 'undefined') return;
 
     /* 필터 활성화 (캐시 있으면 즉시, 없으면 geocoding 시작) */
-    setFilter(convCat);
+    _ensureFilter(convCat);
 
     /* CONV_PLACES에 이미 geocoding 완료된 항목이 있으면 바로 사용 */
     var cached = (typeof CONV_PLACES !== 'undefined' ? CONV_PLACES[convCat] || [] : [])
@@ -2318,7 +2349,9 @@ function renderNearbyResult(myLat, myLng) {
   }
 
   var tName  = nearestTourist.name;
-  var tAddr  = (nearestTourist.address || '').split(' ').slice(1).join(' ');
+  /* 템플릿이 '화성시' 를 앞에 붙이므로 주소에서 시·도 접두어를 제거한다.
+   * slice(1) 은 '경기도'만 떼어내 '화성시 화성시 …' 가 된다. */
+  var tAddr  = (nearestTourist.address || '').replace(/^\s*(경기도\s*)?(화성시\s*)?/, '');
   var imgSrc = 'assets/images/places/' + tName + '.jpg';
   var isFree = nearestPark && (nearestPark.free === true);
   /* 실시간 대수 우선, 없으면 total */
@@ -2489,8 +2522,10 @@ function doHomeSearch(q) {
     });
   }
 
-  /* 4) 지역화폐 가맹점 (최대 5개) */
-  if (typeof lcData !== 'undefined') {
+  /* 4) 지역화폐 가맹점 (최대 5개)
+   * 27,374건 전수 스캔이라 매치가 5건에 못 미치면 항상 최악 경로를 탄다.
+   * 한글 IME 조합 중 자모 1글자는 절대 매치되지 않으므로 2글자부터 검색한다. */
+  if (typeof lcData !== 'undefined' && ql.length >= 2) {
     var lcHits = 0;
     for (var i = 0; i < lcData.length && lcHits < 5; i++) {
       var p = lcData[i];
@@ -2676,7 +2711,7 @@ function renderHomeTourism() {
         </div>
         <div class="place-card-sm" style="flex-direction:row;align-items:center;gap:10px;padding:12px" onclick="goMapCat('temple')">
           <div style="width:34px;height:34px;border-radius:10px;background:#FDE68A;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏯</div>
-          <div><div class="place-card-sm-name" style="font-size:13px">템플스테이</div><div class="place-card-sm-addr">봉림사</div></div>
+          <div><div class="place-card-sm-name" style="font-size:13px">템플스테이</div><div class="place-card-sm-addr">용주사</div></div>
         </div>
         <div class="place-card-sm" style="flex-direction:row;align-items:center;gap:10px;padding:12px" onclick="goMapCat('jebu')">
           <div style="width:34px;height:34px;border-radius:10px;background:#E0F2FE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⛱</div>
@@ -2835,6 +2870,7 @@ function switchTourismSub(el, tab) {
   });
 
   if (tab === 'all' || tab === 'festival' || tab === 'spot') {
+    _resetThemeChips();
     var def = document.getElementById('tourism-default');
     if (def) def.style.display = 'block';
     var fhdr   = document.getElementById('tourism-festival-header');
@@ -3008,6 +3044,14 @@ function pickTheme(el, theme) {
   renderTourismList(theme);
 }
 
+/* 테마를 무시하고 목록을 다시 그리는 경로에서 칩 표시를 '전체'로 되돌린다.
+ * 그렇지 않으면 '역사'가 선택된 것처럼 보이는데 목록은 전체가 나오는 불일치가 생긴다. */
+function _resetThemeChips() {
+  document.querySelectorAll('#tourism-theme-chips .chip').forEach(function (c, i) {
+    c.classList.toggle('active', i === 0);
+  });
+}
+
 function renderTourismList(theme, expanded) {
   const list = document.getElementById('tourism-place-list');
   if (!list || typeof PLACES === 'undefined' || typeof CATEGORY_CONFIG === 'undefined') return;
@@ -3038,7 +3082,8 @@ function renderTourismList(theme, expanded) {
                      background:#FFF7ED;position:relative;display:flex;align-items:center;
                      justify-content:center;font-size:22px">
            <span>🏛</span>
-           <img src="assets/images/places/${p.name}.jpg" alt=""
+           <img src="assets/images/places/${p.name}.jpg" alt="" loading="lazy" decoding="async"
+                width="56" height="56"
                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
                 onerror="this.style.display='none'">
          </div>`
@@ -3251,8 +3296,17 @@ function renderLivingCatList(cat) {
 
   } else if (cat === 'currency') {
     var lcArr = (typeof lcData !== 'undefined') ? lcData : [];
-    /* 미로드 시 fetch 후 자동 재렌더 */
-    if (!lcArr.length) { _loadLcData(function() { renderLivingCatList('currency'); }); }
+    /* 미로드 시 fetch 후 자동 재렌더.
+     * 성공 여부를 확인하지 않으면 실패 콜백이 다시 이 분기로 들어와 4.2MB 를 무한 재요청한다. */
+    if (!lcArr.length) {
+      _loadLcData(function () {
+        /* 로딩이 수 초 걸려 그 사이 사용자가 다른 카테고리로 옮겼을 수 있다. */
+        var act = document.querySelector('.cat-icon-item.cat-active');
+        if (!act || act.id !== 'liv-cat-currency') return;
+        if (typeof lcData !== 'undefined' && lcData.length) renderLivingCatList('currency');
+        else if (countEl) countEl.textContent = '불러오기 실패';
+      });
+    }
     var LC_SHOW = 80;
     if (titleEl) titleEl.textContent = '희망화성지역화폐 가맹점';
     if (countEl) countEl.textContent = lcArr.length ? lcArr.length.toLocaleString() + '곳' : '로딩 중...';
@@ -3539,6 +3593,9 @@ function _loadLcData(callback) {
   if (callback) _lcCallbacks.push(callback);
   if (_lcLoading) return; /* 이미 fetch 중 — 중복 요청 방지 */
   _lcLoading = true;
+  /* 4.2MB / 27,374건이라 저사양 기기에서 파싱 중 1초 가까이 메인스레드가 멈춘다.
+   * 최소한 무반응 구간임을 알린다. */
+  if (typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중입니다...');
   fetch('js/localcurrency-static.json').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     var sc = document.getElementById('stat-currency');

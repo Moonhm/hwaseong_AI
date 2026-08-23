@@ -7,6 +7,8 @@ var lcDisplayItems = [];   /* 현재 지도에 올라간 Marker / CustomOverlay 
 var lcFilter      = 'all'; /* 업종 필터 */
 
 var LC_PIN_LEVEL  = 5;     /* 이 레벨 이하에서만 개별 핀 표시 */
+var LC_MAX_PINS   = 300;   /* 한 뷰포트에 그릴 개별 핀 상한 — 동탄 레벨5는 3,000곳이 넘는다 */
+var _lcCapNotifiedLevel = null;  /* 상한 안내 토스트는 레벨당 1회만 */
 
 /* 업종 그룹 → 원본 업종명 배열 */
 var LC_CAT_MAP = {
@@ -96,12 +98,30 @@ function showViewportMarkers(bounds) {
   var lngPad = (ne.getLng() - sw.getLng()) * 0.1;
   var activeCats = lcFilter !== 'all' ? (LC_CAT_MAP[lcFilter] || []) : null;
 
-  lcData.filter(function (p) {
+  var hits = lcData.filter(function (p) {
     if (!p.lat || !p.lng) return false;
     if (activeCats && activeCats.indexOf(p.c) === -1) return false;
     return p.lat >= sw.getLat() - latPad && p.lat <= ne.getLat() + latPad &&
            p.lng >= sw.getLng() - lngPad && p.lng <= ne.getLng() + lngPad;
-  }).forEach(function (p) {
+  });
+
+  /* 상한 초과 시 화면 중심에서 가까운 순으로 잘라낸다.
+   * 배열 순서(가나다순)로 자르면 화면 구석 가맹점만 남을 수 있다. */
+  if (hits.length > LC_MAX_PINS) {
+    var ctr = lcMap.getCenter(), cy = ctr.getLat(), cx = ctr.getLng();
+    hits.sort(function (a, b) {
+      return ((a.lat - cy) * (a.lat - cy) + (a.lng - cx) * (a.lng - cx)) -
+             ((b.lat - cy) * (b.lat - cy) + (b.lng - cx) * (b.lng - cx));
+    });
+    if (_lcCapNotifiedLevel !== lcMap.getLevel() && typeof showToast === 'function') {
+      _lcCapNotifiedLevel = lcMap.getLevel();
+      showToast('가맹점 ' + hits.length.toLocaleString() + '곳 중 가까운 ' +
+                LC_MAX_PINS + '곳만 표시 — 더 확대해 주세요');
+    }
+    hits = hits.slice(0, LC_MAX_PINS);
+  }
+
+  hits.forEach(function (p) {
     var marker = new kakao.maps.Marker({
       position: new kakao.maps.LatLng(p.lat, p.lng),
       map: lcMap,
@@ -186,7 +206,7 @@ function showLcSlide(p) {
   document.getElementById('slide-inner').innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
     + '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;'
-    + 'padding:3px 10px;border-radius:20px"><img src="img/gyeonggi_currency_logo.png" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>'
+    + 'padding:3px 10px;border-radius:20px"><img src="img/gyeonggi_currency_logo.png" alt="" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>'
     + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:4px">' + p.n + '</div>'
     + '<div style="font-size:12px;color:var(--primary);font-weight:600;margin-bottom:6px">' + p.c + '</div>'

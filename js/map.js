@@ -151,6 +151,18 @@ function _mkCmPin(color, emoji, label) {
 
 /* ── 커스텀 오버레이 생성 (tourist 제외 — 별도 동적 렌더링) ── */
 function buildOverlays() {
+  /* 장소 미정 축제 21건이 지도 중심 좌표(37.199,126.831)에 완전히 겹쳐 있어
+   * 그대로 두면 마지막 1개만 클릭된다. 같은 좌표가 반복되면 나선형으로 조금씩 흩어 놓는다. */
+  var _seenPos = {};
+  function _spread(lat, lng) {
+    var key = lat + ',' + lng;
+    var n = (_seenPos[key] = (_seenPos[key] || 0) + 1) - 1;
+    if (n === 0) return new kakao.maps.LatLng(lat, lng);
+    var ang = n * 2.39996;                      /* 황금각 — 겹치지 않게 퍼짐 */
+    var rad = 0.00045 * Math.sqrt(n);           /* 약 50m 부터 점진 확대 */
+    return new kakao.maps.LatLng(lat + rad * Math.cos(ang), lng + rad * Math.sin(ang));
+  }
+
   PLACES.forEach(function (p) {
     if (p.category === 'tourist') return;
 
@@ -175,7 +187,7 @@ function buildOverlays() {
     })(p.id);
 
     var overlay = new kakao.maps.CustomOverlay({
-      position: new kakao.maps.LatLng(p.lat, p.lng),
+      position: _spread(p.lat, p.lng),
       content:  wrap,
       yAnchor:  1.5,
       zIndex:   1,
@@ -392,7 +404,7 @@ function placePhotoHtml(place) {
     /* 이미지 있으면 커버, 없으면 그라데이션 + 🏞️ */
     return '<div style="width:100%;height:120px;border-radius:12px;overflow:hidden;margin-bottom:12px;' +
       'position:relative;background:linear-gradient(135deg,#FFF7ED,#FFEDD5)">' +
-      '<img src="' + src + '" alt="" ' +
+      '<img src="' + src + '" alt="" decoding="async" ' +
       'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" ' +
       'onerror="this.style.display=\'none\'">' +
       '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:40px;pointer-events:none">🏞️</div>' +
@@ -400,7 +412,7 @@ function placePhotoHtml(place) {
   }
 
   return '<div style="width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:12px;background:' + cfg.bg + ';display:flex;align-items:center;justify-content:center;">' +
-    '<img src="' + src + '" alt="' + place.name + '" ' +
+    '<img src="' + src + '" alt="' + place.name + '" decoding="async" ' +
     'style="width:100%;height:100%;object-fit:cover;" ' +
     'onerror="this.parentNode.innerHTML=\'<span style=\\\"font-size:36px\\\">' + cfg.emoji + '</span>\'">' +
     '</div>';
@@ -597,7 +609,12 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
 function goNearestParking(placeLat, placeLng, placeId) {
   var tPlace = PLACES.find(function (pl) { return pl.id === placeId; });
   _goNPCore(placeLat, placeLng, tPlace ? tPlace.name : '관광지', '🌟',
-    function () { setTouristVisible(true); setTimeout(function () { onPinClick(placeId); }, 350); });
+    function () {
+      var chip = document.querySelector('#map-chips .chip[data-cat="tourist"]');
+      if (chip) chip.classList.add('active');
+      setTouristVisible(true);
+      setTimeout(function () { onPinClick(placeId); }, 350);
+    });
 }
 
 /* ── 편의정보(conv) 핀에서 호출 ── */
@@ -605,6 +622,11 @@ function goNearestParkingConv(placeLat, placeLng, convCat, convName) {
   var cfg = (typeof CONV_CAT_CFG !== 'undefined') && CONV_CAT_CFG[convCat];
   var icon = cfg ? cfg.emoji : '🍽';
   _goNPCore(placeLat, placeLng, convName, icon, function () {
+    /* NP 진입 시 꺼 둔 편의정보 레이어와 칩을 되살린다.
+     * 복원하지 않으면 뒤로가기 후 빈 지도만 남는다. */
+    var chip = document.querySelector('#map-chips .chip[data-cat="' + convCat + '"]');
+    if (chip) chip.classList.add('active');
+    if (typeof showConvCat === 'function') showConvCat(convCat);
     var p = ((typeof CONV_PLACES !== 'undefined' && CONV_PLACES[convCat]) || [])
       .find(function (x) { return x.name === convName; });
     if (p && typeof _showConvSlide === 'function') _showConvSlide(p);
@@ -614,6 +636,9 @@ function goNearestParkingConv(placeLat, placeLng, convCat, convName) {
 /* ── 지역화폐 가맹점 핀에서 호출 ── */
 function goNearestParkingLc(placeLat, placeLng, lcName) {
   _goNPCore(placeLat, placeLng, lcName, '🏪', function () {
+    var chip = document.querySelector('#map-chips .chip[data-cat="localcurrency"]');
+    if (chip) chip.classList.add('active');
+    if (typeof setLcVisible === 'function') setLcVisible(true);
     var p = (typeof lcData !== 'undefined' ? lcData : [])
       .find(function (x) { return x.n === lcName; });
     if (p && typeof showLcSlide === 'function') showLcSlide(p);
@@ -775,6 +800,8 @@ function clearFilter() {
 
 /* ── 주차장 독립 토글 (다른 필터와 동시 선택 가능) ── */
 function toggleParking() {
+  /* NP 모드 오버레이와 ← 버튼이 남아 새 필터 위에 겹치는 것을 막는다. */
+  if (typeof exitNpModeOnly === 'function') exitNpModeOnly();
   closePlaceSlide();
   var chip = document.querySelector('.chip[data-cat="parking"]');
   var nowActive = !!(chip && !chip.classList.contains('active'));
@@ -793,6 +820,8 @@ function activateParking() {
 function setFilter(cat) {
   if (cat === 'parking') { toggleParking(); return; }
 
+  /* NP 모드 중 칩을 누르면 하이라이트 핀 2개와 ← 버튼이 새 필터 위에 남는다. */
+  if (typeof exitNpModeOnly === 'function') exitNpModeOnly();
   closePlaceSlide();
 
   /* LC 업종 필터 바 항상 초기화 — localcurrency 활성화 시 마지막에 다시 표시 */
@@ -857,7 +886,9 @@ function setFilter(cat) {
   });
 
   setTouristVisible(cat === 'all' || cat === 'tourist');
-  if (typeof setLcVisible === 'function') setLcVisible(cat === 'all' || cat === 'localcurrency');
+  /* '전체'에 가맹점을 포함하면 칩 한 번에 4.2MB 다운로드가 시작된다.
+   * 27,374건은 전용 칩으로 명시 선택했을 때만 로드한다. */
+  if (typeof setLcVisible === 'function') setLcVisible(cat === 'localcurrency');
   if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive);
   if (typeof updateParkingCount === 'function') updateParkingCount();
 

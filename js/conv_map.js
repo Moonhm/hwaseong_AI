@@ -76,6 +76,14 @@ var CONV_CACHE_VER = 'v5'; /* 좌표 데이터 변경 시 올려서 캐시 무�
 /* localStorage 캐시 키 */
 function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat; }
 
+/* 해당 카테고리 칩이 켜져 있는지.
+ * 주차장 칩은 다른 칩과 동시에 active 가 될 수 있고 DOM 순서상 가장 앞이라,
+ * querySelector('.chip.active') 로 판단하면 항상 parking 이 잡힌다. */
+function _isConvCatActive(cat) {
+  var chip = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
+  return !!(chip && chip.classList.contains('active'));
+}
+
 /* 캐시에서 좌표 로드 시도 → 성공하면 true */
 function _loadConvCache(cat) {
   var raw, places;
@@ -109,7 +117,11 @@ function showConvCat(cat) {
   var status = CONV_STATUS[cat] || 'idle';
 
   if (status === 'done') {
-    (CONV_PLACES[cat] || []).forEach(function (p) {
+    /* geocoding 완료 시점에 다른 칩이 활성이면 오버레이 생성이 생략된다.
+     * _buildOverlays 는 멱등이므로 여기서 다시 불러 누락분을 복구한다. */
+    var donePlaces = CONV_PLACES[cat] || [];
+    _buildOverlays(cat, donePlaces);
+    donePlaces.forEach(function (p) {
       CONV_OVMAP[p.id] && CONV_OVMAP[p.id].setMap(kakaoMap);
     });
     _fitConv(cat);
@@ -168,10 +180,9 @@ function _geocodeCat(cat) {
     _done = true;
     CONV_STATUS[cat] = 'done';
     CONV_PLACES[cat] = results;
-    _saveConvCache(cat, results);
-    var activeChip = document.querySelector('#map-chips .chip.active');
-    var activeCat  = activeChip ? activeChip.getAttribute('data-cat') : null;
-    if (activeCat === cat) {
+    /* 타임아웃은 일시적 지연일 수 있다. 부분 결과를 캐시하면 누락이 영구히 굳는다. */
+    if (results.length === total) _saveConvCache(cat, results);
+    if (_isConvCatActive(cat)) {
       _buildOverlays(cat, results);
       showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨 (타임아웃)');
       _fitConv(cat);
@@ -218,9 +229,7 @@ function _geocodeCat(cat) {
           CONV_PLACES[cat] = results;
           _saveConvCache(cat, results); /* 다음 방문 시 재사용 */
           /* 제오코딩 중 사용자가 다른 필터로 전환했으면 표시 안 함 */
-          var activeChip = document.querySelector('#map-chips .chip.active');
-          var activeCat  = activeChip ? activeChip.getAttribute('data-cat') : null;
-          if (activeCat === cat) {
+          if (_isConvCatActive(cat)) {
             _buildOverlays(cat, results);
             showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨');
             _fitConv(cat);

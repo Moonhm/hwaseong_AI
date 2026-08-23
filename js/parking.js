@@ -62,6 +62,11 @@ function fetchParkingAll() {
 
 function refreshParking() {
   if (!parkingVisible) return;
+  /* parkingVisible 은 탭을 옮겨도 유지되므로, 지도 탭을 보고 있을 때만 갱신한다.
+   * 그렇지 않으면 60초마다 API 호출 + 오버레이 전량 재생성이 백그라운드에서 계속된다. */
+  if (document.hidden) return;
+  var mapPage = document.getElementById('page-map');
+  if (!mapPage || !mapPage.classList.contains('active')) return;
   fetch('/api/parking/realtime')
     .then(function (r) { return r.json(); })
     .then(function (res) { _applyRealtime(res); })
@@ -78,7 +83,9 @@ function mergeParkingData(list, rt) {
       id: p.id, name: p.name, address: p.address,
       lat: p.lat, lng: p.lng, total: p.total,
       free: p.free, type: p.type, tel: p.tel, zone: p.zone, tags: p.tags || [],
-      open:          r.open  !== undefined ? r.open  : p.open,
+      /* parking-static.json 에는 open 키가 없다. undefined 로 두면 실시간 API 가
+       * 없을 때 131곳이 전부 '미운영' 회색으로 표시되므로 운영중을 기본값으로 쓴다. */
+      open:          r.open  !== undefined ? r.open  : (p.open !== undefined ? p.open : true),
       used:          r.used  !== undefined ? r.used  : 0,
       avail:         r.avail !== undefined ? r.avail : p.total,
       feeFreePeriod: p.feeFreePeriod || '',
