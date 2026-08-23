@@ -336,7 +336,7 @@ python tools/regeocode.py --key 1bd845da5756d1c78955463b800731ef
 | 항목 | 현황 | 개선 방향 |
 |------|------|---------|
 | 별점 데이터 | 알고리즘 생성 (Selenium 환경 없음) | Kakao Place API 실제 별점 연동 |
-| 장소 사진 | git 추적 중 (~59MB) — 필요 시 제거 가능 (아래 참고) | CDN 적용 또는 Cloudflare Images |
+| 장소 사진 | git 추적 제외 완료 — 로컬·배포 서버에만 보관 (섹션 11 참고) | CDN 적용 또는 Cloudflare Images |
 | Geocoder 캐싱 | 편의시설 칩 클릭마다 157건 API 호출 | localStorage 1회 캐싱 |
 | 달력 날짜 연동 | has-event 클래스 하드코딩 일부 | PLACES 배열의 date 필드 기반 동적 마킹 |
 | 맛집 지도 칩 | 실제 restaurant 데이터 없음 | 모범음식점(conv_map.js)으로 리다이렉트 |
