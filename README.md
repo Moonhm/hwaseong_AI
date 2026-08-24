@@ -25,6 +25,21 @@ Built on official city data, the app brings together 159 tourist spots (관광�
 
 ---
 
+## Administrative Districts (행정구역)
+
+Hwaseong Special City (화성특례시) is organized into **4 districts (구), 4 towns (읍), 9 townships (면), and 16 neighborhoods (동)** — 29 divisions in total. Every place in this app belongs to one of them.
+
+| District (구) | Divisions | Composition |
+|---------------|----------:|-------------|
+| **Mansae-gu (만세구)** | 10 | Ujeong-eup (우정읍) · Hyangnam-eup (향남읍) · Namyang-eup (남양읍) · Mado-myeon (마도면) · Songsan-myeon (송산면) · Seosin-myeon (서신면) · Paltan-myeon (팔탄면) · Jangan-myeon (장안면) · Yanggam-myeon (양감면) · Saesol-dong (새솔동) |
+| **Hyohaeng-gu (효행구)** | 5 | Bongdam-eup (봉담읍) · Maesong-myeon (매송면) · Bibong-myeon (비봉면) · Jeongnam-myeon (정남면) · Gibae-dong (기배동) |
+| **Byeongjeom-gu (병점구)** | 5 | Jinan-dong (진안동) · Byeongjeom 1-dong (병점1동) · Byeongjeom 2-dong (병점2동) · Banwol-dong (반월동) · Hwasan-dong (화산동) |
+| **Dongtan-gu (동탄구)** | 9 | Dongtan 1-dong through Dongtan 9-dong (동탄1동 ~ 동탄9동) |
+
+Hwaseong covers a wide range of landscapes across these districts — the western coast and islands of Mansae-gu (제부도·궁평항·전곡항), the UNESCO World Heritage royal tombs in Byeongjeom-gu (융릉과 건릉), and the dense new town of Dongtan-gu (동탄 신도시).
+
+---
+
 ## Features
 
 | Screen | Description |
