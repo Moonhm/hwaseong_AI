@@ -788,7 +788,18 @@ python tools/geocode.py <파일> --category tourist
 
 ---
 
-## 19. 무결성 검사 `tools/check.sh` (2026-08-25 · 개발 Claude)
+## 19. 무결성 검사 `tools/check.sh` (개발 Claude 담당 · 2026-08-25)
+
+> **한눈에** — 개발 Claude가 2026-08-25에 작업한 내용입니다. 커밋 `9fae4be`.
+>
+> | 무엇을 | 어디에 | 왜 |
+> |---|---|---|
+> | 무결성 검사 5종 신설 | `tools/check*.{sh,py,js}` (신규 998줄) | push 가 곧 실서비스인데 검사 수단이 0개였음 |
+> | 실서비스 공개 범위 제한 | `tools/server.py` | 저장소 루트가 통째로 공개되고 있었음 (§19-1) |
+> | 데이터 JSON 캐시 버스팅 | `index.html` · `js/parking.js` | 27,505건이 재방문자 캐시에 막히고 있었음 (§19-2) |
+>
+> **기존 데이터는 한 건도 수정하지 않았습니다.** 작업 전후 모두 28,142건 그대로입니다.
+> 검사가 찾아낸 데이터 영역 결함 1건은 고치지 않고 §19-3 으로 배포 Claude에게 넘겼습니다(§17 절차).
 
 ### 왜 만들었는가
 
@@ -849,7 +860,7 @@ bash tools/check.sh --live       # + 실서비스 URL 과 대조 (네트워크 �
 
 ---
 
-## 19-1. 실서비스 공개 범위 제한 (`tools/server.py`) — ⚠ 서버 재시작 필요
+## 19-1. 실서비스 공개 범위 제한 `tools/server.py` (개발 Claude 담당 · 2026-08-25) — ⚠ Flask 재시작 필요
 
 ### 무엇이 노출돼 있었는가
 
@@ -876,11 +887,37 @@ bash tools/check.sh --live       # + 실서비스 URL 과 대조 (네트워크 �
 정상 경로 5종 전부 200(`/`, `/index.html`, `/js/data.js`, `/js/parking-static.json?v=`, `/img/logo-icon.png`), 민감 경로 8종 전부 404, `/api/parking/realtime` 200 정상.
 
 > **배포 Claude에게**: 이 변경은 **Flask 서버를 재시작해야 적용됩니다.** 재시작 전까지는 위 경로가 계속 공개 상태입니다.
-> 재시작 후 `curl -o /dev/null -w '%{http_code}' <배포URL>/WORKFLOW.md` 가 `404` 인지 확인해 주십시오.
+
+#### ⚠ 배포 URL 이 바뀔까 봐 재시작을 못 한다면 — 안 바뀝니다
+
+**재시작해야 하는 것은 Flask(`tools/server.py`) 뿐이고, `cloudflared` 는 건드리지 않습니다.**
+
+```
+cloudflared  ──터널──▶  localhost:8080  ──▶  Flask (tools/server.py)
+   ↑ 이건 계속 켜둔다              ↑ 이것만 껐다 켠다
+```
+
+Quick Tunnel 의 `*.trycloudflare.com` 주소는 **`cloudflared` 프로세스에 붙어 있습니다.** `cloudflared` 가 살아 있으면 주소는 그대로입니다.
+Flask 만 껐다 켜면 그 몇 초 동안 502 가 뜨고 곧 정상으로 돌아옵니다. **주소는 유지됩니다.**
+
+반대로 `cloudflared` 를 끄면 그 순간 주소가 영구히 사라지고 새 랜덤 주소가 발급됩니다 — README 배지·발표자료·제출물의 링크가 전부 죽습니다. **`cloudflared` 는 절대 끄지 마십시오.**
+
+```bash
+# 올바른 절차 (배포 서버에서)
+pkill -f "tools/server.py"          # Flask 만 종료 — cloudflared 는 그대로 둔다
+python3 tools/server.py --port 8080 &
+```
+
+#### 적용 확인
+
+```bash
+curl -o /dev/null -w '%{http_code}\n' <배포URL>/WORKFLOW.md   # 404 여야 정상
+curl -o /dev/null -w '%{http_code}\n' <배포URL>/js/data.js    # 200 이어야 정상
+```
 
 ---
 
-## 19-2. 캐시 버스팅 확대
+## 19-2. 캐시 버스팅 확대 (개발 Claude 담당 · 2026-08-25)
 
 `index.html:3891` 의 `?v=` 규율이 `<script src>` 6개에만 적용돼 있었고, **정작 데이터가 든 JSON 2개는 보호를 못 받고 있었습니다.**
 `fetch('js/parking-static.json')` 3곳(`index.html:2333·3878`, `js/parking.js:50`)과 `fetch('js/localcurrency-static.json')` 1곳(`index.html:3599`)에 `?v=` 를 붙였습니다. 합계 27,505건이 재방문자 캐시에 막히던 문제입니다.
@@ -889,7 +926,7 @@ bash tools/check.sh --live       # + 실서비스 URL 과 대조 (네트워크 �
 
 ---
 
-## 19-3. 배포 Claude 인계 — 데이터 도구 결함 1건
+## 19-3. 배포 Claude 인계 — 데이터 도구 결함 1건 (개발 Claude가 발견 · 2026-08-25)
 
 검사가 찾아낸 항목인데 **데이터 영역이라 개발 Claude가 손대지 않았습니다**(§17 담당 밖 인계 절차).
 
