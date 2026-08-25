@@ -18,12 +18,12 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082606">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082606">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082606">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082606">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082606">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082606">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082607">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082607">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082607">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082607">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082607">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082607">
 </head>
 <body>
 
@@ -430,7 +430,7 @@
        id 까지 바꾸면 js 17개 파일과 css 선택자를 전부 건드려야 하는데, 라벨이 또
        바뀔 수 있어 지금은 이르다. 대응표는 WORKFLOW.md §17 에 있다. -->
   <button class="nav-item" data-page="tourism" onclick="navTap('tourism')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><path transform="translate(0,1.5)" d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>
     <span>추천</span>
   </button>
   <button class="nav-item" data-page="map" onclick="navTap('map')">
@@ -441,7 +441,7 @@
        js/nav.js:22 의 go() 가 .nav-item[data-page] 만 골라 active 를 옮기므로,
        이 버튼은 어떤 탭에 있든 활성색으로 잘못 칠해지지 않는다. -->
   <button class="nav-item" onclick="openMenu()" aria-label="메뉴 열기">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg>
     <span>메뉴</span>
   </button>
 </nav>
@@ -540,25 +540,25 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082606"></script>
-<script src="js/quiz.js?v=2026082606"></script>
-<script src="js/mapnav.js?v=2026082606"></script>
-<script src="js/home.js?v=2026082606"></script>
-<script src="js/tourism.js?v=2026082606"></script>
-<script src="js/living.js?v=2026082606"></script>
-<script src="js/favorites.js?v=2026082606"></script>
-<script src="js/ui.js?v=2026082606"></script>
-<script src="js/calendar.js?v=2026082606"></script>
-<script src="js/boot.js?v=2026082606"></script>
+<script src="js/nav.js?v=2026082607"></script>
+<script src="js/quiz.js?v=2026082607"></script>
+<script src="js/mapnav.js?v=2026082607"></script>
+<script src="js/home.js?v=2026082607"></script>
+<script src="js/tourism.js?v=2026082607"></script>
+<script src="js/living.js?v=2026082607"></script>
+<script src="js/favorites.js?v=2026082607"></script>
+<script src="js/ui.js?v=2026082607"></script>
+<script src="js/calendar.js?v=2026082607"></script>
+<script src="js/boot.js?v=2026082607"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
 <script src="js/photos.js?v=2026082607"></script>
-<script src="js/convenience.js?v=2026082606"></script>
-<script src="js/data.js?v=2026082606"></script>
-<script src="js/map.js?v=2026082606"></script>
-<script src="js/conv_map.js?v=2026082606"></script>
-<script src="js/parking.js?v=2026082606"></script>
-<script src="js/localcurrency.js?v=2026082606"></script>
+<script src="js/convenience.js?v=2026082607"></script>
+<script src="js/data.js?v=2026082607"></script>
+<script src="js/map.js?v=2026082607"></script>
+<script src="js/conv_map.js?v=2026082607"></script>
+<script src="js/parking.js?v=2026082607"></script>
+<script src="js/localcurrency.js?v=2026082607"></script>
 </body>
 </html>

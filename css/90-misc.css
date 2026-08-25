@@ -60,7 +60,7 @@
 
     /* ── TOAST ── */
     #toast {
-      position: fixed; bottom: calc(46px + env(safe-area-inset-bottom) + 14px); left: 50%;
+      position: fixed; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px); left: 50%;
       transform: translateX(-50%) translateY(20px) scale(0.88);
       background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
       padding: 10px 20px; border-radius: 24px;

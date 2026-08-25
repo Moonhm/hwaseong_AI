@@ -123,7 +123,7 @@
 
     /* CTA */
     .fd-cta {
-      /* .page 가 이미 bottom: calc(46px + env(safe-area-inset-bottom)) 이라
+      /* .page 가 이미 bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)) 이라
        * 여기서 다시 더하면 아이폰에서 34px 빈 띠가 생긴다. */
       margin: 0; padding: 14px 18px;
       background: var(--white); border-top: 1px solid var(--border);

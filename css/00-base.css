@@ -31,6 +31,11 @@
       --r-lg:  16px;
       --r-pill:24px;
       --px:    20px;
+      /* 하단 내비 높이. 46px → 52px 로 올렸다 (2026-08-26, 사용자 요청 '약간 두껍게').
+       * 아이콘 20 + 간격 3 + 글자 12 = 35px 내용에 위아래 8.5px 씩 여백.
+       * 이 값은 .page·#page-map·슬라이드 카드·토스트·NP 버튼이 전부 참조한다 —
+       * 예전엔 46px 이 5곳에 하드코딩돼 있어 하나만 고치면 화면이 어긋났다. */
+      --nav-h: 52px;
     }
 
     /* ── RESET ── */
@@ -60,7 +65,7 @@
     .page {
       display: none; position: absolute;
       top: 0; left: 0; right: 0;
-      bottom: calc(46px + env(safe-area-inset-bottom));
+      bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
       overflow-y: auto; overscroll-behavior-y: contain;
       -webkit-overflow-scrolling: touch;
     }
@@ -110,7 +115,7 @@
     .nav-item {
       flex: 1; min-width: 0;
       display: flex; flex-direction: column; align-items: center;
-      justify-content: center; gap: 2px; height: 46px;
+      justify-content: center; gap: 3px; height: var(--nav-h);
       color: var(--text-muted); font-size: 10px; font-weight: 600;
       white-space: nowrap;
       transition: color 0.14s;

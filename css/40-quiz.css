@@ -104,7 +104,7 @@
     /* 뒤로가기 버튼 */
     #np-back-btn {
       position:fixed;
-      bottom:calc(46px + 72px);
+      bottom:calc(var(--nav-h) + 72px);
       left:max(14px, calc((100vw - 480px) / 2 + 14px));
       width:46px; height:46px; border-radius:50%;
       background:rgba(0,0,0,0.42);
