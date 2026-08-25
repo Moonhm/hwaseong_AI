@@ -140,7 +140,8 @@ def classify(rows):
     if ac:
         addrs = [str(r.get(ac) or "") for r in rows]
         hit = sum(1 for a in addrs if "제부" in a)
-        if addrs and hit / len(addrs) >= 0.8:
+        # 표본이 적으면 값 기반 판정이 우연히 맞을 수 있다(1행짜리가 1/1=100%).
+        if len(addrs) >= 5 and hit / len(addrs) >= 0.8:
             return "jebu", "주소 %d/%d 가 '제부' 포함" % (hit, len(addrs))
 
     # 3) 컬럼명 토큰

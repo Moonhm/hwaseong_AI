@@ -6,3 +6,7 @@ Thumbs.db
 node_modules/
 assets/
 js/localcurrency-source.csv
+
+# 반입 원본 — 용량이 크고 재생성 가능하므로 git 에 올리지 않는다.
+# 경량화한 결과물(data/processed/)과 카탈로그(data/CATALOG.md)만 추적한다.
+data/raw/
