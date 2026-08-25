@@ -376,7 +376,7 @@ function _showConvSlide(place) {
       : '') +
     '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' + encodeURIComponent(place.name || '') + '\',\'_blank\')">🔍 카카오지도</button>' +
     (place.lat && place.lng
-      ? '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingConv(' + place.lat + ',' + place.lng + ',\'' + place.category + '\',\'' + safeName + '\')">🅿 가장 가까운 공영주차장 찾기</button>'
+      ? '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingConv(' + place.lat + ',' + place.lng + ',\'' + place.category + '\',\'' + safeName + '\')">🅿 가장 가까운<br>공영주차장 찾기</button>'
       : '') +
     '</div>';
 
