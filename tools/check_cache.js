@@ -9,7 +9,7 @@
  *   즉 js/convenience.js 의 데이터를 고쳐도 CONV_CACHE_VER(js/conv_map.js:74)를 안 올리면
  *   재방문자에게는 옛 좌표·옛 목록이 계속 나간다. 서버·콘솔·네트워크 어디에도 흔적이 없다.
  *
- *   파일 소유가 갈려 있어서(WORKFLOW.md:654 convenience.js=배포 / :655 conv_map.js=개발)
+ *   파일 소유가 갈려 있어서(WORKFLOW.md §17 convenience.js=배포 / :655 conv_map.js=개발)
  *   이 규칙은 이미 두 번 깨졌다 — 이 검사로 재현 확인함:
  *     d7d67b9 → [restaurants] 변경, v5→v5 = FAIL
  *     5404403 → [touristRestaurants] 변경, v4→v4 = FAIL
