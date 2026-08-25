@@ -108,6 +108,21 @@ function go(page) {
   newPage.scrollTop = 0; // 페이지 자체 스크롤 초기화 (body 스크롤 아님)
   document.querySelector('.nav-item[data-page="' + page + '"]')?.classList.add('active');
   if (page === 'map')     { requestAnimationFrame(() => requestAnimationFrame(initMap)); setTimeout(updateChipArrows, 120); }
+  /* 홈 진입 시 localStorage 기반 두 섹션만 다시 그린다 (2026-08-26).
+   *
+   * renderHomePage() 를 통째로 부르지 않는 이유 — 관광·생활 콘텐츠까지 다시 그리면
+   * 홈을 누를 때마다 목록 카드가 item-enter 애니메이션을 재생해 거슬린다.
+   * 그 둘은 PLACES/lcData 를 읽는데 각자 갱신 경로가 이미 있다
+   * (lcData 지연 로드 완료 시 js/home.js 가 renderHomeLiving 을 다시 부른다).
+   *
+   * 반면 즐겨찾기·최근 둘러본 은 localStorage 라 이 창 밖에서도 바뀔 수 있다
+   * (다른 탭에서 연 같은 앱, 또는 앞으로 생길 새 경로). 각 변경 지점이
+   * 스스로 다시 그리긴 하지만 그건 암묵적 계약이라 하나만 빠뜨려도 홈이 낡는다.
+   * 두 함수 모두 작은 섹션이라 진입마다 불러도 비용이 없다 — 안전망으로 둔다. */
+  if (page === 'home') {
+    if (typeof renderFavSection    === 'function') renderFavSection();
+    if (typeof renderRecentSection === 'function') renderRecentSection();
+  }
   if (page === 'living')  renderLivingPage();
   /* BUG-7: 서브탭 상태 유지 — 'all'로 강제 리셋하지 않음 */
   if (page === 'tourism') {
