@@ -44,15 +44,6 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 15px; color: var(--text-muted); cursor: pointer;
     }
-    .hamburger-btn {
-      display: flex; flex-direction: column; justify-content: center; align-items: center;
-      gap: 4px; padding: 6px 8px; cursor: pointer; border: none; background: none;
-      min-width: 36px; min-height: 36px;   /* 메뉴 유일 진입점 — 터치 타겟 확보 */
-    }
-    .hamburger-btn span {
-      display: block; width: 19px; height: 2px;
-      background: var(--text-sub); border-radius: 1px;
-    }
 
     /* ── 관광 서브탭 ── */
     .tourism-subnav {

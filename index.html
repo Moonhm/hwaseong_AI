@@ -12,13 +12,15 @@
   <!-- CSS 1,310줄을 css/ 아래 6개 파일로 분리했다 (2026-08-25, 개발 Claude).
        파일명 앞 번호 = 캐스케이드 순서. 이 나열 순서를 바꾸면 스타일이 어긋난다.
        새 규칙은 '가장 가까운 번호대 파일'에 넣을 것 — 그래야 두 Claude 가 다른 파일을 만진다.
-       ?v= 는 캐시 버스팅용. css/ 를 고치면 이 날짜도 함께 올릴 것. -->
-  <link rel="stylesheet" href="css/00-base.css?v=20260825">
-  <link rel="stylesheet" href="css/10-content.css?v=20260825">
-  <link rel="stylesheet" href="css/20-map.css?v=20260825">
-  <link rel="stylesheet" href="css/30-panel.css?v=20260825">
-  <link rel="stylesheet" href="css/40-quiz.css?v=20260825">
-  <link rel="stylesheet" href="css/90-misc.css?v=20260825">
+       ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
+       같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
+       예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
+  <link rel="stylesheet" href="css/00-base.css?v=2026082502">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082502">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082502">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082502">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082502">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082502">
 </head>
 <body>
 
@@ -35,12 +37,9 @@
       <img src="img/logo-name.png" alt="화성잇다" style="height:26px;object-fit:contain;"
            onerror="this.style.display='none'">
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div style="font-size:11px;color:var(--text-muted);">화성특례시 통합 정보</div>
-      <button class="hamburger-btn" onclick="openMenu()" aria-label="메뉴 열기">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
+    <!-- 햄버거 버튼은 하단 내비 5번째 칸으로 옮겼다 (2026-08-25).
+         여기 있을 때는 홈 화면에서만 보여서 관광·생활·지도 탭에서는 메뉴를 열 방법이 없었다. -->
+    <div style="font-size:11px;color:var(--text-muted);">화성특례시 통합 정보</div>
   </div>
 
   <!-- 검색바 -->
@@ -406,6 +405,13 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
     <span>지도</span>
   </button>
+  <!-- 메뉴는 화면(page)이 아니라 드로어를 여는 동작이다. data-page 를 일부러 붙이지 않았다 —
+       js/nav.js:22 의 go() 가 .nav-item[data-page] 만 골라 active 를 옮기므로,
+       이 버튼은 어떤 탭에 있든 활성색으로 잘못 칠해지지 않는다. -->
+  <button class="nav-item" onclick="openMenu()" aria-label="메뉴 열기">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+    <span>메뉴</span>
+  </button>
 </nav>
 
 <div id="toast"></div>
@@ -502,24 +508,24 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=20260825"></script>
-<script src="js/quiz.js?v=20260825"></script>
-<script src="js/mapnav.js?v=20260825"></script>
-<script src="js/home.js?v=20260825"></script>
-<script src="js/tourism.js?v=20260825"></script>
-<script src="js/living.js?v=20260825"></script>
-<script src="js/favorites.js?v=20260825"></script>
-<script src="js/ui.js?v=20260825"></script>
-<script src="js/calendar.js?v=20260825"></script>
-<script src="js/boot.js?v=20260825"></script>
+<script src="js/nav.js?v=2026082502"></script>
+<script src="js/quiz.js?v=2026082502"></script>
+<script src="js/mapnav.js?v=2026082502"></script>
+<script src="js/home.js?v=2026082502"></script>
+<script src="js/tourism.js?v=2026082502"></script>
+<script src="js/living.js?v=2026082502"></script>
+<script src="js/favorites.js?v=2026082502"></script>
+<script src="js/ui.js?v=2026082502"></script>
+<script src="js/calendar.js?v=2026082502"></script>
+<script src="js/boot.js?v=2026082502"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/convenience.js?v=20260825"></script>
-<script src="js/data.js?v=20260825"></script>
-<script src="js/map.js?v=20260825"></script>
-<script src="js/conv_map.js?v=20260825"></script>
-<script src="js/parking.js?v=20260825"></script>
-<script src="js/localcurrency.js?v=20260825"></script>
+<script src="js/convenience.js?v=2026082502"></script>
+<script src="js/data.js?v=2026082502"></script>
+<script src="js/map.js?v=2026082502"></script>
+<script src="js/conv_map.js?v=2026082502"></script>
+<script src="js/parking.js?v=2026082502"></script>
+<script src="js/localcurrency.js?v=2026082502"></script>
 </body>
 </html>

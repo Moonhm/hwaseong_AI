@@ -67,10 +67,18 @@
       display: flex; align-items: stretch;
       padding-bottom: env(safe-area-inset-bottom);
     }
+    /* 칸 수는 flex:1 이 알아서 나눈다 — 4칸이든 5칸이든 CSS 를 고칠 필요가 없다.
+       2026-08-25 메뉴 버튼이 들어와 5칸이 됐다. 폭 실측:
+         480px→96px · 390px→78px · 360px→72px · 320px→64px
+       가장 좁은 320px 에서도 터치 타겟 최소 36px 의 1.8배라 여유가 있다.
+       min-width:0 과 nowrap 은 칸이 더 늘거나 라벨이 길어졌을 때
+       글자가 두 줄로 접히거나 칸이 삐져나가는 것을 막는 방어다. */
     .nav-item {
-      flex: 1; display: flex; flex-direction: column; align-items: center;
+      flex: 1; min-width: 0;
+      display: flex; flex-direction: column; align-items: center;
       justify-content: center; gap: 2px; height: 46px;
       color: var(--text-muted); font-size: 10px; font-weight: 600;
+      white-space: nowrap;
       transition: color 0.14s;
     }
     .nav-item.active { color: var(--primary); }
