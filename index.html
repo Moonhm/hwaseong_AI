@@ -18,12 +18,12 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082602">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082602">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082602">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082602">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082602">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082602">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082603">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082603">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082603">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082603">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082603">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082603">
 </head>
 <body>
 
@@ -420,17 +420,17 @@
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
     <span>홈</span>
   </button>
+  <!-- data-page 는 'living' 그대로. 화면 라벨만 '소식' 으로 (위 주석과 같은 이유). -->
+  <button class="nav-item" data-page="living" onclick="navTap('living')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"/></svg>
+    <span>소식</span>
+  </button>
   <!-- data-page 는 'tourism' 그대로다. 화면 라벨만 '추천' 으로 바꿨다 (2026-08-26).
        id 까지 바꾸면 js 17개 파일과 css 선택자를 전부 건드려야 하는데, 라벨이 또
        바뀔 수 있어 지금은 이르다. 대응표는 WORKFLOW.md §17 에 있다. -->
   <button class="nav-item" data-page="tourism" onclick="navTap('tourism')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5z"/></svg>
     <span>추천</span>
-  </button>
-  <!-- data-page 는 'living' 그대로. 화면 라벨만 '소식' 으로 (위 주석과 같은 이유). -->
-  <button class="nav-item" data-page="living" onclick="navTap('living')">
-    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 11v2h4v-2h-4zm-2 6.61c.96.71 2.21 1.65 3.2 2.39.4-.53.8-1.07 1.2-1.6-.99-.74-2.24-1.68-3.2-2.4-.4.54-.8 1.08-1.2 1.61zM20.4 5.6c-.4-.53-.8-1.07-1.2-1.6-.99.74-2.24 1.68-3.2 2.4.4.53.8 1.07 1.2 1.6.96-.72 2.21-1.65 3.2-2.4zM4 9c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h1v4h2v-4h1l5 3V6L8 9H4zm11.5 3c0-1.33-.58-2.53-1.5-3.35v6.69c.92-.81 1.5-2.01 1.5-3.34z"/></svg>
-    <span>소식</span>
   </button>
   <button class="nav-item" data-page="map" onclick="navTap('map')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
@@ -539,25 +539,25 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082602"></script>
-<script src="js/quiz.js?v=2026082602"></script>
-<script src="js/mapnav.js?v=2026082602"></script>
-<script src="js/home.js?v=2026082602"></script>
-<script src="js/tourism.js?v=2026082602"></script>
-<script src="js/living.js?v=2026082602"></script>
-<script src="js/favorites.js?v=2026082602"></script>
-<script src="js/ui.js?v=2026082602"></script>
-<script src="js/calendar.js?v=2026082602"></script>
-<script src="js/boot.js?v=2026082602"></script>
+<script src="js/nav.js?v=2026082603"></script>
+<script src="js/quiz.js?v=2026082603"></script>
+<script src="js/mapnav.js?v=2026082603"></script>
+<script src="js/home.js?v=2026082603"></script>
+<script src="js/tourism.js?v=2026082603"></script>
+<script src="js/living.js?v=2026082603"></script>
+<script src="js/favorites.js?v=2026082603"></script>
+<script src="js/ui.js?v=2026082603"></script>
+<script src="js/calendar.js?v=2026082603"></script>
+<script src="js/boot.js?v=2026082603"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082602"></script>
-<script src="js/convenience.js?v=2026082602"></script>
-<script src="js/data.js?v=2026082602"></script>
-<script src="js/map.js?v=2026082602"></script>
-<script src="js/conv_map.js?v=2026082602"></script>
-<script src="js/parking.js?v=2026082602"></script>
-<script src="js/localcurrency.js?v=2026082602"></script>
+<script src="js/photos.js?v=2026082603"></script>
+<script src="js/convenience.js?v=2026082603"></script>
+<script src="js/data.js?v=2026082603"></script>
+<script src="js/map.js?v=2026082603"></script>
+<script src="js/conv_map.js?v=2026082603"></script>
+<script src="js/parking.js?v=2026082603"></script>
+<script src="js/localcurrency.js?v=2026082603"></script>
 </body>
 </html>

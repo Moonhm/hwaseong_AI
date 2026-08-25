@@ -51,7 +51,10 @@ function resetPage(page) {
  * 정리는 animationend 로 하되 setTimeout 백업을 둔다. 애니메이션이 어떤 이유로든
  * 발생하지 않으면(브라우저 설정·확장·오래된 엔진) animationend 가 영영 안 오고,
  * 그러면 나가던 장이 display:block 인 채 화면에 얼어붙는다. */
-var PAGE_ORDER = ['home', 'tourism', 'living', 'map'];
+/* 반드시 하단 내비의 '보이는' 순서와 같아야 한다 — 전환 방향을 이 배열로 정한다.
+ * 2026-08-26 추천을 가운데(3번째 칸)로 옮기면서 tourism 과 living 의 순서가 뒤집혔다.
+ * 내비 버튼을 옮기면 이 배열도 같이 고칠 것. 안 고치면 방향이 반대로 나온다. */
+var PAGE_ORDER = ['home', 'living', 'tourism', 'map'];
 var _pgTimer = null;
 
 function _pgCleanup() {
