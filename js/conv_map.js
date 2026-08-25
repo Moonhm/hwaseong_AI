@@ -372,7 +372,7 @@ function _showConvSlide(place) {
     cfg.extraHtml(ex) +
     '<div class="sl-actions">' +
     (place.lat && place.lng
-      ? '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺 길찾기</button>'
+      ? '<button class="sl-btn" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺️ 길찾기</button>'
       : '') +
     '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' + encodeURIComponent(place.name || '') + '\',\'_blank\')">🔍 카카오지도</button>' +
     (place.lat && place.lng
@@ -427,7 +427,7 @@ function _showJebuSlide() {
     '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + ((s.minbak_nearby || 0) + (s.nearby || 0)) + '</div><div style="font-size:10px;color:#6b7280">인근</div></div>' +
     '</div>' +
     '<div class="sl-actions">' +
-    '<button class="sl-btn" onclick="openRoute(37.1578,126.5764,\'제부도\')">🗺 길찾기</button>' +
+    '<button class="sl-btn" onclick="openRoute(37.1578,126.5764,\'제부도\')">🗺️ 길찾기</button>' +
     '</div>' +
     _section('🏖 관광펜션', j.pension_outside) +
     _section('🏨 제부도 내 숙박', j.inside) +

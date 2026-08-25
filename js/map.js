@@ -451,7 +451,7 @@ function showPlaceSlide(place) {
   var safeName = (place.name || '').replace(/['"]/g, '');
   var routeBtn = '<button class="sl-btn" style="' +
     (isTourist ? 'background:' + color + ';color:#fff;border-color:' + color : '') +
-    '" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺 길찾기</button>';
+    '" onclick="openRoute(' + place.lat + ',' + place.lng + ',\'' + safeName + '\')">🗺️ 길찾기</button>';
 
   var actionsHtml;
   if (isTourist) {
