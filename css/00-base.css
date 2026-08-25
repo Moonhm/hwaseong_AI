@@ -66,6 +66,33 @@
     }
     .page.active { display: block; }
 
+    /* ── 화면 전환 (2026-08-25, 개발 Claude) ────────────────────────────────
+     * .page 가 이미 position:absolute 로 서로 겹쳐 있어 래퍼 없이 두 장을
+     * 동시에 띄울 수 있다. 나가는 장에 .pg-leaving 을 붙여 display:block 을
+     * 유지시키고, 들어오는 장을 그 위에 얹는다.
+     *
+     * 전체 폭(100%)이 아니라 18%만 밀고 페이드를 겹친다. 이유 둘:
+     *   ① 지도 화면은 커스텀 오버레이가 수백 개라 전체 폭 이동은 합성 비용이 크다
+     *   ② 짧은 이동 + 페이드가 '방향은 알겠는데 기다리게 하지 않는' 느낌을 준다
+     * 0.26s 는 '움직임이 보이는 최소'와 '탭이 굼떠 보이는 최대' 사이 값이다.
+     *
+     * prefers-reduced-motion 은 90-misc.css 끝의 전역 규칙이 잡는다.
+     * 네 애니메이션 모두 fill-mode:both 라 0.01ms 로 줄여도 최종 상태에 정상 도달한다. */
+    @keyframes pg-in-right  { from { transform: translateX(18%);  opacity: 0.3 } to { transform: none; opacity: 1 } }
+    @keyframes pg-in-left   { from { transform: translateX(-18%); opacity: 0.3 } to { transform: none; opacity: 1 } }
+    @keyframes pg-out-left  { from { transform: none; opacity: 1 } to { transform: translateX(-12%); opacity: 0 } }
+    @keyframes pg-out-right { from { transform: none; opacity: 1 } to { transform: translateX(12%);  opacity: 0 } }
+
+    /* 나가는 장 — .active 가 빠져도 애니메이션 동안 살려 둔다.
+     * pointer-events:none 이라 사라지는 중에 눌리지 않는다. */
+    .page.pg-leaving { display: block; z-index: 1; pointer-events: none; }
+    .page.active     { z-index: 2; }
+
+    .page.pg-in-r  { animation: pg-in-right  0.26s cubic-bezier(0.22,0.61,0.36,1) both; }
+    .page.pg-in-l  { animation: pg-in-left   0.26s cubic-bezier(0.22,0.61,0.36,1) both; }
+    .page.pg-out-l { animation: pg-out-left  0.26s cubic-bezier(0.22,0.61,0.36,1) both; }
+    .page.pg-out-r { animation: pg-out-right 0.26s cubic-bezier(0.22,0.61,0.36,1) both; }
+
     /* ── BOTTOM NAV ── */
     .bottom-nav {
       position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);

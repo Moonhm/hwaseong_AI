@@ -42,15 +42,65 @@ function resetPage(page) {
   if (p) p.scrollTop = 0;
 }
 
+
+/* ── 화면 전환 애니메이션 (2026-08-25) ─────────────────────────────────────
+ * .page 는 position:absolute 로 겹쳐 있으므로, 나가는 장에 .pg-leaving 을 붙여
+ * display:block 을 유지시키고 들어오는 장을 그 위에 얹으면 두 장이 함께 움직인다.
+ * 방향은 하단 내비 순서(PAGE_ORDER)로 정한다 — 오른쪽 탭으로 가면 오른쪽에서 들어온다.
+ *
+ * 정리는 animationend 로 하되 setTimeout 백업을 둔다. 애니메이션이 어떤 이유로든
+ * 발생하지 않으면(브라우저 설정·확장·오래된 엔진) animationend 가 영영 안 오고,
+ * 그러면 나가던 장이 display:block 인 채 화면에 얼어붙는다. */
+var PAGE_ORDER = ['home', 'tourism', 'living', 'map'];
+var _pgTimer = null;
+
+function _pgCleanup() {
+  clearTimeout(_pgTimer); _pgTimer = null;
+  document.querySelectorAll('.page').forEach(function (p) {
+    p.classList.remove('pg-leaving', 'pg-in-r', 'pg-in-l', 'pg-out-l', 'pg-out-r');
+  });
+}
+
+function _playPageTransition(oldPage, newPage, name) {
+  /* 같은 장이거나 첫 진입이면 애니메이션할 것이 없다. */
+  if (!oldPage || !newPage || oldPage === newPage) { _pgCleanup(); return; }
+
+  /* 연타 대비 — 이전 전환이 끝나지 않았으면 흔적부터 지운다.
+   * 안 지우면 이전 .pg-leaving 이 남아 화면에 두 장이 겹친 채로 굳는다. */
+  _pgCleanup();
+
+  var from = PAGE_ORDER.indexOf((oldPage.id || '').replace('page-', ''));
+  var to   = PAGE_ORDER.indexOf(name);
+  if (from < 0 || to < 0) return;               /* 목록 밖 화면이면 조용히 건너뛴다 */
+  var goingRight = to > from;
+
+  oldPage.classList.add('pg-leaving', goingRight ? 'pg-out-l' : 'pg-out-r');
+  newPage.classList.add(goingRight ? 'pg-in-r' : 'pg-in-l');
+
+  var done = function () {
+    newPage.removeEventListener('animationend', done);
+    _pgCleanup();
+    /* transform 은 레이아웃 크기를 바꾸지 않으므로 애니메이션 중에도 지도 컨테이너
+     * 크기는 정확하다. 그래도 전환이 끝난 뒤 한 번 더 확정한다 — initMap 은
+     * mapReady 가드(js/map.js:51-56) 덕에 재호출해도 relayout 만 한다. */
+    if (name === 'map' && typeof initMap === 'function') initMap();
+  };
+  newPage.addEventListener('animationend', done);
+  _pgTimer = setTimeout(done, 600);             /* 0.26s 애니 + 여유. animationend 가 안 올 때의 백업 */
+}
+
 /* ── 페이지 전환 ── */
 function go(page) {
   closeQuiz();
   closeMenu();
   /* 맵 탭을 벗어날 때 NP 모드 버튼만 정리 (상태는 유지) */
   if (page !== 'map' && typeof exitNpModeOnly === 'function') exitNpModeOnly();
+  var newPage = document.getElementById('page-' + page);
+  var oldPage = document.querySelector('.page.active');
+  _playPageTransition(oldPage, newPage, page);
+
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item[data-page]').forEach(b => b.classList.remove('active'));
-  var newPage = document.getElementById('page-' + page);
   newPage.classList.add('active');
   newPage.scrollTop = 0; // 페이지 자체 스크롤 초기화 (body 스크롤 아님)
   document.querySelector('.nav-item[data-page="' + page + '"]')?.classList.add('active');
