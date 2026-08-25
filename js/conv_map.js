@@ -2,7 +2,7 @@
 
 /* ── 편의정보 지도 표시 모듈 ──────────────────────────────────
  * Kakao Maps services.Geocoder로 주소 → 좌표 변환 후 오버레이 표시
- * setFilter('mobeom' | 'touristrest' | 'hotel' | 'camping' | 'temple' | 'jebu')
+ * setFilter('mobeom' | 'touristrest' | 'hotel' | 'camping' | 'temple' | 'jebu' | 'touristfacility' | 'cinema')
  * ────────────────────────────────────────────────────────── */
 
 var CONV_CAT_CFG = {
@@ -39,6 +39,18 @@ var CONV_CAT_CFG = {
       return '<div class="sl-addr">⏰ ' + (ex.schedule || '') + '</div>';
     },
   },
+  touristfacility: {
+    label: '관광편의시설', color: '#0891B2', bg: '#CFFAFE', emoji: '🏘',
+    getItems: function () { return CONVENIENCE.touristFacilities || []; },
+    extraHtml: function (ex) {
+      return ex.biz ? '<div class="sl-addr">🏠 ' + ex.biz + '</div>' : '';
+    },
+  },
+  cinema: {
+    label: '영화상영관', color: '#BE185D', bg: '#FCE7F3', emoji: '🎬',
+    getItems: function () { return CONVENIENCE.cinemas || []; },
+    extraHtml: function (ex) { return ''; },
+  },
   jebu: {
     label: '제부도 숙박', color: '#0284C7', bg: '#E0F2FE', emoji: '⛱',
     getItems: function () {
@@ -71,7 +83,7 @@ var CONV_ELMAP  = {};   /* id  → DOM el */
 var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
 var _jebuOv     = null;
 
-var CONV_CACHE_VER = 'v5'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
+var CONV_CACHE_VER = 'v6'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
 
 /* localStorage 캐시 키 */
 function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat; }

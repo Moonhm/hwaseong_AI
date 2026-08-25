@@ -331,12 +331,14 @@ git pull
 
 | 항목 | 값 |
 |------|----|
-| CONV_CACHE_VER | `v5` (localStorage 캐시 버전) |
+| CONV_CACHE_VER | `v6` (2026-08-26 좌표 이식으로 올림) |
 | 관광지 | 159개 (id: 1–41, 66–83, 134–200, 201–233) |
+| 문화재 | 42개 (id: 234–275, 2026-08-26 추가) |
 | 축제 | 48개 (id: 42–133) |
 | 주차장 | 131개 |
 | 제부도 숙박 | 115개 (lat/lng 하드코딩, convenience.js) |
-| 편의정보 | 모범음식점 94, 관광식당 35, 호텔 14, 캠핑 11, 템플스테이 1 |
+| 편의정보 | 모범음식점 94(88좌표이식), 관광식당 35, 호텔 10, 캠핑 17, 템플스테이 1, **관광편의시설 10(신규)**, **영화상영관 10(신규)** |
+| 음식점 데이터 | 3754건 — `data/restaurants-static.json` (665KB, `{n,c,a,t,x,y}`) — **지도 모듈 구현 대기** |
 
 ### Kakao API
 
@@ -367,7 +369,53 @@ python tools/server.py --port 8080
 | 작은섬1·2, 양지팬션·리조텔 | convenience.js에서 동일 좌표 중복 — 마커 겹침, 데이터 보정 필요 |
 | id:41 화성예술의전당 | 주소(향남읍)와 좌표(동탄) 불일치 — 수동 수정 필요 |
 | id:102 송산포도축제 | date 필드에 종료일(9/7)만 기재, 시작일(9/6) 누락 |
-| convenience.js 대부분 lat/lng 없음 | restaurants/hotels/camping 대부분 좌표 미입력 — 지도 핀 미표시 (제부도는 완료) |
+| ~~convenience.js 대부분 lat/lng 없음~~ | ✅ 2026-08-26 해결 — 모범음식점 88/94 좌표 이식, 관광편의시설·영화상영관 신규 섹션 추가 |
+| 음식점 3754건 미표시 | `data/restaurants-static.json` 준비 완료. **개발 Claude의 `js/restaurants.js` 모듈 구현 필요** (§13-R 참조) |
+
+---
+
+## 13-R. 음식점 3754건 지도 표시 — 개발 Claude 구현 사양
+
+> 배포 Claude가 데이터 준비 완료. 개발 Claude가 아래 사양대로 `js/restaurants.js` 구현 후 `index.html`에 연결.
+
+### 데이터 파일
+
+| 파일 | 크기 | 스키마 |
+|------|------|--------|
+| `data/restaurants-static.json` | 665KB | `{ meta: {...}, rows: [{n,c,a,t,x,y}] }` |
+
+- `n` 이름, `c` 카테고리(18종), `a` 주소, `t` 전화, `x` lat, `y` lng
+- 18개 카테고리: 한식 1575, 카페/음료 975, 분식 182, 베이커리 143, 치킨 138, 한식_고기 124, 탕/국밥 116, 해산물 93, 술집/포차 70, 일식 66, 피자 56, 중식 53, 면류 49, 뷔페 33, 족발/보쌈 26, 아시안/외국 24, 양식 19, 패스트푸드 12
+
+### 권장 구현 방식
+
+`js/localcurrency.js`와 동일한 뷰포트+클러스터 방식을 따름:
+
+```js
+// js/restaurants.js 핵심 구조
+var rsData = [];          // fetch로 data/restaurants-static.json 로드
+var rsCatFilter = 'all';  // 카테고리 필터
+var RS_MAX_PINS = 250;    // 뷰포트 내 핀 상한
+var RS_PIN_LEVEL = 6;     // 이 레벨 이하에서 개별 핀, 초과시 클러스터
+
+function initRestaurants(map) { /* idle 이벤트 등록 */ }
+function setRsVisible(visible) { /* 표시/숨김 */ }
+function setRsFilter(cat) { /* 카테고리 필터 */ }
+```
+
+### index.html 연결
+
+```html
+<!-- 지도 칩에 추가 -->
+<div class="chip" data-cat="restaurant" onclick="setFilter('restaurant')">🍜 음식점</div>
+
+<!-- 스크립트 추가 -->
+<script src="js/restaurants.js?v=202608xxxx"></script>
+```
+
+### map.js 연결
+
+`setFilter('restaurant')` 진입 시 `setRsVisible(true)` 호출, 나머지 카테고리 진입 시 `setRsVisible(false)`.
 
 ---
 
