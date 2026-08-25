@@ -47,7 +47,7 @@ function fetchParkingAll() {
   /* DOMContentLoaded에서 이미 static JSON을 로드했으면 재사용 */
   var staticP = parkingData.length
     ? Promise.resolve(null)
-    : fetch('js/parking-static.json').then(function (r) { return r.json(); });
+    : fetch('js/parking-static.json?v=20260825').then(function (r) { return r.json(); });
 
   staticP
     .then(function (list) {

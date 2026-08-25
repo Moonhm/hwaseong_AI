@@ -21,7 +21,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 
 # 프로젝트 루트 = tools/ 의 상위 디렉토리
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -137,6 +137,34 @@ _ZONE_MAP = {
 }
 
 app = Flask(__name__, static_folder=ROOT, static_url_path="")
+
+# ── 공개 범위 제한 ────────────────────────────────────────────────────────────
+# static_folder=ROOT 는 저장소 루트를 통째로 정적 서빙한다. Cloudflare 터널이
+# 이 서버를 그대로 인터넷에 노출하므로, 막지 않으면 아래가 전부 공개로 읽힌다.
+# 실측(2026-08-25): /.git/config, /.git/logs/HEAD(43KB), /WORKFLOW.md(41KB),
+#                   /tools/fix_coords.py 가 전부 HTTP 200 이었다.
+# .git/config 에는 커밋 계정 이메일이, tools/*.py 와 WORKFLOW.md 에는
+# Kakao REST 키가 평문으로 들어 있다.
+#
+# 거부 목록이 아니라 허용 목록이다 — 새 파일이 루트에 생겨도 기본이 비공개다.
+# 앱이 실제로 요청하는 정적 경로는 js/ · img/ · assets/ 뿐이다(코드 전수 확인).
+# css/ 는 향후 CSS 분리를 대비해 미리 열어 둔다.
+_PUBLIC_DIRS  = ("js/", "img/", "assets/", "css/")
+_PUBLIC_FILES = ("index.html", "favicon.ico")
+
+
+@app.before_request
+def _restrict_static_scope():
+    path = request.path.lstrip("/")
+    if not path or path.startswith("api/"):
+        return None                      # 루트(/) 와 API 라우트는 아래 핸들러가 맡는다
+    if ".." in path:
+        return ("Not Found", 404)        # 경로 탈출 시도
+    if path in _PUBLIC_FILES:
+        return None
+    if any(path.startswith(d) for d in _PUBLIC_DIRS):
+        return None
+    return ("Not Found", 404)
 
 _LIST_URL = "https://smartparking.hscity.go.kr/api/parking/searchParkingList.json"
 _RT_URL   = "https://smartparking.hscity.go.kr/api/parking/allOperating.json"

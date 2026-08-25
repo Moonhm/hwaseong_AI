@@ -2330,7 +2330,7 @@ function renderNearbyResult(myLat, myLng) {
 
   /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
   if (!parks.length) {
-    fetch('js/parking-static.json').then(function (r) { return r.json(); }).then(function (d) {
+    fetch('js/parking-static.json?v=20260825').then(function (r) { return r.json(); }).then(function (d) {
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
       if (parkingData.length) renderNearbyResult(myLat, myLng);
     }).catch(function () {});
@@ -3596,7 +3596,7 @@ function _loadLcData(callback) {
   /* 4.2MB / 27,374건이라 저사양 기기에서 파싱 중 1초 가까이 메인스레드가 멈춘다.
    * 최소한 무반응 구간임을 알린다. */
   if (typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중입니다...');
-  fetch('js/localcurrency-static.json').then(function(r) { return r.json(); }).then(function(d) {
+  fetch('js/localcurrency-static.json?v=20260825').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     var sc = document.getElementById('stat-currency');
     if (sc) sc.textContent = lcData.length.toLocaleString();
@@ -3875,7 +3875,7 @@ document.addEventListener('click', function(e) {
 
 window.addEventListener('DOMContentLoaded', () => {
   /* 주차장 데이터 사전 로드 (76KB) — 홈·가까운관광지 즉시 표시용 */
-  fetch('js/parking-static.json').then(function(r) { return r.json(); }).then(function(d) {
+  fetch('js/parking-static.json?v=20260825').then(function(r) { return r.json(); }).then(function(d) {
     if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
     var sp = document.getElementById('stat-parking');
     if (sp) sp.textContent = parkingData.length;
@@ -3889,11 +3889,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/convenience.js?v=20260824"></script>
-<script src="js/data.js?v=20260824"></script>
-<script src="js/map.js?v=20260824"></script>
-<script src="js/conv_map.js?v=20260824"></script>
-<script src="js/parking.js?v=20260824"></script>
-<script src="js/localcurrency.js?v=20260824"></script>
+<script src="js/convenience.js?v=20260825"></script>
+<script src="js/data.js?v=20260825"></script>
+<script src="js/map.js?v=20260825"></script>
+<script src="js/conv_map.js?v=20260825"></script>
+<script src="js/parking.js?v=20260825"></script>
+<script src="js/localcurrency.js?v=20260825"></script>
 </body>
 </html>
