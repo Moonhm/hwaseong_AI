@@ -1,0 +1,225 @@
+/* ============================================================================
+ * css/30-panel.css — 패널·목록 — 사이드 드로어·관광 서브탭·숙박/캠핑/템플·통계 카드
+ *
+ * 왜 따로 있나: 본문 위에 떠오르거나 목록 형태로 반복되는 조각들. 개별 화면보다 재사용 빈도가 높아 따로 둔다.
+ * 함께 볼 것:   js/tourism.js 의 renderHotels·renderCamping·renderTempleStay 와 짝이다.
+ *
+ * index.html <style> 754~967줄에서 분리 (2026-08-25, 개발 Claude).
+ * 파일명 앞 번호 = 캐스케이드 순서다. index.html 의 <link> 나열도 이 순서여야 한다.
+ * 새 규칙은 '가장 가까운 번호대 파일'에 넣는다 — 그래야 두 Claude 가 다른 파일을 만진다.
+ * ========================================================================== */
+
+    /* ── 사이드 메뉴 드로어 ── */
+    #menu-dim {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 600; opacity: 0; pointer-events: none; transition: opacity 0.28s;
+    }
+    #menu-dim.open { opacity: 1; pointer-events: auto; }
+    #quiz-dim {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      z-index: 690; opacity: 0; pointer-events: none; transition: opacity 0.28s;
+    }
+    #quiz-dim.open { opacity: 1; pointer-events: auto; }
+    #menu-drawer {
+      position: fixed; top: 0; height: 100%;
+      right: max(0px, calc((100vw - 480px) / 2));
+      width: min(72vw, 320px);
+      background: var(--white); z-index: 601;
+      transform: translateX(110%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0.35s;
+      overflow-y: auto; box-shadow: -4px 0 24px rgba(0,0,0,0.15);
+      visibility: hidden;
+    }
+    #menu-drawer.open {
+      transform: translateX(0);
+      visibility: visible;
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s 0s;
+    }
+    .menu-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+    }
+    .menu-close {
+      width: 30px; height: 30px; border-radius: 50%; background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; color: var(--text-muted); cursor: pointer;
+    }
+    .hamburger-btn {
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      gap: 4px; padding: 6px 8px; cursor: pointer; border: none; background: none;
+      min-width: 36px; min-height: 36px;   /* 메뉴 유일 진입점 — 터치 타겟 확보 */
+    }
+    .hamburger-btn span {
+      display: block; width: 19px; height: 2px;
+      background: var(--text-sub); border-radius: 1px;
+    }
+
+    /* ── 관광 서브탭 ── */
+    .tourism-subnav {
+      display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; padding: 10px var(--px) 12px;
+      scrollbar-width: none; background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+    .tourism-subnav::-webkit-scrollbar { display: none; }
+
+    /* ── 호텔 아이템 ── */
+    .hotel-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px var(--px); background: var(--white);
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      transition: background 0.1s;
+    }
+    .hotel-item:hover { background: #FAFAFA; }
+    .hotel-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: #FFF7ED; display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .hotel-grade { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 12px; }
+    .grade-4 { background: #FFF7ED; color: #F97316; }
+    .grade-3 { background: #FEF9C3; color: #CA8A04; }
+    .grade-2 { background: #F1F5F9; color: #64748B; }
+    .grade-1 { background: #F1F5F9; color: #94A3B8; }
+    .grade-0 { background: #F1F5F9; color: #9CA3AF; }
+
+    /* ── 제부도 요약 카드 ── */
+    .jebu-hero {
+      margin: 12px var(--px); border-radius: var(--r-lg); overflow: hidden;
+      background: linear-gradient(135deg, #0EA5E9, #0369A1);
+      cursor: pointer; transition: transform 0.12s, box-shadow 0.15s;
+      box-shadow: var(--shadow-sm);
+    }
+    .jebu-hero:active { transform: scale(0.98); }
+    .jebu-hero-body { padding: 18px 20px; color: #fff; }
+    .jebu-hero-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+    .jebu-hero-sub   { font-size: 12px; opacity: 0.8; margin-bottom: 14px; }
+    .jebu-counts { display: flex; gap: 10px; flex-wrap: wrap; }
+    .jebu-count-item {
+      background: rgba(255,255,255,0.18); border-radius: 8px;
+      padding: 8px 12px; text-align: center; flex: 1; min-width: 56px;
+    }
+    .jebu-count-val { font-size: 18px; font-weight: 900; }
+    .jebu-count-lbl { font-size: 10px; opacity: 0.85; margin-top: 1px; }
+
+    .jebu-type-header {
+      padding: 12px var(--px) 6px; font-size: 13px; font-weight: 700; color: var(--text);
+      background: var(--bg); border-top: 1px solid var(--border);
+    }
+
+    /* ── 캠핑장 아이템 ── */
+    .camp-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px var(--px); background: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+    .camp-icon {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      background: var(--green-bg); display: flex; align-items: center;
+      justify-content: center; font-size: 20px;
+    }
+    .camp-fac {
+      font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 10px;
+      background: var(--green-bg); color: var(--green); display: inline-block; margin-top: 5px;
+    }
+    .camp-pub {
+      font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;
+      background: var(--primary-bg); color: var(--primary);
+      display: inline-block; margin-top: 5px; margin-left: 4px;
+    }
+
+    /* ── 템플스테이 카드 ── */
+    .temple-card {
+      margin: 12px var(--px); border-radius: var(--r-lg); overflow: hidden;
+      box-shadow: var(--shadow-sm); background: var(--white); border: 1px solid var(--border);
+    }
+    .temple-hero {
+      height: 130px;
+      background: linear-gradient(150deg, #1a1a3e, #2e1760, #5b21b6);
+      display: flex; align-items: center; justify-content: center; font-size: 52px;
+    }
+    .temple-body { padding: 16px 20px; }
+    .temple-title { font-size: 17px; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+    .temple-desc  { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 12px; }
+    .temple-prog-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 13px; color: var(--text-sub); padding: 7px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .temple-prog-item:last-child { border-bottom: none; }
+
+    /* ── 관광식당 업종 태그 ── */
+    .cuisine-tag { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: #FEE2E2; color: #DC2626; }
+    .cuisine-nepal  { background: #EDE9FE; color: #7C3AED; }
+    .cuisine-russia { background: #E0F2FE; color: #0369A1; }
+
+    /* ── 생활 탭 카테고리 활성 ── */
+    .cat-icon-item.cat-active .cat-icon-circle { outline: 2.5px solid var(--primary); outline-offset: 2px; }
+    .cat-icon-item.cat-active .cat-icon-label  { color: var(--primary); font-weight: 700; }
+
+    /* ── 통계 소형 카드 ── */
+    .stat-card-sm {
+      background: var(--white); border-radius: var(--r-md);
+      border: 1px solid var(--border); padding: 12px 14px;
+    }
+    .stat-val-sm { font-size: 22px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
+    .stat-lbl-sm { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── 내 위치 추천 카드 ── */
+    .nearby-wrap { padding: 0 var(--px) 0; margin-top: 4px; }
+    .nearby-cta {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+      border: 1.5px dashed #93C5FD; border-radius: var(--r-md);
+      padding: 18px 16px; cursor: pointer; transition: box-shadow 0.15s;
+    }
+    .nearby-cta:active { transform: scale(0.98); }
+    .nearby-cta-icon { font-size: 28px; }
+    .nearby-cta-text { font-size: 14px; font-weight: 700; color: var(--primary); line-height: 1.4; }
+    .nearby-cta-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    /* 결과 카드 */
+    .nearby-card { border-radius: var(--r-md); overflow: hidden; box-shadow: var(--shadow-md); background: var(--white); border: 1px solid var(--border); }
+    .nearby-photo {
+      position: relative; width: 100%; height: 180px; overflow: hidden;
+      background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nearby-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .nearby-photo-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0) 55%);
+    }
+    .nearby-photo-info { position: absolute; bottom: 12px; left: 14px; right: 14px; color: #fff; }
+    .nearby-photo-cat  { font-size: 11px; font-weight: 700; opacity: 0.9; margin-bottom: 4px; letter-spacing: 0.5px; }
+    .nearby-photo-name { font-size: 18px; font-weight: 800; line-height: 1.25; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    .nearby-dist-badge {
+      position: absolute; top: 10px; right: 10px;
+      background: rgba(0,0,0,0.52); backdrop-filter: blur(4px);
+      color: #fff; font-size: 11px; font-weight: 700;
+      padding: 3px 9px; border-radius: 20px;
+    }
+    .nearby-body { padding: 14px 16px; }
+    .nearby-addr { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
+    .nearby-actions { display: flex; gap: 8px; }
+    .nearby-btn {
+      flex: 1; padding: 9px 0; border-radius: 10px; font-size: 13px; font-weight: 700;
+      border: 1.5px solid var(--border); background: var(--white); color: var(--text);
+      cursor: pointer; text-align: center; transition: background 0.12s;
+    }
+    .nearby-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .nearby-btn:active  { transform: scale(0.97); }
+    /* 주차 연결 카드 */
+    .nearby-park {
+      margin-top: 10px; border-radius: var(--r-md); padding: 14px 16px;
+      background: var(--white); border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 12px; cursor: pointer; transition: box-shadow 0.15s;
+    }
+    .nearby-park:active { transform: scale(0.98); }
+    .nearby-park-icon {
+      width: 42px; height: 42px; border-radius: 12px; background: #DBEAFE;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 900; color: var(--primary); flex-shrink: 0;
+    }
+    .nearby-park-name { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+    .nearby-park-meta { font-size: 12px; color: var(--text-muted); }
+    .nearby-loading { text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px; }
+

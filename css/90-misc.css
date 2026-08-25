@@ -1,0 +1,130 @@
+/* ============================================================================
+ * css/90-misc.css — 메뉴 항목·토스트·ABOUT/데이터 출처
+ *
+ * 왜 따로 있나: 어디에도 안 붙는 나머지. 번호를 90 으로 띄워 둔 이유는 새 화면이 생기면 50~80 사이에 넣으라는 뜻이다.
+ * 함께 볼 것:   js/ui.js 의 showToast 와 index.html 의 드로어 마크업.
+ *
+ * index.html <style> 1204~1322줄에서 분리 (2026-08-25, 개발 Claude).
+ * 파일명 앞 번호 = 캐스케이드 순서다. index.html 의 <link> 나열도 이 순서여야 한다.
+ * 새 규칙은 '가장 가까운 번호대 파일'에 넣는다 — 그래야 두 Claude 가 다른 파일을 만진다.
+ * ========================================================================== */
+
+    /* ── 메뉴 드로어 항목 ── */
+    .menu-section-title {
+      font-size: 11px; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 20px 20px 8px;
+    }
+    .menu-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px; cursor: pointer;
+      transition: background 0.1s; border-radius: 0;
+    }
+    .menu-item:hover { background: var(--bg); }
+    .menu-item-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .menu-item-text { flex: 1; }
+    .menu-item-label { font-size: 14px; font-weight: 700; color: var(--text); }
+    .menu-item-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .menu-fav-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 13px 20px; cursor: pointer; transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .menu-fav-item:active { background: var(--bg); }
+    .menu-fav-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .menu-fav-name { font-size: 15px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .menu-fav-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .menu-fav-empty { padding: 14px 20px; font-size: 13px; color: var(--text-muted); }
+    .menu-rec-banner {
+      margin: 16px 16px 0;
+      background: linear-gradient(135deg, #F97316, #EA580C);
+      border-radius: 16px; padding: 18px 20px;
+      cursor: pointer; transition: transform 0.12s, box-shadow 0.15s;
+      box-shadow: 0 4px 16px rgba(249,115,22,0.25);
+    }
+    .menu-rec-banner:active { transform: scale(0.98); }
+    .menu-rec-banner-title { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    .menu-rec-banner-sub { font-size: 12px; color: rgba(255,255,255,0.8); }
+    .menu-rec-banner-arrow {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 14px; color: #fff; font-size: 13px; font-weight: 700;
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: calc(46px + env(safe-area-inset-bottom) + 14px); left: 50%;
+      transform: translateX(-50%) translateY(20px) scale(0.88);
+      background: var(--text); color: #fff; font-size: 13px; font-weight: 500;
+      padding: 10px 20px; border-radius: 24px;
+      max-width: calc(100vw - 32px); text-align: center;  /* 320px 화면에서 넘치지 않도록 */
+      box-shadow: var(--shadow-md); z-index: 999;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+    /* ── ABOUT + 데이터 출처 ── */
+    .home-about {
+      margin: 20px var(--px) 0;
+      background: var(--white);
+      border-radius: var(--r-md);
+      padding: 22px 18px 20px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+    .home-about-badge {
+      display: inline-block;
+      background: rgba(249,115,22,0.10);
+      color: var(--orange);
+      font-size: 11px; font-weight: 800; letter-spacing: 1px;
+      padding: 3px 10px; border-radius: 20px; margin-bottom: 10px;
+    }
+    .home-about-title {
+      margin: 0 0 10px; font-size: 16px; font-weight: 800; color: var(--text);
+    }
+    .home-about-desc {
+      margin: 0 0 16px; font-size: 13px; color: var(--text-sub); line-height: 1.85;
+    }
+    .home-about-chips {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .home-about-chip {
+      font-size: 11.5px; font-weight: 600;
+      color: var(--orange);
+      background: rgba(249,115,22,0.07);
+      border: 1px solid rgba(249,115,22,0.18);
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .home-data-notice {
+      margin: 12px var(--px) 0;
+      padding: 16px 16px 14px;
+      background: var(--bg);
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+    }
+    .dn-heading {
+      font-size: 10.5px; font-weight: 800; color: var(--text-muted);
+      letter-spacing: 0.7px; text-transform: uppercase; margin: 0 0 10px;
+    }
+    .dn-body {
+      font-size: 11px; color: #a0aec0; line-height: 1.8; margin: 0 0 7px;
+    }
+    .dn-body strong { color: #718096; font-weight: 700; }
+    .dn-copy {
+      font-size: 10px; color: #b8c2cc; line-height: 1.6;
+      margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--border);
+    }
+    .dn-dev {
+      border-top: none; padding-top: 3px; margin-top: 3px;
+      color: #a0aec0; font-weight: 600;
+    }
+    .dn-mail { color: var(--orange); text-decoration: none; }
+    .home-bottom-pad { height: 24px; }

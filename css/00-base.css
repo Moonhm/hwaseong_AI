@@ -1,0 +1,250 @@
+/* ============================================================================
+ * css/00-base.css — 토큰·리셋·레이아웃 골격·공통 컴포넌트
+ *
+ * 왜 따로 있나: 여기 있는 :root 변수와 리셋은 뒤의 모든 파일이 전제로 삼는다. 그래서 번호가 가장 앞이고, 이 파일만은 순서를 바꾸면 안 된다.
+ * 함께 볼 것:   색·간격을 새로 쓸 때는 여기 :root 에 이름을 붙이고 그 이름만 쓴다. 날 hex 를 화면 파일에 직접 적지 말 것.
+ *
+ * index.html <style> 13~251줄에서 분리 (2026-08-25, 개발 Claude).
+ * 파일명 앞 번호 = 캐스케이드 순서다. index.html 의 <link> 나열도 이 순서여야 한다.
+ * 새 규칙은 '가장 가까운 번호대 파일'에 넣는다 — 그래야 두 Claude 가 다른 파일을 만진다.
+ * ========================================================================== */
+
+    /* ── TOKENS ── */
+    :root {
+      --primary:   #2563EB;
+      --primary-bg:#EEF2FF;
+      --orange:    #F97316;
+      --orange-bg: #FFF7ED;
+      --green:     #16A34A;
+      --green-bg:  #DCFCE7;
+      --blue-dark: #1E40AF;
+      --bg:        #F5F6F8;
+      --white:     #FFFFFF;
+      --text:      #111827;
+      --text-sub:  #374151;
+      --text-muted:#9CA3AF;
+      --border:    #E5E7EB;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+      --r-sm:  8px;
+      --r-md:  12px;
+      --r-lg:  16px;
+      --r-pill:24px;
+      --px:    20px;
+    }
+
+    /* ── RESET ── */
+    html { height: 100%; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100%;
+      overflow: hidden;
+      max-width: 480px;
+      margin: 0 auto;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+    /* ── PAGES — 각 페이지가 독립 스크롤 컨테이너 (body jitter 방지) ── */
+    .page {
+      display: none; position: absolute;
+      top: 0; left: 0; right: 0;
+      bottom: calc(46px + env(safe-area-inset-bottom));
+      overflow-y: auto; overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .page.active { display: block; }
+
+    /* ── BOTTOM NAV ── */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px; z-index: 300;
+      background: var(--white); border-top: 1px solid var(--border);
+      display: flex; align-items: stretch;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 2px; height: 46px;
+      color: var(--text-muted); font-size: 10px; font-weight: 600;
+      transition: color 0.14s;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item svg { width: 20px; height: 20px; }
+
+    /* ── PAGE HEADER ── */
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px var(--px) 8px; background: var(--white);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100;
+    }
+    .page-header-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .page-header-logo { height: 28px; }
+    .back-btn {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 15px; color: var(--text-sub); font-weight: 500;
+    }
+
+    /* ── SEARCH BAR ── */
+    .search-bar {
+      margin: 14px var(--px); display: flex; align-items: center; gap: 10px;
+      background: var(--white); border: 1.5px solid var(--border);
+      border-radius: var(--r-pill); padding: 11px 16px;
+      box-shadow: var(--shadow-sm);
+    }
+    .search-bar input {
+      border: none; outline: none; flex: 1;
+      font-size: 14px; color: var(--text);
+      background: transparent; font-family: inherit;
+    }
+    .search-bar input::placeholder { color: var(--text-muted); }
+
+    /* ── SEARCH RESULTS ── */
+    .home-search-results {
+      display: none; position: relative; z-index: 50;
+      margin: -6px var(--px) 0; background: var(--white);
+      border: 1.5px solid var(--border); border-top: none;
+      border-radius: 0 0 16px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.10); overflow: hidden;
+    }
+    .home-search-results.open { display: block; }
+    .sr-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 16px; cursor: pointer;
+      border-bottom: 1px solid var(--border); transition: background 0.12s;
+    }
+    .sr-item:last-child { border-bottom: none; }
+    .sr-item:active { background: #F3F4F6; }
+    .sr-icon {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+    }
+    .sr-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sr-sub  { font-size: 11px; color: var(--text-muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sr-empty { padding: 20px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+    .search-bar input { caret-color: var(--primary); }
+    .search-clear {
+      display: none; align-items: center; justify-content: center;
+      width: 20px; height: 20px; border-radius: 50%; background: #E5E7EB;
+      cursor: pointer; flex-shrink: 0; font-size: 11px; color: #6B7280;
+      /* 히트영역만 36x36 으로 넓히고 레이아웃 점유는 20x20 유지 —
+       * 패딩만 주면 버튼이 나타나는 순간 검색바 높이가 점프한다. */
+      padding: 8px; box-sizing: content-box; background-clip: content-box; margin: -8px;
+    }
+
+    /* ── TOGGLE TABS ── */
+    .toggle-tabs {
+      display: flex; gap: 8px; padding: 0 var(--px) 14px;
+    }
+    .ttab {
+      flex: 1; padding: 10px; border-radius: var(--r-md); text-align: center;
+      font-size: 14px; font-weight: 600; border: 1.5px solid var(--border);
+      background: var(--white); color: var(--text-muted);
+      transition: all 0.15s;
+    }
+    .ttab.active { background: var(--orange); color: var(--white); border-color: var(--orange); }
+    .ttab[data-tab="tourism"].active { background: #2563EB; border-color: #2563EB; }
+
+    /* ── SECTION ── */
+    .section { padding: 20px var(--px) 0; }
+    .section-header {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title { font-size: 17px; font-weight: 700; color: var(--text); }
+    .section-sub   { font-size: 13px; color: var(--text-muted); }
+    .section-link  { font-size: 13px; color: var(--primary); font-weight: 500; }
+
+    /* ── BADGE ── */
+    .badge {
+      display: inline-flex; align-items: center;
+      font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px;
+    }
+    .badge-ongoing { background: var(--orange); color: #fff; }
+    .badge-upcoming{ background: #F3F4F6; color: var(--text-muted); }
+    .badge-soon    { background: var(--primary-bg); color: var(--primary); }
+
+    /* ── FESTIVAL CARD (홈) ── */
+    .festival-card-big {
+      background: var(--white); border-radius: var(--r-lg);
+      border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+      overflow: hidden; cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .festival-card-big:hover { box-shadow: var(--shadow-md); }
+    .fcb-img {
+      height: 160px; position: relative;
+    }
+    .fcb-badge { position: absolute; top: 12px; left: 12px; }
+    .fcb-body { padding: 14px 16px 16px; }
+    .fcb-date { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+    .fcb-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .fcb-loc  { font-size: 12px; color: var(--text-muted); }
+
+    /* 축제 이미지 placeholder */
+    .img-sunset  { background: linear-gradient(150deg,#FF7043,#8E44AD,#1A3A6B); }
+    .img-sea     { background: linear-gradient(150deg,#0EA5E9,#0369A1,#1E3A5F); }
+    .img-night   { background: linear-gradient(150deg,#1a1a3e,#2563EB,#7C3AED); }
+    .img-peace   { background: linear-gradient(150deg,#E0F2FE,#7DD3FC,#1E40AF); }
+    .img-dino    { background: linear-gradient(150deg,#D1FAE5,#6EE7B7,#065F46); }
+
+    /* ── PLACE 2-COL GRID (홈) ── */
+    .place-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .place-card-sm {
+      background: var(--white); border-radius: var(--r-md);
+      border: 1px solid var(--border); padding: 12px;
+      display: flex; flex-direction: column; gap: 8px; cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    .place-card-sm:hover { box-shadow: var(--shadow-md); }
+    .place-card-sm-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .place-card-sm-addr { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+
+    /* ── PLACE LIST (관광·생활) ── */
+    .place-list { display: flex; flex-direction: column; }
+    .place-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px var(--px); background: var(--white);
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      transition: background 0.1s;
+    }
+    .place-item:first-child { border-top: 1px solid var(--border); }
+    .place-item:hover { background: #FAFAFA; }
+    .tourism-more-btn {
+      padding: 14px var(--px); text-align: center; font-size: 14px; font-weight: 600;
+      color: var(--text-sub); background: var(--white); cursor: pointer;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .tourism-more-btn:hover { background: #F5F5F5; }
+
+    /* 아이콘 뱃지 */
+    .pi {
+      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+    }
+    .pi-tourist  { background: #EEF2FF; border-radius: 10px; }
+    .pi-food     { background: #FFF7ED; border-radius: 50%; }
+    .pi-festival { background: var(--orange-bg); border-radius: 10px; }
+    .pi-currency { background: var(--green-bg); border-radius: 50%; }
+    .pi-parking  { background: #DBEAFE; border-radius: 8px; font-size: 13px; font-weight: 800; color: var(--primary); }
+
+    .pi-content { flex: 1; min-width: 0; }
+    .pi-name {
+      font-size: 15px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      margin-bottom: 3px;
+    }
+    .currency-tag {
+      font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px;
+      background: var(--green-bg); color: var(--green); white-space: nowrap;
+    }
+    .pi-meta  { font-size: 12px; color: var(--text-muted); }
+    .pi-right { font-size: 12px; color: var(--text-muted); flex-shrink: 0; text-align: right; }
+

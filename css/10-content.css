@@ -1,0 +1,239 @@
+/* ============================================================================
+ * css/10-content.css — 관광·생활 탭 콘텐츠 — 축제 스크롤·테마칩·축제 상세·캘린더·통계
+ *
+ * 왜 따로 있나: 탭 안에서 닫히는 화면 전용 스타일이다. 지도(20)나 오버레이(30~40)와 겹치는 선택자가 없다.
+ * 함께 볼 것:   js/tourism.js · js/living.js · js/calendar.js 가 그리는 마크업의 짝이다.
+ *
+ * index.html <style> 252~479줄에서 분리 (2026-08-25, 개발 Claude).
+ * 파일명 앞 번호 = 캐스케이드 순서다. index.html 의 <link> 나열도 이 순서여야 한다.
+ * 새 규칙은 '가장 가까운 번호대 파일'에 넣는다 — 그래야 두 Claude 가 다른 파일을 만진다.
+ * ========================================================================== */
+
+    /* ── FESTIVAL 가로 스크롤 (관광) ── */
+    .fscroll-wrap { position: relative; margin-bottom: 8px; }
+    .festival-scroll {
+      display: flex; gap: 10px;
+      overflow-x: auto; overscroll-behavior-x: contain; padding: 0 var(--px) 4px;
+      scrollbar-width: none;
+    }
+    .festival-scroll::-webkit-scrollbar { display: none; }
+    .fsc-arr {
+      position: absolute; top: 50%; transform: translateY(-60%);
+      width: 30px; height: 30px; border-radius: 50%;
+      background: rgba(255,255,255,0.96); border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: var(--text-sub);
+      cursor: pointer; z-index: 10;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.18s;
+    }
+    .fsc-arr.visible { opacity: 1; pointer-events: auto; }
+    .fsc-arr:hover { background: #F5F5F5; }
+    .fsc-arr-left  { left: 4px; }
+    .fsc-arr-right { right: 4px; }
+    .festival-scroll-card {
+      flex-shrink: 0; width: 180px; background: var(--white);
+      border-radius: var(--r-md); border: 1px solid var(--border);
+      overflow: hidden; cursor: pointer; transition: box-shadow 0.15s;
+    }
+    .festival-scroll-card:hover { box-shadow: var(--shadow-md); }
+    .fsc-img { height: 100px; position: relative; }
+    .fsc-badge { position: absolute; top: 8px; left: 8px; }
+    .fsc-body { padding: 10px 12px 12px; }
+    .fsc-date  { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+    .fsc-title { font-size: 13px; font-weight: 700; color: var(--text); }
+
+    /* ── 테마 칩 ── */
+    .theme-chips {
+      display: flex; gap: 8px; overflow-x: auto; overscroll-behavior-x: contain; padding: var(--px) var(--px) 0;
+      scrollbar-width: none;
+    }
+    .theme-chips::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 7px 16px; border-radius: var(--r-pill); white-space: nowrap;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      border: 1.5px solid var(--border); background: var(--white); color: var(--text-sub);
+      transition: all 0.14s;
+    }
+    .chip.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+    .chip--parking { border-color: #2563EB; color: #2563EB; }
+    .chip--parking.active { background: #2563EB; color: #fff; border-color: #2563EB; }
+
+    /* ── 축제 상세 ── */
+    #view-festival-detail { display: none; }
+    #view-festival-detail.active { display: block; }
+
+    /* 히어로 배너 */
+    .fd-hero {
+      height: 210px; position: relative;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      padding: 20px; overflow: hidden;
+    }
+    .fd-hero::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.60) 100%);
+    }
+    .fd-hero-body { position: relative; z-index: 1; }
+    .fd-hero-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 20px; margin-bottom: 10px;
+      font-size: 11px; font-weight: 700; color: #fff;
+      background: rgba(255,255,255,0.22);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.30);
+    }
+    .fd-hero-title {
+      font-size: 19px; font-weight: 900; color: #fff;
+      line-height: 1.35; text-shadow: 0 1px 6px rgba(0,0,0,0.35);
+      margin-bottom: 6px;
+    }
+    .fd-hero-date {
+      font-size: 12px; color: rgba(255,255,255,0.85); font-weight: 500;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    /* 본문 */
+    .fd-body { background: var(--white); padding: 18px 18px 0; }
+    .fd-info-card {
+      background: #F8FAFC; border-radius: 16px;
+      padding: 16px; margin-bottom: 16px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .fd-info-row  { display: flex; gap: 12px; align-items: flex-start; }
+    .fd-info-icon { font-size: 16px; flex-shrink: 0; width: 22px; margin-top: 1px; }
+    .fd-info-label{ font-size: 11px; color: var(--text-muted); margin-bottom: 3px; font-weight: 600; letter-spacing: 0.3px; }
+    .fd-info-val  { font-size: 13px; color: var(--text-sub); font-weight: 500; line-height: 1.5; }
+    .fd-info-link {
+      font-size: 13px; color: var(--primary); font-weight: 700;
+      text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .fd-info-link:active { opacity: 0.7; }
+
+    /* 주변 바로가기 */
+    .fd-nearby { display: flex; gap: 8px; padding: 0 18px 16px; background: var(--white); }
+    .fd-nearby-btn {
+      flex: 1; padding: 12px 4px; border-radius: 14px; text-align: center;
+      font-size: 11px; font-weight: 600; color: var(--text-sub);
+      border: 1.5px solid var(--border); background: var(--white);
+      cursor: pointer; transition: background 0.1s, transform 0.1s;
+    }
+    .fd-nearby-btn:active { background: var(--bg); transform: scale(0.96); }
+    .fd-nearby-btn .nb-icon { font-size: 20px; display: block; margin-bottom: 5px; }
+
+    /* CTA */
+    .fd-cta {
+      /* .page 가 이미 bottom: calc(46px + env(safe-area-inset-bottom)) 이라
+       * 여기서 다시 더하면 아이폰에서 34px 빈 띠가 생긴다. */
+      margin: 0; padding: 14px 18px;
+      background: var(--white); border-top: 1px solid var(--border);
+      position: sticky; bottom: 0; display: flex; gap: 10px;
+    }
+    .fd-cta-btn {
+      flex: 1; padding: 14px; border-radius: 14px; text-align: center;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+      background: var(--primary); color: var(--white);
+      text-decoration: none; display: block;
+      transition: opacity 0.15s, transform 0.12s;
+    }
+    .fd-cta-btn:active { opacity: 0.85; transform: scale(0.98); }
+    .fd-cta-btn.outline {
+      background: #F1F5F9; color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+
+    /* ── 캘린더 ── */
+    .calendar-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; background: var(--white); border-bottom: 1px solid var(--border);
+    }
+    .cal-month { font-size: 17px; font-weight: 700; }
+    .cal-arrow {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--bg); border: 1.5px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: var(--text-sub); cursor: pointer;
+      transition: background 0.12s;
+    }
+    .cal-arrow:hover { background: #E5E7EB; }
+    .calendar-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; padding: 10px var(--px) 4px; background: var(--white);
+    }
+    .cal-day-hd {
+      text-align: center; font-size: 11px; font-weight: 700; padding: 4px 0;
+      color: var(--text-muted);
+    }
+    .cal-day-hd:first-child { color: #EF4444; }
+    .cal-day-hd:last-child  { color: #3B82F6; }
+    .cal-day {
+      text-align: center; font-size: 13px; color: var(--text-sub);
+      padding: 8px 2px 10px; border-radius: 8px; cursor: pointer; position: relative;
+      transition: background 0.12s;
+    }
+    .cal-day:hover:not(.today) { background: var(--bg); }
+    .cal-day.sun { color: #EF4444; }
+    .cal-day.sat { color: #3B82F6; }
+    .cal-day.has-event::after {
+      content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
+      width: 5px; height: 5px; border-radius: 50%; background: var(--orange);
+    }
+    .cal-day.today {
+      background: var(--primary) !important; color: #fff !important;
+      font-weight: 700; border-radius: 50%;
+    }
+    .cal-day.today::after { background: rgba(255,255,255,0.8) !important; }
+    .cal-day.cal-selected:not(.today) { background: #EEF2FF; color: var(--primary); font-weight: 700; border-radius: 50%; }
+    /* 캘린더 이벤트 목록 */
+    .cal-event-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: opacity 0.12s;
+    }
+    .cal-event-item:last-child { border-bottom: none; }
+    .cal-event-item:hover { opacity: 0.72; }
+    .cal-ev-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+    .cal-ev-body { flex: 1; min-width: 0; }
+    .cal-ev-name { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal-ev-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .cal-ev-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+
+    /* ── 생활 통계 ── */
+    .living-stats {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: var(--px) var(--px) 0;
+    }
+    .stat-card {
+      background: var(--white); border-radius: var(--r-md);
+      border: 1px solid var(--border); padding: 16px;
+    }
+    .stat-val { font-size: 28px; font-weight: 900; color: var(--primary); letter-spacing: -1px; }
+    .stat-lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    /* 업종 아이콘 */
+    .category-icons {
+      display: flex; gap: 0; padding: 16px 0 0;
+      background: var(--white); border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-icon-item {
+      flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 8px; cursor: pointer; transition: background 0.1s;
+    }
+    .cat-icon-item:hover { background: var(--bg); }
+    .cat-icon-circle {
+      width: 50px; height: 50px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; font-size: 22px;
+    }
+    .ci-food    { background: #FEE2E2; }
+    .ci-cafe    { background: #EDE9FE; }
+    .ci-mart    { background: var(--green-bg); }
+    .ci-etc     { background: #F3F4F6; font-size: 16px; color: var(--text-muted); }
+    .cat-icon-label { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+
+    /* ── 주차장 배지 ── */
+    .park-badge {
+      font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+    }
+    .pb-free { background: var(--green-bg); color: var(--green); }
+    .pb-paid { background: #DBEAFE; color: var(--primary); }
+

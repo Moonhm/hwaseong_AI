@@ -1,0 +1,247 @@
+/* ============================================================================
+ * css/40-quiz.css — AI 추천 퀴즈 오버레이와 결과 화면
+ *
+ * 왜 따로 있나: 전체 화면을 덮는 독립 오버레이라 다른 화면과 선택자가 전혀 섞이지 않는다. 애니메이션도 여기서만 쓴다.
+ * 함께 볼 것:   js/quiz.js 하나와만 짝이다. 퀴즈를 손보면 두 파일을 같이 본다.
+ *
+ * index.html <style> 968~1203줄에서 분리 (2026-08-25, 개발 Claude).
+ * 파일명 앞 번호 = 캐스케이드 순서다. index.html 의 <link> 나열도 이 순서여야 한다.
+ * 새 규칙은 '가장 가까운 번호대 파일'에 넣는다 — 그래야 두 Claude 가 다른 파일을 만진다.
+ * ========================================================================== */
+
+    /* ── 관광지 추천 퀴즈 오버레이 ── */
+    #quiz-overlay {
+      position: fixed; top: 0; bottom: 0; left: 50%; z-index: 700;
+      width: min(100vw, 480px);
+      background: #F0F2F8;
+      display: flex; flex-direction: column;
+      transform: translateX(-50%) translateX(110%);
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      overflow-y: auto;
+      visibility: hidden;
+    }
+    #quiz-overlay.open { transform: translateX(-50%); visibility: visible; }
+    .quiz-header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 20px; background: #F0F2F8;
+    }
+    .quiz-back-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--white); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+    }
+    .quiz-header-title { font-size: 14px; font-weight: 800; color: #1B2A5C; }
+    .quiz-body { flex: 1; padding: 0 20px 40px; }
+    .quiz-intro {
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; padding: 52px 0 32px;
+    }
+    .quiz-intro-icon { font-size: 60px; margin-bottom: 20px; }
+    .quiz-intro-title { font-size: 22px; font-weight: 900; color: #1B2A5C; margin-bottom: 10px; }
+    .quiz-intro-desc {
+      font-size: 14px; color: #64748B; line-height: 1.65;
+      margin-bottom: 36px;
+    }
+    .quiz-start-btn {
+      background: linear-gradient(135deg, #F97316, #EA580C);
+      color: #fff; border: none; border-radius: 30px;
+      font-size: 15px; font-weight: 700; padding: 14px 44px;
+      cursor: pointer; box-shadow: 0 4px 16px rgba(249,115,22,0.3);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .quiz-start-btn:active { transform: translateY(1px); box-shadow: 0 2px 8px rgba(249,115,22,0.25); }
+    .quiz-prev-btn {
+      margin-top: 12px; background: none;
+      border: 2px solid var(--orange); color: var(--orange);
+      border-radius: 30px; font-size: 13px; font-weight: 600;
+      padding: 10px 28px; cursor: pointer;
+    }
+    .quiz-card {
+      background: var(--white); border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      padding: 24px 20px 20px;
+      animation: quiz-enter 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    @keyframes quiz-enter {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .quiz-step-label { font-size: 12px; color: #94A3B8; font-weight: 600; margin-bottom: 10px; }
+    .quiz-progress-track {
+      height: 6px; background: #E2E8F0; border-radius: 3px;
+      margin-bottom: 20px; overflow: hidden;
+    }
+    .quiz-progress-fill {
+      height: 100%; width: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #F97316, #EA580C);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+
+    /* ── 가장 가까운 주차장 모드 하이라이트 핀 (타원형) ── */
+    .np-pin { display:flex; flex-direction:column; align-items:center; user-select:none; }
+    .np-pill-wrap {
+      position:relative; display:flex; align-items:center; justify-content:center;
+    }
+    .np-pill {
+      height:32px; border-radius:16px; padding:0 12px;
+      display:flex; align-items:center; justify-content:center; gap:5px;
+      font-size:12px; font-weight:700; color:#fff;
+      border:2px solid #fff;
+      box-shadow:0 2px 10px rgba(0,0,0,0.25);
+      white-space:nowrap; position:relative; z-index:1;
+    }
+    .np-pill-ring { display:none; }
+    .np-tail {
+      width:0; height:0; margin-top:-2px;
+      border-left:6px solid transparent; border-right:6px solid transparent;
+      border-top-width:8px; border-top-style:solid;
+    }
+
+    /* 뒤로가기 버튼 */
+    #np-back-btn {
+      position:fixed;
+      bottom:calc(46px + 72px);
+      left:max(14px, calc((100vw - 480px) / 2 + 14px));
+      width:46px; height:46px; border-radius:50%;
+      background:rgba(0,0,0,0.42);
+      backdrop-filter:blur(10px);
+      -webkit-backdrop-filter:blur(10px);
+      color:#fff; font-size:22px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; z-index:190;   /* .place-slide(200) 보다 낮춰 슬라이드에 가리도록 */
+      box-shadow:0 2px 12px rgba(0,0,0,0.28);
+      transition:background .15s, transform .1s;
+      border:1.5px solid rgba(255,255,255,0.22);
+    }
+    #np-back-btn:active { background:rgba(0,0,0,0.62); transform:scale(0.93); }
+    .quiz-question {
+      font-size: 17px; font-weight: 800; color: #1B2A5C;
+      line-height: 1.4; margin-bottom: 20px;
+    }
+    .quiz-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .quiz-option-btn {
+      background: var(--white); border: 2px solid #E2E8F0;
+      border-radius: 14px; padding: 16px 8px;
+      font-size: 13px; font-weight: 600; color: var(--text);
+      cursor: pointer; line-height: 1.5;
+      transition: border-color 0.15s, background 0.15s, color 0.15s;
+      word-break: keep-all;
+    }
+    .quiz-option-btn:active {
+      border-color: var(--orange); background: #FFF7ED; color: #EA580C;
+    }
+    /* 결과 화면 — 참고 깃 스타일 */
+    @keyframes fade-down {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .rec-result-header {
+      text-align: center; padding: 32px 0 24px;
+      animation: fade-down 0.5s ease both;
+    }
+    .rec-result-emoji { font-size: 54px; margin-bottom: 14px; display: block; }
+    .rec-result-title { font-size: 21px; font-weight: 900; color: #1B2A5C; margin-bottom: 8px; }
+    .rec-result-sub { font-size: 13px; color: #94A3B8; line-height: 1.55; }
+    /* 카드 */
+    .rec-card {
+      background: #fff; border-radius: 20px;
+      overflow: hidden; margin-bottom: 18px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+      cursor: pointer;
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.38s ease,
+                  transform 0.45s cubic-bezier(0.34,1.56,0.64,1),
+                  box-shadow 0.28s ease;
+    }
+    .rec-card.visible {
+      opacity: 1; transform: translateY(0);
+    }
+    .rec-card.visible:hover {
+      transform: translateY(-7px) scale(1.013);
+      box-shadow: 0 20px 48px rgba(0,0,0,0.14);
+    }
+    .rec-card.rank-1.visible:hover {
+      box-shadow: 0 22px 56px rgba(34,197,94,0.28);
+    }
+    .rec-card.visible:active {
+      transform: scale(0.972);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+    /* 1위 강조 — 초록 (참고 깃 동일) */
+    .rec-card.rank-1 {
+      border: 2.5px solid #22c55e;
+      box-shadow: 0 8px 36px rgba(34,197,94,0.18);
+    }
+    /* 사진 */
+    .rec-card-photo {
+      position: relative; height: 164px;
+      background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+      overflow: hidden;
+    }
+    .rec-card.rank-1 .rec-card-photo { height: 224px; }
+    .rec-card-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rec-card-photo-fb {
+      position: absolute; inset: 0; display: flex;
+      align-items: center; justify-content: center; font-size: 56px;
+    }
+    /* 배지 */
+    .rec-rank-badge {
+      position: absolute; top: 12px; left: 12px;
+      background: rgba(0,0,0,0.38); backdrop-filter: blur(4px);
+      color: #fff; font-size: 11px; font-weight: 800;
+      padding: 5px 12px; border-radius: 20px; letter-spacing: 0.2px;
+    }
+    .rec-card.rank-1 .rec-rank-badge {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+      font-size: 12px; padding: 7px 16px;
+    }
+    /* 본문 */
+    .rec-card-body { padding: 16px 16px 18px; }
+    .rec-card-name { font-size: 17px; font-weight: 900; color: #1B2A5C; margin-bottom: 4px; }
+    .rec-card.rank-1 .rec-card-name { font-size: 19px; }
+    .rec-card-addr { font-size: 12px; color: #94A3B8; margin-bottom: 10px; }
+    .rec-card-desc {
+      font-size: 13px; color: #4a5568; line-height: 1.6;
+      margin-bottom: 12px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .rec-card.rank-1 .rec-card-desc { -webkit-line-clamp: 3; }
+    /* 태그 */
+    .rec-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .rec-tag {
+      background: #FFF7ED; color: #EA580C;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .rec-card.rank-1 .rec-tag { background: #F0FDF4; color: #16a34a; }
+    /* 버튼 */
+    .rec-card-actions { display: flex; gap: 8px; }
+    .rec-action-btn {
+      flex: 1; padding: 11px 6px; border-radius: 12px;
+      font-size: 12px; font-weight: 700; border: none;
+      cursor: pointer; transition: opacity 0.12s;
+    }
+    .rec-action-btn:active { opacity: 0.8; }
+    .rec-action-btn.primary {
+      background: linear-gradient(135deg, #F97316, #EA580C); color: #fff;
+    }
+    .rec-card.rank-1 .rec-action-btn.primary {
+      background: linear-gradient(135deg, #22c55e, #15803d);
+    }
+    .rec-action-btn.secondary {
+      background: #F8FAFC; color: var(--text-sub);
+      border: 1.5px solid var(--border);
+    }
+    /* 다시하기 */
+    .rec-restart-wrap { text-align: center; padding: 8px 0 52px; }
+    .rec-restart-btn {
+      background: none; border: 2px solid #22c55e; color: #22c55e;
+      border-radius: 30px; font-size: 14px; font-weight: 700;
+      padding: 13px 40px; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .rec-restart-btn:active { background: #22c55e; color: #fff; }

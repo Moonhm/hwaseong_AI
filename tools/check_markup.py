@@ -18,16 +18,44 @@ def fail(m): FAIL.append(m)
 
 src = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
 
-# ── 1. <style> 중괄호 균형 ───────────────────────────────────────────────────
+# ── 1. CSS 중괄호 균형 ───────────────────────────────────────────────────────
 # 하나만 어긋나도 그 뒤 CSS 규칙 전부가 무시돼 페이지가 스타일 없이 렌더된다.
+#
+# 2026-08-25 CSS 를 css/ 6개 파일로 분리했다. 그때 이 검사가 <style> 블록만 보고 있어서,
+# 블록이 사라지자 for 문이 한 번도 안 돌고 아무 말 없이 통과했다 — 검사가 죽은 줄도 모르고
+# 초록불이 뜨는 상태였다. 그래서 지금은 index.html 의 <style>(남아 있다면)과
+# css/*.css 를 함께 보고, 볼 대상이 하나도 없으면 그 자체를 실패로 만든다.
+_targets = []
 for m in re.finditer(r"<style\b[^>]*>(.*?)</style\s*>", src, re.S | re.I):
-    css = re.sub(r"/\*.*?\*/", "", m.group(1), flags=re.S)
-    d = css.count("{") - css.count("}")
-    ln = src.count("\n", 0, m.start()) + 1
-    if d:
-        fail("index.html:%d  <style> 중괄호 불균형 %+d — 이후 CSS 규칙이 전부 무시된다" % (ln, d))
-    else:
-        print("  i   <style> 중괄호 균형 (규칙 %d개)" % css.count("{"))
+    _targets.append(("index.html:%d" % (src.count("\n", 0, m.start()) + 1), m.group(1)))
+_cssdir = os.path.join(ROOT, "css")
+if os.path.isdir(_cssdir):
+    for fn in sorted(f for f in os.listdir(_cssdir) if f.endswith(".css")):
+        _targets.append(("css/" + fn, open(os.path.join(_cssdir, fn), encoding="utf-8").read()))
+
+# index.html 이 <link> 로 부르는 css 가 실제로 있는지도 본다.
+# 404 는 브라우저가 조용히 넘어가고, 그 파일의 규칙만 통째로 사라진다.
+_linked = re.findall(r'<link\b[^>]*\bhref\s*=\s*["\']css/([^"\'?]+)', src, re.I)
+_ondisk = set(os.listdir(_cssdir)) if os.path.isdir(_cssdir) else set()
+for f in _linked:
+    if f not in _ondisk:
+        fail("index.html 이 css/%s 를 부르는데 파일이 없다 — 그 규칙이 전부 사라진다" % f)
+for f in sorted(_ondisk):
+    if f.endswith(".css") and f not in _linked:
+        fail("css/%s 가 디스크에 있는데 index.html 이 안 부른다 — 죽은 파일이거나 <link> 를 빠뜨렸다" % f)
+
+if not _targets:
+    fail("검사할 CSS 가 하나도 없다 — <style> 도 css/*.css 도 못 찾았다. "
+         "스타일 위치가 바뀌었다면 tools/check_markup.py 도 함께 고쳐라")
+else:
+    _rules = 0
+    for label, raw in _targets:
+        css = re.sub(r"/\*.*?\*/", "", raw, flags=re.S)
+        d = css.count("{") - css.count("}")
+        if d:
+            fail("%s  중괄호 불균형 %+d — 이후 CSS 규칙이 전부 무시된다" % (label, d))
+        _rules += css.count("{")
+    print("  i   CSS 중괄호 균형 (%d개 파일, 규칙 %d개)" % (len(_targets), _rules))
 
 # ── 2. 태그 중첩 ────────────────────────────────────────────────────────────
 # HTMLParser 는 <script>/<style> 를 CDATA 로 처리하므로 인라인 JS 문자열 속 '</div>' 를 태그로 오인하지 않는다.
