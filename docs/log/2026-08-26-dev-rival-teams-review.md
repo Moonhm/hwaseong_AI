@@ -5,21 +5,43 @@
 사용자가 준 GitHub 주소 11개를 전부 클론해 CSS·JS 를 직접 읽고 우리 현황과 대조했다.
 **이 문서가 그 조사의 유일한 기록이다** — 조사 자체는 코드를 남기지 않으므로.
 
-## 대상
+## 대상 — 저장소 11개
 
-| 저장소 | 도메인 | 스택 |
+전부 `git clone --depth 50` 로 받아 CSS·JS 를 직접 읽었다. 규모는 실측(`.git`·`node_modules` 제외).
+
+| # | 저장소 | 규모 | 도메인 | 스택 |
+|---|---|---|---|---|
+| 1 | [Cazeko/ilmeori](https://github.com/Cazeko/ilmeori) | 515파일 / 53커밋 | 공무원 업무공유·인수인계 (HWPX 결재문서 자동 생성) | Next.js 16 + TS + Supabase |
+| 2 | [ldy1118-git/ai-hwaseong](https://github.com/ldy1118-git/ai-hwaseong) | 353파일 / 50커밋 | 소상공인 정책자금 매칭 | React 18 + Vite + Vercel Python |
+| 3 | [2026-AIHwaseong-project/hwaseong-dashboard](https://github.com/2026-AIHwaseong-project/hwaseong-dashboard) | 37파일 / 85커밋 | 버스 수요·공급 미스매칭 대시보드 | **순수 HTML/CSS/JS — 우리와 같은 제약** |
+| 4 | [choys99999-maker/hwaseong-justdream-platform](https://github.com/choys99999-maker/hwaseong-justdream-platform) | 196파일 / 63커밋 | 청년 정책 플랫폼 | React + Tailwind v4 |
+| 5 | [seongyeop1/hwaseong-policy](https://github.com/seongyeop1/hwaseong-policy) | 130파일 / 50커밋 | 정책 안내 | React + framer-motion |
+| 6 | [Seongwonp/hwaseong-eats](https://github.com/Seongwonp/hwaseong-eats) | 380파일 / 67커밋 | 먹거리 지도 (화성페이 가맹점·모범음식점) | Flutter 본체 + React 발표용 데모 |
+| 7 | [caiiyin/JustUs](https://github.com/caiiyin/JustUs) | 176파일 / 36커밋 | 생애주기별 나들이 코스 추천 | Next.js 16 + Prisma + Supabase |
+| 8 | [HSB37373/CrackAI](https://github.com/HSB37373/CrackAI) | 46파일 / 46커밋 | 도로 균열 탐지 민원 | Flask + 순수 JS |
+| 9 | [lse8422/pinpoint-dashboard](https://github.com/lse8422/pinpoint-dashboard) | 19파일 / 50커밋 | 데이터 대시보드 | 단일 HTML + Chart.js |
+| 10 | [tjsrud4941/-AI-](https://github.com/tjsrud4941/-AI-) | 15파일 / 24커밋 | 재난 예측 | 단일 HTML (4.4MB) |
+| 11 | [TeamBongCoding/-safety-platform](https://github.com/TeamBongCoding/-safety-platform) | 122파일 / 44커밋 | 안전 플랫폼 | React + FastAPI |
+
+> **클론 함정** — 10·11번은 저장소 이름이 하이픈으로 시작해서
+> `git clone https://github.com/tjsrud4941/-AI-.git` 이 그대로는 실패한다(git 이 옵션으로 읽는다).
+> 대상 디렉터리를 명시하면 된다: `git clone <url> tjsrud-AI`
+
+## 팀별로 배운 것 한 줄
+
+| 팀 | 가져올 것 | 피할 것 |
 |---|---|---|
-| `Cazeko/ilmeori` | 공무원 업무공유·인수인계 (HWPX 결재문서 생성) | Next.js 16 + TS + Supabase |
-| `ldy1118-git/ai-hwaseong` | 소상공인 정책자금 매칭 | React 18 + Vite + Vercel Python |
-| `2026-AIHwaseong-project/hwaseong-dashboard` | 버스 수요·공급 미스매칭 대시보드 | **순수 HTML/CSS/JS (우리와 같은 제약)** |
-| `choys99999-maker/hwaseong-justdream-platform` | 청년 정책 플랫폼 | React + Tailwind v4 |
-| `seongyeop1/hwaseong-policy` | 정책 안내 | React + framer-motion |
-| `Seongwonp/hwaseong-eats` | 먹거리 지도 | Flutter (웹은 발표용 데모) |
-| `caiiyin/JustUs` | 생애주기 나들이 코스 | Next.js 16 + Prisma |
-| `HSB37373/CrackAI` | 균열 탐지 민원 | Flask + 순수 JS |
-| `lse8422/pinpoint-dashboard` | 데이터 대시보드 | 단일 HTML + Chart.js |
-| `tjsrud4941/-AI-` | 재난 예측 | 단일 HTML (4.4MB) |
-| `TeamBongCoding/-safety-platform` | 안전 플랫폼 | React + FastAPI |
+| **ilmeori** | 디자인 규칙을 **시험으로 강제**(14개). 지운 토큰까지 "왜 지웠는지" 기록 | 프레임워크 이식 |
+| **hwaseong-dashboard** | `:active` 규율 명문화, `prefers-reduced-motion` 11건, 스피너만 감속하는 판단 | 67개 색 토큰 체계(우리 도메인에 대응물 없음) |
+| **justdream** | `max()` safe-area 19곳, 진입 모션 안무(160→520→600ms) | 관리자 화면의 임의 hex 412회 |
+| **hwaseong-policy** | `--font-scale` 큰글씨 모드 | 정책 48건 3중 사본 |
+| **ai-hwaseong** | 4겹 로딩 표현, 11팀 중 유일한 실제 라우트 전환 | **문서 두 벌**(`git-workflow.md` ↔ `CLAUDE.md` 가 정반대 규칙) |
+| **pinpoint-dashboard** | **모바일 3종**(`viewport-fit`·tap-highlight·`text-size-adjust`), CSS 만으로 스파크라인 | 단일 파일 2,132줄에 함수 51개 평면 배치 |
+| **tjsrud-AI** | `translateX` 캐러셀 + 스와이프(48px/400ms 임계값) | `body{height:100vh}`, `:hover` 전용 화살표, base64 4.4MB |
+| **CrackAI** | 점 3개 stagger 로딩 표현 | `@media` 0건, 날짜별 CHANGES_*.md 8개 |
+| **hwaseong-eats**(웹) | — | **별점을 `id*1234567%14` 로 생성**, 인라인 style 497회 |
+| **JustUs** | — | 홈 검색창 `readOnly`, AI 버튼에 `onClick` 없음 |
+| **bong-safety** | 백엔드 테스트 177건, 자기 성능을 불리하게 공개 | `App.jsx.orig` 1,017줄 통째로 커밋 |
 
 ## 평가 — 냉정하게
 
