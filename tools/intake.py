@@ -30,7 +30,7 @@ tools/intake.py — 데이터 반입 현관 (배포 Claude 담당)
     기준 5MB. 선례로 지역화폐 27,374건이 짧은 키 6개로 4.2MB 다.
   · zip 폭탄·경로 탈출(../) 방어를 넣는다. 공공데이터 zip 을 그대로 믿지 않는다.
 """
-import argparse, csv, hashlib, io, json, os, re, shutil, sys, tarfile, time, zipfile
+import argparse, csv, hashlib, io, json, os, re, shutil, sys, tarfile, time, unicodedata, zipfile
 import urllib.parse, urllib.request
 
 ROOT = os.environ.get("HW_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -304,9 +304,13 @@ def main():
     for d in (RAW, PROC, DESC, SRC):
         os.makedirs(d, exist_ok=True)
 
+    # ⚠ 한글 폴더·파일명이 NFD(자모 분리)로 저장돼 있는 경우가 있다.
+    #   KEEP 은 NFC 문자열이라 그대로 비교하면 '화성시 관광지 사진' 이 안 걸러진다.
+    #   실제로 사진 137장을 잡동사니로 쓸어 담을 뻔했다. 정규화해서 비교한다.
+    KEEP_N = {unicodedata.normalize("NFC", k) for k in KEEP}
     items = []
     for f in sorted(os.listdir(args.dir)):
-        if f in KEEP or f.startswith("."):
+        if unicodedata.normalize("NFC", f) in KEEP_N or f.startswith("."):
             continue
         p = os.path.join(args.dir, f)
         items.append(p)

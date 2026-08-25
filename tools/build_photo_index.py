@@ -67,37 +67,54 @@ def scan_photos():
 
 
 def build(files, places):
-    by_name = {p["name"]: p for p in places}
-    by_id = {p["id"]: p for p in places}
+    """파일명 → 인덱스. 장소당 여러 장을 배열로 담는다.
+
+    인식하는 형식 3가지 (위에서부터 시도)
+      1) {읍면동}_{id}[_{메모}].ext   — 신규 규칙. 매칭은 id 토큰만
+      2) {PLACES name}_{설명}.ext    — 사용자가 보내는 현행 규칙 (장소당 여러 장)
+      3) {PLACES name}.ext           — 기존 159장
+    """
+    by_name_place = {p["name"]: p for p in places}
+    by_id_place = {p["id"]: p for p in places}
+    # 긴 이름부터 맞춰야 '제부도' 가 '제부도리조트_전망' 을 가로채지 않는다
+    names_desc = sorted(by_name_place, key=len, reverse=True)
 
     idx_id, idx_name = {}, {}
-    dup_id = defaultdict(list)      # 같은 id 에 사진이 둘 이상
-    unknown_id, orphan_name, legacy = [], [], []
+    unknown_id, orphan, legacy_n, desc_n = [], [], 0, 0
 
     for fn in files:
+        stem, _, ext = fn.rpartition(".")
         m = NEW_RE.match(fn)
-        if m:
+        if m:                                        # 1) 신규 규칙
             pid = int(m.group("id"))
-            if pid not in by_id:
+            if pid not in by_id_place:
                 unknown_id.append((fn, pid))
-                continue
-            dup_id[pid].append(fn)
-            idx_id[pid] = fn
-        else:
-            stem = fn.rsplit(".", 1)[0]
-            if stem in by_name:
-                idx_name[stem] = fn
-                legacy.append(fn)
             else:
-                orphan_name.append(fn)
+                idx_id.setdefault(pid, []).append(fn)
+            continue
+        if stem in by_name_place:                    # 3) 이름 그대로
+            idx_name.setdefault(stem, []).append(fn)
+            legacy_n += 1
+            continue
+        hit = next((n for n in names_desc if stem.startswith(n + "_")), None)
+        if hit:                                      # 2) 이름_설명
+            idx_name.setdefault(hit, []).append(fn)
+            desc_n += 1
+            continue
+        orphan.append(fn)
 
-    dups = {k: v for k, v in dup_id.items() if len(v) > 1}
-    covered = set(idx_id) | {by_name[n]["id"] for n in idx_name if n in by_name}
+    for d in (idx_id, idx_name):                     # 사람이 보기 좋게 정렬
+        for k in d:
+            d[k].sort()
+
+    covered = set(idx_id) | {by_name_place[n]["id"] for n in idx_name}
     missing = [p for p in places if p["category"] == "tourist" and p["id"] not in covered]
+    dups = {k: v for k, v in idx_id.items() if len(v) > 1}
     return {
         "byId": idx_id, "byName": idx_name, "dups": dups,
-        "unknown_id": unknown_id, "orphan": orphan_name,
-        "legacy": legacy, "missing": missing,
+        "unknown_id": unknown_id, "orphan": orphan,
+        "legacy": legacy_n, "desc": desc_n, "missing": missing,
+        "shots": sum(len(v) for v in idx_id.values()) + sum(len(v) for v in idx_name.values()),
     }
 
 
@@ -112,8 +129,9 @@ def write_js(r):
             "/* 자동 생성 — tools/build_photo_index.py\n"
             " * 직접 고치지 마십시오. 사진을 추가한 뒤 배포 서버에서 스크립트를 다시 돌리십시오.\n"
             " *\n"
-            " * byId   : PLACES.id      → 파일명   (신규 규칙 {읍면동}_{id}_{메모}.jpg)\n"
-            " * byName : PLACES.name    → 파일명   (기존 규칙 {name}.jpg)\n"
+            " * byId   : PLACES.id   → 파일명 배열 (신규 규칙 {읍면동}_{id}_{메모}.jpg)\n"
+            " * byName : PLACES.name → 파일명 배열 ({name}.jpg · {name}_{설명}.jpg)\n"
+            " * 장소당 여러 장이 올 수 있어 값은 항상 배열이다. 첫 장이 대표.\n"
             " * 조회 순서는 js/ui.js 의 placePhotoSrc() 참조 — byId 우선, 없으면 byName.\n"
             " */\n"
             "var PHOTO_INDEX = " + body + ";\n")
@@ -146,15 +164,16 @@ def main():
 
     r = build(files, places)
     print("사진 %d장 / PLACES %d건 (tourist %d)" % (len(files), len(places), len(tourist)))
-    print("  신규 규칙 매칭 : %d장" % len(r["byId"]))
-    print("  기존 규칙 매칭 : %d장" % len(r["byName"]))
+    print("  신규 규칙 {읍면동}_{id}   : %d장 → %d곳" % (sum(len(v) for v in r["byId"].values()), len(r["byId"])))
+    print("  이름_설명 {name}_{desc}  : %d장" % r["desc"])
+    print("  이름 그대로 {name}       : %d장" % r["legacy"])
+    print("  → 사진이 있는 장소 %d곳 / 총 %d장" % (len(r["byId"]) + len(r["byName"]), r["shots"]))
 
     rc = 0
     if r["dups"]:
-        rc = 1
-        print("\n❌ 같은 id 에 사진이 둘 이상입니다 — 어느 것이 쓰일지 보장되지 않습니다:")
-        for pid, fns in sorted(r["dups"].items()):
-            print("   id:%d → %s" % (pid, ", ".join(fns)))
+        print("\nℹ️  한 장소에 여러 장 (배열로 담았습니다. 첫 장이 대표):")
+        for pid, fns in sorted(r["dups"].items())[:8]:
+            print("   id:%d → %d장" % (pid, len(fns)))
     if r["unknown_id"]:
         rc = 1
         print("\n❌ data.js 에 없는 id 를 가리키는 파일:")
@@ -176,7 +195,7 @@ def main():
         return rc
 
     a, b = write_js(r)
-    print("\n✅ js/photos.js 생성 — byId %d / byName %d" % (a, b))
+    print("\n✅ js/photos.js 생성 — byId %d곳 / byName %d곳 / 총 %d장" % (a, b, r["shots"]))
     print("   ⚠ index.html 의 photos.js ?v= 날짜를 함께 올리십시오.")
     return 0
 

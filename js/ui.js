@@ -24,15 +24,27 @@ let _tt;
  *   idx.byId 가 undefined 라 TypeError 가 나고, 그 예외가 placePhotoHtml 을 뚫고
  *   나가 슬라이드 카드가 통째로 백지가 된다. 조용한 404 보다 나쁜 실패다.
  * 인자는 place 객체 또는 이름 문자열 둘 다 받는다. */
-function placePhotoSrc(place) {
+/* 한 장소에 사진이 여러 장 올 수 있다(예: 제부도_입구 / 제부도_노을 / 제부도_항공샷).
+ * 인덱스 값은 항상 배열이며 첫 장이 대표다.
+ * 값이 문자열인 옛 인덱스가 배포돼 있어도 깨지지 않도록 둘 다 받는다. */
+function placePhotoAll(place) {
   var p = (typeof place === 'string') ? { name: place } : (place || {});
   var idx = (typeof PHOTO_INDEX !== 'undefined' && PHOTO_INDEX) ? PHOTO_INDEX : null;
-  var f = null;
+  var v = null;
   if (idx) {
-    if (p.id != null && idx.byId)   f = idx.byId[p.id];
-    if (!f && p.name && idx.byName) f = idx.byName[p.name];
+    if (p.id != null && idx.byId)   v = idx.byId[p.id];
+    if (!v && p.name && idx.byName) v = idx.byName[p.name];
   }
-  return 'assets/images/places/' + encodeURIComponent(f || ((p.name || '') + '.jpg'));
+  if (!v) return [];
+  var list = (typeof v === 'string') ? [v] : v;
+  return list.map(function (f) { return 'assets/images/places/' + encodeURIComponent(f); });
+}
+
+function placePhotoSrc(place) {
+  var all = placePhotoAll(place);
+  if (all.length) return all[0];
+  var p = (typeof place === 'string') ? { name: place } : (place || {});
+  return 'assets/images/places/' + encodeURIComponent((p.name || '') + '.jpg');
 }
 
 function showToast(msg) {
