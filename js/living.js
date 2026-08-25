@@ -140,6 +140,8 @@ function renderLivingPage() {
   if (scEl) scEl.textContent = cCount ? cCount.toLocaleString() : '-';
   if (spEl) spEl.textContent = pCount ? pCount.toLocaleString() : '-';
 
+  renderNewsSection();          /* 소식 섹션은 매 진입마다 다시 그린다 — 날짜가 바뀌면 D-N 도 바뀐다 */
+
   // 기본 탭: 모범음식점
   var firstCat = document.getElementById('liv-cat-restaurant');
   switchLivingCat(firstCat, 'restaurant');
@@ -158,4 +160,58 @@ function resetLivingPage() {
    * (go() 의 scrollTop=0 은 js/nav.js:21 로 renderLivingPage() 보다 '앞'이다 — 그 순서를 바꾸지 말 것) */
   var p = document.getElementById('page-living');
   if (p) p.scrollTop = 0;
+}
+
+/* ══════════════════════════════════════════════════
+   이번 주 소식 (2026-08-26)
+   탭 이름이 '생활' → '소식' 이 되면서 시간에 민감한 것을 맨 위로 올렸다.
+   PLACES 의 축제만 읽는다 — 새 데이터도 fetch 도 없다.
+   날짜 파싱은 js/calendar.js 의 _parseFestDate() 를 재사용한다.
+   "2026년 8월 중" 같은 비ISO 형식이 11건 있어 직접 Date 로 넘기면 안 된다.
+══════════════════════════════════════════════════ */
+function renderNewsSection() {
+  var el = document.getElementById('living-news');
+  if (!el || typeof PLACES === 'undefined') return;
+
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var items = [];
+
+  PLACES.forEach(function (p) {
+    if (p.category !== 'festival' || !p.date) return;
+    var d = (typeof _parseFestDate === 'function') ? _parseFestDate(String(p.date).split('~')[0].trim()) : null;
+    if (!d) return;
+    var when = new Date(d[0], d[1] - 1, d[2]); when.setHours(0, 0, 0, 0);
+    var days = Math.round((when - today) / 86400000);
+    if (days < 0 || days > 30) return;            /* 지난 것과 한 달 밖은 '소식'이 아니다 */
+    items.push({ p: p, days: days, when: when });
+  });
+
+  items.sort(function (a, b) { return a.days - b.days; });
+
+  if (!items.length) {
+    el.innerHTML = '<div class="news-empty">다가오는 행사가 없습니다</div>';
+    return;
+  }
+
+  el.innerHTML =
+    '<div class="section-header" style="margin-bottom:10px">' +
+      '<div class="section-title">이번 주 소식</div>' +
+      '<button class="section-link" onclick="go(\'tourism\');setTimeout(function(){' +
+        'var c=document.querySelector(\'.tourism-subnav .chip[data-sub=&quot;festival&quot;]\');' +
+        'if(c)switchTourismSub(c,\'festival\');},260)">전체 보기</button>' +
+    '</div>' +
+    items.slice(0, 3).map(function (it, i) {
+      var d = it.days;
+      var badge = d === 0 ? '오늘' : d === 1 ? '내일' : 'D-' + d;
+      var hot   = d <= 3 ? ' news-badge-hot' : '';
+      return '<div class="news-item" style="animation-delay:' + (i * 0.045) + 's"' +
+             ' onclick="showFestivalDetail(' + it.p.id + ')">' +
+               '<div class="news-badge' + hot + '">' + badge + '</div>' +
+               '<div class="news-body">' +
+                 '<div class="news-title">' + (it.p.name || '') + '</div>' +
+                 '<div class="news-sub">' + (it.p.address || '') + '</div>' +
+               '</div>' +
+               '<div class="news-arrow">›</div>' +
+             '</div>';
+    }).join('');
 }
