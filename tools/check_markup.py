@@ -114,6 +114,39 @@ for f in files:
                  % (os.path.relpath(f, ROOT), t.count("\n", 0, m.start()) + 1, m.group(2)))
 if not miss: print("  i   getElementById 참조 %d건 전부 대상 존재 (기준선 125)" % n)
 
+# ── 이모지 이형 선택자(U+FE0F) 누락 ─────────────────────────────────────────
+# 왜 필요한가: 아래 문자들은 유니코드 기본 표시가 'text' 라서 맨몸으로 쓰면
+# 흑백 글리프로 나온다. 옆의 🎉 🎡 같은 컬러 이모지와 나란히 놓이면 혼자 칙칙하다.
+# 사용자가 2026-08-26 에 🗺️ 와 🏛️ 를 각각 따로 지적하셨다 — 편집기에서 🏛 과 🏛️ 는
+# 똑같이 보이므로 사람이 눈으로 잡을 일이 아니다. 전수 조사해 45곳을 맞췄고,
+# 이 검사가 그 상태를 지킨다.
+# 규칙과 '일부러 안 붙인 것'(♥ ℹ © ⚠)의 근거는 WORKFLOW.md §3 카테고리 색상 체계.
+_NEED_VS16 = {0x1F5FA, 0x1F3DB, 0x1F37D, 0x1F17F, 0x26F1,
+              0x1F3D8, 0x1F3D5, 0x1F3D6, 0x26E9, 0x1F5D3}
+_emoji_files = ([os.path.join(ROOT, "index.html")]
+                + sorted(glob.glob(os.path.join(ROOT, "js", "*.js")))
+                + sorted(glob.glob(os.path.join(ROOT, "css", "*.css"))))
+_bare, _scanned = 0, 0
+for f in _emoji_files:
+    if not os.path.exists(f):
+        continue
+    t = open(f, encoding="utf-8").read()
+    _scanned += 1
+    for i, ch in enumerate(t):
+        if ord(ch) not in _NEED_VS16:
+            continue
+        if i + 1 < len(t) and t[i + 1] == "️":
+            continue
+        _bare += 1
+        if _bare <= 5:
+            fail("%s:%d  %s 뒤에 U+FE0F 가 없다 — 흑백 글리프로 나온다. "
+                 "%s\\ufe0f 로 쓸 것 (편집기에서는 구분이 안 된다)"
+                 % (os.path.relpath(f, ROOT), t.count("\n", 0, i) + 1, ch, ch))
+if not _scanned:
+    fail("이모지 검사가 볼 파일을 하나도 못 찾았다 — 이 검사가 무력화됐다(미탐)")
+elif not _bare:
+    print("  i   이모지 이형 선택자 — %d개 파일 검사, 누락 0" % _scanned)
+
 for m in FAIL: print("  FAIL " + m)
 print("  ── FAIL %d" % len(FAIL))
 sys.exit(1 if FAIL else 0)

@@ -96,7 +96,7 @@ function renderHotels() {
   var s = CONVENIENCE.jebu.summary;
   var jebuHtml = '<div class="jebu-hero" onclick="toggleJebuList()">'
     + '<div class="jebu-hero-body">'
-    + '<div class="jebu-hero-title">⛱ 제부도 숙박</div>'
+    + '<div class="jebu-hero-title">⛱️ 제부도 숙박</div>'
     + '<div class="jebu-hero-sub">서신면 해안길 일대 · 총 ' + s.total + '곳</div>'
     + '<div class="jebu-counts">'
     + '<div class="jebu-count-item"><div class="jebu-count-val">' + s.pension_outside + '</div><div class="jebu-count-lbl">관광펜션</div></div>'
@@ -128,7 +128,7 @@ function toggleJebuList() {
     return '<div class="jebu-type-header">' + label + ' (' + items.length + '곳)</div>'
       + items.map(function(it) {
           return '<div class="place-item">'
-            + '<div class="pi pi-tourist">⛱</div>'
+            + '<div class="pi pi-tourist">⛱️</div>'
             + '<div class="pi-content"><div class="pi-name">' + it.name + '</div>'
             + '<div class="pi-meta">화성시 서신면 ' + it.addr + (it.tel ? ' · ' + it.tel : '') + '</div></div>'
             + '</div>';
@@ -294,7 +294,7 @@ function iconClass(cat) {
 }
 function iconContent(cat) {
   if (cat === 'localcurrency') return '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:64%;height:64%;object-fit:contain;display:block">';
-  const map = { tourist:'🎡', heritage:'🏛', restaurant:'🍽', festival:'🎉', parking:'P' };
+  const map = { tourist:'🎡', heritage:'🏛️', restaurant:'🍽️', festival:'🎉', parking:'P' };
   return map[cat] || '📍';
 }
 
@@ -352,7 +352,7 @@ function showFestivalDetail(id) {
         </div>
         ${date ? `
         <div class="fd-info-row">
-          <div class="fd-info-icon">🗓</div>
+          <div class="fd-info-icon">🗓️</div>
           <div>
             <div class="fd-info-label">일정</div>
             <div class="fd-info-val">${date}</div>
@@ -372,10 +372,10 @@ function showFestivalDetail(id) {
         <span class="nb-icon"><svg viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg></span>지도 보기
       </button>
       <button class="fd-nearby-btn" onclick="goMapCat('mobeom')">
-        <span class="nb-icon">🍽</span>주변 맛집
+        <span class="nb-icon">🍽️</span>주변 맛집
       </button>
       <button class="fd-nearby-btn" onclick="goMapCat('parking')">
-        <span class="nb-icon">🅿</span>주차장
+        <span class="nb-icon">🅿️</span>주차장
       </button>
       <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})">
         <span class="nb-icon"><img src="img/gyeonggi_currency_logo.png" style="width:20px;height:20px;object-fit:contain" alt=""></span>가맹점

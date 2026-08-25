@@ -7,7 +7,7 @@
 
 var CONV_CAT_CFG = {
   mobeom: {
-    label: '모범음식점', color: '#D97706', bg: '#FEF3C7', emoji: '🍽',
+    label: '모범음식점', color: '#D97706', bg: '#FEF3C7', emoji: '🍽️',
     getItems: function () { return CONVENIENCE.restaurants; },
     extraHtml: function (ex) { return ''; },
   },
@@ -29,7 +29,7 @@ var CONV_CAT_CFG = {
     label: '캠핑장', color: '#16A34A', bg: '#DCFCE7', emoji: '⛺',
     getItems: function () { return CONVENIENCE.camping; },
     extraHtml: function (ex) {
-      return '<div class="sl-addr">🏕 야영 ' + ex.sites + '면 · ' + ex.fac + (ex.pub ? ' · 공영' : '') + '</div>';
+      return '<div class="sl-addr">🏕️ 야영 ' + ex.sites + '면 · ' + ex.fac + (ex.pub ? ' · 공영' : '') + '</div>';
     },
   },
   temple: {
@@ -40,7 +40,7 @@ var CONV_CAT_CFG = {
     },
   },
   touristfacility: {
-    label: '관광편의시설', color: '#0891B2', bg: '#CFFAFE', emoji: '🏘',
+    label: '관광편의시설', color: '#0891B2', bg: '#CFFAFE', emoji: '🏘️',
     getItems: function () { return CONVENIENCE.touristFacilities || []; },
     extraHtml: function (ex) {
       return ex.biz ? '<div class="sl-addr">🏠 ' + ex.biz + '</div>' : '';
@@ -52,7 +52,7 @@ var CONV_CAT_CFG = {
     extraHtml: function (ex) { return ''; },
   },
   jebu: {
-    label: '제부도 숙박', color: '#0284C7', bg: '#E0F2FE', emoji: '⛱',
+    label: '제부도 숙박', color: '#0284C7', bg: '#E0F2FE', emoji: '⛱️',
     getItems: function () {
       var j = CONVENIENCE.jebu || {};
       var all = [];
@@ -341,7 +341,7 @@ function _showJebuMarker() {
     circle.className = 'cm-circle';
     circle.style.background = '#0284C7';
     circle.style.whiteSpace = 'nowrap';
-    circle.textContent = '⛱ 제부도 숙박 115곳';
+    circle.textContent = '⛱️ 제부도 숙박 115곳';
     var tail   = document.createElement('div');
     tail.className = 'cm-tail';
     tail.style.borderTopColor = '#0284C7';
@@ -388,7 +388,7 @@ function _showConvSlide(place) {
       : '') +
     '<button class="sl-btn" onclick="window.open(\'https://map.kakao.com/?q=' + encodeURIComponent(place.name || '') + '\',\'_blank\')">🔍 카카오지도</button>' +
     (place.lat && place.lng
-      ? '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingConv(' + place.lat + ',' + place.lng + ',\'' + place.category + '\',\'' + safeName + '\')">🅿 가장 가까운<br>공영주차장 찾기</button>'
+      ? '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingConv(' + place.lat + ',' + place.lng + ',\'' + place.category + '\',\'' + safeName + '\')">🅿️ 가장 가까운<br>공영주차장 찾기</button>'
       : '') +
     '</div>';
 
@@ -426,9 +426,9 @@ function _showJebuSlide() {
 
   var html =
     '<div style="width:100%;height:80px;border-radius:12px;background:#E0F2FE;' +
-    'display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:12px">⛱</div>' +
+    'display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:12px">⛱️</div>' +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
-    '<span class="sl-cat" style="background:#E0F2FE;color:#0284C7">⛱ 제부도 숙박</span>' +
+    '<span class="sl-cat" style="background:#E0F2FE;color:#0284C7">⛱️ 제부도 숙박</span>' +
     '</div>' +
     '<div class="sl-name">제부도 숙박 종합</div>' +
     '<div class="sl-addr">화성시 서신면 제부도 일대 · 총 ' + s.total + '곳</div>' +
@@ -441,11 +441,11 @@ function _showJebuSlide() {
     '<div class="sl-actions">' +
     '<button class="sl-btn" onclick="openRoute(37.1578,126.5764,\'제부도\')">🗺️ 길찾기</button>' +
     '</div>' +
-    _section('🏖 관광펜션', j.pension_outside) +
+    _section('🏖️ 관광펜션', j.pension_outside) +
     _section('🏨 제부도 내 숙박', j.inside) +
     _section('🏡 인근 숙박', j.nearby) +
     _section('🏠 민박 (섬 내)', j.minbak_inside) +
-    _section('🏘 민박 (인근)', j.minbak_nearby);
+    _section('🏘️ 민박 (인근)', j.minbak_nearby);
 
   document.getElementById('slide-inner').innerHTML = html;
   requestAnimationFrame(function () {

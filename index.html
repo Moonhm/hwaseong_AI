@@ -18,12 +18,12 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082613">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082613">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082613">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082613">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082613">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082613">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082614">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082614">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082614">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082614">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082614">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082614">
 </head>
 <body>
 
@@ -96,8 +96,8 @@
       <span class="home-about-chip">🗺️ 카카오맵 API</span>
       <span class="home-about-chip">🎡 관광지 159곳</span>
       <span class="home-about-chip">🎉 축제 50건</span>
-      <span class="home-about-chip">🏛 지정문화재 42곳</span>
-      <span class="home-about-chip">🅿 실시간 공영주차장</span>
+      <span class="home-about-chip">🏛️ 지정문화재 42곳</span>
+      <span class="home-about-chip">🅿️ 실시간 공영주차장</span>
       <span class="home-about-chip"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>
     </div>
   </div>
@@ -345,19 +345,19 @@
   <!-- 필터 칩 -->
   <div class="map-chips" id="map-chips">
     <div class="chip" data-cat="all"           onclick="setFilter('all')">전체</div>
-    <div class="chip chip--parking" data-cat="parking"      onclick="toggleParking()">🅿 공영주차장</div>
+    <div class="chip chip--parking" data-cat="parking"      onclick="toggleParking()">🅿️ 공영주차장</div>
     <div class="chip" data-cat="localcurrency" onclick="setFilter('localcurrency')"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px">지역화폐 가맹점</div>
     <div class="chip" data-cat="tourist"       onclick="setFilter('tourist')">★ 관광지</div>
     <div class="chip" data-cat="festival"      onclick="setFilter('festival')">🎉 축제</div>
-    <div class="chip" data-cat="heritage" onclick="setFilter('heritage')">🏛 문화재</div>
-    <div class="chip" data-cat="mobeom"        onclick="setFilter('mobeom')">🍽 모범음식점</div>
+    <div class="chip" data-cat="heritage" onclick="setFilter('heritage')">🏛️ 문화재</div>
+    <div class="chip" data-cat="mobeom"        onclick="setFilter('mobeom')">🍽️ 모범음식점</div>
     <div class="chip" data-cat="touristrest"   onclick="setFilter('touristrest')">🥢 관광식당업</div>
     <div class="chip" data-cat="hotel"         onclick="setFilter('hotel')">🏨 관광호텔</div>
     <div class="chip" data-cat="camping"       onclick="setFilter('camping')">⛺ 캠핑장</div>
     <div class="chip" data-cat="temple"        onclick="setFilter('temple')">🏯 템플스테이</div>
-    <div class="chip" data-cat="touristfacility" onclick="setFilter('touristfacility')">🏘 관광편의시설</div>
+    <div class="chip" data-cat="touristfacility" onclick="setFilter('touristfacility')">🏘️ 관광편의시설</div>
     <div class="chip" data-cat="cinema"        onclick="setFilter('cinema')">🎬 영화상영관</div>
-    <div class="chip" data-cat="jebu"          onclick="setFilter('jebu')">⛱ 제부도 숙박</div>
+    <div class="chip" data-cat="jebu"          onclick="setFilter('jebu')">⛱️ 제부도 숙박</div>
   </div>
 
   <!-- 칩 스크롤 화살표 -->
@@ -375,7 +375,7 @@
     </button>
     <div id="lc-filter-scroll">
       <button class="lc-fchip active" data-lcat="all"    onclick="setLcFilter('all')">전체</button>
-      <button class="lc-fchip"        data-lcat="food"   onclick="setLcFilter('food')">🍽 음식점</button>
+      <button class="lc-fchip"        data-lcat="food"   onclick="setLcFilter('food')">🍽️ 음식점</button>
       <button class="lc-fchip"        data-lcat="cafe"   onclick="setLcFilter('cafe')">☕ 카페</button>
       <button class="lc-fchip"        data-lcat="mart"   onclick="setLcFilter('mart')">🛒 마트·편의점</button>
       <button class="lc-fchip"        data-lcat="beauty" onclick="setLcFilter('beauty')">💅 뷰티</button>
@@ -498,7 +498,7 @@
       </div>
     </div>
     <div class="menu-item" onclick="menuGoLiving('restaurant')">
-      <div class="menu-item-icon" style="background:#FEF3C7;">🍽</div>
+      <div class="menu-item-icon" style="background:#FEF3C7;">🍽️</div>
       <div class="menu-item-text">
         <div class="menu-item-label">모범음식점</div>
         <div class="menu-item-sub">화성시 인증 맛집 94곳</div>
@@ -519,7 +519,7 @@
       </div>
     </div>
     <div class="menu-item" onclick="closeMenu();goMapCat('jebu')">
-      <div class="menu-item-icon" style="background:#E0F2FE;">⛱</div>
+      <div class="menu-item-icon" style="background:#E0F2FE;">⛱️</div>
       <div class="menu-item-text">
         <div class="menu-item-label">제부도 숙박</div>
         <div class="menu-item-sub">펜션·민박 115곳</div>
@@ -554,25 +554,25 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082613"></script>
-<script src="js/quiz.js?v=2026082613"></script>
-<script src="js/mapnav.js?v=2026082613"></script>
-<script src="js/home.js?v=2026082613"></script>
-<script src="js/tourism.js?v=2026082613"></script>
-<script src="js/living.js?v=2026082613"></script>
-<script src="js/favorites.js?v=2026082613"></script>
-<script src="js/ui.js?v=2026082613"></script>
-<script src="js/calendar.js?v=2026082613"></script>
-<script src="js/boot.js?v=2026082613"></script>
+<script src="js/nav.js?v=2026082614"></script>
+<script src="js/quiz.js?v=2026082614"></script>
+<script src="js/mapnav.js?v=2026082614"></script>
+<script src="js/home.js?v=2026082614"></script>
+<script src="js/tourism.js?v=2026082614"></script>
+<script src="js/living.js?v=2026082614"></script>
+<script src="js/favorites.js?v=2026082614"></script>
+<script src="js/ui.js?v=2026082614"></script>
+<script src="js/calendar.js?v=2026082614"></script>
+<script src="js/boot.js?v=2026082614"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082613"></script>
-<script src="js/convenience.js?v=2026082613"></script>
-<script src="js/data.js?v=2026082613"></script>
-<script src="js/map.js?v=2026082613"></script>
-<script src="js/conv_map.js?v=2026082613"></script>
-<script src="js/parking.js?v=2026082613"></script>
-<script src="js/localcurrency.js?v=2026082613"></script>
+<script src="js/photos.js?v=2026082614"></script>
+<script src="js/convenience.js?v=2026082614"></script>
+<script src="js/data.js?v=2026082614"></script>
+<script src="js/map.js?v=2026082614"></script>
+<script src="js/conv_map.js?v=2026082614"></script>
+<script src="js/parking.js?v=2026082614"></script>
+<script src="js/localcurrency.js?v=2026082614"></script>
 </body>
 </html>

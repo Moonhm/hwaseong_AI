@@ -16,7 +16,7 @@ var QUIZ_QS = [
     q: '어떤 여행 스타일을 좋아하세요?',
     opts: [
       { label: '🌿\n자연 속 힐링', tags: ['자연','힐링','조용한'] },
-      { label: '🏛\n역사·문화 탐방', tags: ['역사','문화','전통'] },
+      { label: '🏛️\n역사·문화 탐방', tags: ['역사','문화','전통'] },
       { label: '🌊\n바다·해안 즐기기', tags: ['바다','해안','일몰'] },
       { label: '🎡\n체험·놀이 중심', tags: ['체험','이색','가족'] },
     ]
@@ -35,7 +35,7 @@ var QUIZ_QS = [
     opts: [
       { label: '🌅\n일몰·바다 뷰', tags: ['일몰','바다','해안','사진'] },
       { label: '🌸\n꽃·정원', tags: ['꽃','자연','힐링','사진'] },
-      { label: '⛩\n고궁·유적지', tags: ['역사','문화','전통'] },
+      { label: '⛩️\n고궁·유적지', tags: ['역사','문화','전통'] },
       { label: '🦕\n특이하고 신기한', tags: ['이색','체험','가족'] },
     ]
   },
@@ -44,7 +44,7 @@ var QUIZ_QS = [
     opts: [
       { label: '📸\n인생 사진 찍기', tags: ['사진','일몰','꽃','낭만'] },
       { label: '🚶\n천천히 산책하기', tags: ['힐링','조용한','자연'] },
-      { label: '🍽\n해산물 맛집 탐방', tags: ['바다','해산물','해안'] },
+      { label: '🍽️\n해산물 맛집 탐방', tags: ['바다','해산물','해안'] },
       { label: '🎭\n다양한 체험하기', tags: ['체험','가족','이색'] },
     ]
   },
@@ -53,7 +53,7 @@ var QUIZ_QS = [
     opts: [
       { label: '🌊\n탁 트인 바다', tags: ['바다','해안','일몰','사진'] },
       { label: '🌿\n고요한 자연', tags: ['자연','힐링','조용한','꽃'] },
-      { label: '🏛\n유서 깊은 장소', tags: ['역사','문화','전통'] },
+      { label: '🏛️\n유서 깊은 장소', tags: ['역사','문화','전통'] },
       { label: '🎡\n즐거운 체험', tags: ['체험','이색','가족'] },
     ]
   },
@@ -83,7 +83,7 @@ function _recFbEmoji(tags) {
   if (tags.indexOf('바다')  >= 0) return '🌊';
   if (tags.indexOf('꽃')    >= 0) return '🌸';
   if (tags.indexOf('이색')  >= 0) return '🦕';
-  if (tags.indexOf('역사')  >= 0) return '🏛';
+  if (tags.indexOf('역사')  >= 0) return '🏛️';
   if (tags.indexOf('자연')  >= 0) return '🌿';
   return '📍';
 }

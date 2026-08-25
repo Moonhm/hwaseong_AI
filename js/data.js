@@ -256,18 +256,18 @@ const PLACES = [
 // 카테고리 설정
 const CATEGORY_CONFIG = {
   tourist:       { label: '관광지',    color: '#FB923C', bg: '#FFF7ED', emoji: '★' },
-  restaurant:    { label: '맛집',      color: '#D97706', bg: '#FEF3C7', emoji: '🍽' },
+  restaurant:    { label: '맛집',      color: '#D97706', bg: '#FEF3C7', emoji: '🍽️' },
   festival:      { label: '축제',      color: '#DC2626', bg: '#FEE2E2', emoji: '🎉' },
-  heritage:      { label: "문화재", color: "#7C3AED", bg: "#F5F3FF", emoji: "🏛" },
-  parking:       { label: '주차장',    color: '#2563EB', bg: '#DBEAFE', emoji: '🅿' },
+  heritage:      { label: "문화재", color: "#7C3AED", bg: "#F5F3FF", emoji: "🏛️" },
+  parking:       { label: '주차장',    color: '#2563EB', bg: '#DBEAFE', emoji: '🅿️' },
   localcurrency: { label: '지역화폐',  color: '#059669', bg: '#D1FAE5', emoji: '💳' },
   /* 편의정보 카테고리 */
-  mobeom:        { label: '모범음식점', color: '#D97706', bg: '#FEF3C7', emoji: '🍽' },
+  mobeom:        { label: '모범음식점', color: '#D97706', bg: '#FEF3C7', emoji: '🍽️' },
   touristrest:   { label: '관광식당업', color: '#DC2626', bg: '#FEE2E2', emoji: '🥢' },
   hotel:         { label: '관광호텔',  color: '#7C3AED', bg: '#EDE9FE', emoji: '🏨' },
   camping:       { label: '캠핑장',    color: '#16A34A', bg: '#DCFCE7', emoji: '⛺' },
   temple:        { label: '템플스테이', color: '#92400E', bg: '#FDE68A', emoji: '🏯' },
-  jebu:          { label: '제부도숙박', color: '#0284C7', bg: '#E0F2FE', emoji: '⛱' },
+  jebu:          { label: '제부도숙박', color: '#0284C7', bg: '#E0F2FE', emoji: '⛱️' },
 };
 
 const FESTIVALS = PLACES.filter(p => p.category === 'festival');

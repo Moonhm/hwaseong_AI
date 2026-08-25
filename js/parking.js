@@ -313,7 +313,7 @@ function showParkingSlide(p) {
 
   document.getElementById('slide-inner').innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
-    + '<span style="background:#DBEAFE;color:#2563EB;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🅿 주차장</span>'
+    + '<span style="background:#DBEAFE;color:#2563EB;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🅿️ 주차장</span>'
     + freeTag + openTag + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">' + p.name + '</div>'
     + '<div class="sl-addr" style="margin-bottom:12px" data-addr="' + (p.address || '').replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + (p.address || '') + '</div>'
@@ -359,6 +359,6 @@ function updateParkingCount() {
   var total = open.length;
   var ratio = total > 0 ? avail / total : 0;
   el.style.background = 'hsl(' + Math.round(ratio * 118) + ',65%,40%)';
-  el.textContent = '🅿 여유 ' + avail + ' / ' + total + '곳';
+  el.textContent = '🅿️ 여유 ' + avail + ' / ' + total + '곳';
   el.style.display = 'inline-block';
 }

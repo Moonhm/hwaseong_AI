@@ -217,12 +217,12 @@ var _REGIONS = [
 
 var _CAT_STYLE = {
   tourist:      { bg: '#EEF2FF', em: '🎡' },
-  heritage:     { bg: '#F5F3FF', em: '🏛' },   /* data.js CATEGORY_CONFIG.heritage 와 색·이모지 동일 */
+  heritage:     { bg: '#F5F3FF', em: '🏛️' },   /* data.js CATEGORY_CONFIG.heritage 와 색·이모지 동일 */
   festival:     { bg: '#FFF7ED', em: '🎉' },
-  restaurant:   { bg: '#FEF3C7', em: '🍽' },
-  mobeom:       { bg: '#FEF3C7', em: '🍽' },
+  restaurant:   { bg: '#FEF3C7', em: '🍽️' },
+  mobeom:       { bg: '#FEF3C7', em: '🍽️' },
   touristrest:  { bg: '#FEE2E2', em: '🥢' },
-  parking:      { bg: '#EFF6FF', em: '🅿' },
+  parking:      { bg: '#EFF6FF', em: '🅿️' },
   localcurrency:{ bg: '#F0FDF4', em: '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:18px;height:18px;object-fit:contain">'  },
   hotel:        { bg: '#EDE9FE', em: '🏨' },
   camping:      { bg: '#DCFCE7', em: '⛺' },
@@ -266,7 +266,7 @@ function doHomeSearch(q) {
       if ((p.name || '').toLowerCase().includes(ql)) {
         var isFree = p.free || (p.tags && p.tags.includes('무료'));
         var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + addr, em: '🅿', bg: '#EFF6FF', lat: p.lat, lng: p.lng, id: p.id });
+        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + addr, em: '🅿️', bg: '#EFF6FF', lat: p.lat, lng: p.lng, id: p.id });
       }
     });
   }
@@ -298,7 +298,7 @@ function doHomeSearch(q) {
       cs.arr.forEach(function(p) {
         if (convHits >= 5) return;
         if ((p.name || '').toLowerCase().includes(ql)) {
-          results.push({ type: 'conv', name: p.name, sub: cs.label + (p.addr ? ' · ' + p.addr : ''), em: '🍽', bg: '#FFF7ED', convCat: cs.cat });
+          results.push({ type: 'conv', name: p.name, sub: cs.label + (p.addr ? ' · ' + p.addr : ''), em: '🍽️', bg: '#FFF7ED', convCat: cs.cat });
           convHits++;
         }
       });
@@ -411,7 +411,7 @@ function renderHomeTourism() {
     ? `<div class="place-grid" style="margin-bottom:10px">${restaurants.map(r => `
         <div class="place-card-sm" onclick="goMapCat('mobeom')">
           <div style="display:flex;align-items:center;gap:8px">
-            <div class="pi pi-food">🍽</div>
+            <div class="pi pi-food">🍽️</div>
             <div><div class="place-card-sm-name">${r.name}</div><div class="place-card-sm-addr">${(r.addr||'').split(' ').slice(0,3).join(' ')}</div></div>
           </div>
         </div>`).join('')}</div>` : '';
@@ -463,7 +463,7 @@ function renderHomeTourism() {
           <div><div class="place-card-sm-name" style="font-size:13px">템플스테이</div><div class="place-card-sm-addr">용주사</div></div>
         </div>
         <div class="place-card-sm" style="flex-direction:row;align-items:center;gap:10px;padding:12px" onclick="goMapCat('jebu')">
-          <div style="width:34px;height:34px;border-radius:10px;background:#E0F2FE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⛱</div>
+          <div style="width:34px;height:34px;border-radius:10px;background:#E0F2FE;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⛱️</div>
           <div><div class="place-card-sm-name" style="font-size:13px">제부도 숙박</div><div class="place-card-sm-addr">115곳</div></div>
         </div>
       </div>
@@ -744,7 +744,7 @@ function renderRecentSection() {
       items.map(function (it, i) {
         var d = it.d, isPark = it.k === 'p';
         var thumb = isPark
-          ? '<div class="recent-thumb recent-thumb-park">🅿</div>'
+          ? '<div class="recent-thumb recent-thumb-park">🅿️</div>'
           : '<div class="recent-thumb">' +
               '<img src="' + ((typeof placePhotoSrc === 'function')
                   ? placePhotoSrc(d)
