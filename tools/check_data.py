@@ -28,6 +28,7 @@ ROOT = os.environ.get("HW_ROOT") or os.path.dirname(os.path.dirname(os.path.absp
 FLOOR = {
     "PLACES.tourist":               159,   # js/data.js  category:"tourist"
     "PLACES.festival":               48,   # js/data.js  category:"festival"
+    "PLACES.heritage":               42,   # js/data.js  category:"heritage" (2026-08-26 지정문화재)
     "CONVENIENCE.restaurants":       94,   # js/convenience.js:5    모범음식점
     "CONVENIENCE.touristRestaurants": 35,  # js/convenience.js:103  관광식당업
     "CONVENIENCE.hotels":            10,   # js/convenience.js:142  관광호텔
@@ -151,6 +152,7 @@ def check_counts():
     src_d  = strip_js_comments(open(p_data, encoding="utf-8").read())
     got["PLACES.tourist"]  = len(re.findall(r'category:\s*"tourist"',  src_d))
     got["PLACES.festival"] = len(re.findall(r'category:\s*"festival"', src_d))
+    got["PLACES.heritage"] = len(re.findall(r'category:\s*"heritage"', src_d))
 
     # 포맷 방어: PLACES 배열의 실제 객체 수와 카테고리 합이 어긋나면 세는 방법이 낡은 것이다.
     m = re.search(r"(?m)^\s*(?:const|let|var)\s+PLACES\s*=\s*\[", src_d)
@@ -158,7 +160,7 @@ def check_counts():
         fail("js/data.js  PLACES 배열 선언을 못 찾았다 — 세는 방법이 무효다")
     else:
         total = count_objects_in_array(src_d, m.end() - 1)
-        s = got["PLACES.tourist"] + got["PLACES.festival"]
+        s = got["PLACES.tourist"] + got["PLACES.festival"] + got["PLACES.heritage"]
         if total != s:
             fail("js/data.js:%d  PLACES 객체 %d개인데 category 합은 %d개 — "
                  "category 가 없거나 오타난 항목이 %d건 있다"
@@ -348,7 +350,7 @@ TOOL_RE = [
     ("tools/regeocode.py:_PLACE_RE",   "js/data.js",
      r'\{[^{}]*?id\s*:\s*(\d+)[^{}]*?category\s*:\s*"(tourist|festival)"[^{}]*?\}', 207, None),
     ("tools/fix_all_coords.py:BLOCK_RE", "js/data.js",
-     r'(\{ id:(\d+), name:"([^"]+)", category:"(tourist|festival)", lat:([\d.]+), lng:([\d.]+), address:"([^"]*?)")', 207, None),
+     r'(\{ id:(\d+), name:"([^"]+)", category:"(tourist|festival|heritage)", lat:([\d.]+), lng:([\d.]+), address:"([^"]*?)")', 249, None),
     ("tools/geocode_jebu.py:ITEM_RE",  "js/convenience.js",
      r'\{name:"([^"]+)",\s*addr:"([^"]+)"(?:,\s*tel:"[^"]*")?\}', None, "jebu"),
 ]

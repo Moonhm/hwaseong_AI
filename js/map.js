@@ -25,6 +25,7 @@ const CAT_COLOR = {
   tourist:       '#FB923C',
   restaurant:    '#EF4444',
   festival:      '#F97316',
+  heritage:      '#7C3AED',
   parking:       '#2563EB',
   localcurrency: '#16A34A',
   mobeom:        '#D97706',
