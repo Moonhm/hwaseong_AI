@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-tools/intake.py — 데이터 반입 현관 (배포 Claude 담당 · WORKFLOW.md §18·§24)
+tools/intake.py — 데이터 반입 현관 (배포 Claude 담당)
+
+관련 문서
+  · 규칙·현황  WORKFLOW.md §18 「외부 데이터 반입 파이프라인」
+  · 작업 기록  docs/log/2026-08-25-deploy-data-intake.md
+  · 데이터 목록 data/CATALOG.md
 
 사용자가 /home/jovyan/work/ 에 무엇을 넣든 이 도구가 받아서 정리한다.
   압축 해제 → 인벤토리 → txt 메모 분해 → URL 수집 → 경량화 → 카탈로그 기록 → work/ 비우기
