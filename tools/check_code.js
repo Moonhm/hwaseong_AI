@@ -13,15 +13,37 @@
  */
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const R = process.env.HW_ROOT || path.resolve(__dirname, '..');
-const JS = ['convenience.js', 'data.js', 'map.js', 'conv_map.js', 'parking.js', 'localcurrency.js'];
-
 let FAILS = [];
 const fail = m => FAILS.push(m);
+
+/* js/ 파일 목록을 여기에 손으로 적지 않는다 — index.html 의 <script src> 나열에서 읽는다.
+   손으로 적으면 파일이 늘었을 때 검사가 그 파일을 안 본 채 초록으로 통과한다.
+   실제로 2026-08-25 인라인 JS 를 10개 파일로 분리했을 때, 하드코딩된 6개 목록이
+   새 파일 10개를 통째로 놓쳐 "전역이 119개뿐" "go() 가 선언돼 있지 않다" 오탐을 냈다.
+   순서도 index.html 을 따른다 = 브라우저의 실제 로드 순서와 항상 일치한다. */
+const JS = (() => {
+  const html = fs.readFileSync(path.join(R, 'index.html'), 'utf8')
+    .replace(/<!--[\s\S]*?-->/g, '');                       // 주석 속 태그는 무시
+  const listed = [...html.matchAll(/<script\b[^>]*\bsrc\s*=\s*["']js\/([^"'?]+)/gi)].map(m => m[1]);
+  const onDisk = fs.readdirSync(path.join(R, 'js')).filter(f => f.endsWith('.js'));
+  for (const f of onDisk) {
+    if (!listed.includes(f)) fail(`js/${f} 가 디스크에 있는데 index.html 이 안 부른다 — 죽은 파일이거나 <script src> 를 빠뜨렸다`);
+  }
+  for (const f of listed) {
+    if (!onDisk.includes(f)) fail(`index.html 이 js/${f} 를 부르는데 파일이 없다 — 404 가 나고 그 파일의 함수가 전부 죽는다`);
+  }
+  return listed.filter(f => onDisk.includes(f));
+})();
+
 
 /* index.html 의 인라인 <script> 만 뽑되, 원본 줄 번호를 보존하려고 앞을 개행으로 채운다.
    줄 번호가 어긋나면 사람이 에디터에서 못 찾아가고, 못 찾아가는 검사는 곧 무시된다. */
 function inlineJs() {
-  const s = fs.readFileSync(path.join(R, 'index.html'), 'utf8');
+  /* HTML 주석을 먼저 공백으로 지운다(개행 보존). 주석 안에 <script> 라는 '글자'가 있으면
+     아래 정규식이 그것을 진짜 태그로 읽어 HTML 을 JS 로 검사하다 문법 오류를 낸다.
+     실제로 2026-08-25 인라인 JS 분리 때 남긴 안내 주석이 이 사고를 냈다. */
+  const s = fs.readFileSync(path.join(R, 'index.html'), 'utf8')
+    .replace(/<!--[\s\S]*?-->/g, c => c.replace(/[^\n]/g, ' '));
   const re = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
   let out = '', m;
   while ((m = re.exec(s))) {

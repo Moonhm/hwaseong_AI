@@ -283,40 +283,46 @@ def check_printed(got):
     got = dict(got)
     got["CONVENIENCE.jebu.total"] = sum(v for k, v in got.items() if k.startswith("CONVENIENCE.jebu."))
 
-    p = os.path.join(ROOT, "index.html")
-    raw = open(p, encoding="utf-8").read()
-    # 주석 속 숫자를 실제 표기로 오인하지 않도록 지운다(개행은 보존).
-    #   index.html:2526, index.html:3596 에 "27,374건" 이 주석으로 적혀 있다.
-    #   실측: 이 처리로 /27,?374/ 매치가 3건 → 1건이 된다.
-    h = re.sub(r"<!--.*?-->", lambda m: "\n" * m.group(0).count("\n"), raw, flags=re.S)
-    h = strip_js_comments(h)
-    lines = h.split("\n")
+    # 2026-08-25 인라인 JS 분리 이후: 화면에 찍히는 숫자를 만드는 코드가 index.html 과
+    # js/*.js 양쪽에 흩어져 있다. index.html 만 훑으면 카드 라벨 5종을 못 찾아
+    # "마크업이 바뀌었다" 오탐이 난다. 두 곳을 함께 훑는다.
+    targets = ["index.html"] + sorted(
+        "js/" + f for f in os.listdir(os.path.join(ROOT, "js")) if f.endswith(".js")
+    )
+    scan = []          # (파일명, 줄번호, 본문)
+    for rel in targets:
+        raw = open(os.path.join(ROOT, rel), encoding="utf-8").read()
+        # 주석 속 숫자를 실제 표기로 오인하지 않도록 지운다(개행은 보존).
+        #   예: "27,374건" 이 주석으로 적혀 있는 자리가 있다.
+        h = re.sub(r"<!--.*?-->", lambda m: "\n" * m.group(0).count("\n"), raw, flags=re.S)
+        h = strip_js_comments(h)
+        scan.extend((rel, i, l) for i, l in enumerate(h.split("\n"), 1))
 
     for pat, key, minocc in PRINTED:
         occ = 0
-        for i, l in enumerate(lines, 1):
+        for fn, i, l in scan:
             for v in re.findall(pat, l):
                 occ += 1
                 real = got.get(key, -1)
                 if real < 0:
                     continue  # 데이터를 못 읽었다 — check_counts 가 이미 FAIL 을 냈으므로 중복 보고하지 않는다
                 if int(v.replace(",", "")) != real:
-                    fail("index.html:%d  「%s」 라고 적혀 있는데 실제 %s 는 %d건" % (i, v, key, real))
+                    fail("%s:%d  「%s」 라고 적혀 있는데 실제 %s 는 %d건" % (fn, i, v, key, real))
         if occ < minocc:
-            fail("index.html  패턴 /%s/ 이 %d회밖에 안 잡힌다(기대 %d회) — 문구를 바꿨다면 "
+            fail("index.html+js/  패턴 /%s/ 이 %d회밖에 안 잡힌다(기대 %d회) — 문구를 바꿨다면 "
                  "tools/check_data.py PRINTED 도 함께 고쳐라. 안 고치면 이 검사가 조용히 무력화된다"
                  % (pat, occ, minocc))
 
     for label, key in PRINTED_CARD:
         pat = r'place-card-sm-name"[^>]*>%s</div><div class="place-card-sm-addr">([\d,]+)곳' % re.escape(label)
         occ = 0
-        for i, l in enumerate(lines, 1):
+        for fn, i, l in scan:
             for v in re.findall(pat, l):
                 occ += 1
                 if int(v.replace(",", "")) != got.get(key, -1):
-                    fail("index.html:%d  카드「%s %s곳」인데 실제 %s 는 %d건" % (i, label, v, key, got.get(key, -1)))
+                    fail("%s:%d  카드「%s %s곳」인데 실제 %s 는 %d건" % (fn, i, label, v, key, got.get(key, -1)))
         if occ < 1:
-            fail("index.html  카드 라벨「%s」의 건수 표기를 못 찾았다 — 마크업이 바뀌었다" % label)
+            fail("index.html+js/  카드 라벨「%s」의 건수 표기를 못 찾았다 — 마크업이 바뀌었다" % label)
 
     # js/convenience.js:196 의 summary — 화면 숫자(index.html:2937-2945, js/conv_map.js:394-396)의 실제 출처
     src = open(os.path.join(ROOT, "js/convenience.js"), encoding="utf-8").read()

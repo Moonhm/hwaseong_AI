@@ -1,0 +1,145 @@
+/* ============================================================================
+ * js/living.js — 생활 탭 — 카테고리 전환과 목록
+ *
+ * 왜 따로 있나: 생활 탭 전용 렌더러. 관광 탭과 데이터 출처는 같지만 화면 구성이 달라 분리한다.
+ * 함께 볼 것:   renderLivingPage() 의 가맹점 수는 지연 로드 전이면 0 이다 — js/ui.js 의 _loadLcData() 참고.
+ *
+ * index.html 인라인 <script> 3246~3380줄에서 분리 (2026-08-25, 개발 Claude).
+ * classic script 다 — type="module" 을 붙이면 전역이 사라져 onclick 이 전부 죽는다.
+ * ========================================================================== */
+
+/* ── 생활 페이지 렌더 ── */
+/* ── 생활편의 카테고리 전환 ── */
+function switchLivingCat(el, cat) {
+  document.querySelectorAll('.cat-icon-item').forEach(function(c) { c.classList.remove('cat-active'); });
+  if (el) el.classList.add('cat-active');
+  renderLivingCatList(cat);
+}
+
+function renderLivingCatList(cat) {
+  var list = document.getElementById('living-main-list');
+  var titleEl = document.getElementById('living-list-title');
+  var countEl = document.getElementById('living-list-count');
+  if (!list) return;
+  var empty = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+
+  var items;
+  if (cat === 'restaurant') {
+    if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
+    items = CONVENIENCE.restaurants;
+    if (!items) { list.innerHTML = empty; return; }
+    if (titleEl) titleEl.textContent = '모범음식점';
+    if (countEl) countEl.textContent = items.length + '곳';
+    list.innerHTML = items.map(function(r, i) {
+      return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.03) + 's" onclick="goConvItem(\'mobeom\',' + i + ')">'
+        + '<div class="pi ci-food" style="border-radius:12px;background:#FEF3C7;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🍽️</div>'
+        + '<div class="pi-content"><div class="pi-name">' + r.name + '</div>'
+        + '<div class="pi-meta">화성시 ' + r.addr + '</div></div>'
+        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
+        + '</div>';
+    }).join('');
+
+  } else if (cat === 'touristrest') {
+    if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
+    items = CONVENIENCE.touristRestaurants;
+    if (!items) { list.innerHTML = empty; return; }
+    if (titleEl) titleEl.textContent = '관광식당업';
+    if (countEl) countEl.textContent = items.length + '곳';
+    list.innerHTML = items.map(function(r, i) {
+      var tagClass = (r.cuisine || '').includes('네팔') ? 'cuisine-nepal' : (r.cuisine || '').includes('러시아') ? 'cuisine-russia' : '';
+      return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's" onclick="goConvItem(\'touristrest\',' + i + ')">'
+        + '<div class="pi" style="border-radius:12px;background:#FEE2E2;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🥢</div>'
+        + '<div class="pi-content">'
+        + '<div class="pi-name" style="gap:6px">' + r.name
+        + (r.cuisine ? '<span class="cuisine-tag ' + tagClass + '">' + r.cuisine + '</span>' : '')
+        + '</div>'
+        + '<div class="pi-meta">화성시 ' + r.addr + (r.area ? ' · ' + r.area : '') + '</div>'
+        + '</div>'
+        + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
+        + '</div>';
+    }).join('');
+
+  } else if (cat === 'currency') {
+    var lcArr = (typeof lcData !== 'undefined') ? lcData : [];
+    /* 미로드 시 fetch 후 자동 재렌더.
+     * 성공 여부를 확인하지 않으면 실패 콜백이 다시 이 분기로 들어와 4.2MB 를 무한 재요청한다. */
+    if (!lcArr.length) {
+      _loadLcData(function () {
+        /* 로딩이 수 초 걸려 그 사이 사용자가 다른 카테고리로 옮겼을 수 있다. */
+        var act = document.querySelector('.cat-icon-item.cat-active');
+        if (!act || act.id !== 'liv-cat-currency') return;
+        if (typeof lcData !== 'undefined' && lcData.length) renderLivingCatList('currency');
+        else if (countEl) countEl.textContent = '불러오기 실패';
+      });
+    }
+    var LC_SHOW = 80;
+    if (titleEl) titleEl.textContent = '희망화성지역화폐 가맹점';
+    if (countEl) countEl.textContent = lcArr.length ? lcArr.length.toLocaleString() + '곳' : '로딩 중...';
+    list.innerHTML = lcArr.length
+      ? lcArr.slice(0, LC_SHOW).map(function(p, i) {
+          /* lcData 필드: n=이름, c=업종, a=주소, lat, lng */
+          var name = p.n || p.name || '';
+          var addr = (p.a || p.address || '').replace('경기도 화성시 ','');
+          var cat2 = p.c || '';
+          var hasCoord = p.lat && p.lng;
+          var clickFn = hasCoord
+            ? 'goMapLc(' + p.lat + ',' + p.lng + ')'
+            : 'goMapCat(\'localcurrency\')';
+          return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.04) + 's;cursor:pointer" onclick="' + clickFn + '">'
+            + '<div class="pi pi-currency"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:64%;height:64%;object-fit:contain;display:block"></div>'
+            + '<div class="pi-content">'
+            + '<div class="pi-name">' + name + '</div>'
+            + '<div class="pi-meta">' + (cat2 ? cat2 + ' · ' : '') + addr + '</div>'
+            + '</div>'
+            + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
+            + '</div>';
+        }).join('')
+      + (lcArr.length > LC_SHOW
+          ? '<div style="padding:16px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer" onclick="goMapCat(\'localcurrency\')">'
+            + '지도에서 ' + lcArr.length.toLocaleString() + '개 전체 보기 →</div>'
+          : '')
+      : empty;
+
+  } else if (cat === 'parking') {
+    var pkArr = (typeof parkingData !== 'undefined') ? parkingData : [];
+    if (titleEl) titleEl.textContent = '공영주차장';
+    if (countEl) countEl.textContent = pkArr.length + '곳';
+    list.innerHTML = pkArr.length
+      ? pkArr.map(function(p, i) {
+          var isFree = p.free === true;
+          var avail = (p.avail != null) ? p.avail : p.total;
+          var addr = (p.address || '').replace('경기도 화성시 ','');
+          var hasCoord = p.lat && p.lng;
+          var clickFn = hasCoord
+            ? 'goMapPark(' + p.lat + ',' + p.lng + ',' + p.id + ')'
+            : 'goMapCat(\'parking\')';
+          return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.04) + 's;cursor:pointer" onclick="' + clickFn + '">'
+            + '<div class="pi pi-parking">P</div>'
+            + '<div class="pi-content">'
+            + '<div class="pi-name">' + p.name + '</div>'
+            + '<div class="pi-meta">' + addr + ' · ' + p.type + '</div>'
+            + '</div>'
+            + '<div class="pi-right" style="text-align:right;flex-shrink:0">'
+            + '<span class="park-badge ' + (isFree ? 'pb-free' : 'pb-paid') + '">' + (isFree ? '무료' : '유료') + '</span>'
+            + '<div style="font-size:10px;color:var(--text-muted);margin-top:3px">' + avail + '대</div>'
+            + '</div>'
+            + '</div>';
+        }).join('')
+      : empty;
+  }
+}
+
+function renderLivingPage() {
+  var cCount = (typeof lcData !== 'undefined') ? lcData.length : 0;
+  var pCount = (typeof parkingData !== 'undefined') ? parkingData.length : 0;
+  var scEl = document.getElementById('stat-currency');
+  var spEl = document.getElementById('stat-parking');
+  if (scEl) scEl.textContent = cCount;
+  if (spEl) spEl.textContent = pCount;
+
+  // 기본 탭: 모범음식점
+  var firstCat = document.getElementById('liv-cat-restaurant');
+  switchLivingCat(firstCat, 'restaurant');
+}
+
+
