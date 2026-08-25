@@ -440,9 +440,14 @@ def check_cachebust():
         warn("  → 갱신한 주차장·지역화폐 데이터가 재방문자 브라우저 캐시에 막힌다. "
              "index.html:3891 의 규율에 맞춰 이 fetch 들에도 ?v= 를 붙여라")
     # <script src="js/*.js?v="> 쪽은 전부 붙어 있는지 확인
-    for m in re.finditer(r'src="(js/[A-Za-z_]+\.js)(\?v=(\d+))?"', h):
+    # js/ 뿐 아니라 css/ 도 본다. 파일명에 숫자·하이픈이 들어가므로([A-Za-z_] 만으로는
+    # 00-base.css 류가 통째로 안 잡힌다) 문자클래스를 넓혔다. 2026-08-25 CSS 분리 때
+    # 이 정규식이 css 6개를 0개로 세어, ?v= 갱신 누락을 잡을 수단이 없던 것을 고친 것이다.
+    for m in re.finditer(r'(?:src|href)="((?:js|css)/[A-Za-z0-9_.-]+\.(?:js|css))(\?v=(\d+))?"', h):
         if not m.group(2):
-            fail("index.html:%d  <script src=\"%s\"> 에 ?v= 가 없다" % (h.count("\n", 0, m.start()) + 1, m.group(1)))
+            fail("index.html:%d  %s 에 ?v= 가 없다 — 이 파일을 고쳐도 재방문자에게 안 간다"
+                 % (h.count("\n", 0, m.start()) + 1,
+                    ('<link href="%s">' if m.group(1).startswith("css/") else '<script src="%s">') % m.group(1)))
 
 
 def main():

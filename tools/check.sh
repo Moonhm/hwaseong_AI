@@ -162,7 +162,8 @@ precommit_guard() {
       echo "  FAIL $f 는 $last 에 바뀌었는데 index.html 의 ?v=$v 는 그대로다 — 옛 파일이 캐시에서 나간다"
       bad=1
     fi
-  done < <(grep -o 'src="js/[a-zA-Z_]*\.js?v=[0-9]*"' index.html | sed 's/src="//;s/"$//;s/?v=/ /')
+  done < <(grep -oE '(src|href)="(js|css)/[A-Za-z0-9_.-]+\.(js|css)\?v=[0-9]+"' index.html \
+           | sed -E 's/^(src|href)="//;s/"$//;s/\?v=/ /')
   [ $bad = 0 ] && echo "  i     ?v= 캐시 버스팅 일관"
   return $bad
 }
