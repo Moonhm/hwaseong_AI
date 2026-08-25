@@ -2,7 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- viewport-fit=cover 가 없으면 env(safe-area-inset-*) 이 항상 0 을 반환한다.
+       우리는 safe-area 를 6곳에서 쓰는데(00-base:56,68 / 20-map:19,208 / 90-misc:63)
+       이 한 단어가 없어서 전부 무효였다 — iPhone 홈 인디케이터가 하단 내비를 가린다. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>화성잇다</title>
   <link rel="icon" type="image/png" sizes="32x32" href="img/favicon.png" />
   <link rel="apple-touch-icon" href="img/favicon-192.png" />
@@ -15,12 +18,12 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082503">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082503">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082503">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082503">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082503">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082503">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082504">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082504">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082504">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082504">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082504">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082504">
 </head>
 <body>
 
@@ -508,25 +511,25 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082503"></script>
-<script src="js/quiz.js?v=2026082503"></script>
-<script src="js/mapnav.js?v=2026082503"></script>
-<script src="js/home.js?v=2026082503"></script>
-<script src="js/tourism.js?v=2026082503"></script>
-<script src="js/living.js?v=2026082503"></script>
-<script src="js/favorites.js?v=2026082503"></script>
+<script src="js/nav.js?v=2026082504"></script>
+<script src="js/quiz.js?v=2026082504"></script>
+<script src="js/mapnav.js?v=2026082504"></script>
+<script src="js/home.js?v=2026082504"></script>
+<script src="js/tourism.js?v=2026082504"></script>
+<script src="js/living.js?v=2026082504"></script>
+<script src="js/favorites.js?v=2026082504"></script>
 <script src="js/ui.js?v=2026082504"></script>
-<script src="js/calendar.js?v=2026082503"></script>
-<script src="js/boot.js?v=2026082503"></script>
+<script src="js/calendar.js?v=2026082504"></script>
+<script src="js/boot.js?v=2026082504"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
 <script src="js/photos.js?v=2026082504"></script>
-<script src="js/convenience.js?v=2026082503"></script>
-<script src="js/data.js?v=2026082503"></script>
-<script src="js/map.js?v=2026082503"></script>
-<script src="js/conv_map.js?v=2026082503"></script>
-<script src="js/parking.js?v=2026082503"></script>
-<script src="js/localcurrency.js?v=2026082503"></script>
+<script src="js/convenience.js?v=2026082504"></script>
+<script src="js/data.js?v=2026082504"></script>
+<script src="js/map.js?v=2026082504"></script>
+<script src="js/conv_map.js?v=2026082504"></script>
+<script src="js/parking.js?v=2026082504"></script>
+<script src="js/localcurrency.js?v=2026082504"></script>
 </body>
 </html>

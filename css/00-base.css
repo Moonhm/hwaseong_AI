@@ -36,6 +36,13 @@
     /* ── RESET ── */
     html { height: 100%; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* 안드로이드 크롬이 터치 시 그리는 파란 사각형. 우리는 :active 로 scale 피드백을
+     * 이미 주고 있어서(20-map.css:277-290) 둘이 겹쳐 두 번 반응하는 것처럼 보인다.
+     * 지우는 대신, :active 가 없던 요소에는 90-misc.css 끝에서 짝을 채워 넣었다 —
+     * 하이라이트만 지우면 그 요소들은 피드백이 0이 된다. */
+    * { -webkit-tap-highlight-color: transparent; }
+    /* 가로로 돌렸을 때 iOS 가 글자를 제멋대로 키우는 것을 막는다. */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
       font-family: "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg);
