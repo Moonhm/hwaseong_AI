@@ -297,6 +297,10 @@ function feeSection(p) {
 }
 
 function showParkingSlide(p) {
+  /* '최근 본' 기록 지점 (js/home.js pushRecent). 관광지는 js/map.js showPlaceSlide 가 건다.
+   * 주차장 id 는 관광지 id 와 60개가 겹치므로 종류를 반드시 함께 넘긴다. */
+  if (typeof pushRecent === 'function') pushRecent(p, 'parking');
+
   var color   = pinColorCached(p);
   var avail   = p.open ? p.avail : '-';
   var ratio   = (p.open && p.total > 0) ? Math.max(0, Math.round((p.avail / p.total) * 100)) : 0;

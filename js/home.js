@@ -652,15 +652,20 @@ function resetHomePage() {
 }
 
 /* ══════════════════════════════════════════════════
-   최근 둘러본 관광지 (2026-08-26)
+   최근 본 관광지·주차장 (2026-08-26)
    즐겨찾기(js/favorites.js)와 같은 localStorage 방식이되 성격이 다르다 —
    즐겨찾기는 '사용자가 고른 것', 이쪽은 '사용자가 지나간 것'이라 자동으로 쌓인다.
 
-   '둘러봤다'의 기준 = 슬라이드 카드가 열린 시점(js/map.js showPlaceSlide).
-   지도 핀 클릭, 관광 목록 클릭, 홈 검색 결과, 즐겨찾기 진입이 전부 이 함수를 거치므로
-   한 곳만 걸면 모든 경로가 잡힌다.
+   '봤다'의 기준 = 슬라이드 카드가 열린 시점.
+     관광지 → js/map.js showPlaceSlide()      (지도 핀·관광 목록·홈 검색·즐겨찾기가 전부 여기를 거친다)
+     주차장 → js/parking.js showParkingSlide()
+   호출부마다 걸면 새 경로가 생길 때 빠뜨리므로 이 두 곳만 건다.
 
-   관광지(tourist)만 쌓는다. 축제는 성격이 달라 뺐다 — 필요하면 아래 필터만 풀면 된다.
+   ⚠ 종류(k)를 반드시 함께 저장한다. 주차장 id 와 관광지 id 는 둘 다 작은 정수라
+     실측 60개가 겹친다 — id 만 저장하면 서로를 덮어쓴다.
+       k:'t' = 관광지(PLACES) · k:'p' = 주차장(parkingData)
+     k 가 없는 옛 기록은 관광지로 본다(2026-08-26 이전 저장분 호환).
+
    localStorage 가 막힌 환경(사파리 프라이빗)에서도 죽지 않게 전부 try 로 감쌌다.
 ══════════════════════════════════════════════════ */
 var _RECENT_KEY = 'hsida_recent';
@@ -668,17 +673,22 @@ var _RECENT_MAX = 12;    /* 저장 개수 */
 var _RECENT_SHOW = 6;    /* 화면에 띄울 개수 */
 
 function getRecent() {
-  try { return JSON.parse(localStorage.getItem(_RECENT_KEY) || '[]'); } catch (e) { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(_RECENT_KEY) || '[]')
+      .map(function (r) { return { k: r.k || 't', id: r.id, at: r.at }; });   /* 옛 기록 호환 */
+  } catch (e) { return []; }
 }
 
-function pushRecent(place) {
-  if (!place || place.category !== 'tourist' || place.id == null) return;
+/* kind: 'tourist' | 'parking' */
+function pushRecent(item, kind) {
+  if (!item || item.id == null) return;
+  var k = (kind === 'parking') ? 'p' : 't';
+  if (k === 't' && item.category !== 'tourist') return;   /* 축제 등은 쌓지 않는다 */
   try {
-    var list = getRecent().filter(function (r) { return r.id !== place.id; });   /* 중복 제거 */
-    list.unshift({ id: place.id, name: place.name || '', at: Date.now() });
+    var list = getRecent().filter(function (r) { return !(r.k === k && r.id === item.id); });
+    list.unshift({ k: k, id: item.id, at: Date.now() });
     localStorage.setItem(_RECENT_KEY, JSON.stringify(list.slice(0, _RECENT_MAX)));
   } catch (e) { /* 저장 불가 환경 — 기능만 조용히 꺼진다 */ }
-  /* 홈이 이미 그려져 있으면 바로 반영. 홈에 없을 때도 안전하다(요소가 없으면 return). */
   renderRecentSection();
 }
 
@@ -690,33 +700,57 @@ function clearRecent() {
 function renderRecentSection() {
   var el = document.getElementById('home-recent-section');
   if (!el) return;
-  if (typeof PLACES === 'undefined') { el.style.display = 'none'; return; }
+  el.style.display = 'block';        /* 비어 있어도 자리를 지킨다 — 아래 주석 참고 */
 
-  /* 저장된 id 로 지금 PLACES 를 다시 찾는다 — 이름·좌표가 바뀌어도 최신값을 쓰고,
-   * 삭제된 관광지는 자동으로 빠진다. */
-  var items = getRecent()
-    .map(function (r) { return PLACES.find(function (p) { return p.id === r.id; }); })
-    .filter(Boolean)
-    .slice(0, _RECENT_SHOW);
+  /* 저장된 id 로 원본을 다시 찾는다 — 이름·좌표가 바뀌어도 최신값을 쓰고,
+   * 삭제된 항목은 자동으로 빠진다. */
+  var items = getRecent().map(function (r) {
+    if (r.k === 'p') {
+      if (typeof parkingData === 'undefined') return null;
+      var pk = parkingData.find(function (x) { return x.id === r.id; });
+      return pk ? { k: 'p', d: pk } : null;
+    }
+    if (typeof PLACES === 'undefined') return null;
+    var pl = PLACES.find(function (x) { return x.id === r.id && x.category === 'tourist'; });
+    return pl ? { k: 't', d: pl } : null;
+  }).filter(Boolean).slice(0, _RECENT_SHOW);
 
-  if (!items.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
-
-  el.style.display = 'block';
-  el.innerHTML =
+  var head =
     '<div class="section-header" style="padding:0 var(--px);margin-bottom:10px">' +
-      '<div class="section-title">최근 둘러본 관광지</div>' +
-      '<button class="section-link" onclick="clearRecent()">지우기</button>' +
-    '</div>' +
+      '<div class="section-title">최근 본 관광지·주차장</div>' +
+      (items.length ? '<button class="section-link" onclick="clearRecent()">지우기</button>' : '') +
+    '</div>';
+
+  /* 한 번도 본 적 없어도 이 칸을 없애지 않는다 —
+   * 숨겨 두면 이런 기능이 있다는 것 자체를 아무도 모른다.
+   * 대신 빈 상자가 아니라 '여기에 무엇이 쌓이는지'를 말해 준다. */
+  if (!items.length) {
+    el.innerHTML = head +
+      '<div class="recent-empty">' +
+        '<div class="recent-empty-icon">🕘</div>' +
+        '<div class="recent-empty-text">지도에서 관광지나 주차장을 눌러 보세요</div>' +
+        '<div class="recent-empty-sub">최근 본 곳이 여기에 모입니다</div>' +
+      '</div>';
+    return;
+  }
+
+  el.innerHTML = head +
     '<div class="recent-row">' +
-      items.map(function (p, i) {
-        var src = (typeof placePhotoSrc === 'function') ? placePhotoSrc(p)
-                : 'assets/images/places/' + p.name + '.jpg';
-        return '<div class="recent-card" style="animation-delay:' + (i * 0.04) + 's"' +
-               ' onclick="goMapFocus(' + p.lat + ',' + p.lng + ',4,' + p.id + ')">' +
-                 '<div class="recent-thumb">' +
-                   '<img src="' + src + '" alt="" onerror="this.style.display=\'none\'">' +
-                 '</div>' +
-                 '<div class="recent-name">' + (p.name || '') + '</div>' +
+      items.map(function (it, i) {
+        var d = it.d, isPark = it.k === 'p';
+        var thumb = isPark
+          ? '<div class="recent-thumb recent-thumb-park">🅿</div>'
+          : '<div class="recent-thumb">' +
+              '<img src="' + ((typeof placePhotoSrc === 'function')
+                  ? placePhotoSrc(d)
+                  : 'assets/images/places/' + encodeURIComponent((d.name || '') + '.jpg')) +
+              '" alt="" onerror="this.style.display=\'none\'"></div>';
+        var act = isPark
+          ? 'goMapPark(' + d.lat + ',' + d.lng + ',' + d.id + ')'
+          : 'goMapFocus(' + d.lat + ',' + d.lng + ',4,' + d.id + ')';
+        return '<div class="recent-card" style="animation-delay:' + (i * 0.04) + 's" onclick="' + act + '">' +
+                 thumb +
+                 '<div class="recent-name">' + (d.name || '') + '</div>' +
                '</div>';
       }).join('') +
     '</div>';
