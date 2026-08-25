@@ -27,7 +27,7 @@ ROOT = os.environ.get("HW_ROOT") or os.path.dirname(os.path.dirname(os.path.absp
 # ─────────────────────────────────────────────────────────────────────────────
 FLOOR = {
     "PLACES.tourist":               159,   # js/data.js  category:"tourist"
-    "PLACES.festival":               48,   # js/data.js  category:"festival"
+    "PLACES.festival":               50,   # js/data.js  category:"festival"  (2026-08-26 id:276·277 추가)
     "PLACES.heritage":               42,   # js/data.js  category:"heritage" (2026-08-26 지정문화재)
     "CONVENIENCE.restaurants":       94,   # js/convenience.js:5    모범음식점
     "CONVENIENCE.touristRestaurants": 35,  # js/convenience.js:103  관광식당업
@@ -348,9 +348,11 @@ def check_printed(got):
 #   tools/*.py 의 정규식을 고치면 이 블록도 반드시 함께 고쳐라.
 TOOL_RE = [
     ("tools/regeocode.py:_PLACE_RE",   "js/data.js",
-     r'\{[^{}]*?id\s*:\s*(\d+)[^{}]*?category\s*:\s*"(tourist|festival)"[^{}]*?\}', 207, None),
+     r'\{[^{}]*?id\s*:\s*(\d+)[^{}]*?category\s*:\s*"(tourist|festival)"[^{}]*?\}', 209, None),
+    # 209 = tourist(159) + festival(50). heritage 42건 추가 이후 기준선 갱신 (2026-08-26).
     ("tools/fix_all_coords.py:BLOCK_RE", "js/data.js",
-     r'(\{ id:(\d+), name:"([^"]+)", category:"(tourist|festival|heritage)", lat:([\d.]+), lng:([\d.]+), address:"([^"]*?)")', 249, None),
+     r'(\{ id:(\d+), name:"([^"]+)", category:"(tourist|festival|heritage)", lat:([\d.]+), lng:([\d.]+), address:"([^"]*?)")', 251, None),
+    # 251 = tourist(159) + festival(50) + heritage(42) = PLACES 전체. heritage 추가 이후 기준선 갱신 (2026-08-26).
     ("tools/geocode_jebu.py:ITEM_RE",  "js/convenience.js",
      r'\{name:"([^"]+)",\s*addr:"([^"]+)"(?:,\s*tel:"[^"]*")?\}', None, "jebu"),
 ]
@@ -439,15 +441,34 @@ def check_photos():
     name2id = {N(n): i for i, n in
                ((int(a), b) for a, b in
                 re.findall(r'id:(\d+),\s*name:"([^"]+)",\s*category:"tourist"', src_d))}
-    covered = set(by_id) | {name2id[n] for n in (legacy & want) if n in name2id}
+
+    # 멀티사진 레거시 규칙: "{장소명}_{설명}.jpg" 형식.
+    # 장소명 자체는 언더스코어 없이 한글·공백으로 구성되므로, 마지막 '_' 앞 부분을 기준 이름으로 쓴다.
+    # 예: "국화도_갯벌" → 기준 "국화도" 가 want 에 있으면 그 장소의 멀티사진으로 인정.
+    # 2026-08-26: 신규 사진 137장이 이 형식으로 반입됨 (배포 Claude §23).
+    def legacy_base(stem):
+        if "_" in stem:
+            return N(stem.rsplit("_", 1)[0])
+        return None
+
+    # want 이름으로 직접 매치되거나 멀티사진 기반 이름으로 매치되면 covered
+    legacy_exact = legacy & want
+    legacy_multi = {f for f in legacy if legacy_base(f) in want}
+    covered = set(by_id) | {name2id[n] for n in legacy_exact if n in name2id} \
+              | {name2id[legacy_base(f)] for f in legacy_multi if legacy_base(f) in name2id}
 
     for n in names:
-        if N(n) not in legacy and name2id.get(N(n)) not in covered:
-            fail("관광지 '%s' 사진 없음 — 기존 규칙이면 '%s.jpg', "
+        matched = (N(n) in legacy_exact
+                   or name2id.get(N(n)) in covered)
+        if not matched:
+            fail("관광지 '%s' 사진 없음 — 기존 규칙이면 '%s.jpg' 또는 '%s_{설명}.jpg', "
                  "신규 규칙이면 '{읍면동}_%s_{메모}.jpg' (js/ui.js placePhotoSrc 가 조회한다)"
-                 % (n, n, name2id.get(N(n), "?")))
-    for f in sorted(legacy - want):
-        fail("assets/images/places/%s.jpg 가 고아다 — data.js 에 그 이름이 없다(이름을 바꿨나?)" % f)
+                 % (n, n, n, name2id.get(N(n), "?")))
+
+    # 고아: 정확 매치도, 멀티사진 기반 이름도 모두 아닌 파일
+    for f in sorted(legacy - want - legacy_multi):
+        fail("assets/images/places/%s.jpg 가 고아다 — data.js 에 그 이름도, "
+             "그 이름의 장소도 없다(이름을 바꿨나?)" % f)
     for f in sorted(unknown):
         fail("assets/images/places/%s — data.js 에 없는 id 를 가리킨다" % f)
     for pid, fs in sorted(by_id.items()):
@@ -492,6 +513,92 @@ def check_cachebust():
                     ('<link href="%s">' if m.group(1).startswith("css/") else '<script src="%s">') % m.group(1)))
 
 
+# ─── 7. 따옴표 안전성 ─────────────────────────────────────────────────────────
+# 데이터 반입 시 복사-붙여넣기로 오염되는 두 가지 패턴:
+#   a. 스마트(굽은)따옴표 U+201C/D/8/9 가 문자열 구분자 위치에 쓰임
+#      — 주의: 문자열 값 '안에' 있는 스마트따옴표는 한국어 인용 표현으로 정상이며 무해하다.
+#      — JS 파서는 U+0022 만 문자열 구분자로 인식하므로 값 내부의 스마트따옴표는 오류가 아님.
+#   b. 이스케이프 없는 곧은따옴표 " 가 문자열 안에 들어와 문자열을 비정상 종료시킴
+#      — 조기종료(early termination) 케이스는 node vm.Script 가 잡는다 (tools/check_code.js).
+#      — 여기서는 "파일 끝까지 열린 채로 남는" 단순 케이스와, 구분자 위치 스마트따옴표만 잡는다.
+# state machine 으로 "문자열 안" vs "문자열 밖" 을 구분하여 오탐을 제거한다.
+def check_quote_safety():
+    SMART = {
+        chr(0x201c): "(U+201C, 왼쪽 겹따옴표)",
+        chr(0x201d): "(U+201D, 오른쪽 겹따옴표)",
+        chr(0x2018): "(U+2018, 왼쪽 홑따옴표)",
+        chr(0x2019): "(U+2019, 오른쪽 홑따옴표)",
+    }
+
+    for fname in ("js/data.js", "js/convenience.js"):
+        fpath = os.path.join(ROOT, fname)
+        if not os.path.exists(fpath):
+            continue
+        src = open(fpath, encoding="utf-8").read()
+
+        # ── state machine: 문자열 구분자 위치 스마트따옴표 + 열린 문자열 감지 ──
+        i, line, n = 0, 1, len(src)
+        in_str = False
+        open_line = None
+        smart_outside = []  # 문자열 밖에서 발견된 스마트따옴표
+
+        while i < n:
+            c = src[i]
+            if c == "\n":
+                line += 1; i += 1; continue
+
+            if not in_str:
+                # 줄 주석
+                if c == "/" and i + 1 < n and src[i + 1] == "/":
+                    while i < n and src[i] != "\n":
+                        i += 1
+                    continue
+                # 블록 주석
+                if c == "/" and i + 1 < n and src[i + 1] == "*":
+                    i += 2
+                    while i < n:
+                        if src[i] == "\n":
+                            line += 1
+                        if src[i:i + 2] == "*/":
+                            i += 2; break
+                        i += 1
+                    continue
+                # 문자열 밖 스마트따옴표 → 구분자 위치에 쓰인 것
+                if c in SMART:
+                    smart_outside.append((line, c))
+                # 문자열 시작
+                if c == '"':
+                    in_str = True; open_line = line
+            else:
+                # 이스케이프
+                if c == "\\":
+                    i += 2; continue
+                # 정상 종료
+                if c == '"':
+                    in_str = False; open_line = None; i += 1; continue
+                # 문자열 안 스마트따옴표 → 한국어 인용 표현으로 정상, 무시
+            i += 1
+
+        # 파일 끝까지 열린 문자열
+        if open_line is not None:
+            fail("%s  줄 %d: 파일 끝까지 닫히지 않은 문자열 — "
+                 "이스케이프 없는 '\"' (곧은따옴표) 가 문자열을 조기 종료시키고 "
+                 "새 문자열이 열린 채로 끝난 것으로 보인다. "
+                 "데이터 반입 시 desc/address 값 안의 '\"' 를 \\\" 로 이스케이프할 것"
+                 % (fname, open_line))
+
+        # 문자열 구분자 위치 스마트따옴표
+        for ln, ch in smart_outside[:5]:
+            label = SMART.get(ch, repr(ch))
+            fail("%s  줄 %d: 문자열 구분자 위치에 스마트따옴표 %s — "
+                 "JS가 문자열 시작을 인식 못 해 SyntaxError. "
+                 "곧은따옴표 '\"' 로 교체할 것"
+                 % (fname, ln, label))
+        if len(smart_outside) > 5:
+            fail("%s  문자열 밖 스마트따옴표 %d건 (위 5건 외 %d건 추가)"
+                 % (fname, len(smart_outside), len(smart_outside) - 5))
+
+
 def main():
     print("── 데이터 손실 검사 (tools/check_data.py) ─────────────────────────")
     got, total = check_counts()
@@ -500,6 +607,7 @@ def main():
     check_tool_regex()
     check_photos()
     check_cachebust()
+    check_quote_safety()
 
     for m in INFO: print("  i   " + m)
     for m in WARN: print("  WARN " + m)
