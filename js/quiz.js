@@ -192,7 +192,7 @@ function _renderQuizResult() {
     var p      = r.place;
     var tags   = r.tags.slice(0, 4);
     var fb     = _recFbEmoji(r.tags);
-    var imgSrc = 'assets/images/places/' + p.name + '.jpg';
+    var imgSrc = placePhotoSrc(p);
     var addr   = p.address ? p.address.split(' ').slice(1).join(' ') : '';
 
     /* desc: 관광지 설명 (첫 문장만) */

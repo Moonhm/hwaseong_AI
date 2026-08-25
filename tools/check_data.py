@@ -405,16 +405,56 @@ def check_photos():
         print("        사진 163장은 배포 서버 디스크 한 곳에만 있고 버전관리도 백업도 없다.")
         print("        배포 서버에서 이 검사를 돌려라. 잃어버렸다면: git archive '6004a43^' assets | tar -x")
         return
+    # 2026-08-25 (배포 Claude): 신규 파일명 규칙을 함께 인식한다.
+    #   {읍면동}_{id}[_{메모}].{jpg|jpeg|png|webp}  — 매칭은 id 토큰만 쓴다.
+    # 이걸 안 넣으면 신규 형식 사진을 1장만 넣어도 즉시 FAIL(고아) 이 되고,
+    # 전건 개명 시 FAIL 318 이 되어 상시 빨간불이 된다 — 이 파일 스스로
+    # ':46 알려진 결함의 상한' 주석에서 경계한 바로 그 상태다.
+    src_d = open(os.path.join(ROOT, "js/data.js"), encoding="utf-8").read()
+    all_ids = {int(m) for m in re.findall(r"\bid:\s*(\d+)", src_d)}
+
+    EXTS = ("jpg", "jpeg", "png", "webp")
+    NEW_RE = re.compile(r"^(?P<region>[^_]+)_(?P<id>\d+)(?:_(?P<memo>.*))?\.(?:%s)$"
+                        % "|".join(EXTS), re.I)
     N = lambda s: unicodedata.normalize("NFC", s)
-    files = {N(f[:-4]) for f in os.listdir(pdir) if f.lower().endswith(".jpg")}
-    want  = {N(n) for n in names}
+
+    legacy, by_id, unknown = set(), {}, []
+    for f in os.listdir(pdir):
+        f = N(f)
+        if not f.lower().endswith(tuple("." + e for e in EXTS)):
+            continue
+        m = NEW_RE.match(f)
+        if m:
+            pid = int(m.group("id"))
+            if pid not in all_ids:
+                unknown.append(f)
+            else:
+                by_id.setdefault(pid, []).append(f)
+        else:
+            legacy.add(f.rsplit(".", 1)[0])
+
+    want = {N(n) for n in names}
+    name2id = {N(n): i for i, n in
+               ((int(a), b) for a, b in
+                re.findall(r'id:(\d+),\s*name:"([^"]+)",\s*category:"tourist"', src_d))}
+    covered = set(by_id) | {name2id[n] for n in (legacy & want) if n in name2id}
+
     for n in names:
-        if N(n) not in files:
-            fail("assets/images/places/%s.jpg 없음 — data.js 의 이름과 파일명이 어긋났다 "
-                 "(js/map.js:401 이 이름을 그대로 이어붙인다)" % n)
-    for f in sorted(files - want):
+        if N(n) not in legacy and name2id.get(N(n)) not in covered:
+            fail("관광지 '%s' 사진 없음 — 기존 규칙이면 '%s.jpg', "
+                 "신규 규칙이면 '{읍면동}_%s_{메모}.jpg' (js/ui.js placePhotoSrc 가 조회한다)"
+                 % (n, n, name2id.get(N(n), "?")))
+    for f in sorted(legacy - want):
         fail("assets/images/places/%s.jpg 가 고아다 — data.js 에 그 이름이 없다(이름을 바꿨나?)" % f)
-    info("사진 %d장 / 관광지 %d곳 대조" % (len(files), len(names)))
+    for f in sorted(unknown):
+        fail("assets/images/places/%s — data.js 에 없는 id 를 가리킨다" % f)
+    for pid, fs in sorted(by_id.items()):
+        if len(fs) > 1:
+            fail("id:%d 에 사진이 %d장이다 (%s) — 어느 것이 쓰일지 보장되지 않는다"
+                 % (pid, len(fs), ", ".join(fs)))
+
+    info("사진 %d장 / 관광지 %d곳 대조 (기존규칙 %d · 신규규칙 %d)"
+         % (len(legacy) + sum(len(v) for v in by_id.values()), len(names), len(legacy), len(by_id)))
 
 
 # ─── 6. 캐시 무효화 ──────────────────────────────────────────────────────────

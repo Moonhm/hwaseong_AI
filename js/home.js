@@ -87,7 +87,7 @@ function renderNearbyResult(myLat, myLng) {
   /* 템플릿이 '화성시' 를 앞에 붙이므로 주소에서 시·도 접두어를 제거한다.
    * slice(1) 은 '경기도'만 떼어내 '화성시 화성시 …' 가 된다. */
   var tAddr  = (nearestTourist.address || '').replace(/^\s*(경기도\s*)?(화성시\s*)?/, '');
-  var imgSrc = 'assets/images/places/' + tName + '.jpg';
+  var imgSrc = placePhotoSrc(nearestTourist);
   var isFree = nearestPark && (nearestPark.free === true);
   /* 실시간 대수 우선, 없으면 total */
   var availSpots = nearestPark ? (nearestPark.avail != null ? nearestPark.avail : nearestPark.total) : null;

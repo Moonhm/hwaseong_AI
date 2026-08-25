@@ -10,6 +10,31 @@
 
 /* ── 토스트 ── */
 let _tt;
+/* ── 장소 사진 경로 ──────────────────────────────────────────────────────────
+ * 인덱스(js/photos.js, tools/build_photo_index.py 산출물)를 먼저 보고,
+ * 없으면 기존 {name}.jpg 규칙으로 떨어진다.
+ *
+ * 왜 인덱스인가: name 을 한 글자만 고쳐도 사진이 조용히 404 가 되기 때문이다.
+ *   tourist 159건 중 50건이 공백·괄호·쉼표를 갖고 있고, 실제로 커밋 c941986 에서
+ *   이름을 바꾸며 사진도 손으로 같이 고쳐야 했다.
+ * 신규 파일명 규칙은 {읍면동}_{id}_{메모}.jpg 이며 매칭은 id 토큰만 쓴다.
+ *   지역명을 틀리게 적어도 사진은 정상적으로 뜬다.
+ *
+ * ⚠ 하위 객체까지 가드하는 이유: 인덱스 생성이 실패한 photos.js 가 배포되면
+ *   idx.byId 가 undefined 라 TypeError 가 나고, 그 예외가 placePhotoHtml 을 뚫고
+ *   나가 슬라이드 카드가 통째로 백지가 된다. 조용한 404 보다 나쁜 실패다.
+ * 인자는 place 객체 또는 이름 문자열 둘 다 받는다. */
+function placePhotoSrc(place) {
+  var p = (typeof place === 'string') ? { name: place } : (place || {});
+  var idx = (typeof PHOTO_INDEX !== 'undefined' && PHOTO_INDEX) ? PHOTO_INDEX : null;
+  var f = null;
+  if (idx) {
+    if (p.id != null && idx.byId)   f = idx.byId[p.id];
+    if (!f && p.name && idx.byName) f = idx.byName[p.name];
+  }
+  return 'assets/images/places/' + encodeURIComponent(f || ((p.name || '') + '.jpg'));
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.innerHTML = msg; t.classList.add('show');

@@ -398,7 +398,7 @@ function setupSlideCardDrag() {
 /* ── 장소 사진 HTML ── */
 function placePhotoHtml(place) {
   var cfg = CATEGORY_CONFIG[place.category] || { bg: '#F3F4F6', emoji: '📍' };
-  var src = 'assets/images/places/' + place.name + '.jpg';
+  var src = placePhotoSrc(place);
 
   if (place.category === 'tourist') {
     /* 이미지 있으면 커버, 없으면 그라데이션 + 🏞️ */

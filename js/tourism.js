@@ -234,7 +234,7 @@ function renderTourismList(theme, expanded) {
                      background:#FFF7ED;position:relative;display:flex;align-items:center;
                      justify-content:center;font-size:22px">
            <span>🏛</span>
-           <img src="assets/images/places/${p.name}.jpg" alt="" loading="lazy" decoding="async"
+           <img src="${placePhotoSrc(p)}" alt="" loading="lazy" decoding="async"
                 width="56" height="56"
                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
                 onerror="this.style.display='none'">
