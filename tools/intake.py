@@ -36,12 +36,14 @@ import urllib.parse, urllib.request
 ROOT = os.environ.get("HW_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data")
 RAW, PROC, DESC, SRC = (os.path.join(DATA, d) for d in ("raw", "processed", "descriptions", "sources"))
+RAW_BIG = os.path.join(DATA, "raw-large")
 CATALOG = os.path.join(DATA, "CATALOG.md")
 
 WORK = "/home/jovyan/work"
 KEEP = {"hwaseong_AI", "logs", ".vscode", ".ipynb_checkpoints", "화성시 관광지 사진"}
 
 BIG = 5 * 1024 * 1024          # 이 크기를 넘으면 경량화 대상
+GIT_MAX = 3 * 1024 * 1024      # 이 크기 미만이면 data/raw/ (git 추적), 이상이면 data/raw-large/ (로컬 전용)
 MAX_UNPACK = 2 * 1024 ** 3     # 압축 해제 총량 상한 (zip 폭탄 방어)
 
 TABLE_EXT = (".csv", ".tsv", ".json", ".xlsx", ".xls")
@@ -274,6 +276,18 @@ def probe_url(u, timeout=12):
 
 
 # ── 카탈로그 ─────────────────────────────────────────────────────────────────
+def raw_dir_for(size):
+    """3MB 미만이면 git 에 올리는 data/raw/, 이상이면 로컬 전용 data/raw-large/.
+
+    .gitignore 는 파일 크기를 판정할 수 없다. "작으면 올린다" 를 규칙으로만 두면
+    반드시 어긋나므로 디렉터리로 갈라 구조적으로 강제한다."""
+    return RAW if size < GIT_MAX else RAW_BIG
+
+
+def rel(path):
+    return os.path.relpath(path, ROOT)
+
+
 def append_catalog(entries):
     if not entries:
         return
@@ -301,7 +315,7 @@ def main():
     ap.add_argument("--fetch", action="store_true", help="URL 접속해 내용·API 확인")
     args = ap.parse_args()
 
-    for d in (RAW, PROC, DESC, SRC):
+    for d in (RAW, RAW_BIG, PROC, DESC, SRC):
         os.makedirs(d, exist_ok=True)
 
     # ⚠ 한글 폴더·파일명이 NFD(자모 분리)로 저장돼 있는 경우가 있다.
@@ -423,28 +437,28 @@ def main():
                     else:
                         # 경량화가 이득이 없다 — 원본을 남긴다
                         os.remove(out)
-                        tgt = os.path.join(RAW, "%s_%s" % (stamp, base))
+                        tgt = os.path.join(raw_dir_for(size), "%s_%s" % (stamp, base))
                         shutil.copy2(p, tgt)
                         print("   경량화 이득 없음(%s → %s) — 원본을 그대로 보관합니다"
                               % (human(size), human(nb)))
                         entries.append({"name": base, "cat": cat, "state": "parsed", "count": len(rows),
-                                        "raw": "data/raw/%s" % os.path.basename(tgt), "out": "-",
+                                        "raw": rel(tgt), "out": "-",
                                         "source": origin or "사용자 제공", "note": "경량화 이득 없어 원본 유지"})
                 else:
-                    tgt = os.path.join(RAW, "%s_%s" % (stamp, base))
+                    tgt = os.path.join(raw_dir_for(size), "%s_%s" % (stamp, base))
                     shutil.copy2(p, tgt)
                     entries.append({"name": base, "cat": cat, "state": "parsed", "count": len(rows),
-                                    "raw": "data/raw/%s" % os.path.basename(tgt), "out": "-",
+                                    "raw": rel(tgt), "out": "-",
                                     "source": origin or "사용자 제공", "note": ", ".join(map(str, cols[:5]))})
             continue
 
         # 그 밖의 파일 — 버리지 않고 보관
         print("\n📁 %s%s (%s) — 표·메모 아님. 보관합니다" % (origin, base, human(size)))
         if args.apply:
-            tgt = os.path.join(RAW, "%s_%s" % (stamp, base))
+            tgt = os.path.join(raw_dir_for(size), "%s_%s" % (stamp, base))
             shutil.copy2(p, tgt)
             entries.append({"name": base, "cat": "misc", "state": "hold", "count": "-",
-                            "raw": "data/raw/%s" % os.path.basename(tgt), "out": "-",
+                            "raw": rel(tgt), "out": "-",
                             "source": origin or "사용자 제공", "note": "미분류 보관"})
 
     if args.apply:

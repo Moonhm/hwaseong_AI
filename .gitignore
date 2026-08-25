@@ -7,6 +7,9 @@ node_modules/
 assets/
 js/localcurrency-source.csv
 
-# 반입 원본 — 용량이 크고 재생성 가능하므로 git 에 올리지 않는다.
-# 경량화한 결과물(data/processed/)과 카탈로그(data/CATALOG.md)만 추적한다.
-data/raw/
+# 반입 원본 — 용량으로 갈린다 (2026-08-25 사용자 결정)
+#   data/raw/        3MB 미만. git 에 올린다. 전처리 방식을 바꿔 다시 돌릴 때 필요하다.
+#   data/raw-large/  3MB 이상. 이 서버에만 둔다.
+# 디렉터리로 나눈 이유: .gitignore 는 파일 크기를 판정할 수 없어
+# "작으면 올린다" 를 규칙으로만 두면 반드시 어긋난다. 구조로 강제한다.
+data/raw-large/
