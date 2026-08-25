@@ -48,7 +48,9 @@ FLOOR = {
 #   - 그래서 "현재 사실"을 박아두고 악화만 막는다. 줄이면 값을 내려라.
 CEILING = {
     "lc.empty_addr": 503,     # localcurrency-static.json 의 a(주소) 빈 문자열 건수
-    "jebu_regex_out_of_scope": 92,  # tools/geocode_jebu.py:51 ITEM_RE 오폭 건수 (아래 설명)
+    # 2026-08-25 해소 — geocode_jebu.py 에 jebu 섹션 범위 가드가 들어가
+    # 이제 건수 상한이 아니라 '가드 존재 여부'를 본다 (check_tool_regex 참조).
+    "jebu_regex_out_of_scope": 0,
     "fetch_without_cachebust": 2,   # ?v= 없는 fetch 대상 수 (parking/localcurrency static)
 }
 
@@ -366,16 +368,19 @@ def check_tool_regex():
                     "아무것도 안 고치고 성공처럼 끝난다" if not ms else "일부만 고치고 나머지를 조용히 빠뜨린다"))
         if scope:
             out = [m for m in ms if sec_of(m.start()) != scope]
-            if len(out) > CEILING["jebu_regex_out_of_scope"]:
-                fail("%s  '%s' 섹션 밖 매치가 상한 %d → %d 로 늘었다 (%s)"
-                     % (name, scope, CEILING["jebu_regex_out_of_scope"], len(out),
-                        ",".join(sorted({sec_of(m.start()) for m in out}))))
-            elif out:
-                warn("%s  '%s' 밖에서 %d건 매치 중 (%s) — 알려진 결함, 상한 %d 로 고정. "
-                     "이 도구를 실행하면 그 %d건에 제부도 좌표가 박힌다. "
-                     "고칠 때는 파일 전체가 아니라 jebu 섹션 범위만 스캔하도록 바꿔라"
-                     % (name, scope, len(out), ",".join(sorted({sec_of(m.start()) for m in out})),
-                        CEILING["jebu_regex_out_of_scope"], len(out)))
+            # 2026-08-25 (배포 Claude, §19-3 처리): geocode_jebu.py 가 스캔 범위를
+            # jebu 섹션으로 제한하도록 고쳐졌다. 정규식 자체는 여전히 restaurants 에도
+            # 매치되므로 원시 매치 수만 세면 의미가 없다 — 도구에 범위 가드가
+            # 살아 있는지를 본다. 가드가 사라지면 그 순간 다시 위험해진다.
+            guard_src = open(os.path.join(ROOT, "tools/geocode_jebu.py"), encoding="utf-8").read()
+            has_guard = "def jebu_span" in guard_src and "JSTART <= m.start() < JEND" in guard_src
+            if not has_guard:
+                fail("%s  jebu 섹션 범위 가드가 사라졌다 — 지금 실행하면 '%s' 밖 %d건(%s)에 "
+                     "제부도 좌표가 박힌다. jebu_span() 스코프 제한을 되살려라"
+                     % (name, scope, len(out), ",".join(sorted({sec_of(m.start()) for m in out}))))
+            else:
+                info("%s  범위 가드 확인 — '%s' 섹션만 스캔 (정규식 자체는 %s 에도 매치되나 대상에서 제외됨)"
+                     % (name, scope, ",".join(sorted({sec_of(m.start()) for m in out})) or "없음"))
 
 
 # ─── 5. 사진 ↔ 이름 연결 ─────────────────────────────────────────────────────
