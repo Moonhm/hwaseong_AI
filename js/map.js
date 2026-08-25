@@ -1046,3 +1046,112 @@ function setupZoomSlider() {
   });
 }
 
+/* ══════════════════════════════════════════════════
+   지도 탭 재클릭 리셋 (2026-08-25)
+   첫 진입 화면의 정의 = 중심 HWASEONG(js/map.js:22) / 레벨 9(js/map.js:73) /
+   핀·칩·슬라이드·배지 전부 없음 (js/map.js:83 "최초 진입 시 아무것도 표시하지 않음").
+
+   절대 하지 않는 것:
+     · mapReady=false 로 되돌려 initMap() 재실행  → 지도 인스턴스 이중 생성, 오버레이 누수,
+       리스너(resize/zoom_changed/idle/mylocation) 전량 중복 등록 (js/map.js:71-103, parking.js:23, localcurrency.js:35)
+     · setFilter() 호출  → 토글이라 이미 켜진 칩에 부르면 '해제'가 되고(js/map.js:852-861),
+       setFilter('all') 은 첫 진입에 없는 '전체' 칩을 켜고 fitPlaces 로 카메라까지 옮긴다(:864,:903-904)
+     · exitNearestParkMode()  → 120ms 뒤 onBack 콜백이 방금 지운 칩·레이어를 되살린다(js/map.js:753-758, 612-617)
+     · localStorage 삭제  → 'hsida_favs'(사용자 데이터) / 'hwaseong_conv_v5_*'(지오코딩 캐시, 재실행 시 수십 초)
+     · lcData=[] / CONV_STATUS='idle'  → 4.2MB 재다운로드, 수백 건 Geocoder 재요청
+     · #map-loader 되살리기  → initMap 첫 실행에서 영구 remove 됐다(js/map.js:63-64).
+       '초기화'는 로딩 화면 재현이 아니다.
+══════════════════════════════════════════════════ */
+var _mapResetGen = 0;
+
+function resetMapPage() {
+  /* 지도 인스턴스가 없어도(SDK 로드 실패·지연) DOM 상태는 반드시 되돌린다.
+   * 칩·슬라이드·배지·필터바는 카카오 SDK 없이도 클릭되고 클래스가 붙기 때문이다.
+   * 여기서 통째로 return 하면 'SDK 가 안 뜬 환경에서는 재클릭이 아무것도 안 하는' 상태가 된다.
+   * 지도 객체가 필요한 작업(오버레이 setMap·카메라)만 아래에서 개별로 가드한다. */
+  var hasMap = !!(mapReady && kakaoMap);
+
+  /* ① NP 모드. #np-back-btn 은 document.body 에 append 되어(js/map.js:589) #page-map 밖에 살고
+   *    position:fixed z-index:190(css/40-quiz.css:105-119) 이라 페이지 클래스로는 안 사라진다.
+   *    go() 의 정리(js/nav.js:16)는 page!=='map' 일 때만 돌아서 재클릭은 지금 전혀 커버되지 않는다. */
+  if (typeof exitNpModeOnly === 'function') exitNpModeOnly();
+
+  /* ② 슬라이드 카드 + 딤 + 선택 핀 강조 + selectedId=null (js/map.js:774-784) */
+  if (typeof closePlaceSlide === 'function') closePlaceSlide();
+
+  /* ③ 레이어 전부 끄기 — 반드시 카메라(⑨)보다 '먼저'.
+   *    setCenter/setLevel 은 idle 을 쏘고, 거기 붙은 3개 핸들러
+   *    (js/map.js:85-87 / js/parking.js:23-28 / js/localcurrency.js:38-43)는
+   *    visible 플래그로만 가드된다 — 순서를 뒤집으면 옛 레이어가 다시 그려진다.
+   *    객체(핀 인스턴스)는 유지하고 '표시'만 끈다. buildOverlays() 를 다시 부르면 핀이 이중 생성된다. */
+  if (hasMap) {
+    Object.keys(overlayMap).forEach(function (id) {
+      overlayMap[id].setMap(null);
+      overlayMap[id].setZIndex(1);
+      if (overlayEls[id]) overlayEls[id].classList.remove('selected');
+    });
+    setTouristVisible(false);                                          /* _tkTimer clearTimeout 포함 */
+    if (typeof setParkingVisible === 'function') setParkingVisible(false);
+    if (typeof setLcVisible      === 'function') setLcVisible(false);  /* clearLcDisplay 만 — lcData 보존 */
+    if (typeof hideAllConv       === 'function') hideAllConv();        /* setMap(null) 만 — 캐시 보존 */
+  }
+  /* 지오코딩이 'loading' 중이어도 취소할 필요 없다 — 완료 콜백이 _isConvCatActive(cat)
+   * 로 칩 상태를 다시 확인하므로(js/conv_map.js:232), ④에서 칩을 끄면 화면에 튀어나오지 않는다. */
+
+  /* ④ 칩 전부 비활성. 첫 진입 마크업엔 active 칩이 하나도 없다(index.html:308-318).
+   *    updateParkingCount() 는 반드시 이 '뒤'에 — 칩 active 를 보고 배지 display 를 정한다(js/parking.js:351-352).
+   *    (clearFilter()(js/map.js:787-799)는 :793 에서 칩 제거(:796)보다 먼저 불러 배지가 남는다. 복붙 금지.) */
+  document.querySelectorAll('#map-chips .chip').forEach(function (c) { c.classList.remove('active'); });
+  if (typeof updateParkingCount === 'function') updateParkingCount();
+
+  /* ⑤ 지역화폐 업종 필터 바. CSS 기본은 display:none(css/20-map.css:62-65)인데
+   *    setFilter 가 인라인 block 을 박는다(js/map.js:896-897) → 인라인이 CSS 를 이긴다.
+   *    js/map.js:828-833 의 초기화 블록과 동일하게 처리한다. */
+  var _lcBar = document.getElementById('lc-filter-bar');
+  if (_lcBar) _lcBar.style.display = 'none';
+  if (typeof lcFilter !== 'undefined') lcFilter = 'all';
+  document.querySelectorAll('.lc-fchip').forEach(function (c) {
+    c.classList.toggle('active', c.dataset.lcat === 'all');
+  });
+  var _lcScroll = document.getElementById('lc-filter-scroll');
+  if (_lcScroll) _lcScroll.scrollLeft = 0;
+  if (typeof updateLcArrows === 'function') updateLcArrows();
+
+  /* ⑥ 상단 칩 바 가로 스크롤. go() 는 updateChipArrows 만 부르고(js/nav.js:23)
+   *    scrollLeft 는 안 되돌려서 '제부도 숙박'까지 밀어둔 상태가 남는다. */
+  var _chips = document.getElementById('map-chips');
+  if (_chips) _chips.scrollLeft = 0;
+  if (typeof updateChipArrows === 'function') updateChipArrows();
+
+  /* ⑦ GPS 로 찍은 빨간 '내 위치' 점. 첫 진입은 null(js/map.js:938).
+   *    주입된 <style id="my-loc-style">(js/map.js:999-1008)은 보이지 않는 CSS 정의라 지우지 않는다. */
+  if (hasMap && myLocationOverlay) { myLocationOverlay.setMap(null); myLocationOverlay = null; }
+
+  /* ⑧ '가까운 300곳만 표시' 토스트 dedupe (js/localcurrency.js:11,116-117) */
+  if (typeof _lcCapNotifiedLevel !== 'undefined') _lcCapNotifiedLevel = null;
+
+  /* ⑨ 마지막에 카메라. 재클릭 직전 동작이 걸어둔 카메라 타이머가 뒤늦게 도착해 화면을 옮길 수 있다:
+   *    _panPinAboveSlide panBy 50ms(js/map.js:357-364) / fitPlaces setLevel 150ms(:114-116)
+   *    / 클러스터 panTo 180ms(:311-314) / NP setBounds 320ms + 중첩 200ms(:594).
+   *    최대 ~520ms 이므로 550ms 뒤 한 번 더 확정한다. 그 사이 사용자가 조작했으면 건드리지 않는다. */
+  if (!hasMap) return;                  /* 여기부터는 지도 객체가 있어야 의미가 있다 */
+  var _gen = ++_mapResetGen;
+  _applyMapHomeView();
+  setTimeout(function () {
+    if (_gen !== _mapResetGen) return;                                     /* 그 사이 또 리셋됨 */
+    if (document.querySelector('#map-chips .chip.active')) return;         /* 사용자가 칩을 눌렀다 */
+    var sl = document.getElementById('place-slide');
+    if (sl && sl.classList.contains('open')) return;                       /* 슬라이드를 열었다 */
+    _applyMapHomeView();
+  }, 550);
+}
+
+function _applyMapHomeView() {
+  if (!kakaoMap || typeof kakao === 'undefined') return;
+  kakaoMap.setCenter(new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng));
+  kakaoMap.setLevel(9);
+  /* 슬라이더 동기화. setLevel 이 zoom_changed 를 쏘면 js/map.js:1043-1046 이 알아서 맞추지만,
+   * 이미 레벨 9 였으면 이벤트가 안 뜬다. 명시 대입이 확실하다. levelToSlider = 15 - level (:1026). */
+  var z = document.getElementById('zoom-track');
+  if (z) z.value = 15 - kakaoMap.getLevel();
+}

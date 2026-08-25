@@ -395,3 +395,78 @@ function hideCalendar() {
   document.getElementById('view-tourism-list').style.display = 'block';
 }
 
+/* ══════════════════════════════════════════════════
+   관광 탭 재클릭 리셋 (2026-08-25)
+   핵심은 switchTourismSub(allChip,'all') 재사용이다 — 칩·4개 섹션 display·헤더/스크롤/테마칩
+   display·_resetThemeChips()·renderTourismList('all') 을 한 번에 일치시킨다(js/tourism.js:13-61).
+   renderTourismList('all') 만 단독 호출하면 BUG-7 이 그대로 재발한다(칩은 '숙박'인데 목록은 전체).
+   BUG-7 의 본질은 '서브탭을 유지해야 한다'가 아니라 '칩과 내용이 일치해야 한다' 였다.
+
+   localStorage 는 한 줄도 만지지 않는다 — 관광 탭은 즐겨찾기를 읽지도 쓰지도 않는다.
+   PLACES/CONVENIENCE 는 동기 상수라 네트워크를 타는 경로가 아예 없다.
+══════════════════════════════════════════════════ */
+function resetTourismPage() {
+  /* ① 뷰 → 목록. go() 도 하지만(js/nav.js:32-34) 이 함수만 봐도 완결되도록 멱등하게 둔다. */
+  var _fd = document.getElementById('view-festival-detail');
+  var _cv = document.getElementById('view-calendar');
+  var _vl = document.getElementById('view-tourism-list');
+  if (_fd) _fd.style.display = 'none';
+  if (_cv) _cv.style.display = 'none';
+  if (_vl) _vl.style.display = 'block';
+
+  /* ② 축제 상세 본문 비우기. showFestivalDetail 은 display:block(:309) 을 innerHTML 대입(:325)
+   *    보다 먼저 해서, 안 비우면 다음에 열 때 옛 축제가 한 프레임 비친다.
+   *    첫 진입 시엔 비어 있다(index.html:217). 항상 재생성되므로 비워도 부작용 없다. */
+  var _fdc = document.getElementById('fd-content');
+  if (_fdc) _fdc.innerHTML = '';
+
+  /* ③ 제부도 목록 접기. renderHotels(js/tourism.js:102)는 DOM 을 display:none 으로 재생성하면서
+   *    전역 _jebuOpen 은 true 로 남긴다 → toggleJebuList(:114)가 false 로 뒤집고 :117 이 이미
+   *    숨겨진 것을 또 숨겨 '첫 클릭 먹통'이 된다. 전역을 반드시 함께 되돌린다. */
+  _jebuOpen = false;
+  var _jb = document.getElementById('jebu-list-section');
+  if (_jb) { _jb.style.display = 'none'; _jb.innerHTML = ''; }
+
+  /* ④ 서브탭 → '전체' (index.html:164 가 첫 진입의 active). 이 한 줄이 리셋의 몸통이다. */
+  var _allChip = document.querySelector('.tourism-subnav .chip[data-sub="all"]');
+  if (_allChip) {
+    switchTourismSub(_allChip, 'all');
+  } else {                       /* 마크업이 바뀐 비상 경로 */
+    _tourismSub = 'all';
+    _resetThemeChips();
+    renderTourismList('all');    /* expanded 미전달 = 5개 미리보기 + '더보기 +N' (js/tourism.js:225-227,266-272) */
+  }
+
+  /* ⑤ 가로 스크롤 3곳 — 첫 진입은 전부 왼쪽 끝.
+   *    특히 #festival-scroll-list 는 renderFestivalScroll() 이 boot.js:117 에서 딱 한 번만
+   *    불려 다시 그려지지 않으므로, scrollLeft 가 앱 수명 내내 남는다.
+   *    renderFestivalScroll() 을 다시 부르지 말 것 — PLACES 는 불변이라 결과 HTML 이 동일한
+   *    순수 낭비다(카드 DOM 전량 재생성 + 리스너 재등록, js/home.js:561-580). */
+  var _sn = document.querySelector('.tourism-subnav');
+  if (_sn) _sn.scrollLeft = 0;
+  var _tc = document.getElementById('tourism-theme-chips');
+  if (_tc) _tc.scrollLeft = 0;
+  var _fs = document.getElementById('festival-scroll-list');
+  if (_fs) _fs.scrollLeft = 0;
+  /* 좌/우 화살표(.visible)는 scrollLeft 파생 상태. go() 가 js/nav.js:45 에서
+   * setTimeout(updateFestArrows,60) 을 이미 걸어 두므로 그게 정리한다.
+   * 즉시성도 확보하려면 한 번 더 부른다 — 멱등하다. */
+  if (typeof updateFestArrows === 'function') updateFestArrows();
+
+  /* ⑥ 캘린더 → 오늘 달.
+   *    _calYear/_calMonth 만 되돌리면 안 된다. showCalendar(js/tourism.js:391)는
+   *    if(!_calInitDone) 이라 이미 true 면 재렌더를 건너뛰고, 변수는 8월인데 화면은
+   *    사용자가 넘겨둔 12월 그대로인 불일치가 생긴다(그 상태에서 › 를 누르면 9월로 점프).
+   *    셋을 항상 세트로 되돌린다. 지금 _renderCalendar() 를 부를 필요는 없다 —
+   *    #view-calendar 는 display:none 이라 낭비다. 다음 showCalendar() 가 그린다.
+   *    앱을 오래 켜둔 사이 달이 바뀌었을 수 있어 new Date() 로 다시 읽는다. */
+  if (typeof _calYear !== 'undefined') {
+    var _t = new Date();
+    _calYear     = _t.getFullYear();
+    _calMonth    = _t.getMonth();
+    _calInitDone = false;
+  }
+  /* #calendar-grid 는 절대 innerHTML='' 로 비우지 마라 — index.html:231 의 .cal-day-hd
+   * 요일 7칸까지 날아가고 _renderCalendar(js/calendar.js:134-165)는 그걸 다시 만들지 않는다.
+   * js/calendar.js:126 이 .cal-day 만 지우므로 위 _calInitDone=false 로 충분하다. */
+}

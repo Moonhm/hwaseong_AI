@@ -130,16 +130,32 @@ function renderLivingCatList(cat) {
 }
 
 function renderLivingPage() {
-  var cCount = (typeof lcData !== 'undefined') ? lcData.length : 0;
+  var cCount = (typeof lcData      !== 'undefined') ? lcData.length      : 0;
   var pCount = (typeof parkingData !== 'undefined') ? parkingData.length : 0;
   var scEl = document.getElementById('stat-currency');
   var spEl = document.getElementById('stat-parking');
-  if (scEl) scEl.textContent = cCount;
-  if (spEl) spEl.textContent = pCount;
+  /* 표기를 js/ui.js:86 · js/living.js:77 과 통일한다 (콤마 없는 27374 로 퇴화하던 버그).
+   * 0 은 '진짜 0곳'이 아니라 '아직 지연 로드 전'이므로 HTML 기본값 '-'(index.html:257-258)로 둔다.
+   * lcData 는 boot 에서 프리페치하지 않고(js/boot.js:114), parking 도 async 라 첫 진입엔 0 이 될 수 있다. */
+  if (scEl) scEl.textContent = cCount ? cCount.toLocaleString() : '-';
+  if (spEl) spEl.textContent = pCount ? pCount.toLocaleString() : '-';
 
   // 기본 탭: 모범음식점
   var firstCat = document.getElementById('liv-cat-restaurant');
   switchLivingCat(firstCat, 'restaurant');
 }
 
-
+/* ══════════════════════════════════════════════════
+   생활 탭 재클릭 리셋 (2026-08-25)
+   생활 탭은 이미 go('living') 이 renderLivingPage()(js/nav.js:24)를 무조건 불러
+   통계·카테고리·제목·건수·목록 DOM 을 전부 기본값으로 되돌린다. 새 리셋 로직이 필요 없다.
+   여기서 renderLivingPage() 를 또 부르면 94건 innerHTML 을 두 번 그리고
+   .place-item 등장 애니메이션(css/20-map.css:274)이 두 번 재생돼 깜빡인다.
+   이 함수는 4개 탭의 리셋 진입점을 같은 모양으로 유지하려고 남긴 자리표시자다.
+══════════════════════════════════════════════════ */
+function resetLivingPage() {
+  /* 목록 재렌더로 높이가 바뀐 뒤 스크롤을 확정한다.
+   * (go() 의 scrollTop=0 은 js/nav.js:21 로 renderLivingPage() 보다 '앞'이다 — 그 순서를 바꾸지 말 것) */
+  var p = document.getElementById('page-living');
+  if (p) p.scrollTop = 0;
+}

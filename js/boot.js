@@ -105,6 +105,12 @@ document.addEventListener('click', function(e) {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
+  /* 홈 '내 위치 추천' CTA 원본 마크업 스냅샷 (index.html 의 #home-nearby-section).
+   * 홈 탭 재클릭 리셋이 이 값으로 되돌린다. requestNearbyRec() 이 innerHTML 을
+   * 덮어쓰기 전에 떠야 하므로 반드시 여기, 다른 어떤 렌더보다 먼저. */
+  var _nb0 = document.getElementById('home-nearby-section');
+  if (_nb0 && typeof _homeNearbyInitHtml !== 'undefined') _homeNearbyInitHtml = _nb0.innerHTML;
+
   /* 주차장 데이터 사전 로드 (76KB) — 홈·가까운관광지 즉시 표시용 */
   fetch('js/parking-static.json?v=20260825').then(function(r) { return r.json(); }).then(function(d) {
     if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);

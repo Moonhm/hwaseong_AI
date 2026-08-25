@@ -15,12 +15,12 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082502">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082502">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082502">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082502">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082502">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082502">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082503">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082503">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082503">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082503">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082503">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082503">
 </head>
 <body>
 
@@ -389,19 +389,19 @@
 
 <!-- ── BOTTOM NAV ── -->
 <nav class="bottom-nav">
-  <button class="nav-item active" data-page="home" onclick="go('home')">
+  <button class="nav-item active" data-page="home" onclick="navTap('home')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
     <span>홈</span>
   </button>
-  <button class="nav-item" data-page="tourism" onclick="go('tourism')">
+  <button class="nav-item" data-page="tourism" onclick="navTap('tourism')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
     <span>관광</span>
   </button>
-  <button class="nav-item" data-page="living" onclick="go('living')">
+  <button class="nav-item" data-page="living" onclick="navTap('living')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
     <span>생활</span>
   </button>
-  <button class="nav-item" data-page="map" onclick="go('map')">
+  <button class="nav-item" data-page="map" onclick="navTap('map')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
     <span>지도</span>
   </button>
@@ -508,24 +508,25 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082502"></script>
-<script src="js/quiz.js?v=2026082502"></script>
-<script src="js/mapnav.js?v=2026082502"></script>
-<script src="js/home.js?v=2026082502"></script>
-<script src="js/tourism.js?v=2026082502"></script>
-<script src="js/living.js?v=2026082502"></script>
-<script src="js/favorites.js?v=2026082502"></script>
-<script src="js/ui.js?v=2026082502"></script>
-<script src="js/calendar.js?v=2026082502"></script>
-<script src="js/boot.js?v=2026082502"></script>
+<script src="js/nav.js?v=2026082503"></script>
+<script src="js/quiz.js?v=2026082503"></script>
+<script src="js/mapnav.js?v=2026082503"></script>
+<script src="js/home.js?v=2026082503"></script>
+<script src="js/tourism.js?v=2026082503"></script>
+<script src="js/living.js?v=2026082503"></script>
+<script src="js/favorites.js?v=2026082503"></script>
+<script src="js/ui.js?v=2026082503"></script>
+<script src="js/calendar.js?v=2026082503"></script>
+<script src="js/boot.js?v=2026082503"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082502"></script>
-<script src="js/convenience.js?v=2026082502"></script>
-<script src="js/data.js?v=2026082502"></script>
-<script src="js/map.js?v=2026082502"></script>
-<script src="js/conv_map.js?v=2026082502"></script>
-<script src="js/parking.js?v=2026082502"></script>
-<script src="js/localcurrency.js?v=2026082502"></script></body>
+<script src="js/photos.js?v=2026082503"></script>
+<script src="js/convenience.js?v=2026082503"></script>
+<script src="js/data.js?v=2026082503"></script>
+<script src="js/map.js?v=2026082503"></script>
+<script src="js/conv_map.js?v=2026082503"></script>
+<script src="js/parking.js?v=2026082503"></script>
+<script src="js/localcurrency.js?v=2026082503"></script>
+</body>
 </html>

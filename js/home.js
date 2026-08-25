@@ -18,11 +18,19 @@ function requestNearbyRec() {
     return;
   }
 
+  /* 이 요청의 세대. 홈 탭을 재클릭하면 resetHomePage() 가 _nearbyGen 을 올려
+   * 아래 두 콜백이 조용히 무시된다. geolocation 에는 취소 API 가 없어 이 방법뿐이다. */
+  var myGen = ++_nearbyGen;
+
   sec.innerHTML = '<div class="nearby-loading">📡 위치 확인 중...</div>';
 
   navigator.geolocation.getCurrentPosition(
-    function (pos) { renderNearbyResult(pos.coords.latitude, pos.coords.longitude); },
+    function (pos) {
+      if (myGen !== _nearbyGen) return;
+      renderNearbyResult(pos.coords.latitude, pos.coords.longitude, myGen);
+    },
     function ()    {
+      if (myGen !== _nearbyGen) return;
       sec.innerHTML =
         '<div class="nearby-cta" onclick="requestNearbyRec()" style="border-color:#FCA5A5;background:linear-gradient(135deg,#FEF2F2,#FEE2E2)">' +
         '<div class="nearby-cta-icon">⚠️</div>' +
@@ -47,7 +55,10 @@ function _distLabel(km) {
   return km < 1 ? Math.round(km * 1000) + 'm' : km.toFixed(1) + 'km';
 }
 
-function renderNearbyResult(myLat, myLng) {
+function renderNearbyResult(myLat, myLng, gen) {
+  /* gen 미전달 = 세대 검사 없음(기존 호출 호환).
+   * 홈 탭을 재클릭한 뒤 뒤늦게 도착한 GPS 콜백은 여기서 걸러진다. */
+  if (gen != null && gen !== _nearbyGen) return;
   if (typeof PLACES === 'undefined') return;
   var sec = document.getElementById('home-nearby-section');
   if (!sec) return;
@@ -65,9 +76,10 @@ function renderNearbyResult(myLat, myLng) {
 
   /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
   if (!parks.length) {
-    fetch('js/parking-static.json?v=20260825').then(function (r) { return r.json(); }).then(function (d) {
+    fetch('js/parking-static.json?v=2026082502').then(function (r) { return r.json(); }).then(function (d) {
+      if (gen != null && gen !== _nearbyGen) return;
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
-      if (parkingData.length) renderNearbyResult(myLat, myLng);
+      if (parkingData.length) renderNearbyResult(myLat, myLng, gen);
     }).catch(function () {});
     return;
   }
@@ -591,3 +603,51 @@ function switchHomeTab(el, tab) {
   }
 }
 
+/* ══════════════════════════════════════════════════
+   홈 탭 재클릭 리셋 (2026-08-25)
+   되돌리는 것 = 화면 상태뿐. 절대 건드리지 않는 것:
+     · localStorage 'hsida_favs' (사용자 데이터) — clearFavs() 를 부르면 안 된다
+     · lcData / _lcLoading / _lcCallbacks (4.2MB 캐시, js/ui.js:73-95)
+     · parkingData / parkingTimer (js/parking.js:3-5)
+   GPS 도 다시 요청하지 않는다 — 내 위치 섹션은 원본 CTA 마크업으로 되돌리기만 한다.
+══════════════════════════════════════════════════ */
+
+/* index.html:66-74 의 원본 CTA 스냅샷. boot.js 가 첫 페인트 전에 채운다.
+ * JS 문자열로 하드코딩하지 않는 이유: 그 CTA 는 100자짜리 인라인 SVG path 를 포함한 8줄
+ * 마크업이고, js/home.js:26-30 에 이미 비슷하지만 다른(오류용 빨간) 복제본이 있어 드리프트 전례가 있다. */
+var _homeNearbyInitHtml = null;
+
+/* 진행 중인 위치 요청 무효화용 세대 토큰.
+ * geolocation 은 취소 API 가 없어서, '위치 확인 중' 상태로 리셋해도 최대 8초 뒤
+ * 성공 콜백이 결과 카드를 다시 그린다(js/home.js:23-33). 세대가 다르면 무시한다. */
+var _nearbyGen = 0;
+
+function resetHomePage() {
+  /* ① 검색 — 예약된 디바운스부터 죽인다.
+   *    타이핑 직후 220ms 안에 홈을 재클릭하면, 리셋이 끝난 뒤 js/home.js:222 의 타이머가 터져
+   *    doHomeSearch(옛 검색어) 가 실행되고 결과 패널이 되살아난다.
+   *    clearHomeSearch()/closeHomeSearch() 어디에도 clearTimeout 이 없다. */
+  clearTimeout(_srTimer);
+  _srTimer = null;
+  clearHomeSearch();          /* value='' + ✕ 숨김 + 결과 innerHTML='' + .open 제거 + 검색바 borderRadius 복원 */
+  var _si = document.getElementById('home-search-input');
+  if (_si) _si.blur();        /* 첫 진입은 포커스 없음 = 모바일 키보드 닫힘. clearHomeSearch 는 blur 를 안 한다. */
+  window._srResults = null;   /* 27,374건 배열 원소 참조를 붙들고 있어 GC 를 막는다(js/home.js:316) */
+
+  /* ② 내 위치 추천 → 원본 CTA. 진행 중인 GPS/주차장 fallback fetch 를 세대 증가로 무효화한다.
+   *    새 GPS 요청은 하지 않는다 — CTA 는 onclick 대기 상태일 뿐이다. */
+  _nearbyGen++;
+  var _nb = document.getElementById('home-nearby-section');
+  if (_nb && _homeNearbyInitHtml != null) _nb.innerHTML = _homeNearbyInitHtml;
+
+  /* ③ 관광/생활 토글 → 항상 '관광'(index.html:58 에 active 하드코딩).
+   *    반드시 'tourism' 으로만 부를 것 — js/home.js:588-591 의 'living' 분기는
+   *    _loadLcData() 를 태워 4.2MB 재요청 + 로딩 토스트를 띄운다. */
+  var _tt = document.querySelector('#page-home .ttab[data-tab="tourism"]');
+  if (_tt) switchHomeTab(_tt, 'tourism');   /* 클래스 + 두 블록 display 를 한 번에 맞춘다 */
+
+  /* ④ 콘텐츠 재렌더. 세 함수 모두 이미 로드된 PLACES/CONVENIENCE/parkingData/lcData 를
+   *    '읽기만' 한다 — fetch 하는 것은 switchHomeTab 안의 _loadLcData 뿐이고 위에서 피했다.
+   *    renderFavSection() 은 getFavs() 로 localStorage 를 읽기만 한다(js/favorites.js:109). */
+  renderHomePage();           /* = renderHomeTourism + renderHomeLiving + renderFavSection (js/home.js:171-175) */
+}
