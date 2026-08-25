@@ -406,6 +406,15 @@ function hideCalendar() {
    PLACES/CONVENIENCE 는 동기 상수라 네트워크를 타는 경로가 아예 없다.
 ══════════════════════════════════════════════════ */
 function resetTourismPage() {
+  /* ⓪ 내 위치 추천 → 원본 CTA (2026-08-26 홈에서 이 탭으로 옮겨 왔다).
+   *    진행 중인 GPS/주차장 fallback fetch 는 세대 증가로 무효화한다.
+   *    새 GPS 요청은 하지 않는다 — CTA 는 onclick 대기 상태일 뿐이다. */
+  if (typeof _nearbyGen !== 'undefined') _nearbyGen++;
+  var _nb = document.getElementById('nearby-section');
+  if (_nb && typeof _homeNearbyInitHtml !== 'undefined' && _homeNearbyInitHtml != null) {
+    _nb.innerHTML = _homeNearbyInitHtml;
+  }
+
   /* ① 뷰 → 목록. go() 도 하지만(js/nav.js:32-34) 이 함수만 봐도 완결되도록 멱등하게 둔다. */
   var _fd = document.getElementById('view-festival-detail');
   var _cv = document.getElementById('view-calendar');

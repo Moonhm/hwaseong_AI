@@ -421,6 +421,11 @@ function placePhotoHtml(place) {
 
 /* ── 장소 슬라이드 카드 ── */
 function showPlaceSlide(place) {
+  /* '최근 둘러본 관광지' 기록 지점 (js/home.js pushRecent).
+   * 지도 핀 클릭·관광 목록 클릭·홈 검색 결과·즐겨찾기 진입이 전부 이 함수를 거치므로
+   * 여기 한 곳만 걸면 모든 경로가 잡힌다. 관광지가 아니면 pushRecent 가 알아서 무시한다. */
+  if (typeof pushRecent === 'function') pushRecent(place);
+
   var cfg       = CATEGORY_CONFIG[place.category] || { label: '', bg: '#F3F4F6', emoji: '📍' };
   var color     = CAT_COLOR[place.category] || '#6B7280';
   var isTourist = place.category === 'tourist';

@@ -10,7 +10,7 @@
 
 /* ── 내 위치 추천 ── */
 function requestNearbyRec() {
-  var sec = document.getElementById('home-nearby-section');
+  var sec = document.getElementById('nearby-section');
   if (!sec) return;
 
   if (!navigator.geolocation) {
@@ -60,7 +60,7 @@ function renderNearbyResult(myLat, myLng, gen) {
    * 홈 탭을 재클릭한 뒤 뒤늦게 도착한 GPS 콜백은 여기서 걸러진다. */
   if (gen != null && gen !== _nearbyGen) return;
   if (typeof PLACES === 'undefined') return;
-  var sec = document.getElementById('home-nearby-section');
+  var sec = document.getElementById('nearby-section');
   if (!sec) return;
 
   /* 가장 가까운 관광지 */
@@ -184,6 +184,7 @@ function renderHomePage() {
   renderHomeTourism();
   renderHomeLiving();
   if (typeof renderFavSection === 'function') renderFavSection();
+  renderRecentSection();   /* 최근 둘러본 관광지 (없으면 스스로 숨는다) */
 }
 
 /* ══════════════════════════════════════════════════
@@ -634,11 +635,9 @@ function resetHomePage() {
   if (_si) _si.blur();        /* 첫 진입은 포커스 없음 = 모바일 키보드 닫힘. clearHomeSearch 는 blur 를 안 한다. */
   window._srResults = null;   /* 27,374건 배열 원소 참조를 붙들고 있어 GC 를 막는다(js/home.js:316) */
 
-  /* ② 내 위치 추천 → 원본 CTA. 진행 중인 GPS/주차장 fallback fetch 를 세대 증가로 무효화한다.
-   *    새 GPS 요청은 하지 않는다 — CTA 는 onclick 대기 상태일 뿐이다. */
-  _nearbyGen++;
-  var _nb = document.getElementById('home-nearby-section');
-  if (_nb && _homeNearbyInitHtml != null) _nb.innerHTML = _homeNearbyInitHtml;
+  /* ② 최근 둘러본 관광지 다시 그리기 (내 위치 추천은 2026-08-26 추천 탭으로 갔다 —
+   *    복원 책임도 resetTourismPage() 로 함께 옮겼다). */
+  if (typeof renderRecentSection === 'function') renderRecentSection();
 
   /* ③ 관광/생활 토글 → 항상 '관광'(index.html:58 에 active 하드코딩).
    *    반드시 'tourism' 으로만 부를 것 — js/home.js:588-591 의 'living' 분기는
@@ -650,4 +649,75 @@ function resetHomePage() {
    *    '읽기만' 한다 — fetch 하는 것은 switchHomeTab 안의 _loadLcData 뿐이고 위에서 피했다.
    *    renderFavSection() 은 getFavs() 로 localStorage 를 읽기만 한다(js/favorites.js:109). */
   renderHomePage();           /* = renderHomeTourism + renderHomeLiving + renderFavSection (js/home.js:171-175) */
+}
+
+/* ══════════════════════════════════════════════════
+   최근 둘러본 관광지 (2026-08-26)
+   즐겨찾기(js/favorites.js)와 같은 localStorage 방식이되 성격이 다르다 —
+   즐겨찾기는 '사용자가 고른 것', 이쪽은 '사용자가 지나간 것'이라 자동으로 쌓인다.
+
+   '둘러봤다'의 기준 = 슬라이드 카드가 열린 시점(js/map.js showPlaceSlide).
+   지도 핀 클릭, 관광 목록 클릭, 홈 검색 결과, 즐겨찾기 진입이 전부 이 함수를 거치므로
+   한 곳만 걸면 모든 경로가 잡힌다.
+
+   관광지(tourist)만 쌓는다. 축제는 성격이 달라 뺐다 — 필요하면 아래 필터만 풀면 된다.
+   localStorage 가 막힌 환경(사파리 프라이빗)에서도 죽지 않게 전부 try 로 감쌌다.
+══════════════════════════════════════════════════ */
+var _RECENT_KEY = 'hsida_recent';
+var _RECENT_MAX = 12;    /* 저장 개수 */
+var _RECENT_SHOW = 6;    /* 화면에 띄울 개수 */
+
+function getRecent() {
+  try { return JSON.parse(localStorage.getItem(_RECENT_KEY) || '[]'); } catch (e) { return []; }
+}
+
+function pushRecent(place) {
+  if (!place || place.category !== 'tourist' || place.id == null) return;
+  try {
+    var list = getRecent().filter(function (r) { return r.id !== place.id; });   /* 중복 제거 */
+    list.unshift({ id: place.id, name: place.name || '', at: Date.now() });
+    localStorage.setItem(_RECENT_KEY, JSON.stringify(list.slice(0, _RECENT_MAX)));
+  } catch (e) { /* 저장 불가 환경 — 기능만 조용히 꺼진다 */ }
+  /* 홈이 이미 그려져 있으면 바로 반영. 홈에 없을 때도 안전하다(요소가 없으면 return). */
+  renderRecentSection();
+}
+
+function clearRecent() {
+  try { localStorage.removeItem(_RECENT_KEY); } catch (e) {}
+  renderRecentSection();
+}
+
+function renderRecentSection() {
+  var el = document.getElementById('home-recent-section');
+  if (!el) return;
+  if (typeof PLACES === 'undefined') { el.style.display = 'none'; return; }
+
+  /* 저장된 id 로 지금 PLACES 를 다시 찾는다 — 이름·좌표가 바뀌어도 최신값을 쓰고,
+   * 삭제된 관광지는 자동으로 빠진다. */
+  var items = getRecent()
+    .map(function (r) { return PLACES.find(function (p) { return p.id === r.id; }); })
+    .filter(Boolean)
+    .slice(0, _RECENT_SHOW);
+
+  if (!items.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+
+  el.style.display = 'block';
+  el.innerHTML =
+    '<div class="section-header" style="padding:0 var(--px);margin-bottom:10px">' +
+      '<div class="section-title">최근 둘러본 관광지</div>' +
+      '<button class="section-link" onclick="clearRecent()">지우기</button>' +
+    '</div>' +
+    '<div class="recent-row">' +
+      items.map(function (p, i) {
+        var src = (typeof placePhotoSrc === 'function') ? placePhotoSrc(p)
+                : 'assets/images/places/' + p.name + '.jpg';
+        return '<div class="recent-card" style="animation-delay:' + (i * 0.04) + 's"' +
+               ' onclick="goMapFocus(' + p.lat + ',' + p.lng + ',4,' + p.id + ')">' +
+                 '<div class="recent-thumb">' +
+                   '<img src="' + src + '" alt="" onerror="this.style.display=\'none\'">' +
+                 '</div>' +
+                 '<div class="recent-name">' + (p.name || '') + '</div>' +
+               '</div>';
+      }).join('') +
+    '</div>';
 }

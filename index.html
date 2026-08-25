@@ -18,12 +18,12 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082607">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082607">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082607">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082607">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082607">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082607">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082609">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082609">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082609">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082609">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082609">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082609">
 </head>
 <body>
 
@@ -65,16 +65,11 @@
   <!-- 즐겨찾기 섹션 -->
   <div id="home-favs-section" style="display:none;margin-top:16px"></div>
 
-  <!-- 내 위치 추천 (항상 표시) -->
-  <div class="nearby-wrap" id="home-nearby-section">
-    <div class="nearby-cta" onclick="requestNearbyRec()">
-      <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
-      <div>
-        <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 공영주차장</div>
-        <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
-      </div>
-    </div>
-  </div>
+  <!-- 최근 둘러본 관광지 (2026-08-26) — 내 위치 추천이 추천 탭으로 가면서 빈 자리.
+       js/home.js 의 renderRecentSection() 이 채운다. 기록이 없으면 통째로 숨는다 —
+       빈 상자가 떠 있으면 고장으로 읽힌다. -->
+  <div id="home-recent-section" style="display:none;margin-top:16px"></div>
+
 
   <!-- 관광 탭 콘텐츠 (JS 렌더) -->
   <div id="home-tourism" style="margin-top:16px">
@@ -170,6 +165,20 @@
         <div class="chip" data-sub="stay" onclick="switchTourismSub(this,'stay')">숙박</div>
         <div class="chip" data-sub="camp" onclick="switchTourismSub(this,'camp')">캠핑</div>
         <div class="chip" data-sub="temple" onclick="switchTourismSub(this,'temple')">템플스테이</div>
+      </div>
+    </div>
+
+    <!-- 내 위치 추천 — 2026-08-26 홈 탭에서 여기로 옮겼다.
+         '지금 내 옆에 뭐가 있나' 는 추천의 한 갈래라 이 탭이 맞는 자리다.
+         id 는 home-nearby-section → nearby-section 으로 바꿨다(더는 홈이 아니다).
+         관련 함수는 js/home.js 에 그대로 있다 — 파일 이동은 위험 대비 이득이 없어 미뤘다. -->
+    <div class="nearby-wrap" id="nearby-section">
+      <div class="nearby-cta" onclick="requestNearbyRec()">
+        <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
+        <div>
+          <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 공영주차장</div>
+          <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
+        </div>
       </div>
     </div>
 
@@ -542,25 +551,25 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082607"></script>
-<script src="js/quiz.js?v=2026082607"></script>
-<script src="js/mapnav.js?v=2026082607"></script>
-<script src="js/home.js?v=2026082607"></script>
-<script src="js/tourism.js?v=2026082607"></script>
-<script src="js/living.js?v=2026082607"></script>
-<script src="js/favorites.js?v=2026082607"></script>
-<script src="js/ui.js?v=2026082607"></script>
-<script src="js/calendar.js?v=2026082607"></script>
-<script src="js/boot.js?v=2026082607"></script>
+<script src="js/nav.js?v=2026082609"></script>
+<script src="js/quiz.js?v=2026082609"></script>
+<script src="js/mapnav.js?v=2026082609"></script>
+<script src="js/home.js?v=2026082609"></script>
+<script src="js/tourism.js?v=2026082609"></script>
+<script src="js/living.js?v=2026082609"></script>
+<script src="js/favorites.js?v=2026082609"></script>
+<script src="js/ui.js?v=2026082609"></script>
+<script src="js/calendar.js?v=2026082609"></script>
+<script src="js/boot.js?v=2026082609"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082607"></script>
-<script src="js/convenience.js?v=2026082608"></script>
-<script src="js/data.js?v=2026082607"></script>
-<script src="js/map.js?v=2026082607"></script>
-<script src="js/conv_map.js?v=2026082608"></script>
-<script src="js/parking.js?v=2026082607"></script>
-<script src="js/localcurrency.js?v=2026082607"></script>
+<script src="js/photos.js?v=2026082609"></script>
+<script src="js/convenience.js?v=2026082609"></script>
+<script src="js/data.js?v=2026082609"></script>
+<script src="js/map.js?v=2026082609"></script>
+<script src="js/conv_map.js?v=2026082609"></script>
+<script src="js/parking.js?v=2026082609"></script>
+<script src="js/localcurrency.js?v=2026082609"></script>
 </body>
 </html>
