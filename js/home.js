@@ -216,7 +216,8 @@ var _REGIONS = [
 ];
 
 var _CAT_STYLE = {
-  tourist:      { bg: '#EEF2FF', em: '🏛' },
+  tourist:      { bg: '#EEF2FF', em: '🎡' },
+  heritage:     { bg: '#F5F3FF', em: '🏛' },   /* data.js CATEGORY_CONFIG.heritage 와 색·이모지 동일 */
   festival:     { bg: '#FFF7ED', em: '🎉' },
   restaurant:   { bg: '#FEF3C7', em: '🍽' },
   mobeom:       { bg: '#FEF3C7', em: '🍽' },
@@ -683,7 +684,9 @@ function getRecent() {
 function pushRecent(item, kind) {
   if (!item || item.id == null) return;
   var k = (kind === 'parking') ? 'p' : 't';
-  if (k === 't' && item.category !== 'tourist') return;   /* 축제 등은 쌓지 않는다 */
+  /* 관광지·문화재만 쌓는다. 축제는 기간이 지나면 의미가 없어 제외한다.
+   * PLACES 의 id 는 카테고리를 넘어 전역 유일이라 k:'t' 하나로 둘 다 담아도 충돌하지 않는다. */
+  if (k === 't' && item.category !== 'tourist' && item.category !== 'heritage') return;
   try {
     var list = getRecent().filter(function (r) { return !(r.k === k && r.id === item.id); });
     list.unshift({ k: k, id: item.id, at: Date.now() });
@@ -711,7 +714,9 @@ function renderRecentSection() {
       return pk ? { k: 'p', d: pk } : null;
     }
     if (typeof PLACES === 'undefined') return null;
-    var pl = PLACES.find(function (x) { return x.id === r.id && x.category === 'tourist'; });
+    var pl = PLACES.find(function (x) {
+      return x.id === r.id && (x.category === 'tourist' || x.category === 'heritage');
+    });
     return pl ? { k: 't', d: pl } : null;
   }).filter(Boolean).slice(0, _RECENT_SHOW);
 

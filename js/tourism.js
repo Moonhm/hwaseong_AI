@@ -21,7 +21,7 @@ function switchTourismSub(el, tab) {
     if (el2) el2.style.display = 'none';
   });
 
-  if (tab === 'all' || tab === 'festival' || tab === 'spot') {
+  if (tab === 'all' || tab === 'festival' || tab === 'spot' || tab === 'heritage') {
     _resetThemeChips();
     var def = document.getElementById('tourism-default');
     if (def) def.style.display = 'block';
@@ -41,6 +41,13 @@ function switchTourismSub(el, tab) {
       if (thdr)  thdr.style.display  = 'block';
       if (tchips) tchips.style.display = 'flex';
       renderTourismList('tourist-only');
+    } else if (tab === 'heritage') {
+      /* 문화재는 테마 태그(바다·자연·가족)와 맞지 않아 테마 칩을 숨긴다. 축제 캐러셀도 무관하다. */
+      if (fhdr)  fhdr.style.display  = 'none';
+      if (fwrap) fwrap.style.display = 'none';
+      if (thdr)  thdr.style.display  = 'none';
+      if (tchips) tchips.style.display = 'none';
+      renderTourismList('heritage-only');
     } else {
       if (fhdr)  fhdr.style.display  = 'block';
       if (fwrap) fwrap.style.display = 'block';
@@ -212,8 +219,12 @@ function renderTourismList(theme, expanded) {
     items = PLACES.filter(p => p.category === 'festival');
   } else if (theme === 'tourist-only') {
     items = PLACES.filter(p => p.category === 'tourist');
+  } else if (theme === 'heritage-only') {
+    items = PLACES.filter(p => p.category === 'heritage');
   } else {
-    const cats = ['tourist','restaurant','festival'];
+    /* 'restaurant' 는 PLACES 에 0건이다 — 맛집은 CONVENIENCE(생활 탭) 소속이라 여기 오지 않는다.
+     * 대신 heritage 42건이 빠져 있어 '전체'에서 문화재가 통째로 안 보였다. (2026-08-26) */
+    const cats = ['tourist','festival','heritage'];
     items = PLACES.filter(p => cats.includes(p.category));
     if (theme !== 'all' && THEME_TAGS[theme]) {
       const tags = THEME_TAGS[theme];
@@ -233,7 +244,7 @@ function renderTourismList(theme, expanded) {
       ? `<div style="width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;
                      background:#FFF7ED;position:relative;display:flex;align-items:center;
                      justify-content:center;font-size:22px">
-           <span>🏛</span>
+           <span>🎡</span>
            <img src="${placePhotoSrc(p)}" alt="" loading="lazy" decoding="async"
                 width="56" height="56"
                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
@@ -278,12 +289,12 @@ function ratingStars(r) {
   return '<span style="color:#F59E0B">' + '★'.repeat(full) + '</span>' + (half ? hs : '') + (empty ? '<span style="color:#D1D5DB">' + '★'.repeat(empty) + '</span>' : '');
 }
 function iconClass(cat) {
-  const map = { tourist:'pi-tourist', restaurant:'pi-food', festival:'pi-festival', localcurrency:'pi-currency', parking:'pi-parking' };
+  const map = { tourist:'pi-tourist', heritage:'pi-heritage', restaurant:'pi-food', festival:'pi-festival', localcurrency:'pi-currency', parking:'pi-parking' };
   return map[cat] || 'pi-tourist';
 }
 function iconContent(cat) {
   if (cat === 'localcurrency') return '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:64%;height:64%;object-fit:contain;display:block">';
-  const map = { tourist:'🏛', restaurant:'🍽', festival:'🎉', parking:'P' };
+  const map = { tourist:'🎡', heritage:'🏛', restaurant:'🍽', festival:'🎉', parking:'P' };
   return map[cat] || '📍';
 }
 

@@ -159,13 +159,22 @@ AI Workflow      Claude Sonnet 4.6 × 2 인스턴스 (개발 + 배포)
 
 ### 카테고리 색상 체계
 
-| 카테고리 | 색상 | 이모지 |
-|---------|------|--------|
-| tourist (관광지) | `#FB923C` | ★ |
-| restaurant (맛집) | `#D97706` | 🍽 |
-| festival (축제) | `#DC2626` | 🎉 |
-| parking (주차장) | `#2563EB` | 🅿 |
-| localcurrency (지역화폐) | `#059669` | 💳 |
+| 카테고리 | 색상 | 지도 핀 | 목록·검색 |
+|---------|------|--------|----------|
+| tourist (관광지) | `#FB923C` | ★ | 🎡 |
+| heritage (문화재) | `#7C3AED` | 🏛 | 🏛 |
+| restaurant (맛집) | `#D97706` | 🍽 | 🍽 |
+| festival (축제) | `#DC2626` | 🎉 | 🎉 |
+| parking (주차장) | `#2563EB` | 🅿 | 🅿 |
+| localcurrency (지역화폐) | `#059669` | 💳 | 로고 이미지 |
+
+**관광지만 핀과 목록의 기호가 다릅니다.** 핀은 작은 원이라 컬러 이모지보다
+글리프(★)가 또렷해서 그대로 뒀습니다. 목록·검색은 🎡 입니다 (2026-08-26 사용자 지시).
+🏛 은 **문화재 전용**입니다 — 관광지에 쓰지 마십시오. 둘이 구분되지 않던 걸 갈라놓은 것입니다.
+
+이모지를 바꿀 때 손대야 하는 곳은 네 군데입니다:
+`index.html` About 칩 · `js/home.js` `_CAT_STYLE` · `js/tourism.js` `iconContent()` ·
+`js/tourism.js` 목록 사진 폴백. `js/data.js` `CATEGORY_CONFIG` 는 지도 핀 쪽입니다.
 
 ### 지도 렌더링 방식
 
@@ -650,6 +659,26 @@ Kakao Local API 5종(keyword / address / coord2address / coord2regioncode / cate
 앱 쪽 13곳을 고치는 것보다 **반입 관문 한 곳에서 막는 편이 확실하고 되돌릴 일이 없습니다.**
 데이터가 이미 깨끗하면 앱은 아무것도 안 해도 됩니다.
 
+### ⚠ 쉼표를 두 번 찍지 마십시오 — 문법 오류가 아니라서 아무도 못 잡습니다
+
+2026-08-26 `js/data.js:140` 이 `},,` 로 끝나 **앱 절반이 죽어 있었습니다.**
+발견 경위와 실측은 [`docs/log/2026-08-26-dev-heritage-wiring-emoji.md`](docs/log/2026-08-26-dev-heritage-wiring-emoji.md).
+
+```js
+{ id:230, name:"예랑 도예원", ... },,     ← 쉼표 2개 → PLACES[137] 이 빈칸이 된다
+```
+
+`[1,,2]` 는 **적법한 자바스크립트입니다.** 그래서 문법 검사를 그냥 통과합니다.
+게다가 `filter()` `forEach()` `map()` 은 빈칸을 건너뛰므로 **목록 화면도 멀쩡해 보입니다.**
+
+그런데 `find()` 는 빈칸을 `undefined` 로 방문합니다. 목록 항목을 누르면 도는
+`PLACES.find(x => x.id === placeId)` 가 거기서 TypeError 로 죽어,
+**빈칸보다 뒤에 있는 114곳이 클릭 불능이었습니다.**
+
+- 항목을 지울 때는 **줄 전체**를 지우십시오. 내용만 지우고 `,` 를 남기면 이 사고가 납니다.
+- 지금은 `tools/check_code.js` 검사 D 가 전역 배열의 빈칸·null 을 잡습니다.
+  **데이터를 넣은 뒤 `bash tools/check.sh` 를 꼭 돌리십시오.**
+
 ### 도구 — 무엇을 언제 쓰나
 
 | 도구 | 언제 | 기본 동작 |
@@ -762,3 +791,5 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 ## 23. 사진 지역 라벨링 · 데이터 분류 반입 → [`docs/log/2026-08-25-deploy-photo-index.md`](docs/log/2026-08-25-deploy-photo-index.md)
 
 ## 24. 같은 탭 재클릭 = 초기화 → [`docs/log/2026-08-25-dev-tab-reset.md`](docs/log/2026-08-25-dev-tab-reset.md)
+
+## 25. 문화재 UI 연결 · 관광지 이모지 🎡 · PLACES 빈칸 장애 → [`docs/log/2026-08-26-dev-heritage-wiring-emoji.md`](docs/log/2026-08-26-dev-heritage-wiring-emoji.md)

@@ -277,6 +277,7 @@
       display: flex; align-items: center; justify-content: center; font-size: 18px;
     }
     .pi-tourist  { background: #EEF2FF; border-radius: 10px; }
+    .pi-heritage { background: #F5F3FF; border-radius: 10px; }
     .pi-food     { background: #FFF7ED; border-radius: 50%; }
     .pi-festival { background: var(--orange-bg); border-radius: 10px; }
     .pi-currency { background: var(--green-bg); border-radius: 50%; }

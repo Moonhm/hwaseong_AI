@@ -162,6 +162,45 @@ function checkHandlers(ctx) {
   if (!dead) console.log(`  i   인라인 핸들러 고유 함수 ${Object.keys(found).length}개 전부 선언됨 (기준선 55)`);
 }
 
+/* ── D. 전역 배열의 빈칸·null 원소 ────────────────────────────────────────
+   왜 필요한가: 2026-08-26 js/data.js:140 이 `},,` 로 끝나 PLACES 에 빈칸이
+   하나 생겼다. 이건 문법 오류가 '아니라서' A 검사를 그냥 통과했고,
+   filter()·forEach() 는 빈칸을 건너뛰므로 목록 화면도 멀쩡해 보였다.
+   그런데 find() 는 빈칸을 undefined 로 '방문'한다 — 그래서
+   goMapFocus(js/tourism.js) 의 PLACES.find(x => x.id === placeId) 가
+   빈칸 뒤쪽 항목을 누를 때마다 TypeError 로 죽었다(전체 251곳 중 114곳).
+   길이만 세는 검사로는 절대 못 잡는다. 원소를 하나씩 봐야 한다. */
+function checkArrayHoles(ctx) {
+  /* 이름을 Object.getOwnPropertyNames(ctx) 로 모으면 안 된다 —
+   * `const PLACES = [...]` 는 렉시컬 바인딩이라 컨텍스트 객체의 속성이 되지 않는다.
+   * 실제로 그렇게 짰다가 무관한 var 배열 4개만 훑고 '0건'이라 답하는 미탐을 냈다.
+   * 그래서 원문에서 선언 이름을 긁어 컨텍스트 '안에서' 평가한다. */
+  const DECL = /^\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*\[/gm;
+  const names = new Set();
+  for (const [, code] of ORDER) {
+    let m; DECL.lastIndex = 0;
+    while ((m = DECL.exec(code))) names.add(m[1]);
+  }
+  let bad = 0, scanned = 0, total = 0;
+  for (const k of names) {
+    let v;
+    try { v = vm.runInContext(`typeof ${k} !== 'undefined' ? ${k} : null`, ctx, { timeout: 4000 }); }
+    catch (_) { continue; }
+    if (!Array.isArray(v) || !v.length) continue;
+    scanned++; total += v.length;
+    for (let i = 0; i < v.length; i++) {
+      if (i in v && v[i] != null) continue;
+      const near = (v[i - 1] && v[i - 1].name) || (v[i + 1] && v[i + 1].name) || '?';
+      fail(`${k}[${i}] 가 ${i in v ? 'null' : '빈칸'} ('${near}' 부근) ` +
+           `— 쉼표가 두 번 찍혔는지 보라. find() 가 이 지점에서 TypeError 로 죽는다`);
+      if (++bad >= 5) return;
+    }
+  }
+  /* 볼 게 없으면 통과가 아니라 실패다. 조용한 0건이 이 검사를 무력화했던 전례가 있다. */
+  if (!scanned) fail('전역 배열을 하나도 못 찾았다 — 이 검사가 무력화됐다(미탐). DECL 정규식을 확인하라');
+  else if (!bad) console.log(`  i   전역 배열 ${scanned}개 원소 ${total}개 빈칸·null 0`);
+}
+
 console.log('── 코드 축 검사 (tools/check_code.js) ─────────────────────────────');
 const ok = checkSyntax();
 if (!ok) {
@@ -169,6 +208,7 @@ if (!ok) {
 } else {
   const ctx = checkGlobals();
   checkHandlers(ctx);
+  checkArrayHoles(ctx);
 }
 FAILS.forEach(m => console.log('  FAIL ' + m));
 console.log(`  ── FAIL ${FAILS.length}`);
