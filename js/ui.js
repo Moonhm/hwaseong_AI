@@ -67,7 +67,7 @@ function copyAppUrl() {
 function shareApp() {
   var url   = window.location.href.split('?')[0].split('#')[0];
   var title = '화성잇다 — 화성특례시 통합 관광 앱';
-  var text  = '화성시 관광지·축제·맛집·주차장을 한눈에! 🗺';
+  var text  = '화성시 관광지·축제·맛집·주차장을 한눈에! 🗺️';
   if (navigator.share) {
     navigator.share({ title: title, text: text, url: url }).catch(function () {});
   } else {

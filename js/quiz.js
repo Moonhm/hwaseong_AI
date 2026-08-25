@@ -220,7 +220,7 @@ function _renderQuizResult() {
       +    tags.map(function(t) { return '<span class="rec-tag">#' + t + '</span>'; }).join('')
       + '  </div>'
       + '  <div class="rec-card-actions">'
-      + '    <button class="rec-action-btn primary" onclick="' + focusFn + '">🗺 지도에서 보기</button>'
+      + '    <button class="rec-action-btn primary" onclick="' + focusFn + '">🗺️ 지도에서 보기</button>'
       + '    <button class="rec-action-btn secondary" onclick="' + routeFn + '">길찾기</button>'
       + '  </div>'
       + '</div>'

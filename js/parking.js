@@ -325,7 +325,7 @@ function showParkingSlide(p) {
     + (p.tel ? '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">📞 ' + p.tel + '</div>' : '')
     + feeSection(p)
     + '<div class="sl-actions">'
-    + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + (p.name || '').replace(/'/g, '') + '\')">🗺 길찾기</button>'
+    + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + (p.name || '').replace(/'/g, '') + '\')">🗺️ 길찾기</button>'
     + '<button class="sl-btn" onclick="refreshParking();showToast(\'새로고침 완료\')">🔄 새로고침</button>'
     + (function() {
         var fid = 'park-' + p.id;
