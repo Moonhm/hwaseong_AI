@@ -154,11 +154,73 @@ def process(d: Path, check: bool):
     return before, after, changed
 
 
+THUMB_W = 240
+THUMB_Q = 78
+
+
+def make_thumbs(check: bool):
+    """assets/images/places/{name} → assets/images/thumbs/{name} (폭 240)
+
+    왜 필요한가 (2026-08-26): 홈 첫 화면이 38·48·76px 슬롯에 1160x550 원본을
+    그대로 내리고 있었다. 인기 5장 + 축제 대표 1장 = 약 1,061KB 다.
+    240px 로 구우면 약 75KB — 3G(187KB/s)에서 5.7초가 0.4초가 된다.
+
+    왜 240px 한 종류인가: 가장 큰 소비처가 .recent-thumb 76px 이고 DPR3 에서
+    228px 를 원한다. 240 이면 그 하나로 38·48·76 슬롯을 전부 덮는다.
+    두 종류(160/240)로 나누면 파일이 두 배가 되는데 절감은 5장에 30KB 차이뿐이라
+    관리 비용이 이득을 넘는다.
+
+    원본은 건드리지 않는다 — 상세 화면과 지도 슬라이드는 계속 원본을 쓴다.
+    """
+    src = ROOT / "assets" / "images" / "places"
+    dst = ROOT / "assets" / "images" / "thumbs"
+    if not src.is_dir():
+        print("  건너뜀 — %s 가 없습니다" % src)
+        return 0, 0, 0
+    if not check:
+        dst.mkdir(parents=True, exist_ok=True)
+    made = skipped = 0
+    tot = 0
+    for f in sorted(src.iterdir()):
+        if not f.is_file() or f.suffix.lower() not in EXTS:
+            continue
+        out = dst / (unicodedata.normalize("NFC", f.stem) + ".jpg")
+        # 원본이 더 새것이면 다시 굽는다(사진을 교체했을 때 썸네일이 낡는 것을 막는다)
+        if out.exists() and out.stat().st_mtime >= f.stat().st_mtime:
+            skipped += 1
+            tot += out.stat().st_size
+            continue
+        if check:
+            made += 1
+            continue
+        try:
+            im = Image.open(f).convert("RGB")
+        except Exception as e:
+            print("  ! 열 수 없음 %s (%s)" % (f.name, e))
+            continue
+        im.thumbnail((THUMB_W, THUMB_W * 10), Image.LANCZOS)
+        im.save(out, "JPEG", quality=THUMB_Q, optimize=True, progressive=True)
+        tot += out.stat().st_size
+        made += 1
+    return made, skipped, tot
+
+
 def main():
     ap = argparse.ArgumentParser(description="assets 사진 전처리 (원본 덮어씀)")
     ap.add_argument("dirs", nargs="*", help="대상 폴더 (없으면 assets/images/* 전부)")
     ap.add_argument("--check", action="store_true", help="바꾸지 않고 대상만 출력")
+    ap.add_argument("--thumbs", action="store_true",
+                    help="assets/images/thumbs/ 에 240px 썸네일 생성 (원본은 안 건드림)")
     a = ap.parse_args()
+
+    if a.thumbs:
+        made, skipped, tot = make_thumbs(a.check)
+        print("▶ assets/images/thumbs (폭 %d, q%d)" % (THUMB_W, THUMB_Q))
+        print("   %s %d장 / 최신이라 건너뜀 %d장 / 합계 %.1fMB"
+              % ("대상" if a.check else "생성", made, skipped, tot / 1048576))
+        if not a.check:
+            print("⚠ 원본을 교체했으면 이 명령을 다시 돌려 썸네일도 갱신하십시오.")
+        return 0
 
     tb = ta = tc = 0
     for d in targets(a.dirs):

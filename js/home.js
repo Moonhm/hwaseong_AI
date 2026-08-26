@@ -750,12 +750,16 @@ function _renderHomePopular() {
      * 추천 탭의 renderDlPopular() 는 3열 사진 격자라 3위까지만 둔다 — 5장이면
      * 둘째 줄에 2장만 남아 빈칸이 생긴다. 두 화면의 개수가 다른 건 의도다. */
     el2.innerHTML = list.slice(0, 5).map(function(r, i) {
-      var src = '';
+      /* 38px 슬롯이다 — 240px 썸네일로 충분하다(2026-08-26).
+       * 원본은 1160x550 이라 5장이면 약 991KB 인데 썸네일은 약 50KB 다. */
+      var src = '', _full = '';
       if (typeof placePhotoSrc === 'function') {
         var _norm = function(s) { return (s || '').replace(/\s+/g, ''); };
         var _nq = _norm(r.name);
         var _hit = (typeof PLACES !== 'undefined') && PLACES.find(function(p) { return p.name === r.name || _norm(p.name) === _nq; });
-        src = placePhotoSrc(_hit || { name: r.name });
+        var _tgt = _hit || { name: r.name };
+        _full = placePhotoSrc(_tgt);
+        src = (typeof placeThumbSrc === 'function' && placeThumbSrc(_tgt)) || _full;
       }
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="dlGoPlace(\'' + r.name.replace(/'/g, '') + '\')">' +
         /* DL_MEDALS 는 js/datalab.js 에 있다. index.html 의 <script> 순서상
@@ -770,7 +774,8 @@ function _renderHomePopular() {
         '" aria-label="' + (i + 1) + '위">' +
           (i < 3 && typeof DL_MEDALS !== 'undefined' ? DL_MEDALS[i] : (i + 1)) + '</div>' +
         '<div style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#F3F4F6">' +
-          '<img src="' + src + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' +
+          '<img src="' + src + '" alt="" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover" ' +
+            'onerror="_thumbFallback(this,\'' + _full.replace(/'/g, '%27') + '\')">' +
         '</div>' +
         '<div style="flex:1;min-width:0">' +
           '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.name + '</div>' +
@@ -1159,11 +1164,17 @@ function renderRecentSection() {
         var d = it.d, isPark = it.k === 'p';
         var thumb = isPark
           ? '<div class="recent-thumb recent-thumb-park">🅿️</div>'
-          : '<div class="recent-thumb">' +
-              '<img src="' + ((typeof placePhotoSrc === 'function')
-                  ? placePhotoSrc(d)
-                  : 'assets/images/places/' + encodeURIComponent((d.name || '') + '.jpg')) +
-              '" alt="" onerror="this.style.display=\'none\'"></div>';
+          : (function () {
+              /* 76px 슬롯 — 240px 썸네일이 DPR3(228px)까지 덮는다 (2026-08-26). */
+              var _f = (typeof placePhotoSrc === 'function')
+                ? placePhotoSrc(d)
+                : 'assets/images/places/' + encodeURIComponent((d.name || '') + '.jpg');
+              var _t = (typeof placeThumbSrc === 'function') ? placeThumbSrc(d) : '';
+              return '<div class="recent-thumb">' +
+                '<img src="' + (_t || _f) + '" alt="" loading="lazy" decoding="async" onerror="' +
+                (_t ? '_thumbFallback(this,\'' + _f.replace(/'/g, '%27') + '\')'
+                    : 'this.style.display=\'none\'') + '"></div>';
+            })();
         var act = isPark
           ? 'goMapPark(' + d.lat + ',' + d.lng + ',' + d.id + ')'
           : 'goMapFocus(' + d.lat + ',' + d.lng + ',4,' + d.id + ')';

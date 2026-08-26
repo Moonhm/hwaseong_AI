@@ -54,6 +54,33 @@ function hasPhoto(place) {
   return placePhotoAll(place).length > 0;
 }
 
+/* 작은 슬롯용 240px 썸네일 (2026-08-26). tools/optimize_images.py --thumbs 가 굽는다.
+ *
+ * 왜: 홈 첫 화면이 38·48·76px 슬롯에 1160x550 원본을 그대로 내리고 있었다.
+ *   인기 5장 + 축제 대표 1장이 약 1,061KB — 3G(187KB/s)로 5.7초다.
+ *   썸네일 평균이 10KB 라 같은 화면이 약 75KB 로 끝난다.
+ *
+ * 240px 한 종류인 이유는 tools/optimize_images.py make_thumbs 주석 참고.
+ * 상세 화면·지도 슬라이드처럼 큰 슬롯은 계속 placePhotoSrc(원본)를 쓴다.
+ *
+ * 썸네일이 아직 없을 수 있다(사진을 새로 넣고 --thumbs 를 안 돌린 경우).
+ * 그래서 호출부는 반드시 _thumbFallback() 을 onerror 에 걸어 원본으로 되돌아간다. */
+function placeThumbSrc(place) {
+  var all = placePhotoAll(place);
+  if (!all.length) return '';
+  return all[0].replace('/images/places/', '/images/thumbs/')
+               .replace(/\.(png|webp|jpeg)$/i, '.jpg');
+}
+
+/* 썸네일 → 원본 → 포기(이모지 폴백) 순으로 한 단계씩만 내려간다.
+ * data-f 로 재시도 여부를 표시해 무한 루프를 막는다 — onerror 안에서 src 를
+ * 바꾸면 그 실패가 다시 onerror 를 부르기 때문이다. */
+function _thumbFallback(img, fullSrc) {
+  if (img.dataset.f) { img.style.display = 'none'; return; }
+  img.dataset.f = '1';
+  img.src = fullSrc;
+}
+
 /* 장소 썸네일 한 조각. 사진이 없으면 빈 문자열을 돌려주므로
  * 호출부에서 `photoThumb(p) || 기존이모지` 로 쓰면 된다.
  *
@@ -68,10 +95,18 @@ function hasPhoto(place) {
 function photoThumb(place, size, fb, cls) {
   if (!hasPhoto(place)) return '';
   var s = size || 56;
+  /* 240px 썸네일로 덮이는 크기면 그쪽을 쓴다(2026-08-26). DPR3 까지 고려한 값이다.
+   * 그보다 큰 슬롯은 원본을 써야 흐려지지 않는다. */
+  var full  = placePhotoSrc(place);
+  var thumb = (s <= 80) ? placeThumbSrc(place) : '';
+  var src   = thumb || full;
+  var onerr = thumb
+    ? '_thumbFallback(this,\'' + full.replace(/'/g, '%27') + '\')'
+    : 'this.style.display=\'none\'';
   return '<div class="ph-thumb ' + (cls || '') + '" style="width:' + s + 'px;height:' + s + 'px">' +
            '<span class="ph-thumb-fb">' + (fb || '📍') + '</span>' +
-           '<img src="' + placePhotoSrc(place) + '" alt="" loading="lazy" decoding="async" ' +
-                'width="' + s + '" height="' + s + '" onerror="this.style.display=\'none\'">' +
+           '<img src="' + src + '" alt="" loading="lazy" decoding="async" ' +
+                'width="' + s + '" height="' + s + '" onerror="' + onerr + '">' +
          '</div>';
 }
 
