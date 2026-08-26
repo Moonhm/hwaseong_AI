@@ -166,6 +166,48 @@ def _restrict_static_scope():
         return None
     return ("Not Found", 404)
 
+
+@app.after_request
+def _cache_headers(resp):
+    """?v= 를 단 js/css 만 장기 캐시한다 (2026-08-26, 배포 Claude).
+
+    왜: Flask 기본값이라 정적 파일이 전부 Cache-Control: no-cache 로 나간다.
+      no-cache 는 no-store 가 아니라 브라우저가 본문은 갖고 있고 조건부 GET 으로
+      304 를 받는다. 그래서 절감되는 것은 **바이트가 아니라 왕복 시간**이다.
+      index.html 의 <link>·<script> 30개는 전부 defer/async 없는 렌더 블로킹이라,
+      재방문마다 화면이 뜨기 전 30건 재검증이 끝나기를 기다린다(터널 실측 1.4~1.7초).
+
+    ⚠ 조건 셋은 전부 지켜야 한다. 하나라도 풀면 되돌릴 수 없는 사고가 난다.
+
+      1) assets/ · img/ 는 건드리지 않는다.
+         이미지 URL 에는 ?v= 가 없고(실측 0건) 경로가 런타임 조립이다
+         (js/ui.js placePhotoSrc 등). 파일명이 장소명이라 내용을 갈아도 URL 이
+         그대로다 — 실제로 오늘 places 를 57.5→20.7MB 로 같은 이름 그대로 바꿨다.
+         장기 캐시였다면 그 이전 방문자를 되돌릴 방법이 전혀 없다.
+
+      2) .json 에 immutable 을 붙이지 않는다.
+         JSON 버전은 JS 안에 하드코딩돼 있고(js/ui.js 의 localcurrency ?v= 등)
+         tools/check.sh 의 ?v= 검사는 index.html 의 .js/.css 태그만 본다.
+         갱신하고 문자열을 안 올리면 아무 검사도 못 잡는데, immutable 은
+         Firefox·Safari 에서 새로고침조차 무시한다. 짧게만 준다.
+
+      3) 로컬 직접 접근은 예외다.
+         앱의 30개 태그는 항상 ?v= 를 달고 있어 개발 중 새로고침이 100%
+         이 경로를 탄다. 두 Claude 가 파일을 고치고 확인하는 흐름이 막힌다.
+    """
+    host = (request.host or "").split(":")[0]
+    if host in ("127.0.0.1", "localhost", "0.0.0.0", "::1"):
+        return resp                      # 조건 3 — 개발 중에는 캐시하지 않는다
+    if not request.args.get("v"):
+        return resp                      # 버전이 없으면 무효화 수단이 없다
+    p = request.path.lstrip("/")
+    if p.startswith(("js/", "css/")):
+        if p.endswith((".js", ".css")):
+            resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif p.endswith(".json"):
+            resp.headers["Cache-Control"] = "public, max-age=3600"   # 조건 2
+    return resp                          # assets/·img/ 는 손대지 않는다 (조건 1)
+
 _LIST_URL = "https://smartparking.hscity.go.kr/api/parking/searchParkingList.json"
 _RT_URL   = "https://smartparking.hscity.go.kr/api/parking/allOperating.json"
 
