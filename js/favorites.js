@@ -216,7 +216,9 @@ function renderMenuFavs() {
           '<div class="menu-fav-name">' + (f.name || '') + '</div>' +
           '<div class="menu-fav-type">' + cfg.label + '</div>' +
         '</div>' +
-        _favParkBadge(f) +
+        /* 남은 대수 배지는 홈 즐겨찾기에만 둔다 (2026-08-26 사용자 지시).
+         * 메뉴는 '어디로 갈지 고르는 곳' 이라 실시간 수치가 들어가면 초점이 흐려진다.
+         * _favParkBadge 는 renderFavSection(홈)이 계속 쓰므로 함수는 그대로 둔다. */
         '<button style="background:none;border:none;color:#D1D5DB;font-size:22px;cursor:pointer;padding:0 0 0 8px;line-height:1" ' +
           'onclick="event.stopPropagation();removeFav(\'' + sid + '\')">×</button>' +
       '</div>';

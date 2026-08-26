@@ -125,6 +125,18 @@ window.addEventListener('DOMContentLoaded', () => {
     if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
     /* 소식 탭 통계 4칸(#stat-parking)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.
      * 건수는 카테고리를 고르면 목록 머리(#living-list-count)가 보여 준다. */
+
+    /* ⚠ 즐겨찾기를 다시 그린다 (2026-08-26).
+     * 이 fetch 는 비동기인데 바로 아래 renderHomePage() 는 동기로 먼저 돈다.
+     * 그래서 renderFavSection() 이 parkingData 가 비어 있을 때 실행되고,
+     * 주차장 남은 대수 배지(_favParkBadge)가 parkingData.find 에서 빈손으로
+     * 돌아와 배지가 통째로 빠진 채 굳었다. 로드가 끝나도 다시 그리지 않으니
+     * 홈에서는 배지가 영영 안 보였다.
+     *   메뉴 쪽(renderMenuFavs)은 사용자가 메뉴를 여는 시점이면 이 fetch 가
+     *   이미 끝나 있어 배지가 보였다 — 같은 코드인데 화면마다 달라 보인 이유다.
+     * getFavs() 는 localStorage 만 읽어 비용이 없고, 즐겨찾기가 없으면
+     * renderFavSection 이 스스로 숨으므로 헛일도 아니다. */
+    if (typeof renderFavSection === 'function') renderFavSection();
   }).catch(function() {});
   /* localcurrency-static.json(4.2MB)은 탭 클릭 시 지연 로드 */
 
