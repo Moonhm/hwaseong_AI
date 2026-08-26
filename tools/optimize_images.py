@@ -43,6 +43,9 @@ MAX_W = 1200          # places 사진의 실측 상한과 맞췄다
 QUALITY = 82
 EXTS = (".jpg", ".jpeg", ".png", ".webp")
 # 사진이 아니라 그래픽이라 PNG 로 둬야 하는 것들 (투명도·선명한 경계)
+# 파일명 토큰만으로는 한글 이름 로고를 못 지킨다(assets 의 PNG 4장이 전부 한글 이름
+# 투명 로고였다). 이름 토큰과 **실제 투명도** 둘 다로 판정한다 — 투명 PNG 를 JPEG 로
+# 바꾸면 배경이 검게 칠해져 로고가 망가지고 되돌릴 수 없다.
 KEEP_PNG = ("logo", "favicon", "icon")
 
 
@@ -74,6 +77,11 @@ def process(d: Path, check: bool):
             after += s0
             continue
 
+        # 투명도가 있으면 이름과 무관하게 PNG 로 남긴다(JPEG 는 알파를 못 담는다).
+        if f.suffix.lower() == ".png" and (im.mode in ("RGBA", "LA")
+                                           or (im.mode == "P" and "transparency" in im.info)):
+            keep_png = True
+
         need_resize = im.width > MAX_W
         need_jpeg = (f.suffix.lower() == ".png") and not keep_png
         need_rename = (nfc != f.stem)
@@ -83,6 +91,17 @@ def process(d: Path, check: bool):
 
         ext = ".jpg" if need_jpeg else f.suffix.lower()
         out = d / (nfc + ext)
+
+        # ⚠ 서로 다른 사진이 영구 소실되는 것을 막는다.
+        #   같은 stem 의 .png 와 .jpg 가 한 폴더에 있으면(예: 'X.png' 와 'X.jpg'),
+        #   .png 를 JPEG 로 저장하는 순간 기존 'X.jpg' 를 덮어쓰고 원본 .png 도 지운다.
+        #   두 파일이 다른 사진이면 한 장이 통째로 사라지고 되돌릴 수 없다.
+        #   assets/ 는 이 서버에만 있는 유일본이라 더 위험하다. 건드리지 않고 알린다.
+        if out.exists() and out.resolve() != f.resolve():
+            print("  ! 건너뜀 — 대상이 이미 있음: %s → %s (둘 다 남긴다)" % (f.name, out.name))
+            after += s0
+            continue
+
         if check:
             why = ",".join(w for w, c in
                            (("크기", need_resize), ("JPEG", need_jpeg), ("NFC", need_rename)) if c)
@@ -95,7 +114,12 @@ def process(d: Path, check: bool):
         if need_resize:
             im.thumbnail((MAX_W, MAX_W * 10), Image.LANCZOS)
         if ext == ".jpg":
-            im.save(out, "JPEG", quality=QUALITY, optimize=True, progressive=True)
+            # EXIF 를 넘긴다. Orientation 태그가 사라지면 스마트폰 세로 사진이 눕는다.
+            kw = {}
+            ex = im.info.get("exif")
+            if ex:
+                kw["exif"] = ex
+            im.save(out, "JPEG", quality=QUALITY, optimize=True, progressive=True, **kw)
         else:
             im.save(out, optimize=True)
         if f.name != out.name:

@@ -187,7 +187,9 @@ def check_counts():
 
     p_conv = os.path.join(ROOT, "js/convenience.js")
     src_c  = strip_js_comments(open(p_conv, encoding="utf-8").read())
-    for k in ("restaurants", "touristRestaurants", "hotels", "camping"):
+    # cinemas 를 2026-08-26 에 넣었다 — 그전에는 FLOOR 에만 있고 여기서 값을 안 채워
+    # '죽은 항목' 이었다. 영화관 13곳이 통째로 사라져도 검사가 초록불이었다.
+    for k in ("restaurants", "touristRestaurants", "hotels", "camping", "cinemas"):
         got["CONVENIENCE." + k] = array_len(
             src_c, k, "js/convenience.js",
             "index.html:2141 의 `CONVENIENCE[srcMap[convCat]]` 가 undefined 를 받아 목록이 빈다")

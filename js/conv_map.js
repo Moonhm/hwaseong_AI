@@ -87,7 +87,11 @@ var CONV_ELMAP  = {};   /* id  → DOM el */
 var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
 var _jebuOv     = null;
 
-var CONV_CACHE_VER = 'v6'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
+var CONV_CACHE_VER = 'v7'; /* 좌표 데이터 변경 시 올려서 캐시 무효화
+                            * v7(2026-08-26): CONVENIENCE.cinemas 10 → 13곳.
+                            * 이걸 안 올리면 재방문자는 localStorage 에 굳은 10곳만 보고,
+                            * 새로 넣은 3곳(CGV동탄역·CGV화성봉담·화성시 작은영화관)은
+                            * PLACES 에서도 뺐으므로 지도에서 영영 안 보인다. */
 
 /* localStorage 캐시 키 */
 /* 캐시 키 접두사를 만드는 유일한 자리. js/today.js 설정 패널이 이걸 써야 한다 —

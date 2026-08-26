@@ -232,7 +232,9 @@ def main():
 
     if args.list:
         print("id,읍면동(주소에서 추정),이름,권장_파일명")
-        for p in sorted(places, key=lambda x: x["id"]):
+        # 편의정보(id:None)는 신규 규칙 {읍면동}_{id}_ 대상이 아니라 제외한다.
+        # 안 거르면 sorted 가 None 과 int 를 비교하다 TypeError 로 죽는다.
+        for p in sorted([q for q in places if q["id"] is not None], key=lambda x: x["id"]):
             m = re.search(r"([가-힣]+(?:읍|면|동))", (p["address"] or "").replace("화성시", ""))
             emd = m.group(1) if m else "지역"
             nm = p["name"].replace(",", " ")
