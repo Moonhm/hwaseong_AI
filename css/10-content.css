@@ -285,7 +285,13 @@
     .recent-row {
       display: flex; gap: 10px; overflow-x: auto;
       padding: 2px var(--px) 4px;
-      scrollbar-width: none; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      /* ⚠ -webkit-overflow-scrolling: touch 를 뺐다 (2026-08-26).
+       * iOS 13 부터 기본값이라 효과가 없는데, 이 속성은 중첩 스크롤 영역을
+       * 별도 합성 레이어로 올려 세로 스크롤 중 안쪽 내용이 한 박자 늦게
+       * 따라오는 현상을 만든다. 앱의 다른 가로 스크롤 행(.festival-scroll ·
+       * .dl-photo-row 등)은 애초에 이 속성이 없고, 사용자가 지적한 것도
+       * 이 행 하나뿐이었다. */
       overscroll-behavior-x: contain;
     }
     .recent-row::-webkit-scrollbar { display: none; }
@@ -294,7 +300,11 @@
       flex: 0 0 auto; width: 76px; cursor: pointer;
       animation: item-enter 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     }
-    .recent-card:active { transform: scale(0.94); }
+    /* 0.94 는 앱에서 가장 센 축소였다(다른 카드는 전부 0.97~0.98).
+     * 세로로 스크롤하려고 카드에 손을 얹으면 :active 가 먼저 걸려 6% 줄었다가
+     * 스크롤이 시작되며 풀리는데, 0.12s 전환이 그 왕복을 눈에 보이게 만든다 —
+     * 사진이 따라 움직이는 것처럼 보인 이유다. 다른 카드와 같은 값으로 낮췄다. */
+    .recent-card:active { transform: scale(0.97); }
     .recent-card { transition: transform 0.12s ease; }
 
     /* 사진이 없으면(assets/ 는 배포 서버에만 있다) onerror 로 img 가 숨고
@@ -307,6 +317,10 @@
       background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; margin-bottom: 6px;
+      /* border-radius + overflow:hidden + 안쪽 이미지 조합은 스크롤 중
+       * 둥근 모서리 클립이 내용보다 늦게 따라오는 아티팩트를 낸다.
+       * 자체 레이어로 올려 클립과 내용이 함께 움직이게 한다. */
+      transform: translateZ(0);
     }
     .recent-thumb::before { content: '🏞️'; font-size: 24px; position: absolute; }
     .recent-thumb img {
