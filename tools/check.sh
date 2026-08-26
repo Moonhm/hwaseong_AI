@@ -117,6 +117,23 @@ asset_guard() {
       echo "  WARN $f 가 git 에 없다 — clone 이나 'git clean -xdf' 한 번이면 사라진다"
     fi
   done
+  # 사진·대용량 파일은 push 금지다. 예외 없다.
+  # .gitignore 만으로는 부족하다 — 'git add -f' 한 번이면 뚫리고, 아래 assets/ 검사는
+  # gitignore 규칙이 있으면 WARN 가지로 빠져 '추적 중인 파일'을 영영 못 본다.
+  # 한 번 커밋되면 히스토리에 blob 으로 남아 지우려면 filter-repo + force push 뿐이다.
+  # 실제로 0274753 에서 사진 159장(~59MB)이 올라갔고 6004a43 에서 추적만 껐다 —
+  # 그 104개 35.4MB 는 지금도 origin/main 에서 받아진다(2026-08-26 확인, 그대로 두기로 결정).
+  # 같은 일이 다시 나지 않도록 여기서 막는다.
+  for d in assets data/raw-large; do
+    n=$(git ls-files "$d" 2>/dev/null | wc -l)
+    if [ "$n" -gt 0 ]; then
+      echo "  FAIL $d/ 아래 파일 ${n}개가 git 에 추적되고 있다 — 사진·대용량은 push 금지다"
+      git ls-files "$d" 2>/dev/null | head -5 | sed 's/^/          /'
+      echo "          해제: git rm -r --cached $d"
+      bad=1
+    fi
+  done
+
   # 동적으로 조립되는 사진 경로(js/map.js:401 'assets/images/places/' + place.name + '.jpg')는
   # 위 grep 으로 안 잡힌다. tools/check_data.py 의 사진-이름 대조가 그쪽을 본다.
   if [ -d assets ]; then

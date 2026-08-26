@@ -883,6 +883,55 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 
 ## 27-I. 행정구역(4개 구)별 지도 보기 · 검색 → [`docs/log/2026-08-26-dev-district.md`](docs/log/2026-08-26-dev-district.md)
 
+## §28 사진·대용량 파일 push 금지 — 현황과 결정 (2026-08-26)
+
+### 현재 상태: 새로 올라가는 것은 없다
+
+| 항목 | 값 |
+|------|---|
+| `assets/` git 추적 | **0건** (디스크 353장) |
+| `data/raw-large/` git 추적 | **0건** (사진 zip 72MB 보관) |
+| git 추적 중인 이미지 전체 | 5개 — 전부 `img/` (파비콘·로고, UI 자산) |
+
+`.gitignore:7 assets/` · `:15 data/raw-large/` 가 실제로 걸린 것을 `git check-ignore` 로 확인했다.
+
+### 다만 과거 것이 히스토리에 남아 있다
+
+```
+0274753  chore: 관광지 사진 159장 및 로고 이미지 git 추적 추가 (~59MB)
+   ↓
+6004a43  chore: assets/ git 추적 제거 및 정책 확정   ← 163개 D(삭제)
+```
+
+**8/22 에 추적을 껐지만 그 전에 올라간 blob 은 히스토리에 남는다.**
+git 은 파일을 지워도 과거 커밋이 참조하면 객체를 보존한다.
+
+```
+히스토리에 남은 assets blob : 104개 / 35.4 MB
+origin/main 에서 도달 가능  : 104개 / 35.4 MB   ← GitHub 에서 지금도 받아진다
+.git/objects                : 58 MB
+```
+
+### 결정: 그대로 둔다 (사용자 판단, 2026-08-26)
+
+제거하려면 `git filter-repo` + force push 뿐인데 대가가 크다 —
+모든 커밋 SHA 가 바뀌어 개발 Claude 는 재 clone 해야 하고,
+`WORKFLOW.md`·`docs/log/` 에 적어 둔 해시 참조가 전부 무효가 된다.
+35.4MB 는 GitHub 기준 문제되는 크기가 아니고 추가 유출은 이미 멈췄다.
+
+**나중에 마음이 바뀌면 그때 하면 된다. 다만 그전까지 이 사실을 잊지 마라.**
+
+### 재발 방지
+
+`tools/check.sh` 의 `asset_guard()` 는 원래 `.gitignore` 규칙 존재 여부만 봤다.
+규칙이 있으면 WARN 가지로 빠져 **추적 중인 파일이 있어도 못 봤고**, `git add -f` 한 번이면 뚫렸다.
+
+`assets/` · `data/raw-large/` 아래 추적 파일이 하나라도 있으면 **FAIL + exit 1** 로 막도록 고쳤다.
+회귀 테스트로 확인했다 — 사진 1장을 `git add -f` 하니 즉시 잡고 exit 1 을 냈다.
+
+> ⚠️ 배포 Claude 주의: "추적 0건"만 보고 "규칙 지켜짐"이라고 보고하지 마라.
+> 히스토리는 별도다. 이 세션에서 실제로 그렇게 잘못 보고했다.
+
 ## 27-H. PLACES 주소 32건 보정 · 개발 Claude 인계 3건 판별 (배포) → [`docs/log/2026-08-26-deploy-photo-dedup-weather.md#7`](docs/log/2026-08-26-deploy-photo-dedup-weather.md)
 
 `address:"경기도 화성시"` 로 시(市) 단위에서 끊긴 관광지 31건 + 구 누락 1건을 읍면동까지 채웠다.
