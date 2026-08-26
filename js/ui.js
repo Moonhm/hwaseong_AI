@@ -68,8 +68,14 @@ function hasPhoto(place) {
 function placeThumbSrc(place) {
   var all = placePhotoAll(place);
   if (!all.length) return '';
+  /* 확장자를 통째로 .jpg 로 바꾼다. 썸네일은 원본 형식과 무관하게 항상
+   * 소문자 .jpg 로 굽기 때문이다(tools/optimize_images.py make_thumbs).
+   * ⚠ 예전에는 (png|webp|jpeg) 만 갈았다 — '.JPG' 같은 대문자나 '.jpg' 자신은
+   * 그대로 남아 없는 썸네일을 요청하고 폴백까지 타서 요청이 2배가 된다.
+   * 지금 인덱스 343장이 전부 소문자 .jpg 라 안 터지지만, 사진을 새로 넣으면
+   * 언제든 생긴다(개발 Claude 지적, 2026-08-26). */
   return all[0].replace('/images/places/', '/images/thumbs/')
-               .replace(/\.(png|webp|jpeg)$/i, '.jpg');
+               .replace(/\.[A-Za-z0-9]+$/, '.jpg');
 }
 
 /* 썸네일 → 원본 → 포기(이모지 폴백) 순으로 한 단계씩만 내려간다.
