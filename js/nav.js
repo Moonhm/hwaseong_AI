@@ -167,7 +167,8 @@ function go(page) {
 function openMenu() {
   document.getElementById('menu-dim').classList.add('open');
   document.getElementById('menu-drawer').classList.add('open');
-  if (typeof renderMenuFavs === 'function') renderMenuFavs();
+  if (typeof renderMenuFavs   === 'function') renderMenuFavs();
+  if (typeof renderMenuRecent === 'function') renderMenuRecent();   /* 2026-08-26 */
 }
 function closeMenu() {
   document.getElementById('menu-dim').classList.remove('open');

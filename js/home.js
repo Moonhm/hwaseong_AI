@@ -843,16 +843,15 @@ function pushRecent(item, kind) {
 function clearRecent() {
   try { localStorage.removeItem(_RECENT_KEY); } catch (e) {}
   renderRecentSection();
+  /* 메뉴가 열린 채로 눌렀을 수 있다 — 그쪽 목록도 같이 비운다 */
+  if (typeof renderMenuRecent === 'function') renderMenuRecent();
 }
 
-function renderRecentSection() {
-  var el = document.getElementById('home-recent-section');
-  if (!el) return;
-  el.style.display = 'block';        /* 비어 있어도 자리를 지킨다 — 아래 주석 참고 */
-
-  /* 저장된 id 로 원본을 다시 찾는다 — 이름·좌표가 바뀌어도 최신값을 쓰고,
-   * 삭제된 항목은 자동으로 빠진다. */
-  var items = getRecent().map(function (r) {
+/* 저장된 id 로 원본을 다시 찾는다 — 이름·좌표가 바뀌어도 최신값을 쓰고,
+ * 삭제된 항목은 자동으로 빠진다.
+ * 홈 섹션과 사이드 메뉴가 같은 목록을 쓰므로 여기 한 곳에 뒀다. */
+function _recentItems(limit) {
+  return getRecent().map(function (r) {
     if (r.k === 'p') {
       if (typeof parkingData === 'undefined') return null;
       var pk = parkingData.find(function (x) { return x.id === r.id; });
@@ -863,7 +862,49 @@ function renderRecentSection() {
       return x.id === r.id && (x.category === 'tourist' || x.category === 'heritage');
     });
     return pl ? { k: 't', d: pl } : null;
-  }).filter(Boolean).slice(0, _RECENT_SHOW);
+  }).filter(Boolean).slice(0, limit);
+}
+
+/* 사이드 메뉴용 (2026-08-26, 사용자 지시). 즐겨찾기(renderMenuFavs)와 같은 모양이다.
+ * 홈과 달리 비어 있으면 통째로 감춘다 — 홈 쪽 빈 안내는 '이런 기능이 있다'를
+ * 알리는 자리지만, 메뉴는 이미 항목이 많아 빈 칸을 더하면 잡음만 는다. */
+function renderMenuRecent() {
+  var wrap = document.getElementById('menu-recent-wrap');
+  if (!wrap) return;
+  var items = _recentItems(5);
+  if (!items.length) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML =
+    '<div class="menu-section-title" style="padding-top:16px">🕘 최근 본 곳</div>' +
+    items.map(function (it) {
+      var d = it.d, isPark = it.k === 'p';
+      var st = _CAT_STYLE[isPark ? 'parking' : (d.category || 'tourist')] ||
+               { bg: '#F3F4F6', em: '📌' };
+      var act = isPark
+        ? 'goMapPark(' + d.lat + ',' + d.lng + ',' + d.id + ')'
+        : 'goMapFocus(' + d.lat + ',' + d.lng + ',4,' + d.id + ')';
+      var sub = isPark ? '공영주차장'
+              : (d.category === 'heritage' ? '문화재' : '관광지');
+      return '<div class="menu-fav-item" onclick="closeMenu();' + act + '">' +
+               '<div class="menu-fav-icon" style="background:' + st.bg + '">' + st.em + '</div>' +
+               '<div style="flex:1;min-width:0">' +
+                 '<div class="menu-fav-name">' + (d.name || '') + '</div>' +
+                 '<div class="menu-fav-type">' + sub + '</div>' +
+               '</div>' +
+             '</div>';
+    }).join('') +
+    '<div style="text-align:center;padding:2px 0 8px">' +
+      '<button class="section-link" onclick="clearRecent()">기록 지우기</button>' +
+    '</div>';
+}
+
+function renderRecentSection() {
+  var el = document.getElementById('home-recent-section');
+  if (!el) return;
+  el.style.display = 'block';        /* 비어 있어도 자리를 지킨다 — 아래 주석 참고 */
+
+  /* 저장된 id 로 원본을 다시 찾는다 — 이름·좌표가 바뀌어도 최신값을 쓰고,
+   * 삭제된 항목은 자동으로 빠진다. */
+  var items = _recentItems(_RECENT_SHOW);
 
   var head =
     '<div class="section-header" style="padding:0 var(--px);margin-bottom:10px">' +
