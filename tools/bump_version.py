@@ -36,6 +36,16 @@ ROOT = Path(os.environ.get("HW_ROOT") or Path(__file__).resolve().parent.parent)
 TARGET = ROOT / "index.html"
 PAT = re.compile(r"\?v=(\d+)")
 
+# js/datalab.js 의 DL_VER 도 같이 올린다 (2026-08-26 개발 Claude 추가).
+#   그 값은 데이터랩 JSON 을 받을 때 쓰는 캐시 버스팅이다
+#   (js/datalab.js: fetch('js/' + file + '?v=' + DL_VER)).
+#   index.html 의 ?v= 와 별개 값인데 지금까지 손으로 맞춰 왔다 —
+#   한쪽만 올리면 JSON 이 낡은 채로 남는다. 서버가 .json 에는 immutable 대신
+#   1시간 캐시를 주므로(tools/server.py) js/css 만큼 위험하진 않지만,
+#   '손으로 맞추는 값' 을 남겨 두면 언젠가 또 어긋난다.
+DL_TARGET = ROOT / "js" / "datalab.js"
+DL_PAT = re.compile(r"(DL_VER\s*=\s*')(\d+)(')")
+
 
 def main():
     ap = argparse.ArgumentParser(description="index.html 의 ?v= 를 올린다")
@@ -66,6 +76,16 @@ def main():
 
     out = PAT.sub("?v=%d" % nxt, src)
     TARGET.write_text(out, encoding="utf-8")
+
+    # DL_VER 동기화 — 없거나 못 찾으면 조용히 넘어가지 말고 알린다.
+    if DL_TARGET.exists():
+        dsrc = DL_TARGET.read_text(encoding="utf-8")
+        dnew, cnt = DL_PAT.subn(lambda m: m.group(1) + str(nxt) + m.group(3), dsrc)
+        if cnt == 1:
+            DL_TARGET.write_text(dnew, encoding="utf-8")
+            print("   js/datalab.js DL_VER → %d" % nxt)
+        else:
+            print("⚠ js/datalab.js 의 DL_VER 를 %d곳 찾았습니다(1곳이어야 함) — 손으로 확인하십시오." % cnt)
 
     # 쓴 뒤 다시 읽어 확인한다 — sed 사고의 재발을 막는 핵심이다.
     back = TARGET.read_text(encoding="utf-8")
