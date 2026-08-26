@@ -14,13 +14,76 @@ var _calYear = _td0.getFullYear(), _calMonth = _td0.getMonth();
 var _calInitDone = false;
 
 /* "YYYY-MM-DD" 또는 "YYYY년 MM월 중" 형식을 [yyyy, mm, dd] 배열로 파싱 */
+/* 반환: [YYYY, MM, DD]. 못 읽으면 null.
+ * ⚠ '2026년 10월 중' 처럼 '일' 이 없는 표기는 1일로 채우는데, 그건 **근사값**이지
+ *   확정 일정이 아니다. 그대로 D-day 를 찍으면 없는 일정이 확정처럼 보인다
+ *   (실제로 'D-36' 이 화면에 찍혔다 — 2026-08-26 감사).
+ *   그래서 근사인지 여부를 _parseFestDateMeta() 로 따로 알린다. */
 function _parseFestDate(str) {
+  var m = _parseFestDateMeta(str);
+  return m ? m.ymd : null;
+}
+
+/* { ymd:[Y,M,D], approx:true|false } — approx=true 면 '월만 아는' 미확정 일정이다. */
+function _parseFestDateMeta(str) {
   str = (str || '').trim();
   var iso = str.split('-');
-  if (iso.length === 3 && /^\d{4}$/.test(iso[0])) return iso;
+  if (iso.length === 3 && /^\d{4}$/.test(iso[0])) return { ymd: iso, approx: false };
   var m = str.match(/(\d{4})년\s*(\d{1,2})월/);
-  if (m) return [m[1], ('0' + m[2]).slice(-2), '01'];
+  if (m) return { ymd: [m[1], ('0' + m[2]).slice(-2), '01'], approx: true };
   return null;
+}
+
+/* ── 축제 상태를 '날짜' 로 계산한다 ──────────────────────────────────────
+   ⚠ place.status 를 읽지 마라. 50건이 전부 'upcoming' 으로 굳어 있어
+     (수집 시점 값이다) '진행중' 은 영원히 안 뜨고 끝난 축제도 '예정' 이 된다.
+     2026-08-26 감사에서 확인했고, 배포 Claude 도 '죽은 필드' 로 판정했다.
+   반환: 'ongoing' | 'upcoming' | 'ended' | 'unknown'
+   date 가 'A ~ B' 범위면 그 사이를 진행중으로 본다. 단일 날짜면 그날 하루다.
+   approx(월만 아는 것)는 그 달 안이면 진행중으로 보지 않고 upcoming 으로 둔다 —
+   근사값으로 '지금 열리고 있다'고 말하면 안 된다. */
+function festStatus(place, now) {
+  if (!place) return 'unknown';
+  var raw = place.date || '';
+  if (!raw && place.desc) {
+    var parts = String(place.desc).split('|');
+    if (parts.length > 1) raw = parts[1].trim();
+  }
+  if (!raw) return 'unknown';
+
+  var today = now ? new Date(now) : new Date();
+  today.setHours(0, 0, 0, 0);
+
+  var seg = String(raw).split('~');
+  var a = _parseFestDateMeta(seg[0].trim());
+  if (!a) return 'unknown';
+  var start = new Date(+a.ymd[0], +a.ymd[1] - 1, +a.ymd[2]); start.setHours(0, 0, 0, 0);
+
+  var end = start;
+  if (seg.length > 1) {
+    var b = _parseFestDateMeta(seg[1].trim());
+    if (b) { end = new Date(+b.ymd[0], +b.ymd[1] - 1, +b.ymd[2]); end.setHours(0, 0, 0, 0); }
+  }
+
+  if (a.approx) {
+    /* 월만 아는 일정 — 그 달이 지났으면 종료, 아니면 예정. '진행중' 은 쓰지 않는다. */
+    var lastDay = new Date(+a.ymd[0], +a.ymd[1], 0); lastDay.setHours(0, 0, 0, 0);
+    return today > lastDay ? 'ended' : 'upcoming';
+  }
+  if (today < start) return 'upcoming';
+  if (today > end)   return 'ended';
+  return 'ongoing';
+}
+
+/* 화면에 붙일 배지 문구·클래스. status 필드 대신 이걸 쓴다. */
+function festBadge(place) {
+  var st = festStatus(place);
+  if (st === 'ongoing') return { cls: 'badge-ongoing',  text: '진행중' };
+  if (st === 'ended')   return { cls: 'badge-ended',    text: '종료' };
+  if (st === 'unknown') return { cls: 'badge-upcoming', text: '일정 미정' };
+  var meta = _parseFestDateMeta(String(place.date || '').split('~')[0].trim());
+  if (meta && meta.approx) return { cls: 'badge-upcoming', text: '예정' };
+  return { cls: 'badge-upcoming', text: '예정' };
 }
 
 /* 축제 날짜 Set 반환 — 날짜 범위("YYYY-MM-DD ~ YYYY-MM-DD") 전체 처리 */
@@ -96,7 +159,7 @@ function renderCalEventList(festivals, labelText) {
     return;
   }
   el.innerHTML = festivals.map(function(p) {
-    var isOngoing = p.status === 'ongoing';
+    var isOngoing = (typeof festStatus === 'function') && festStatus(p) === 'ongoing';
     var badgeStyle = isOngoing
       ? 'background:#DCFCE7;color:#16A34A'
       : 'background:#FFF7ED;color:#F59E0B';

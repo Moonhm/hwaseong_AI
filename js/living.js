@@ -187,12 +187,19 @@ function renderNewsSection() {
 
   PLACES.forEach(function (p) {
     if (p.category !== 'festival' || !p.date) return;
-    var d = (typeof _parseFestDate === 'function') ? _parseFestDate(String(p.date).split('~')[0].trim()) : null;
+    /* ⚠ '2026년 10월 중' 같은 미확정 일정은 1일로 채워지는 근사값이다.
+     * 그대로 D-day 를 찍으면 없는 확정 일정처럼 보인다(감사에서 'D-36' 실측).
+     * 근사 여부를 함께 받아 배지 문구를 바꾼다. */
+    var _dm = (typeof _parseFestDateMeta === 'function') ? _parseFestDateMeta(String(p.date).split('~')[0].trim()) : null;
+    var d = _dm ? _dm.ymd : null;
     if (!d) return;
     var when = new Date(d[0], d[1] - 1, d[2]); when.setHours(0, 0, 0, 0);
     var days = Math.round((when - today) / 86400000);
     if (days < 0 || days > 30) return;            /* 지난 것과 한 달 밖은 '소식'이 아니다 */
-    items.push({ p: p, days: days, when: when });
+    /* 근사 일정이면 표시할 문구를 여기서 만들어 둔다 — 렌더 시점에 정규식을 다시
+     * 돌리면(RegExp.$1 같은 전역 상태) 다른 매치에 오염될 수 있다. */
+    items.push({ p: p, days: days, when: when,
+                 approxLabel: (_dm && _dm.approx) ? (parseInt(d[1], 10) + '월 중') : null });
   });
 
   items.sort(function (a, b) { return a.days - b.days; });
@@ -211,7 +218,9 @@ function renderNewsSection() {
     '</div>' +
     items.slice(0, 3).map(function (it, i) {
       var d = it.days;
-      var badge = d === 0 ? '오늘' : d === 1 ? '내일' : 'D-' + d;
+      /* 근사 일정은 날짜를 단정하지 않는다 — '10월 중' 처럼 원문 단위로 말한다 */
+      var badge = it.approxLabel ? it.approxLabel
+                : d === 0 ? '오늘' : d === 1 ? '내일' : 'D-' + d;
       var hot   = d <= 3 ? ' news-badge-hot' : '';
       return '<div class="news-item" style="animation-delay:' + (i * 0.045) + 's"' +
              ' onclick="showFestivalDetail(' + it.p.id + ')">' +

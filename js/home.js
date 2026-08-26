@@ -582,7 +582,7 @@ function renderHomeTourism() {
         display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:8px;transition:box-shadow 0.15s;">
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
-            <span class="badge badge-${festivals[0].status === 'ongoing' ? 'ongoing' : 'upcoming'}">${festivals[0].status === 'ongoing' ? '진행중' : '예정'}</span>
+            <span class="badge ${festBadge(festivals[0]).cls}">${festBadge(festivals[0]).text}</span>
             <span style="font-size:11px;color:var(--text-muted);">${festivals[0].date ? festivals[0].date.replace(/^\d{4}-/,'').replace(/-/g,'.') : ''}</span>
           </div>
           <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${festivals[0].name}</div>
@@ -614,7 +614,7 @@ function renderHomeTourism() {
         <div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="section-title">행사</div>
-            ${festivals.some(f => f.status === 'ongoing') ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : ''}
+            ${festivals.some(f => festStatus(f) === 'ongoing') ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : ''}
           </div>
           <div class="section-sub" style="margin-top:2px">이번 주 축제 · 맛집 · 주차</div>
         </div>
@@ -764,7 +764,9 @@ function renderFestivalScroll() {
   if (!festivals.length) { el.innerHTML = '<div style="padding:8px var(--px);color:var(--text-muted);font-size:13px">축제 데이터 준비 중</div>'; return; }
   el.innerHTML = festivals.map((p, i) => {
     const img = IMG_CLASSES[i % IMG_CLASSES.length];
-    const badge = p.status === 'ongoing' ? '<span class="badge badge-ongoing fsc-badge">진행중</span>' : '<span class="badge badge-upcoming fsc-badge">예정</span>';
+    /* status 필드는 죽었다(50건 전부 upcoming) — 날짜로 계산한다. js/calendar.js festBadge 참고 */
+    const _fb = festBadge(p);
+    const badge = '<span class="badge ' + _fb.cls + ' fsc-badge">' + _fb.text + '</span>';
     const dateStr = p.date ? (p.date.includes('~')
       ? p.date.split('~')[0].trim().replace(/^\d{4}-/,'').replace(/-/g,'.') + ' ~'
       : p.date.trim().replace(/^\d{4}-/,'').replace(/-/g,'.')) : '';

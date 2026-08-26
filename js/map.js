@@ -570,7 +570,7 @@ function showPlaceSlide(place) {
     placePhotoHtml(place) +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
     '<span class="sl-cat" style="background:' + cfg.bg + ';color:' + color + '">' + cfg.emoji + ' ' + cfg.label + '</span>' +
-    (place.status === 'ongoing' ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : '') +
+    ((typeof festStatus === 'function' && festStatus(place) === 'ongoing') ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : '') +
     '</div>' +
     '<div class="sl-name">' + place.name + '</div>' +
     ratingHtml +

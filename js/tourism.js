@@ -332,7 +332,7 @@ function showFestivalDetail(id) {
   const imgClass = IMG_CLASSES_FD[Math.max(0, festIdx) % IMG_CLASSES_FD.length];
 
   const { status, date } = getFestivalMeta(place);
-  const isOngoing = status === 'ongoing';
+  const isOngoing = (typeof festStatus === 'function') && festStatus(place) === 'ongoing';
 
   const descParts = place.desc ? place.desc.split('|').map(s => s.trim()) : [];
   const detailDate = descParts.length > 1 ? descParts[1] : (descParts[0] || '');

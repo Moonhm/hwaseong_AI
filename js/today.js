@@ -58,12 +58,17 @@ function _todayFestivals() {
   var items = [];
   PLACES.forEach(function (p) {
     if (p.category !== 'festival' || !p.date) return;
-    var d = _parseFestDate(String(p.date).split('~')[0].trim());
-    if (!d) return;
+    /* ⚠ '2026년 10월 중' 은 1일로 채워지는 근사값이다. D-day 로 찍으면
+     * 없는 확정 일정처럼 보인다 — 근사면 'N월 중' 으로 말한다. */
+    var dm = (typeof _parseFestDateMeta === 'function')
+      ? _parseFestDateMeta(String(p.date).split('~')[0].trim())
+      : (function (y) { return y ? { ymd: y, approx: false } : null; })(_parseFestDate(String(p.date).split('~')[0].trim()));
+    if (!dm) return;
+    var d = dm.ymd;
     var when = new Date(d[0], d[1] - 1, d[2]); when.setHours(0, 0, 0, 0);
     var days = Math.round((when - today) / 86400000);
     if (days < 0) return;
-    items.push({ p: p, days: days });
+    items.push({ p: p, days: days, approxLabel: dm.approx ? (parseInt(d[1], 10) + '월 중') : null });
   });
   items.sort(function (a, b) { return a.days - b.days; });
   var todayOnly = items.filter(function (x) { return x.days === 0; });
@@ -138,7 +143,8 @@ function _renderToday() {
     ? (fr.soon ? '<div class="td-note" style="margin-top:0">오늘 열리는 축제는 없어요. 다가오는 축제예요.</div>' : '') +
       fr.list.map(function (it) {
         var f = it.p;
-        var badge = it.days === 0 ? '오늘' : it.days === 1 ? '내일' : 'D-' + it.days;
+        var badge = it.approxLabel ? it.approxLabel
+                  : it.days === 0 ? '오늘' : it.days === 1 ? '내일' : 'D-' + it.days;
         return '<div class="td-row" onclick="closeToday();go(\'tourism\');setTimeout(function(){showFestivalDetail(' + f.id + ')},260)">' +
                  '<div class="td-row-icon td-row-badge">' + badge + '</div>' +
                  '<div class="td-row-main">' +
