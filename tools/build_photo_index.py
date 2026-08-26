@@ -109,13 +109,57 @@ def build(files, places):
 
     covered = set(idx_id) | {by_name_place[n]["id"] for n in idx_name}
     missing = [p for p in places if p["category"] == "tourist" and p["id"] not in covered]
+    # 카테고리별 공백도 함께 센다 — tourist 만 보면 heritage 42건이 통째로 빈 것을 놓친다
+    gap = {}
+    for p in places:
+        if p["id"] not in covered:
+            gap.setdefault(p["category"], []).append(p)
     dups = {k: v for k, v in idx_id.items() if len(v) > 1}
     return {
         "byId": idx_id, "byName": idx_name, "dups": dups,
         "unknown_id": unknown_id, "orphan": orphan,
-        "legacy": legacy_n, "desc": desc_n, "missing": missing,
+        "legacy": legacy_n, "desc": desc_n, "missing": missing, "gap": gap,
+        "cross": cross_place_dupes(idx_id, idx_name, by_name_place),
         "shots": sum(len(v) for v in idx_id.values()) + sum(len(v) for v in idx_name.values()),
     }
+
+
+def cross_place_dupes(idx_id, idx_name, by_name_place):
+    """같은 사진 파일이 서로 다른 장소에 배정됐는지 내용 해시로 잡는다.
+
+    2026-08-26 에 실제로 터진 사고를 막으려고 넣었다: 사진 373장 중 고유 이미지가
+    211장뿐이었고, 162장이 다른 관광지 사진의 복사본이었다. 예컨대 '화성시작은영화관'
+    간판이 찍힌 사진 한 장이 CGV·롯데시네마 4곳의 대표 사진으로 들어가 있었다.
+    파일명만 보면 멀쩡해 보여서 아무 검사도 이것을 잡지 못했다.
+    """
+    owner = {}                                   # 파일명 → 소속 장소 표시
+    for pid, fns in idx_id.items():
+        for fn in fns:
+            owner[fn] = "id:%d" % pid
+    for nm, fns in idx_name.items():
+        for fn in fns:
+            owner.setdefault(fn, nm)
+
+    import hashlib
+    by_hash = {}
+    for fn in owner:
+        path = os.path.join(PHOTO_DIR, fn)
+        if not os.path.exists(path):             # NFD 로 저장된 경우 원본 이름을 되찾는다
+            cand = [f for f in os.listdir(PHOTO_DIR)
+                    if unicodedata.normalize("NFC", f) == fn]
+            if not cand:
+                continue
+            path = os.path.join(PHOTO_DIR, cand[0])
+        with open(path, "rb") as f:
+            h = hashlib.sha256(f.read()).hexdigest()[:12]
+        by_hash.setdefault(h, []).append(fn)
+
+    out = []
+    for h, fns in by_hash.items():
+        places_hit = {owner[f] for f in fns}
+        if len(places_hit) > 1:                  # 한 사진이 두 장소 이상을 덮고 있다
+            out.append((h, sorted(fns), sorted(places_hit)))
+    return sorted(out, key=lambda x: -len(x[1]))
 
 
 def write_js(r):
@@ -183,9 +227,21 @@ def main():
         print("\n⚠ 어느 장소와도 연결되지 않는 파일 %d개:" % len(r["orphan"]))
         for fn in r["orphan"][:10]:
             print("   %s" % fn)
+    if r["cross"]:
+        rc = 1
+        n = sum(len(f) - 1 for _, f, _ in r["cross"])
+        print("\n❌ 같은 사진이 서로 다른 장소에 배정됐습니다 — %d그룹 / 잉여 사본 %d장:"
+              % (len(r["cross"]), n))
+        for h, fns, pls in r["cross"][:8]:
+            print("   [%s] %d곳: %s" % (h, len(pls), ", ".join(fns[:5])))
+        print("   → 진짜 주인 1곳만 남기고 나머지 사본을 지우십시오."
+              " 사진이 없어지는 장소는 호출부의 이모지 폴백으로 떨어집니다.")
     if r["missing"]:
         print("\nℹ️  사진이 없는 관광지 %d곳 (앞 10개): %s"
               % (len(r["missing"]), ", ".join(p["name"] for p in r["missing"][:10])))
+    if r["gap"]:
+        print("\nℹ️  카테고리별 사진 공백: %s"
+              % " / ".join("%s %d건" % (c, len(v)) for c, v in sorted(r["gap"].items())))
 
     if args.check:
         print("\n(--check 이므로 js/photos.js 를 쓰지 않았습니다)")

@@ -53,6 +53,13 @@ CEILING = {
     # 이제 건수 상한이 아니라 '가드 존재 여부'를 본다 (check_tool_regex 참조).
     "jebu_regex_out_of_scope": 0,
     "fetch_without_cachebust": 2,   # ?v= 없는 fetch 대상 수 (parking/localcurrency static)
+    # 2026-08-26: 사진 373장 중 162장이 '다른 관광지 사진의 복사본'이었다.
+    # 한 장이 6곳을 덮은 사례까지 있어(작은영화관 간판 사진 → CGV·롯데시네마 4곳)
+    # 전부 지웠다. 그 결과 관광지 120곳이 사진 없음이 됐다 — 가짜를 지운 대가이며
+    # 화면은 js/ui.js placePhotoSrc 호출부 4곳의 이모지 폴백으로 안전하게 떨어진다.
+    # 사진을 새로 받으면 이 값을 내려라. 올리지는 마라.
+    "photo_missing_tourist": 120,
+    "photo_orphan": 4,              # PLACES·convenience 어디에도 없는 사진 (행사 사진 4장)
 }
 
 # 좌표 상자 — 화성시보다 넉넉히. 실측 27,712건 전부 이 안에 있다.
@@ -437,10 +444,22 @@ def check_photos():
         else:
             legacy.add(f.rsplit(".", 1)[0])
 
+    # 고아 판정과 '사진 없음' 판정은 대상 범위가 다르다.
+    #   want     = tourist 만  → 사진이 없으면 FAIL (관광지는 사진이 있어야 한다)
+    #   want_all = 전체 카테고리 → 고아 판정용. 이걸 tourist 로 좁히면
+    #              축제·문화재 사진을 넣는 순간 전부 "고아"로 잡혀 상시 빨간불이 된다.
+    #              (2026-08-26: 축제 사진 41장이 실제로 이 오탐에 걸렸다)
     want = {N(n) for n in names}
-    name2id = {N(n): i for i, n in
-               ((int(a), b) for a, b in
-                re.findall(r'id:(\d+),\s*name:"([^"]+)",\s*category:"tourist"', src_d))}
+    all_named = re.findall(r'id:(\d+),\s*name:"([^"]+)",\s*category:"[a-z]+"', src_d)
+    want_all = {N(b) for _, b in all_named}
+    name2id = {N(b): int(a) for a, b in all_named}
+
+    # 캠핑장·관광호텔 등은 PLACES 가 아니라 js/convenience.js 에 산다.
+    # data.js 만 보면 그 사진들이 전부 고아로 잡힌다 — 실제로는 앱이 아는 장소다.
+    conv = os.path.join(ROOT, "js/convenience.js")
+    if os.path.exists(conv):
+        want_all |= {N(m) for m in
+                     re.findall(r'name:\s*"([^"]+)"', open(conv, encoding="utf-8").read())}
 
     # 멀티사진 레거시 규칙: "{장소명}_{설명}.jpg" 형식.
     # 장소명 자체는 언더스코어 없이 한글·공백으로 구성되므로, 마지막 '_' 앞 부분을 기준 이름으로 쓴다.
@@ -452,23 +471,31 @@ def check_photos():
         return None
 
     # want 이름으로 직접 매치되거나 멀티사진 기반 이름으로 매치되면 covered
-    legacy_exact = legacy & want
-    legacy_multi = {f for f in legacy if legacy_base(f) in want}
+    legacy_exact = legacy & want_all
+    legacy_multi = {f for f in legacy if legacy_base(f) in want_all}
     covered = set(by_id) | {name2id[n] for n in legacy_exact if n in name2id} \
               | {name2id[legacy_base(f)] for f in legacy_multi if legacy_base(f) in name2id}
 
-    for n in names:
-        matched = (N(n) in legacy_exact
-                   or name2id.get(N(n)) in covered)
-        if not matched:
-            fail("관광지 '%s' 사진 없음 — 기존 규칙이면 '%s.jpg' 또는 '%s_{설명}.jpg', "
-                 "신규 규칙이면 '{읍면동}_%s_{메모}.jpg' (js/ui.js placePhotoSrc 가 조회한다)"
-                 % (n, n, n, name2id.get(N(n), "?")))
+    # 사진 없는 관광지는 건별 FAIL 이 아니라 상한 대조로 본다.
+    # 건별로 실패시키면 120건이 상시 빨간불이 되어 이 검사 전체가 무시된다
+    # (파일 머리말 '알려진 결함의 상한' 정책 참조). 악화만 막는다.
+    lack = [n for n in names
+            if N(n) not in legacy_exact and name2id.get(N(n)) not in covered]
+    if len(lack) > CEILING["photo_missing_tourist"]:
+        fail("사진 없는 관광지가 %d곳 → %d곳으로 늘었다. 앞 5곳: %s"
+             % (CEILING["photo_missing_tourist"], len(lack), ", ".join(lack[:5])))
+    elif lack:
+        info("사진 없는 관광지 %d곳 (상한 %d 이내) — 앞 5곳: %s"
+             % (len(lack), CEILING["photo_missing_tourist"], ", ".join(lack[:5])))
 
-    # 고아: 정확 매치도, 멀티사진 기반 이름도 모두 아닌 파일
-    for f in sorted(legacy - want - legacy_multi):
-        fail("assets/images/places/%s.jpg 가 고아다 — data.js 에 그 이름도, "
-             "그 이름의 장소도 없다(이름을 바꿨나?)" % f)
+    # 고아: 정확 매치도, 멀티사진 기반 이름도 모두 아닌 파일 (전체 카테고리 기준)
+    orphans = sorted(legacy - want_all - legacy_multi)
+    if len(orphans) > CEILING["photo_orphan"]:
+        fail("고아 사진이 %d개 → %d개로 늘었다: %s"
+             % (CEILING["photo_orphan"], len(orphans), ", ".join(orphans[:6])))
+    elif orphans:
+        info("고아 사진 %d개 (상한 %d 이내) — PLACES·convenience 어디에도 없다: %s"
+             % (len(orphans), CEILING["photo_orphan"], ", ".join(orphans)))
     for f in sorted(unknown):
         fail("assets/images/places/%s — data.js 에 없는 id 를 가리킨다" % f)
     for pid, fs in sorted(by_id.items()):
