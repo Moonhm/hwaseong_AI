@@ -115,10 +115,10 @@ function goMapFocus(lat, lng, level, placeId) {
   if (placeId != null && typeof PLACES !== 'undefined') {
     var _fp = PLACES.find(function (x) { return x.id === placeId; });
     if (_fp && _fp.category === 'festival') {
-      go('tourism');
-      setTimeout(function () {
-        if (typeof showFestivalDetail === 'function') showFestivalDetail(placeId);
-      }, 260);
+      /* openFestView 가 '어느 탭에서 왔는지'를 기억해 뒤로가기와 헤더 라벨을 맞춘다
+       * (js/tourism.js, 2026-08-26). 탭 전환과 260ms 지연도 그 안에 있다. */
+      if (typeof openFestView === 'function') openFestView('detail', placeId);
+      else { go('tourism'); setTimeout(function () { showFestivalDetail(placeId); }, 260); }
       return;
     }
   }

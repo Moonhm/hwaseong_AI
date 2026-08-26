@@ -269,10 +269,10 @@ function renderNewsSection() {
                 : d  <  0 ? 'D+' + (-d) : 'D-' + d;
       var hot   = d <= 3 ? ' news-badge-hot' : '';
       return '<div class="news-item" style="animation-delay:' + (i * 0.045) + 's"' +
-             /* ⚠ go('tourism') 없이 showFestivalDetail 만 부르면 아무 일도 안 일어난다 —
-              * 그 함수는 #page-tourism '안의' 뷰 display 만 뒤집는데 사용자는 소식 탭에
-              * 남아 있기 때문이다. 게다가 추천 탭 상태만 오염된다. (2026-08-26 감사) */
-             ' onclick="go(\'tourism\');setTimeout(function(){showFestivalDetail(' + it.p.id + ')},260)">' +
+             /* openFestView 가 탭 전환·지연·'← 소식' 라벨·뒤로가기 복귀를 한꺼번에 맡는다
+              * (js/tourism.js). 직접 showFestivalDetail 을 부르면 아무 일도 안 일어나고,
+              * go('tourism') 만 붙이면 뒤로가기가 추천 탭에 남는다. */
+             ' onclick="openFestView(\'detail\',' + it.p.id + ')">' +
                '<div class="news-badge' + hot + '">' + badge + '</div>' +
                /* 사진이 있으면 배지 옆에 썸네일. 없으면 예전처럼 배지+텍스트만이다. */
                ((typeof photoThumb === 'function') ? photoThumb(it.p, 40, '🎉', 'ph-sm news-thumb') : '') +
@@ -298,9 +298,9 @@ function renderNewsSection() {
    ⚠ p.status 를 읽지 마라 — 50건이 전부 'upcoming' 으로 굳어 있다.
      js/calendar.js 의 festStatus() 가 date 를 파싱해 실제 상태를 낸다.
 
-   ⚠ onclick 에서 showFestivalDetail() 만 부르면 아무 일도 안 일어난다.
-     그 함수는 #page-tourism '안의' 뷰 display 만 뒤집는데 사용자는 소식 탭에 있다.
-     renderNewsSection() 과 같은 이유로 go('tourism') 을 먼저 태운다.
+   ⚠ 항목 클릭은 반드시 openFestView('detail', id) 로 간다(js/tourism.js).
+     showFestivalDetail() 을 직접 부르면 아무 일도 안 일어나고(그 뷰는 추천 탭 소속),
+     go('tourism') 만 덧붙이면 헤더가 '← 추천'이 되고 뒤로가기가 추천 탭에 남는다.
 ══════════════════════════════════════════════════ */
 var FEST_ALL_PREVIEW = 5;
 
@@ -358,7 +358,7 @@ function renderFestivalAll(expanded) {
       ? raw.replace(/^\d{4}-/, '').replace(/-/g, '.')
       : raw.replace(/^\d{4}\s*년?\s*/, '');
     return '<div class="place-item" style="animation-delay:' + (Math.min(i, 12) * 0.045) + 's"' +
-           ' onclick="go(\'tourism\');setTimeout(function(){showFestivalDetail(' + p.id + ')},260)">' +
+           ' onclick="openFestView(\'detail\',' + p.id + ')">' +
              thumb +
              '<div class="pi-content">' +
                '<div class="pi-name">' + (p.name || '') + '</div>' +

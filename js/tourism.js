@@ -257,7 +257,7 @@ function renderTourismList(theme, expanded) {
     return `
       <div class="place-item" style="animation-delay:${Math.min(i, 12) * 0.045}s"
         onclick="${p.category === 'festival'
-          ? 'showFestivalDetail(' + p.id + ')'
+          ? 'openFestView(\'detail\',' + p.id + ')'
           : 'goMapFocus(' + p.lat + ',' + p.lng + ',4,' + p.id + ')'}">
         ${iconHtml}
         <div class="pi-content">
@@ -395,6 +395,79 @@ function hideFestivalDetail() {
   document.getElementById('view-tourism-list').style.display = 'block';
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   축제 상세·캘린더를 '어느 탭에서 열었는지' 기억한다 (2026-08-26)
+
+   이 두 화면은 #page-tourism '안의' 뷰다. 소식 탭에서 열면 화면은 뜨지만
+   상단이 추천 탭 헤더라 '← 관광'이라고 적혀 있었고, 뒤로가기를 누르면
+   소식이 아니라 추천 탭에 남았다 — 사용자 지적.
+
+   뷰를 소식 탭으로 복제하지 않고 '온 곳'만 기억한다. 복제하면 축제 상세가
+   두 벌이 되어 한쪽만 고치는 사고가 난다.
+
+   ⚠ hideCalendar()/hideFestivalDetail() 자체는 건드리지 않는다. 그 둘은
+     js/calendar.js:170 에서 '캘린더를 닫고 상세를 연다'는 뜻으로도 쓰인다.
+     거기서 탭까지 옮겨 버리면 상세가 열리기 전에 소식으로 튕긴다.
+     탭 복귀는 뒤로가기 버튼 전용 backFrom*() 에만 넣는다.
+   ══════════════════════════════════════════════════════════════════════════ */
+var _festViewFrom   = null;   /* 'page-living' | 'page-home' | 'page-map' | null(추천에서 열었다) */
+var _festViewScroll = 0;      /* 돌아갈 탭의 스크롤 위치 — go() 가 0 으로 밀어 버린다 */
+
+var _FEST_BACK = {
+  'page-living': { label: '← 소식', page: 'living' },
+  'page-home':   { label: '← 홈',   page: 'home'   },
+  'page-map':    { label: '← 지도', page: 'map'    },
+};
+
+function _setFestBackLabel() {
+  var info = _FEST_BACK[_festViewFrom];
+  var text = info ? info.label : '← 추천';   /* 하단 내비 이름이 '추천'이다. '관광'은 옛 이름 */
+  ['#view-calendar .back-btn', '#view-festival-detail .back-btn'].forEach(function (sel) {
+    var b = document.querySelector(sel);
+    if (b) b.textContent = text;
+  });
+}
+
+/* 축제 상세·캘린더로 가는 공용 진입점. kind: 'detail' | 'calendar' */
+function openFestView(kind, id) {
+  var cur  = document.querySelector('.page.active');
+  var from = cur ? cur.id : null;
+  _festViewFrom   = (from && from !== 'page-tourism') ? from : null;
+  _festViewScroll = (_festViewFrom && cur) ? cur.scrollTop : 0;
+
+  var open = function () {
+    _setFestBackLabel();
+    if (kind === 'calendar') showCalendar();
+    else if (typeof showFestivalDetail === 'function') showFestivalDetail(id);
+  };
+
+  if (!_festViewFrom) { open(); return; }   /* 이미 추천 탭이면 탭 전환도 지연도 필요 없다 */
+
+  go('tourism');
+  /* go() 는 #page-tourism 을 active 로 바꾸고 나서야 뷰 display 가 화면에 반영된다.
+   * 260ms 는 이 기능을 옮기기 전 호출부들이 쓰던 값 그대로다. */
+  setTimeout(open, 260);
+}
+
+/* 뒤로가기 버튼 전용. 온 곳이 다른 탭이면 그 탭으로, 아니면 추천 탭 목록으로. */
+function _returnFromFestView() {
+  var info = _FEST_BACK[_festViewFrom];
+  if (!info) { _setFestBackLabel(); return; }
+  var scroll = _festViewScroll;
+  _festViewFrom = null; _festViewScroll = 0;
+  _setFestBackLabel();
+  go(info.page);
+  /* go() 가 scrollTop 을 0 으로 밀고 living 은 renderLivingPage() 까지 돈다(js/nav.js:126).
+   * 그 뒤에 복원해야 보고 있던 자리로 돌아온다 — 뒤로가기인데 맨 위로 튀면 길을 잃는다. */
+  setTimeout(function () {
+    var pg = document.getElementById(info.page === 'living' ? 'page-living' : 'page-' + info.page);
+    if (pg) pg.scrollTop = scroll;
+  }, 40);
+}
+
+function backFromCalendar()       { hideCalendar();       _returnFromFestView(); }
+function backFromFestivalDetail() { hideFestivalDetail(); _returnFromFestView(); }
+
 function showCalendar() {
   document.getElementById('view-tourism-list').style.display = 'none';
   document.getElementById('view-calendar').style.display = 'block';
@@ -447,6 +520,12 @@ function resetTourismPage() {
   _jebuOpen = false;
   var _jb = document.getElementById('jebu-list-section');
   if (_jb) { _jb.style.display = 'none'; _jb.innerHTML = ''; }
+
+  /* ③-b 축제 뷰의 '온 곳' 기억도 지운다 (2026-08-26). 소식에서 상세를 열어 둔 채
+   *     하단 내비로 추천 탭을 누르면 뷰는 목록으로 돌아가는데 _festViewFrom 만
+   *     'page-living' 으로 남아, 다음 뒤로가기가 엉뚱하게 소식으로 튄다. */
+  _festViewFrom = null; _festViewScroll = 0;
+  if (typeof _setFestBackLabel === 'function') _setFestBackLabel();
 
   /* ④ 서브탭 → '전체' (index.html:164 가 첫 진입의 active). 이 한 줄이 리셋의 몸통이다. */
   var _allChip = document.querySelector('.tourism-subnav .chip[data-sub="all"]');

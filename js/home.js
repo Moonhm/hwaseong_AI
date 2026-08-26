@@ -608,7 +608,7 @@ function renderHomeTourism() {
   const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>`;
 
   const festivalBig = festivals.length
-    ? `<div onclick="go('tourism');showFestivalDetail(${festivals[0].id})"
+    ? `<div onclick="openFestView('detail',${festivals[0].id})"
         style="background:var(--white);border-radius:var(--r-md);border:1px solid var(--border);
         border-left:3px solid var(--orange);padding:14px 16px;
         display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:12px;transition:box-shadow 0.15s;">
@@ -870,7 +870,7 @@ function renderFestivalScroll() {
       : p.date.trim().replace(/^\d{4}-/,'').replace(/-/g,'.')) : '';
     /* 이 캐러셀은 2026-08-26 에 소식 탭으로 옮겨졌다 — go('tourism') 이 없으면 먹통이다.
      * 위 js/living.js 의 news-item 과 같은 이유다. */
-    return `<div class="festival-scroll-card" onclick="go('tourism');setTimeout(function(){showFestivalDetail(${p.id})},260)">
+    return `<div class="festival-scroll-card" onclick="openFestView('detail',${p.id})">
       <div class="fsc-img ${img}">${hasPhoto(p) ? `<img class="fsc-photo" src="${placePhotoSrc(p)}" alt=""
              loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}${badge}</div>
       <div class="fsc-body"><div class="fsc-date">${dateStr}</div><div class="fsc-title">${p.name}</div></div>
