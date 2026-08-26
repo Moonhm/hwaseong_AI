@@ -155,7 +155,7 @@ function renderCalEventList(festivals, labelText) {
   if (lbl) lbl.textContent = labelText || '이번 달 축제';
   if (!el) return;
   if (!festivals.length) {
-    el.innerHTML = '<div style="padding:20px 0;text-align:center;color:var(--text-muted);font-size:13px">축제가 없습니다</div>';
+    el.innerHTML = '<div style="padding:20px 0;text-align:center;color:var(--text-muted);font-size:13px">축제가 없어요</div>';
     return;
   }
   el.innerHTML = festivals.map(function(p) {

@@ -111,7 +111,7 @@ function goMapFocus(lat, lng, level, placeId) {
   go('map');
   setTimeout(function () {
     if (!kakaoMap) {
-      if (typeof showToast === 'function') showToast('지도를 불러오는 중입니다. 잠시 후 다시 눌러주세요.');
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
       return;
     }
     /* 카테고리 필터 활성화 (이미 활성화된 경우 토글 방지) */

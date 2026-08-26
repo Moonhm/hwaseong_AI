@@ -74,21 +74,21 @@ function initMap() {
   }
 
   if (typeof kakao === 'undefined' || !kakao.maps) {
-    showMapError('카카오맵을 불러올 수 없습니다.<br>페이지를 새로고침 해주세요.');
+    showMapError('카카오맵을 불러오지 못했어요.<br>페이지를 새로고침 해주세요.');
     return;
   }
 
   /* 본체가 아직 실행 전이면 여기서 로드하고 끝난 뒤 이어서 그린다. */
   if (!kakao.maps.Map) {
     if (typeof kakao.maps.load !== 'function') {
-      showMapError('카카오맵을 불러올 수 없습니다.<br>페이지를 새로고침 해주세요.');
+      showMapError('카카오맵을 불러오지 못했어요.<br>페이지를 새로고침 해주세요.');
       return;
     }
     /* 안전망: load 콜백이 끝내 안 오면 빈 지도가 아니라 새로고침 버튼을 보여 준다.
      * autoload=false 는 2026-08-26 에 넣었는데 개발 환경에서 카카오 CDN 이 막혀
      * 실동작을 검증하지 못했다 — 조용히 실패하는 것만은 막아 둔다. */
     var _guard = setTimeout(function () {
-      if (!mapReady) showMapError('지도를 불러오지 못했습니다.<br>네트워크를 확인하고 새로고침 해주세요.');
+      if (!mapReady) showMapError('지도를 불러오지 못했어요.<br>네트워크를 확인하고 새로고침 해주세요.');
     }, 8000);
     kakao.maps.load(function () {
       clearTimeout(_guard);
@@ -608,7 +608,7 @@ var _npMode = null; /* { onBack, touristOv, parkOv, backBtn } */
 /* ── 공통 핵심 로직 ── */
 function _goNPCore(placeLat, placeLng, label, icon, onBack) {
   if (typeof parkingData === 'undefined' || !parkingData.length) {
-    if (typeof showToast === 'function') showToast('주차장 정보를 불러오는 중입니다.');
+    if (typeof showToast === 'function') showToast('주차장 정보를 불러오는 중이에요.');
     return;
   }
 
@@ -621,7 +621,7 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
   });
 
   if (!nearest) {
-    if (typeof showToast === 'function') showToast('주변 공영주차장을 찾을 수 없습니다.');
+    if (typeof showToast === 'function') showToast('주변에 공영주차장을 찾지 못했어요.');
     return;
   }
 
@@ -1003,7 +1003,7 @@ function findNearby(lat, lng) {
   });
   closePlaceSlide();
   if (!nearby.length) {
-    showToast('반경 500m 내 지역화폐 가맹점이 없습니다.');
+    showToast('반경 500m 안에는 지역화폐 가맹점이 없어요.');
     return;
   }
   /* 이미 활성화된 경우 toggle 방지 */
@@ -1026,7 +1026,7 @@ var myLocationOverlay = null;
 function setupMyLocation() {
   document.getElementById('btn-mylocation').addEventListener('click', function () {
     if (!navigator.geolocation) {
-      showToast('위치 정보를 지원하지 않는 브라우저입니다.');
+      showToast('이 브라우저는 위치 정보를 지원하지 않아요.');
       return;
     }
     navigator.geolocation.getCurrentPosition(

@@ -102,7 +102,7 @@ function setGuView(gu) {
   b.extend(new kakao.maps.LatLng(g.lat[0], g.lng[0]));
   b.extend(new kakao.maps.LatLng(g.lat[1], g.lng[1]));
   kakaoMap.setBounds(b, 24);
-  if (typeof showToast === 'function') showToast(gu + ' 화면입니다 — 화면 안의 것만 표시돼요');
+  if (typeof showToast === 'function') showToast(gu + ' 화면이에요 — 화면 안의 것만 보여요');
 }
 
 function _guSyncChips() {

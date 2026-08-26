@@ -170,7 +170,7 @@ function hideAllConv() {
 /* ── Geocoding ── */
 function _geocodeCat(cat) {
   if (typeof kakao === 'undefined' || !kakao.maps || !kakao.maps.services) {
-    showToast('Geocoder 서비스를 불러올 수 없습니다.');
+    showToast('위치 변환 서비스를 불러오지 못했어요.');
     return;
   }
 

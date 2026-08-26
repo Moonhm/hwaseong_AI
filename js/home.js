@@ -14,7 +14,7 @@ function requestNearbyRec() {
   if (!sec) return;
 
   if (!navigator.geolocation) {
-    sec.innerHTML = '<div class="nearby-loading">위치 정보를 지원하지 않는 브라우저입니다.</div>';
+    sec.innerHTML = '<div class="nearby-loading">이 브라우저는 위치 정보를 지원하지 않아요.</div>';
     return;
   }
 
@@ -34,7 +34,7 @@ function requestNearbyRec() {
       sec.innerHTML =
         '<div class="nearby-cta" onclick="requestNearbyRec()" style="border-color:#FCA5A5;background:linear-gradient(135deg,#FEF2F2,#FEE2E2)">' +
         '<div class="nearby-cta-icon">⚠️</div>' +
-        '<div><div class="nearby-cta-text" style="color:#DC2626">위치 접근 권한이 필요합니다</div>' +
+        '<div><div class="nearby-cta-text" style="color:#DC2626">위치 접근 권한이 필요해요</div>' +
         '<div class="nearby-cta-sub">탭하여 다시 시도</div></div></div>';
     },
     { timeout: 8000, maximumAge: 60000 }
@@ -91,7 +91,7 @@ function renderNearbyResult(myLat, myLng, gen) {
   });
 
   if (!nearestTourist) {
-    sec.innerHTML = '<div class="nearby-loading">관광지 데이터를 불러오는 중입니다.</div>';
+    sec.innerHTML = '<div class="nearby-loading">관광지 정보를 불러오는 중이에요.</div>';
     return;
   }
 
@@ -573,7 +573,7 @@ function renderHomeTourism() {
   const restaurants = (typeof CONVENIENCE !== 'undefined' && CONVENIENCE.restaurants) ? CONVENIENCE.restaurants.slice(0, 4) : [];
   const parkings    = (typeof parkingData  !== 'undefined' && parkingData.length)      ? parkingData.slice(0, 1) : [];
 
-  const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>`;
+  const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>`;
 
   const festivalBig = festivals.length
     ? `<div onclick="go('tourism');showFestivalDetail(${festivals[0].id})"
@@ -675,7 +675,7 @@ function renderHomeLiving() {
           </div>
         </div>`;
       }).join('')
-    : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+    : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>';
 
   const parkingItems = parkings.length
     ? parkings.slice(0, 3).map(p => {
@@ -694,7 +694,7 @@ function renderHomeLiving() {
           </div>
         </div>`;
       }).join('')
-    : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+    : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>';
 
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 var(--px)">
@@ -962,7 +962,7 @@ function renderRecentSection() {
       '<div class="recent-empty">' +
         '<div class="recent-empty-icon">🕘</div>' +
         '<div class="recent-empty-text">지도에서 관광지나 주차장을 눌러 보세요</div>' +
-        '<div class="recent-empty-sub">최근 본 곳이 여기에 모입니다</div>' +
+        '<div class="recent-empty-sub">최근 본 곳이 여기에 모여요</div>' +
       '</div>';
     return;
   }

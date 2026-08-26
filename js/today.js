@@ -238,9 +238,9 @@ function _renderSettings() {
       '다시 계산하느라 수십 초가 걸릴 수 있어요. 위치가 이상할 때만 비우세요.</div>' +
 
     '<div class="td-sect">위치</div>' +
-    '<div class="td-note">‘내 주변 추천’과 ‘내 위치’ 버튼은 브라우저 위치 권한을 씁니다. ' +
+    '<div class="td-note">‘내 주변 추천’과 ‘내 위치’ 버튼은 브라우저 위치 권한을 써요. ' +
       '거부했다면 주소창의 자물쇠 아이콘에서 다시 허용할 수 있어요. ' +
-      '위치는 기기 안에서만 쓰고 서버로 보내지 않습니다.</div>' +
+      '위치는 기기 안에서만 쓰고 서버로 보내지 않아요.</div>' +
 
     '<div class="td-foot">' +
       '<button class="td-btn" onclick="closeSettings();shareApp()">🔗 앱 링크 공유</button>' +
@@ -248,7 +248,7 @@ function _renderSettings() {
 }
 
 function clearGeoCache() {
-  if (!confirm('주소 변환 캐시를 비울까요?\n다음에 지도를 열 때 다시 계산합니다.')) return;
+  if (!confirm('주소 변환 캐시를 비울까요?\n다음에 지도를 열 때 다시 계산해요.')) return;
   try {
     var del = [];
     for (var i = 0; i < localStorage.length; i++) {

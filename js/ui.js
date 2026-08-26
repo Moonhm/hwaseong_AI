@@ -116,7 +116,7 @@ function _loadLcData(callback) {
   _lcLoading = true;
   /* 4.2MB / 27,374건이라 저사양 기기에서 파싱 중 1초 가까이 메인스레드가 멈춘다.
    * 최소한 무반응 구간임을 알린다. */
-  if (typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중입니다...');
+  if (typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중이에요...');
   fetch('js/localcurrency-static.json?v=20260825').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     var sc = document.getElementById('stat-currency');

@@ -308,7 +308,7 @@ function pkHoverOut(id) {
 function feeSection(p) {
   if (p.free) {
     return '<div style="background:#F0FDF4;border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;color:#166534">'
-      + '💚 <strong>무료 주차장</strong>입니다.</div>';
+      + '💚 <strong>무료 주차장</strong>이에요.</div>';
   }
   if (!p.feeFreePeriod && !p.feeSteps.length) {
     return '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">요금 정보 없음</div>';

@@ -186,16 +186,29 @@
       opacity: 0; pointer-events: none; transition: opacity 0.22s; z-index: 300;
     }
     #tide-dim.show { opacity: 1; pointer-events: auto; }
+    /* ⚠ translate(-50%,100%) 만으로는 '위로 뻗는' box-shadow 가 화면에 남는다.
+     * 패널은 bottom:0 이라 100% 내리면 윗변이 화면 맨 아래에 걸치는데,
+     * 그림자는 거기서 위로 34px(6+28) 번져 하단 내비 자리에 어두운 띠가 생긴다.
+     * (2026-08-26 사용자 지적 "탭 선택하는거 밑에 무슨 그늘이 생겼는데")
+     * 기존 .place-slide 는 translateY(calc(100% + 200px)) 로 그림자까지 밀어내는데,
+     * 그 방식은 그림자 크기가 바뀌면 다시 어긋난다. visibility 로 아예 끈다 —
+     * 닫힌 패널이 접근성 트리에서도 빠지는 이점이 함께 온다.
+     * transition 의 visibility 0s linear 0.26s 는 '닫힘 애니메이션이 끝난 뒤에'
+     * 숨기라는 뜻이다. 이게 없으면 내려가는 모습 없이 즉시 사라진다. */
     #tide-panel {
       position: fixed; left: 50%; bottom: 0;
       width: 100%; max-width: 480px; transform: translate(-50%, 100%);
       background: var(--white); z-index: 310;
       border-radius: 20px 20px 0 0;
       max-height: 86vh; display: flex; flex-direction: column;
-      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+      visibility: hidden;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.26s;
       box-shadow: 0 -6px 28px rgba(0,0,0,0.18);
     }
-    #tide-panel.open { transform: translate(-50%, 0); }
+    #tide-panel.open {
+      transform: translate(-50%, 0); visibility: visible;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s;
+    }
     .tide-head {
       display: flex; align-items: flex-start; justify-content: space-between;
       padding: 18px var(--px) 12px; border-bottom: 1px solid var(--border);
@@ -304,16 +317,21 @@
       opacity: 0; pointer-events: none; transition: opacity 0.22s; z-index: 300;
     }
     #today-dim.show { opacity: 1; pointer-events: auto; }
+    /* 위 #tide-panel 과 같은 이유로 visibility 를 쓴다 — 그 주석 참고 */
     #today-panel, #settings-panel {
       position: fixed; left: 50%; bottom: 0;
       width: 100%; max-width: 480px; transform: translate(-50%, 100%);
       background: var(--white); z-index: 310;
       border-radius: 20px 20px 0 0;
       max-height: 86vh; display: flex; flex-direction: column;
-      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+      visibility: hidden;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.26s;
       box-shadow: 0 -6px 28px rgba(0,0,0,0.18);
     }
-    #today-panel.open, #settings-panel.open { transform: translate(-50%, 0); }
+    #today-panel.open, #settings-panel.open {
+      transform: translate(-50%, 0); visibility: visible;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s;
+    }
     #today-body, #settings-body {
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       padding-bottom: calc(18px + env(safe-area-inset-bottom));

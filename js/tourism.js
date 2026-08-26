@@ -151,7 +151,7 @@ function toggleJebuList() {
 function renderCamping() {
   var el = document.getElementById('tourism-camp');
   if (!el || typeof CONVENIENCE === 'undefined') return;
-  if (!CONVENIENCE.camping) { el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
+  if (!CONVENIENCE.camping) { el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>'; return; }
   el.innerHTML = '<div style="padding:16px var(--px) 8px;border-bottom:1px solid var(--border)">'
     + '<div class="section-title">캠핑장</div>'
     + '<div style="font-size:12px;color:var(--text-muted);margin-top:2px">화성시 등록 캠핑장 ' + CONVENIENCE.camping.length + '곳</div>'
@@ -179,7 +179,7 @@ function renderTempleStay() {
   var el = document.getElementById('tourism-temple');
   if (!el || typeof CONVENIENCE === 'undefined') return;
   var t = CONVENIENCE.templeStay;
-  if (!t) { el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
+  if (!t) { el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>'; return; }
   el.innerHTML = '<div style="padding:16px var(--px) 0">'
     + '<div class="section-title">템플스테이</div>'
     + '</div>'
@@ -237,7 +237,7 @@ function renderTourismList(theme, expanded) {
       items = items.filter(p => (p.tags || []).some(t => tags.includes(t)));
     }
   }
-  if (!items.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>'; return; }
+  if (!items.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>'; return; }
 
   const PREVIEW = 5;
   const collapsible = theme === 'all' && items.length > PREVIEW;

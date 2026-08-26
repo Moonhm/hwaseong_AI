@@ -21,7 +21,7 @@ function renderLivingCatList(cat) {
   var titleEl = document.getElementById('living-list-title');
   var countEl = document.getElementById('living-list-count');
   if (!list) return;
-  var empty = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">데이터 준비 중입니다</div>';
+  var empty = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>';
 
   var items;
   if (cat === 'restaurant') {
@@ -205,7 +205,7 @@ function renderNewsSection() {
   items.sort(function (a, b) { return a.days - b.days; });
 
   if (!items.length) {
-    el.innerHTML = '<div class="news-empty">다가오는 행사가 없습니다</div>';
+    el.innerHTML = '<div class="news-empty">다가오는 행사가 없어요</div>';
     return;
   }
 
