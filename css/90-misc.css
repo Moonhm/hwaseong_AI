@@ -254,10 +254,18 @@
     /* 주소 복사처럼 '텍스트를 누르는' 자리는 투명도로만 반응한다. */
     .sl-addr:active     { opacity: 0.55; }
 
-    .lc-fchip, .chip-arrow, .lc-arr, .fsc-arr, .cal-arrow,
-    .menu-item, .section-link, .back-btn {
-      transition: transform 0.12s ease;
-    }
+    /* ⚠ 여기서 transition 을 통째로 쓰면 원래 애니메이션이 죽는다 (2026-08-26 감사).
+     * 이 파일이 마지막에 로드되므로 같은 명시도면 무조건 이긴다. 그 탓에
+     * 좌우 스크롤 화살표 3종의 opacity 0.18s 페이드가 사라져 있었다 —
+     * .visible 토글로 나타나고 사라지는 버튼인데 페이드 없이 깜빡였다.
+     * (실측: .chip-arrow·.fsc-arr 의 computed transition 이 'transform 0.12s' 뿐이었다)
+     * 덮어쓰지 말고 transform 만 '덧붙인다'. */
+    .section-link, .back-btn        { transition: transform 0.12s ease; }
+    .chip-arrow, .lc-arr, .fsc-arr  { transition: opacity 0.18s, transform 0.12s ease; }
+    .cal-arrow                      { transition: background 0.12s, transform 0.12s ease; }
+    .menu-item                      { transition: background 0.1s, transform 0.12s ease; }
+    /* .lc-fchip 은 뺐다 — css/20-map.css 의 `all 0.15s` 가 transform 까지 이미 덮는다.
+     * 여기 목록에 넣으면 그 `all` 이 죽어 .active 색 전환이 사라진다. */
     .place-item { transition: background-color 0.12s ease; }
     .sl-addr    { transition: opacity 0.12s ease; }
 

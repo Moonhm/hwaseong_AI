@@ -286,8 +286,18 @@ function renderTourismList(theme, expanded) {
   }
   if (!items.length) { list.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>'; return; }
 
-  const PREVIEW = 5;
-  const collapsible = theme === 'all' && items.length > PREVIEW;
+  /* ⚠ collapsible 조건에서 theme === 'all' 을 뺐다 (2026-08-26 감사).
+   * 그 조건 때문에 '관광지'·'문화재'·'축제' 서브탭(*-only 경로)에는 더보기가
+   * 아예 안 붙어 전량이 그려졌다. 실측: 관광지 151건 = DOM 2,523노드 · img 118개.
+   * 게다가 theme==='all' 은 현재 UI 에서 도달하지 않는 경로라('인기' 서브탭은
+   * 목록 자체를 숨긴다) 미리보기 기구 전체가 죽어 있었다.
+   *
+   * PREVIEW 를 20 으로 잡은 이유: 소식·생활 목록은 5 지만 저기는 '확인' 용이고
+   * 이 목록은 '둘러보기' 용이다. 5 면 첫 화면(약 8개 노출)에서 바로 잘려 탐색이
+   * 끊기고, 더보기를 누르면 어차피 2,523노드로 돌아가 순손해다.
+   * 20 이면 2.5화면쯤 훑고 나서 더보기를 만나고, 노드도 326개로 87% 준다. */
+  const PREVIEW = 20;
+  const collapsible = items.length > PREVIEW;
   const visible = collapsible && !expanded ? items.slice(0, PREVIEW) : items;
 
   function itemHtml(p, i) {
