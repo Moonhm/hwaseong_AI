@@ -110,34 +110,105 @@ function showViewportMarkers(bounds) {
            p.lng >= sw.getLng() - lngPad && p.lng <= ne.getLng() + lngPad;
   });
 
-  /* 상한 초과 시 화면 중심에서 가까운 순으로 잘라낸다.
-   * 배열 순서(가나다순)로 자르면 화면 구석 가맹점만 남을 수 있다. */
-  if (hits.length > LC_MAX_PINS) {
+  /* ⚠ 같은 좌표에 여러 가맹점이 쌓여 있다 — 한 건물에 입점한 상가들이다.
+   * 전체 27,374건의 고유 좌표는 10,755개뿐이고, 한 점에 최대 241건이 겹친다
+   * (동탄대로시범길 134 한 건물).
+   *
+   * 예전에는 '가맹점' 단위로 300개를 잘랐다. 그러면 동탄 중심에서
+   * 핀을 300개 그려도 화면에는 겹친 탓에 28개 점만 보이고, 후보 2,567건 중
+   * 2,267건이 잘려 나갔다(2026-08-26 실측). 상한을 겹친 핀이 잡아먹은 것이다.
+   *
+   * 그래서 '좌표' 단위로 묶은 뒤 좌표 기준으로 자른다. 같은 300 상한으로도
+   * 화면에 보이는 점이 28 → 300개가 되고, 담기는 가맹점 수는 훨씬 많아진다.
+   * 겹친 자리는 마커 하나로 두고 누르면 그 건물의 목록을 보여 준다. */
+  var buckets = {};
+  hits.forEach(function (p) {
+    var k = p.lat + ',' + p.lng;
+    (buckets[k] || (buckets[k] = { lat: p.lat, lng: p.lng, items: [] })).items.push(p);
+  });
+  var spots = Object.keys(buckets).map(function (k) { return buckets[k]; });
+
+  if (spots.length > LC_MAX_PINS) {
     var ctr = lcMap.getCenter(), cy = ctr.getLat(), cx = ctr.getLng();
-    hits.sort(function (a, b) {
+    spots.sort(function (a, b) {
       return ((a.lat - cy) * (a.lat - cy) + (a.lng - cx) * (a.lng - cx)) -
              ((b.lat - cy) * (b.lat - cy) + (b.lng - cx) * (b.lng - cx));
     });
+    spots = spots.slice(0, LC_MAX_PINS);
+    var shown = spots.reduce(function (n, s) { return n + s.items.length; }, 0);
     if (_lcCapNotifiedLevel !== lcMap.getLevel() && typeof showToast === 'function') {
       _lcCapNotifiedLevel = lcMap.getLevel();
       showToast('가맹점 ' + hits.length.toLocaleString() + '곳 중 가까운 ' +
-                LC_MAX_PINS + '곳만 표시 — 더 확대해 주세요');
+                shown.toLocaleString() + '곳 표시 — 더 확대하면 전부 보여요');
     }
-    hits = hits.slice(0, LC_MAX_PINS);
   }
 
-  hits.forEach(function (p) {
+  spots.forEach(function (sp) {
     var marker = new kakao.maps.Marker({
-      position: new kakao.maps.LatLng(p.lat, p.lng),
+      position: new kakao.maps.LatLng(sp.lat, sp.lng),
       map: lcMap,
     });
-    marker._clickHandler = (function (pp) {
-      return function () { showLcSlide(pp); };
-    })(p);
+    marker._clickHandler = (function (bucket) {
+      return function () {
+        if (bucket.items.length === 1) showLcSlide(bucket.items[0]);
+        else showLcSpotSlide(bucket);
+      };
+    })(sp);
     kakao.maps.event.addListener(marker, 'click', marker._clickHandler);
     lcDisplayItems.push(marker);
   });
+
+  /* 겹친 자리에 몇 곳이 있는지 숫자로 알린다. 마커는 네이티브라 배지를 못 붙이므로
+   * 작은 오버레이를 얹는다. 2곳 이상인 자리만 — 전부 붙이면 화면이 숫자로 덮인다. */
+  spots.forEach(function (sp) {
+    if (sp.items.length < 2) return;
+    var el = document.createElement('div');
+    el.className = 'lc-count-badge';
+    el.textContent = sp.items.length > 99 ? '99+' : sp.items.length;
+    var ov = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(sp.lat, sp.lng),
+      content: el, yAnchor: 2.2, xAnchor: -0.15, zIndex: 5, map: lcMap,
+    });
+    lcDisplayItems.push(ov);
+  });
 }
+
+/* 한 좌표에 여러 가맹점이 있을 때 — 그 건물의 목록을 보여 준다.
+ * 예전에는 마지막 하나만 클릭됐고 나머지는 닿을 방법이 없었다. */
+function showLcSpotSlide(bucket) {
+  if (typeof clearSelectedPin === 'function') clearSelectedPin();
+  _lcSelect(bucket.items[0]);
+  if (typeof registerSelectedPin === 'function') registerSelectedPin(_lcSelClear);
+  if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(bucket.lat, bucket.lng, 50, 300);
+
+  var addr = (bucket.items[0].a || '').replace('경기도 화성시 ', '');
+  var inner = document.getElementById('slide-inner');
+  if (!inner) return;
+  inner.innerHTML =
+    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">' +
+      '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;' +
+      'padding:3px 10px;border-radius:20px">지역화폐 가맹점 ' + bucket.items.length + '곳</span>' +
+    '</div>' +
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px">' + addr + '</div>' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">이 건물에 있는 가맹점이에요</div>' +
+    '<div class="lc-spot-list">' +
+      bucket.items.map(function (p, i) {
+        return '<div class="lc-spot-item" onclick="showLcSlide(_lcSpotPick(' + i + '))">' +
+                 '<div class="lc-spot-name">' + (p.n || '') + '</div>' +
+                 '<div class="lc-spot-cat">' + (p.c || '') + '</div>' +
+               '</div>';
+      }).join('') +
+    '</div>';
+  _lcSpotBucket = bucket;
+
+  var slide = document.getElementById('place-slide');
+  var dim   = document.getElementById('map-dim');
+  if (slide) slide.classList.add('open');
+  if (dim) dim.classList.add('show');
+}
+/* 목록에서 하나를 고를 때 쓰는 임시 참조 — onclick 문자열에 객체를 못 넣는다 */
+var _lcSpotBucket = null;
+function _lcSpotPick(i) { return (_lcSpotBucket && _lcSpotBucket.items[i]) || null; }
 
 /* ── 격자 기반 클러스터 원 표시 ── */
 function showClusters(bounds, level) {
