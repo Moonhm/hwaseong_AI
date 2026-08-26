@@ -377,6 +377,8 @@ git pull
 | README 수정 금지 | README는 서비스 소개 전용. 개발 메모는 반드시 이 파일(WORKFLOW.md)에 |
 | 수정 전 허락 | 검수·분석 결과는 먼저 보고 → 사용자 허락 후 수정 진행 |
 | git pull/push | 작업 전 pull, 작업 후 push. 사용자가 "깃 풀 푸쉬"라고 하면 pull → push 순서 |
+| **`go()` 뒤 `setTimeout` 금지** | 화면을 바꾸는 코드는 `go()` **바로 뒤에서 동기로** 부를 것. `go()` 는 뷰 교체와 목록 렌더까지 전부 동기로 끝내므로(`js/nav.js`), 지연을 두면 그 사이 '엉뚱한 화면'이 완성돼 페인트된다. 2026-08-26 에 이 패턴 6곳을 걷어냈다(실측 최대 9프레임 노출). 예외는 **스크롤**뿐 — 전환 애니메이션(0.26s) 뒤에 움직이는 편이 낫다 |
+| **추천 탭 네 뷰는 배타** | `#view-tourism-list` · `#view-calendar` · `#view-festival-detail` · `#view-datalab` 중 하나만 보여야 한다. 새 뷰를 켜는 함수는 **나머지 셋을 전부 `display:none`** 으로 내릴 것. `#view-datalab` 은 `_dlView` 도 함께 `null` 로 내린다 — display 만 내리면 `dlLoad` 의 늦은 콜백이 숨긴 뷰를 다시 그린다 |
 
 ### 핵심 현황 (최신 기준)
 
@@ -389,7 +391,7 @@ git pull
 | 주차장 | 131개 |
 | 제부도 숙박 | 115개 (lat/lng 하드코딩, convenience.js) |
 | 편의정보 | 모범음식점 94(88좌표이식), 관광식당 35, 호텔 10, 캠핑 17, 템플스테이 1, **관광편의시설 10(신규)**, **영화상영관 10(신규)** |
-| 음식점 데이터 | 3754건 — `js/restaurants-static.json` (665KB, `{n,c,a,t,x,y}`) — **지도 모듈 구현 대기** |
+| 음식점 데이터 | 3754건 — `js/restaurants-static.json` (665KB, `{n,c,a,t,x,y}`) — **현재 어떤 코드도 읽지 않는다.** `js/restaurants.js` 가 지워지고 지도 칩 `data-cat="restaurant"` 도 없다. 햄버거 메뉴 '음식점 전체' 는 2026-08-26 에 '준비 중' 토스트로 바꿨다 (되살리려면 로더 + 지도 칩 두 개가 필요) |
 
 ### Kakao API
 
