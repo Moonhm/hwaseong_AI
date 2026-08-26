@@ -186,7 +186,7 @@ function renderNearbyResult(myLat, myLng, gen) {
              data.go.kr 에서 '한국환경공단_에어코리아_대기오염정보' 활용신청(무료)
              발급받은 키를 AIRKOREA_KEY에 입력하면 동탄 측정소 PM2.5 표시
 ══════════════════════════════════════════════════ */
-var AIRKOREA_KEY = '';  /* TODO: data.go.kr 무료 키 입력 */
+var AIRKOREA_KEY = 'zH1Ajghx0euybdD9BbPBYpBTNTpGscQcGPFtoHSWV9ZmP3KnpVhJxfVO01seBplRXgMefHYZvm/VxSeNfoRtNQ==';
 
 var _hwLat = 37.199, _hwLon = 126.831, _hwLocName = '화성시';
 
@@ -247,10 +247,11 @@ function _renderWeather(d) {
     if (times[i].slice(0, 10) === today &&
         parseInt(times[i].slice(11, 13), 10) === curH) { idx = i; break; }
   }
+  var offsets = [1, 2, 3, 6];
   var html = '';
   for (var s = 0; s < 4; s++) {
-    var si    = idx + s;
-    var label = s === 0 ? '지금' : s + '시간 후';
+    var si    = idx + offsets[s];
+    var label = offsets[s] + '시간 후';
     var icon  = (_WMO[hWmos[si]] || '🌡️,—').split(',')[0];
     var temp  = Math.round(hTemps[si]) + '°';
     html += '<div class="hwb-hour-slot">' +
