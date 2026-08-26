@@ -292,11 +292,11 @@ function renderTourismList(theme, expanded) {
    * 게다가 theme==='all' 은 현재 UI 에서 도달하지 않는 경로라('인기' 서브탭은
    * 목록 자체를 숨긴다) 미리보기 기구 전체가 죽어 있었다.
    *
-   * PREVIEW 를 20 으로 잡은 이유: 소식·생활 목록은 5 지만 저기는 '확인' 용이고
-   * 이 목록은 '둘러보기' 용이다. 5 면 첫 화면(약 8개 노출)에서 바로 잘려 탐색이
-   * 끊기고, 더보기를 누르면 어차피 2,523노드로 돌아가 순손해다.
-   * 20 이면 2.5화면쯤 훑고 나서 더보기를 만나고, 노드도 326개로 87% 준다. */
-  const PREVIEW = 20;
+   * PREVIEW = 10 (2026-08-26 사용자 지시). 처음에 20 으로 뒀다가 10 으로 낮췄다.
+   * 소식·생활 목록의 5 보다는 많다 — 저기는 '확인' 용이고 이 목록은 '둘러보기' 용이라,
+   * 첫 화면(약 8개 노출)에서 바로 잘리면 탐색이 끊긴다. 10 이면 한 화면을 살짝 넘겨
+   * 스크롤이 시작되는 지점에서 더보기를 만난다. */
+  const PREVIEW = 10;
   const collapsible = items.length > PREVIEW;
   const visible = collapsible && !expanded ? items.slice(0, PREVIEW) : items;
 

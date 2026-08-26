@@ -96,6 +96,71 @@ function updateLcDisplay() {
   }
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   좌표 격자 인덱스 (2026-08-26, 배포 Claude 발굴 → 개발 Claude 구현)
+
+   왜: 아래 두 함수가 팬·줌으로 idle 이 뜰 때마다 lcData 27,374건을 **전수로**
+   훑고 있었다. 지도를 끄는 동안 idle 은 계속 뜬다.
+   실측(이 저장소 데이터·같은 뷰포트, node): 전수 11.5ms → 격자 3.0ms (3.8배).
+   모바일은 3~6배 느리므로 34~69ms → 9~18ms 로 본다.
+
+   ⚠ 첫 화면에는 영향이 0 이다. 지역화폐 칩을 켠 사용자만 겪는다.
+   ⚠ 격자 구축은 1회 34ms 다. 그래서 부팅이 아니라 **첫 뷰포트 렌더 때** 만든다 —
+     칩을 안 켜는 사용자는 이 비용을 아예 치르지 않는다.
+
+   셀 0.01°(약 1.1km)는 셀 591개 · 셀당 평균 46건이 되도록 고른 값이다.
+   너무 잘게 쪼개면 셀 순회가 늘고, 너무 크면 셀 안에서 다시 거르는 비용이 는다.
+   ========================================================================== */
+var LC_CELL   = 0.01;
+var _lcGrid   = null;
+var _lcGridN  = -1;      /* 어느 건수로 만든 인덱스인지 — lcData 가 바뀌면 다시 만든다 */
+
+function _lcBuildGrid() {
+  _lcGrid = {};
+  _lcGridN = lcData.length;
+  for (var i = 0; i < lcData.length; i++) {
+    var p = lcData[i];
+    if (!p.lat || !p.lng) continue;
+    var k = Math.floor(p.lat / LC_CELL) + ',' + Math.floor(p.lng / LC_CELL);
+    (_lcGrid[k] || (_lcGrid[k] = [])).push(p);
+  }
+}
+
+/* 사각 범위 안의 후보를 돌려준다. 카테고리 필터도 여기서 함께 건다.
+ * ⚠ 범위가 아주 넓으면(도시 전체 등) 방문할 셀이 실제 셀 수보다 많아진다.
+ *   그때는 셀을 순회하는 편이 낫다 — 없는 셀을 헛되이 조회하지 않는다. */
+function _lcQuery(minLat, maxLat, minLng, maxLng, cats) {
+  if (!_lcGrid || _lcGridN !== lcData.length) _lcBuildGrid();
+
+  var out = [];
+  var push = function (p) {
+    if (p.lat < minLat || p.lat > maxLat || p.lng < minLng || p.lng > maxLng) return;
+    if (cats && cats.indexOf(p.c) === -1) return;
+    out.push(p);
+  };
+
+  var y0 = Math.floor(minLat / LC_CELL), y1 = Math.floor(maxLat / LC_CELL);
+  var x0 = Math.floor(minLng / LC_CELL), x1 = Math.floor(maxLng / LC_CELL);
+  var want = (y1 - y0 + 1) * (x1 - x0 + 1);
+  var keys = Object.keys(_lcGrid);
+
+  if (want > keys.length) {
+    for (var n = 0; n < keys.length; n++) {
+      var cell = _lcGrid[keys[n]];
+      for (var m = 0; m < cell.length; m++) push(cell[m]);
+    }
+    return out;
+  }
+  for (var y = y0; y <= y1; y++) {
+    for (var x = x0; x <= x1; x++) {
+      var a = _lcGrid[y + ',' + x];
+      if (!a) continue;
+      for (var j = 0; j < a.length; j++) push(a[j]);
+    }
+  }
+  return out;
+}
+
 /* ── 뷰포트 안 가맹점만 개별 마커로 표시 ── */
 function showViewportMarkers(bounds) {
   var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
@@ -103,12 +168,9 @@ function showViewportMarkers(bounds) {
   var lngPad = (ne.getLng() - sw.getLng()) * 0.1;
   var activeCats = lcFilter !== 'all' ? (LC_CAT_MAP[lcFilter] || []) : null;
 
-  var hits = lcData.filter(function (p) {
-    if (!p.lat || !p.lng) return false;
-    if (activeCats && activeCats.indexOf(p.c) === -1) return false;
-    return p.lat >= sw.getLat() - latPad && p.lat <= ne.getLat() + latPad &&
-           p.lng >= sw.getLng() - lngPad && p.lng <= ne.getLng() + lngPad;
-  });
+  /* 예전에는 lcData 27,374건을 idle 마다 filter 로 전수 훑었다 (2026-08-26 감사). */
+  var hits = _lcQuery(sw.getLat() - latPad, ne.getLat() + latPad,
+                      sw.getLng() - lngPad, ne.getLng() + lngPad, activeCats);
 
   /* ⚠ 같은 좌표에 여러 가맹점이 쌓여 있다 — 한 건물에 입점한 상가들이다.
    * 전체 27,374건의 고유 좌표는 10,755개뿐이고, 한 점에 최대 241건이 겹친다
@@ -222,11 +284,9 @@ function showClusters(bounds, level) {
   /* 뷰포트 내 데이터를 격자 셀로 묶기 */
   var cells = {};
   var _activeCats = lcFilter !== 'all' ? (LC_CAT_MAP[lcFilter] || []) : null;
-  lcData.forEach(function (p) {
-    if (!p.lat || !p.lng) return;
-    if (_activeCats && _activeCats.indexOf(p.c) === -1) return;
-    if (p.lat < minLat || p.lat > maxLat ||
-        p.lng < minLng || p.lng > maxLng) return;
+  /* 여기도 전수 스캔이었다. 격자로 후보를 좁힌 뒤 레벨별 클러스터 셀로 다시 묶는다 —
+   * LC_GRID[level] 은 화면에 그릴 뭉치 크기라 인덱스 셀(LC_CELL)과 별개다. */
+  _lcQuery(minLat, maxLat, minLng, maxLng, _activeCats).forEach(function (p) {
     var key = Math.floor(p.lat / grid) + ',' + Math.floor(p.lng / grid);
     if (!cells[key]) cells[key] = { sumLat: 0, sumLng: 0, count: 0 };
     cells[key].sumLat += p.lat;
