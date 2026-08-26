@@ -171,10 +171,17 @@ function go(page) {
 
 /* ── 사이드 메뉴 ── */
 function openMenu() {
+  var drawer = document.getElementById('menu-drawer');
   document.getElementById('menu-dim').classList.add('open');
-  document.getElementById('menu-drawer').classList.add('open');
+  drawer.classList.add('open');
   if (typeof renderMenuFavs   === 'function') renderMenuFavs();
   if (typeof renderMenuRecent === 'function') renderMenuRecent();   /* 2026-08-26 */
+  /* 항상 맨 위에서 시작한다 (2026-08-26 사용자 지시).
+   * #menu-drawer 가 overflow-y:auto 인 스크롤 주체라 scrollTop 이 그대로 남아,
+   * 맨 아래에서 닫으면 다시 열어도 맨 아래였다.
+   * ⚠ 위 두 render 뒤에 둬야 한다 — 그것들이 항목을 채우며 높이를 바꾸므로
+   *   먼저 0 으로 만들면 다시 밀린다. */
+  drawer.scrollTop = 0;
 }
 function closeMenu() {
   document.getElementById('menu-dim').classList.remove('open');
