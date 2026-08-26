@@ -374,6 +374,11 @@ var _CAT_STYLE = {
 };
 
 function homeSearchInput(val) {
+  /* 직접 타이핑해도 칩 상태가 따라오게 한다 — 칩과 입력창이 어긋나면
+   * 어느 쪽이 진짜인지 알 수 없다. (2026-08-26) */
+  if (typeof _syncHomeGuChips === 'function' && typeof splitGuQuery === 'function') {
+    _syncHomeGuChips(splitGuQuery(val).gu);
+  }
   clearTimeout(_srTimer);
   var clearBtn = document.getElementById('home-search-clear');
   if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
@@ -550,6 +555,34 @@ function _srClick(idx) {
   }
 }
 
+/* 홈 검색창 아래 지역 칩 (2026-08-26).
+ * 검색창에 구 이름을 넣고 기존 검색을 그대로 돌린다 — doHomeSearch 가 이미
+ * 구를 알아듣는다(js/district.js splitGuQuery). 같은 칩을 다시 누르면 해제한다. */
+function pickHomeGu(gu) {
+  var input = document.getElementById('home-search-input');
+  if (!input) return;
+  var cur = (typeof splitGuQuery === 'function') ? splitGuQuery(input.value).gu : null;
+  if (cur === gu) {                      /* 재클릭 = 해제 */
+    var rest = splitGuQuery(input.value).rest;
+    input.value = rest;
+    _syncHomeGuChips(null);
+    if (rest) doHomeSearch(rest); else closeHomeSearch();
+    return;
+  }
+  /* 이미 친 검색어가 있으면 유지하고 구만 갈아 끼운다 — '카페' 를 친 뒤
+   * 구를 고르면 '동탄구 카페' 가 되는 게 자연스럽다. */
+  var rest2 = (typeof splitGuQuery === 'function') ? splitGuQuery(input.value).rest : input.value.trim();
+  input.value = rest2 ? (gu + ' ' + rest2) : gu;
+  _syncHomeGuChips(gu);
+  doHomeSearch(input.value);
+}
+
+function _syncHomeGuChips(gu) {
+  document.querySelectorAll('.home-gu-chip').forEach(function (c) {
+    c.classList.toggle('active', c.dataset.gu === gu);
+  });
+}
+
 function closeHomeSearch() {
   var el  = document.getElementById('home-search-results');
   var bar = document.getElementById('home-search-bar');
@@ -558,6 +591,7 @@ function closeHomeSearch() {
 }
 
 function clearHomeSearch() {
+  if (typeof _syncHomeGuChips === 'function') _syncHomeGuChips(null);
   var inp = document.getElementById('home-search-input');
   var clr = document.getElementById('home-search-clear');
   if (inp) inp.value = '';
