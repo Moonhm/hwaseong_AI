@@ -26,7 +26,10 @@ ROOT = os.environ.get("HW_ROOT") or os.path.dirname(os.path.dirname(os.path.absp
 #   * 2026-08-25 실측값
 # ─────────────────────────────────────────────────────────────────────────────
 FLOOR = {
-    "PLACES.tourist":               159,   # js/data.js  category:"tourist"
+    # 2026-08-26: 159 → 151. 영화관 8곳을 CONVENIENCE.cinemas 로 옮겼다(사용자 지시,
+    # "영화관은 관광지에 있으면 안 돼"). 데이터가 사라진 게 아니라 자리를 옮긴 것이라
+    # 하한을 내린다 — 옮긴 쪽은 아래 CONVENIENCE.cinemas 13 이 지킨다.
+    "PLACES.tourist":               151,   # js/data.js  category:"tourist"
     "PLACES.festival":               50,   # js/data.js  category:"festival"  (2026-08-26 id:276·277 추가)
     "PLACES.heritage":               42,   # js/data.js  category:"heritage" (2026-08-26 지정문화재)
     "CONVENIENCE.restaurants":       94,   # js/convenience.js:5    모범음식점
@@ -45,7 +48,7 @@ FLOOR = {
     # 변조 실험으로 확인한 사각지대였다 — 데이터가 비어도 검사는 초록불이었다.
     "restaurants-static.json":     3754,   # js/restaurants-static.json rows (지도 음식점 칩)
     "CONVENIENCE.touristFacilities": 10,   # 지도 🏘️ 관광편의시설 칩
-    "CONVENIENCE.cinemas":           10,   # 지도 🎬 영화상영관 칩
+    "CONVENIENCE.cinemas":           13,   # 지도 🎬 영화상영관 칩 (2026-08-26: 10 → 공식 CSV 전건 13)
 }
 # templeStay(용주사) 는 배열이 아니라 객체 1건이라 건수가 아니라 '존재 여부'로 본다 (check_counts 참조)
 
@@ -373,11 +376,11 @@ def check_printed(got):
 #   tools/*.py 의 정규식을 고치면 이 블록도 반드시 함께 고쳐라.
 TOOL_RE = [
     ("tools/regeocode.py:_PLACE_RE",   "js/data.js",
-     r'\{[^{}]*?id\s*:\s*(\d+)[^{}]*?category\s*:\s*"(tourist|festival)"[^{}]*?\}', 209, None),
-    # 209 = tourist(159) + festival(50). heritage 42건 추가 이후 기준선 갱신 (2026-08-26).
+     r'\{[^{}]*?id\s*:\s*(\d+)[^{}]*?category\s*:\s*"(tourist|festival)"[^{}]*?\}', 201, None),
+    # 201 = tourist(151) + festival(50). 영화관 8곳을 convenience.cinemas 로 옮기며 갱신 (2026-08-26).
     ("tools/fix_all_coords.py:BLOCK_RE", "js/data.js",
-     r'(\{ id:(\d+), name:"([^"]+)", category:"(tourist|festival|heritage)", lat:([\d.]+), lng:([\d.]+), address:"([^"]*?)")', 251, None),
-    # 251 = tourist(159) + festival(50) + heritage(42) = PLACES 전체. heritage 추가 이후 기준선 갱신 (2026-08-26).
+     r'(\{ id:(\d+), name:"([^"]+)", category:"(tourist|festival|heritage)", lat:([\d.]+), lng:([\d.]+), address:"([^"]*?)")', 243, None),
+    # 243 = tourist(151) + festival(50) + heritage(42) = PLACES 전체. 영화관 이관 이후 갱신 (2026-08-26).
     ("tools/geocode_jebu.py:ITEM_RE",  "js/convenience.js",
      r'\{name:"([^"]+)",\s*addr:"([^"]+)"(?:,\s*tel:"[^"]*")?\}', None, "jebu"),
 ]
