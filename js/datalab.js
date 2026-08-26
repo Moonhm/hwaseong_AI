@@ -266,7 +266,10 @@ function renderDlCityTour() {
     if (!cs || !cs.length) { el2.innerHTML = _dlEmpty('코스 정보를 불러오지 못했어요'); return; }
     el2.innerHTML =
       '<div class="dl-tour-row">' +
-      cs.slice(0, 6).map(function (c, i) {
+      /* 2026-08-26 사용자 지시로 6개 제한을 뺐다. '투어' 가 전용 서브탭이 되면서
+       * 이 캐러셀이 그 탭의 본문이 됐는데, 10개 중 6개만 보이고 나머지 4개는
+       * '전체 보기' 를 한 번 더 눌러야 나오는 게 말이 안 됐다. */
+      cs.map(function (c, i) {
         var col = DL_TOUR_COLORS[i % DL_TOUR_COLORS.length];
         var _hero = _dlCourseHeroSrc(c);
         return '<div class="dl-tour-card" onclick="dlShowCourse(' + c.no + ')">' +
@@ -541,8 +544,18 @@ function _dlViewTour(el) {
       (cs.length
         ? cs.map(function (c, i) {
             var col = DL_TOUR_COLORS[i % DL_TOUR_COLORS.length];
+            /* 전체 보기에도 코스 사진을 넣는다 (2026-08-26 사용자 지적 — "전체보기하면
+             * 또 사진이 안뜨네?"). 미리보기 캐러셀과 코스 상세는 사진을 쓰는데
+             * 이 목록만 번호 배지뿐이라, 같은 코스가 화면마다 다르게 보였다.
+             * 사진이 없으면 _dlCourseHeroSrc 가 '' 를 주고, 404 면 onerror 로 img 가
+             * 숨어 배지 색 배경이 그대로 보인다 — 어느 쪽이든 빈 사각형이 남지 않는다. */
+            var _hero = _dlCourseHeroSrc(c);
             return '<div class="dl-course is-link" onclick="dlShowCourse(' + c.no + ')">' +
-                     '<div class="dl-course-no" style="background:' + col + '">' + c.no + '</div>' +
+                     '<div class="dl-course-thumb" style="background:' + col + '">' +
+                       (_hero ? '<img src="' + _hero + '" alt="" loading="lazy" decoding="async" ' +
+                                'onerror="this.style.display=\'none\'">' : '') +
+                       '<span class="dl-course-no-badge">' + c.no + '</span>' +
+                     '</div>' +
                      '<div class="dl-course-main">' +
                        '<div class="dl-course-name">' + c.name + '</div>' +
                        '<div class="dl-course-theme" style="color:' + col + '">' + (c.theme || '') + '</div>' +

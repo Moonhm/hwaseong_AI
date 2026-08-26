@@ -170,6 +170,24 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 13px; font-weight: 900; color: #fff;
     }
+    /* 전체 보기 목록의 코스 썸네일 (2026-08-26). 그전에는 28px 번호 배지뿐이라
+     * 미리보기 캐러셀·코스 상세와 달리 이 화면에만 사진이 없었다.
+     * 배경은 코스 색이라 사진이 없거나 404 여도 배지가 얹힌 색 사각형으로 보인다. */
+    .dl-course-thumb {
+      position: relative; overflow: hidden; flex-shrink: 0;
+      width: 68px; height: 68px; border-radius: 12px;
+    }
+    .dl-course-thumb img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    }
+    .dl-course-no-badge {
+      position: absolute; left: 5px; top: 5px;
+      min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900; color: #fff;
+      background: rgba(0,0,0,0.42);            /* 사진 위에서도 읽히게 */
+      backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+    }
     .dl-course-main { flex: 1; min-width: 0; }
     .dl-course-name { font-size: 14.5px; font-weight: 800; color: var(--text); word-break: keep-all; }
     .dl-course-theme { font-size: 11.5px; font-weight: 700; margin-top: 3px; word-break: keep-all; }
