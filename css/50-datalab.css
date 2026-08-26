@@ -632,3 +632,21 @@
       cursor: grab;
     }
     .panel-drag-zone:active { cursor: grabbing; }
+
+    /* ── 시티투어 공식 사이트 링크 (2026-08-26) ──────────────────────────
+     * 코스 카드 아래 한 줄. 앱 안의 요약과 '진짜 예약처' 를 구분해 주려는 것이다.
+     * 터치 타깃을 44px 로 잡았다 — WORKFLOW.md §3 의 최소 36px 을 넘긴다. */
+    .dl-ext-wrap { padding: 12px var(--px) 4px; }
+    .dl-ext-link {
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+      min-height: 44px; padding: 0 14px;
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--r-md); box-shadow: var(--shadow-sm);
+      font-size: 13.5px; font-weight: 700; color: var(--text);
+      text-decoration: none; -webkit-tap-highlight-color: transparent;
+      transition: background 0.12s, transform 0.12s;
+    }
+    .dl-ext-link:hover  { background: var(--bg); }
+    .dl-ext-link:active { transform: scale(0.98); background: var(--bg); }
+    .dl-ext-mark { font-size: 11px; font-weight: 700; color: var(--text-muted); margin-left: 2px; }
+

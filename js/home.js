@@ -927,6 +927,17 @@ function renderFestivalScroll() {
   let festivals = (typeof _getFestsInMonth === 'function')
     ? _getFestsInMonth(_now.getFullYear(), _now.getMonth())
     : PLACES.filter(p => p.category === 'festival');
+  /* 이번 달이라도 이미 지난 것이 앞에 오면 첫 카드가 '종료' 다 (2026-08-26 사용자 지시).
+   * 소식 탭 '행사 전체'(js/living.js _festAllSorted)·홈 대표 카드와 같은 순서로 맞춘다. */
+  const _fsRank = { ongoing: 0, upcoming: 1, unknown: 2, ended: 3 };
+  festivals = festivals.slice().sort((a, b) => {
+    const sa = (typeof festStatus === 'function') ? festStatus(a) : 'unknown';
+    const sb = (typeof festStatus === 'function') ? festStatus(b) : 'unknown';
+    const ra = _fsRank[sa] !== undefined ? _fsRank[sa] : 2;
+    const rb = _fsRank[sb] !== undefined ? _fsRank[sb] : 2;
+    if (ra !== rb) return ra - rb;
+    return String(a.date || '').localeCompare(String(b.date || ''));
+  });
   if (!festivals.length) {
     /* 이번 달에 아무것도 없을 수 있다. 그때 '준비 중' 은 거짓말이라 사실대로 적는다. */
     el.innerHTML = '<div style="padding:8px var(--px);color:var(--text-muted);font-size:13px">이번 달에는 예정된 행사가 없어요</div>';
