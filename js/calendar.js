@@ -165,8 +165,10 @@ function renderCalEventList(festivals, labelText) {
       : 'background:#FFF7ED;color:#F59E0B';
     var badgeText  = isOngoing ? '진행중' : '예정';
     var dateStr = (p.date || '').replace(/^\d{4}-/,'').replace(/-/g,'.').replace(' ~ ',' ~ ');
+    /* 사진이 있으면 점(dot) 대신 썸네일. 없으면 기존 점 그대로다. */
+    var thumb = (typeof photoThumb === 'function') ? photoThumb(p, 38, '🎉', 'ph-sm') : '';
     return '<div class="cal-event-item" onclick="hideCalendar();showFestivalDetail(' + p.id + ')">'
-      + '<div class="cal-ev-dot"></div>'
+      + (thumb || '<div class="cal-ev-dot"></div>')
       + '<div class="cal-ev-body">'
       + '<div class="cal-ev-name">' + p.name + '</div>'
       + '<div class="cal-ev-date">📅 ' + dateStr + '</div>'

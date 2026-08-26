@@ -145,8 +145,10 @@ function _renderToday() {
         var f = it.p;
         var badge = it.approxLabel ? it.approxLabel
                   : it.days === 0 ? '오늘' : it.days === 1 ? '내일' : 'D-' + it.days;
+        /* 사진이 있으면 배지 옆에 작은 썸네일 (js/ui.js photoThumb) */
+        var th = (typeof photoThumb === 'function') ? photoThumb(f, 38, '🎉', 'ph-sm') : '';
         return '<div class="td-row" onclick="closeToday();go(\'tourism\');setTimeout(function(){showFestivalDetail(' + f.id + ')},260)">' +
-                 '<div class="td-row-icon td-row-badge">' + badge + '</div>' +
+                 '<div class="td-row-icon td-row-badge">' + badge + '</div>' + th +
                  '<div class="td-row-main">' +
                    '<div class="td-row-name">' + (f.name || '') + '</div>' +
                    '<div class="td-row-sub">' + ((f.address || '').replace('경기도 화성시 ', '')) + '</div>' +

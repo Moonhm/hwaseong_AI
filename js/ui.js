@@ -47,6 +47,33 @@ function placePhotoSrc(place) {
   return 'assets/images/places/' + encodeURIComponent((p.name || '') + '.jpg');
 }
 
+/* 사진이 인덱스에 실제로 있는가. 없는데 <img> 를 넣으면 404 를 한 번 치고
+ * onerror 로 숨기는데, 목록 수십 개면 그 요청이 전부 나간다. */
+function hasPhoto(place) {
+  return placePhotoAll(place).length > 0;
+}
+
+/* 장소 썸네일 한 조각. 사진이 없으면 빈 문자열을 돌려주므로
+ * 호출부에서 `photoThumb(p) || 기존이모지` 로 쓰면 된다.
+ *
+ * 2026-08-26: 축제 50장·문화재 43장을 받아 놓고도 화면 어디에도 안 뜨고 있었다.
+ * 목록·소식·캘린더·상세가 각자 다른 방식으로 사진을 안 그렸기 때문인데,
+ * 같은 것을 7곳에 복붙하면 다음에 또 어긋나므로 여기 한 곳에 둔다.
+ *
+ *   size  픽셀. 정사각형이다.
+ *   fb    사진이 깨졌을 때 뒤에서 비치는 이모지 (보통 iconContent(cat))
+ *   cls   추가 클래스. 호출부에서 여백·모서리를 조정할 때 쓴다.
+ */
+function photoThumb(place, size, fb, cls) {
+  if (!hasPhoto(place)) return '';
+  var s = size || 56;
+  return '<div class="ph-thumb ' + (cls || '') + '" style="width:' + s + 'px;height:' + s + 'px">' +
+           '<span class="ph-thumb-fb">' + (fb || '📍') + '</span>' +
+           '<img src="' + placePhotoSrc(place) + '" alt="" loading="lazy" decoding="async" ' +
+                'width="' + s + '" height="' + s + '" onerror="this.style.display=\'none\'">' +
+         '</div>';
+}
+
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.innerHTML = msg; t.classList.add('show');

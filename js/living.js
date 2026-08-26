@@ -228,6 +228,8 @@ function renderNewsSection() {
               * 남아 있기 때문이다. 게다가 추천 탭 상태만 오염된다. (2026-08-26 감사) */
              ' onclick="go(\'tourism\');setTimeout(function(){showFestivalDetail(' + it.p.id + ')},260)">' +
                '<div class="news-badge' + hot + '">' + badge + '</div>' +
+               /* 사진이 있으면 배지 옆에 썸네일. 없으면 예전처럼 배지+텍스트만이다. */
+               ((typeof photoThumb === 'function') ? photoThumb(it.p, 40, '🎉', 'ph-sm news-thumb') : '') +
                '<div class="news-body">' +
                  '<div class="news-title">' + (it.p.name || '') + '</div>' +
                  '<div class="news-sub">' + (it.p.address || '') + '</div>' +

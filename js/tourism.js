@@ -246,17 +246,11 @@ function renderTourismList(theme, expanded) {
   function itemHtml(p, i) {
     const cfg = CATEGORY_CONFIG[p.category];
     const isCurrency = (p.tags || []).includes('가맹점');
-    const iconHtml = p.category === 'tourist'
-      ? `<div style="width:56px;height:56px;border-radius:10px;overflow:hidden;flex-shrink:0;
-                     background:#FFF7ED;position:relative;display:flex;align-items:center;
-                     justify-content:center;font-size:22px">
-           <span>🎡</span>
-           <img src="${placePhotoSrc(p)}" alt="" loading="lazy" decoding="async"
-                width="56" height="56"
-                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"
-                onerror="this.style.display='none'">
-         </div>`
-      : `<div class="pi ${iconClass(p.category)}">${iconContent(p.category)}</div>`;
+    /* 예전에는 `p.category === 'tourist'` 일 때만 사진을 걸었다. 그 탓에 축제 50장·
+       문화재 43장을 받아 놓고도 이 목록에서 이모지만 보였다 (2026-08-26 감사).
+       카테고리가 아니라 '사진이 실제로 있는가' 로 판단한다 — 없으면 기존 이모지 타일. */
+    const iconHtml = photoThumb(p, 56, iconContent(p.category))
+      || `<div class="pi ${iconClass(p.category)}">${iconContent(p.category)}</div>`;
     return `
       <div class="place-item" style="animation-delay:${Math.min(i, 12) * 0.045}s"
         onclick="${p.category === 'festival'
@@ -341,6 +335,8 @@ function showFestivalDetail(id) {
 
   document.getElementById('fd-content').innerHTML = `
     <div class="fd-hero ${imgClass}">
+      ${hasPhoto(place) ? `<img class="fd-hero-img" src="${placePhotoSrc(place)}" alt=""
+             decoding="async" onerror="this.style.display='none'">` : ''}
       <div class="fd-hero-body">
         <div class="fd-hero-badge">${isOngoing ? '🎪 진행중' : '📅 예정'}</div>
         <div class="fd-hero-title">${place.name}</div>

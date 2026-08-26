@@ -614,6 +614,7 @@ function renderHomeTourism() {
         style="background:var(--white);border-radius:var(--r-md);border:1px solid var(--border);
         border-left:3px solid var(--orange);padding:14px 16px;
         display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:8px;transition:box-shadow 0.15s;">
+        ${photoThumb(festivals[0], 48, '🎉', 'ph-sm')}
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
             <span class="badge ${festBadge(festivals[0]).cls}">${festBadge(festivals[0]).text}</span>
@@ -807,7 +808,8 @@ function renderFestivalScroll() {
     /* 이 캐러셀은 2026-08-26 에 소식 탭으로 옮겨졌다 — go('tourism') 이 없으면 먹통이다.
      * 위 js/living.js 의 news-item 과 같은 이유다. */
     return `<div class="festival-scroll-card" onclick="go('tourism');setTimeout(function(){showFestivalDetail(${p.id})},260)">
-      <div class="fsc-img ${img}">${badge}</div>
+      <div class="fsc-img ${img}">${hasPhoto(p) ? `<img class="fsc-photo" src="${placePhotoSrc(p)}" alt=""
+             loading="lazy" decoding="async" onerror="this.style.display='none'">` : ''}${badge}</div>
       <div class="fsc-body"><div class="fsc-date">${dateStr}</div><div class="fsc-title">${p.name}</div></div>
     </div>`;
   }).join('');
