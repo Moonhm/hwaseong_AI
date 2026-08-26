@@ -867,3 +867,16 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 ## 27-E. 추천 탭 큐레이션 3종 + 제부도 바닷길 시간표 → [`docs/log/2026-08-26-dev-datalab-tide.md`](docs/log/2026-08-26-dev-datalab-tide.md)
 
 ## 27-F. 음식점 3,754곳 · 관광 리포트 3화면 · 메뉴 확장 → [`docs/log/2026-08-26-dev-restaurants-report-menu.md`](docs/log/2026-08-26-dev-restaurants-report-menu.md)
+
+## 27-G. 사진 중복 162장 제거 · 날씨 위젯 · 검사기 보강 (배포) → [`docs/log/2026-08-26-deploy-photo-dedup-weather.md`](docs/log/2026-08-26-deploy-photo-dedup-weather.md)
+
+사진 373장 중 고유 이미지가 211장뿐이었다. 162장이 다른 관광지 사진의 복사본으로,
+한 장이 6곳을 덮은 사례까지 있었다(CGV·롯데시네마 4곳에 '화성시작은영화관' 간판 사진).
+파일명만 보는 기존 검사로는 잡히지 않아, `build_photo_index.py` 에 해시 교차중복 차단을 넣었다.
+
+  사진 373 → 211장 · 사진 있는 장소 199 → 83곳 · `check.sh` 통과(FAIL 0)
+
+**남은 사진 공백 168곳은 [`docs/PHOTO_NEEDS.md`](docs/PHOTO_NEEDS.md) 에 읍면동별로 정리했다.**
+
+개발 Claude 인계: 캠핑장 17장·호텔 6장은 `js/convenience.js` 소속이라 인덱서가 못 읽고,
+축제 사진 44장은 축제 카드가 CSS 배너를 써서 화면에 안 나온다.
