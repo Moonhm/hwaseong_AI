@@ -96,6 +96,15 @@ function _playPageTransition(oldPage, newPage, name) {
 function go(page) {
   closeQuiz();
   closeMenu();
+  /* ⚠ 슬라이드 패널 셋도 함께 닫는다 (2026-08-26 실측으로 잡은 버그).
+   * 메뉴·퀴즈만 닫고 있어서, 제부도 시간표를 열어 둔 채 하단 내비로 지도를 누르면
+   * 패널이 화면 아래 절반(422px)을 덮은 채 지도 위에 그대로 남았다.
+   * 바깥을 누르면 닫히긴 하지만, 탭을 바꾼 순간 이미 '다른 화면' 이므로
+   * 앞 화면에서 열어 둔 것이 따라오면 안 된다.
+   * 세 함수 모두 이미 닫혀 있어도 클래스만 지우므로 여러 번 불러도 안전하다. */
+  if (typeof closeTide     === 'function') closeTide();
+  if (typeof closeToday    === 'function') closeToday();
+  if (typeof closeSettings === 'function') closeSettings();
   /* 맵 탭을 벗어날 때 NP 모드 버튼만 정리 (상태는 유지) */
   if (page !== 'map' && typeof exitNpModeOnly === 'function') exitNpModeOnly();
   var newPage = document.getElementById('page-' + page);
