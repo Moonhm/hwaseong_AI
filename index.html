@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082665">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082666">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082665">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082665">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082665">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082665">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082665">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082667">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082667">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082667">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082667">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082667">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082667">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082667">
 </head>
 <body>
 
@@ -682,6 +682,42 @@
          쓸모 없는 줄만 늘어난다. 채운 것은 js/home.js 의 renderMenuRecent(). -->
     <div id="menu-recent-wrap"></div>
 
+
+    <!-- 화성특례시청 공식 서비스 (2026-08-26, 사용자 요청)
+         우리가 만든 기능으로 오해하지 않도록 섹션을 갈라 두고, 줄마다 외부 링크 표시(↗)를 붙였다.
+         ⚠ 외부 사이트라 <a> + target="_blank" + rel="noopener noreferrer" 로 연다.
+           noopener 가 없으면 열린 쪽이 window.opener 로 우리 페이지를 조작할 수 있다.
+         2026-08-26 사용자 지시로 '최근 본 곳' 바로 아래(바로가기 위)로 올렸다 —
+         공식 출처라 우리 기능보다 앞에 두는 게 맞다는 판단이다. -->
+    <div class="menu-section-title">화성특례시청 공식 서비스</div>
+    <a class="menu-item menu-item--ext"
+       href="https://www.hscity.go.kr/www/index.do"
+       target="_blank" rel="noopener noreferrer" onclick="closeMenu()">
+      <div class="menu-item-icon" style="background:#DBEAFE;">🏛️</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">화성특례시청 홈페이지<span class="menu-ext-mark">↗</span></div>
+        <div class="menu-item-sub">민원·고시공고·시정 소식 등 공식 정보</div>
+      </div>
+    </a>
+    <a class="menu-item menu-item--ext"
+       href="https://live.saharax.io/chat-core/index.html?programId=programs-8hmqxZnHR-2oaWhMoRSNAQ&amp;open=true&amp;popup=true"
+       target="_blank" rel="noopener noreferrer" onclick="closeMenu()">
+      <div class="menu-item-icon" style="background:#EDE9FE;">🤖</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">화성in — 행정정보 AI 상담<span class="menu-ext-mark">↗</span></div>
+        <div class="menu-item-sub">화성시청 공식 챗봇 · 민원·행정 궁금증을 물어보세요</div>
+      </div>
+    </a>
+    <a class="menu-item menu-item--ext"
+       href="https://blog.naver.com/hsview"
+       target="_blank" rel="noopener noreferrer" onclick="closeMenu()">
+      <div class="menu-item-icon" style="background:#DCFCE7;">📝</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">화성특례시 공식 블로그<span class="menu-ext-mark">↗</span></div>
+        <div class="menu-item-sub">축제·행사 후기와 동네 소식을 사진으로</div>
+      </div>
+    </a>
+
     <!-- 바로가기 -->
     <div class="menu-section-title">바로가기</div>
     <!-- 2026-08-26 추가: 하루 단위로 쓰는 것 셋을 맨 위에 모았다. -->
@@ -759,22 +795,6 @@
       </div>
     </div>
 
-    <!-- 화성시청 공식 서비스 (2026-08-26, 사용자 요청)
-         '화성in' — 화성시청 홈페이지 정보를 바탕으로 행정정보를 안내하는 대화형 AI.
-         우리 앱은 관광 정보를 다루고 이쪽은 행정 정보라 겹치지 않는다 — 서로 보완한다.
-         ⚠ 외부 사이트다. target="_blank" + rel="noopener" 로 새 탭에 연다
-           (noopener 가 없으면 열린 쪽이 window.opener 로 우리 페이지를 조작할 수 있다).
-         우리가 만든 기능으로 오해하지 않도록 '화성시청 공식' 과 외부 링크 표시(↗)를 붙였다. -->
-    <div class="menu-section-title">화성시청 공식 서비스</div>
-    <a class="menu-item menu-item--ext"
-       href="https://live.saharax.io/chat-core/index.html?programId=programs-8hmqxZnHR-2oaWhMoRSNAQ&amp;open=true&amp;popup=true"
-       target="_blank" rel="noopener noreferrer" onclick="closeMenu()">
-      <div class="menu-item-icon" style="background:#EDE9FE;">🤖</div>
-      <div class="menu-item-text">
-        <div class="menu-item-label">화성in — 행정정보 AI 상담<span class="menu-ext-mark">↗</span></div>
-        <div class="menu-item-sub">화성시청 공식 챗봇 · 민원·행정 궁금증을 물어보세요</div>
-      </div>
-    </a>
 
     <!-- 공유 -->
     <div class="menu-section-title">설정</div>
@@ -813,35 +833,35 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082665"></script>
-<script src="js/quiz.js?v=2026082665"></script>
-<script src="js/mapnav.js?v=2026082665"></script>
-<script src="js/home.js?v=2026082666"></script>
-<script src="js/tourism.js?v=2026082666"></script>
-<script src="js/living.js?v=2026082666"></script>
-<script src="js/favorites.js?v=2026082665"></script>
-<script src="js/ui.js?v=2026082666"></script>
-<script src="js/calendar.js?v=2026082666"></script>
-<script src="js/boot.js?v=2026082665"></script>
+<script src="js/nav.js?v=2026082667"></script>
+<script src="js/quiz.js?v=2026082667"></script>
+<script src="js/mapnav.js?v=2026082667"></script>
+<script src="js/home.js?v=2026082667"></script>
+<script src="js/tourism.js?v=2026082667"></script>
+<script src="js/living.js?v=2026082667"></script>
+<script src="js/favorites.js?v=2026082667"></script>
+<script src="js/ui.js?v=2026082667"></script>
+<script src="js/calendar.js?v=2026082667"></script>
+<script src="js/boot.js?v=2026082667"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082665"></script>
-<script src="js/convenience.js?v=2026082665"></script>
-<script src="js/data.js?v=2026082665"></script>
-<script src="js/map.js?v=2026082665"></script>
-<script src="js/conv_map.js?v=2026082665"></script>
-<script src="js/parking.js?v=2026082665"></script>
-<script src="js/localcurrency.js?v=2026082665"></script>
+<script src="js/photos.js?v=2026082667"></script>
+<script src="js/convenience.js?v=2026082667"></script>
+<script src="js/data.js?v=2026082667"></script>
+<script src="js/map.js?v=2026082667"></script>
+<script src="js/conv_map.js?v=2026082667"></script>
+<script src="js/parking.js?v=2026082667"></script>
+<script src="js/localcurrency.js?v=2026082667"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082665"></script>
-<script src="js/tide.js?v=2026082665"></script>
-<script src="js/restaurants.js?v=2026082665"></script>
-<script src="js/weather.js?v=2026082665"></script>
-<script src="js/today.js?v=2026082666"></script>
-<script src="js/district.js?v=2026082665"></script>
+<script src="js/datalab.js?v=2026082667"></script>
+<script src="js/tide.js?v=2026082667"></script>
+<script src="js/restaurants.js?v=2026082667"></script>
+<script src="js/weather.js?v=2026082667"></script>
+<script src="js/today.js?v=2026082667"></script>
+<script src="js/district.js?v=2026082667"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=2026082665"></script>
+<script src="js/hscroll.js?v=2026082667"></script>
 </body>
 </html>

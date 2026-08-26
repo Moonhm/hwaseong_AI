@@ -951,7 +951,9 @@ function _recentItems(limit) {
 function renderMenuRecent() {
   var wrap = document.getElementById('menu-recent-wrap');
   if (!wrap) return;
-  var items = _recentItems(5);
+  /* 메뉴는 3개까지만 (2026-08-26 사용자 지시). 홈 섹션은 6개를 그대로 쓴다 —
+   * 메뉴는 항목이 이미 많아 길어지면 아래 바로가기가 밀린다. */
+  var items = _recentItems(3);
   if (!items.length) { wrap.innerHTML = ''; return; }
   wrap.innerHTML =
     '<div class="menu-section-title" style="padding-top:16px">🕘 최근 본 곳</div>' +
