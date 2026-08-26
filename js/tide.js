@@ -158,7 +158,12 @@ function _renderTide() {
       '</div>';
   }
 
-  var note = (_tideData.meta && _tideData.meta.note) ? _tideData.meta.note : '';
+  var _meta = _tideData.meta || {};
+  var src   = _meta.source || '화성시 공공데이터';
+  /* 제목에서 연도만 뽑는다 — '2026년 제부도 바닷길 …' 형태다.
+   * 표가 갱신되면 여기 문구도 자동으로 따라간다(하드코딩하지 않는다). */
+  var _ym   = /(\d{4})/.exec(_meta.title || '');
+  var yr    = _ym ? _ym[1] + '년' : '';
   el.innerHTML =
     head +
     '<div class="tide-list">' + (rows || '<div class="tide-load">표시할 날짜가 없어요</div>') + '</div>' +
@@ -167,7 +172,18 @@ function _renderTide() {
     '</button>' +
     '<div class="tide-foot">' +
       '<button class="tide-map-btn" onclick="closeTide();dlGoPlace(\'제부도\')">🗺️ 지도에서 제부도 보기</button>' +
-      (note ? '<div class="tide-note">' + note + '</div>' : '') +
-      '<div class="tide-note">물때는 기상·해황에 따라 달라질 수 있어요. 현장 안내를 함께 확인하세요.</div>' +
+    '</div>' +
+    /* 출처 고지 — '오늘의 화성 날씨' 와 같은 양식(.td-src)을 쓴다.
+     * 2026-08-26 사용자 요청. 앱의 다른 문구는 해요체지만 고지문만 격식체다
+     * (사용자 지시, WORKFLOW §3). meta.source 를 그대로 인용해 출처를 못 박는다. */
+    '<div class="td-src">' +
+      '<div class="td-src-head">데이터 출처 및 유의사항</div>' +
+      '<p class="td-src-body">본 시간표는 <strong>' + src + '</strong>를 기반으로 합니다. ' +
+      '통행 가능 시간은 <strong>' + (yr || '해당 연도') + ' 공표 기준 예정값</strong>이며, ' +
+      '기상·해황에 따라 현장에서 달라질 수 있습니다.</p>' +
+      '<p class="td-src-body">실제 통제 여부는 현장 안내판과 화성시 공식 안내를 ' +
+      '반드시 함께 확인하시기 바랍니다.</p>' +
     '</div>';
+    /* ⚠ meta.note 는 화면에 쓰지 않는다 — 'cross1/cross2: 각 차수 통행 가능 구간…'
+     * 같은 데이터 스키마 설명이라 개발자용이다. 사용자에게는 뜻 없는 문장이 된다. */
 }
