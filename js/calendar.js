@@ -210,19 +210,26 @@ function _renderCalendar() {
       + (dow === 0 ? ' sun' : '')
       + (dow === 6 ? ' sat' : '')
       + (isToday ? ' today' : '')
-      + (hasFest && !isToday ? ' has-event' : '');
+      + (hasFest ? ' has-event' : '');
     cell.textContent = d;
     (function(day, fests) {
       cell.addEventListener('click', function() {
-        /* 선택 날 하이라이트 */
+        var wasSelected = this.classList.contains('cal-selected');
         grid.querySelectorAll('.cal-day.cal-selected').forEach(function(c) {
           c.classList.remove('cal-selected');
         });
-        if (fests && fests.length) {
-          this.classList.add('cal-selected');
-          renderCalEventList(fests, _calYear + '년 ' + MONTHS[_calMonth] + ' ' + day + '일 축제');
-          document.getElementById('calendar-event-list').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        /* 같은 날을 다시 누르면 선택 해제 — 그 달 전체 목록으로 돌아간다
+         * (달을 넘겼을 때와 같은 화면이다). 2026-08-26 사용자 요청.
+         * 축제가 없는 날을 눌러도 여기로 온다 — 빈 목록을 띄우는 것보다
+         * 그 달 전체를 보여 주는 편이 쓸모 있다. */
+        if (wasSelected || !fests || !fests.length) {
+          renderCalEventList(_getFestsInMonth(_calYear, _calMonth),
+                             _calYear + '년 ' + MONTHS[_calMonth] + ' 축제');
+          return;
         }
+        this.classList.add('cal-selected');
+        renderCalEventList(fests, _calYear + '년 ' + MONTHS[_calMonth] + ' ' + day + '일 축제');
+        document.getElementById('calendar-event-list').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     })(d, festDays[d]);
     frag.appendChild(cell);

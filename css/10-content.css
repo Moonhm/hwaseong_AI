@@ -175,24 +175,37 @@
     }
     .cal-day-hd:first-child { color: #EF4444; }
     .cal-day-hd:last-child  { color: #3B82F6; }
+    /* 2026-08-26 사용자 지시로 캘린더 날짜 표시를 손봤다.
+     *  · 오늘·선택일의 '타원(border-radius:50%)' 을 없애고 다른 날과 같은 네모로.
+     *    원형이면 두 자리 숫자에서 좌우가 눌려 보이고, 한 셀만 모양이 달라 튄다.
+     *  · 선택색을 연한 파랑(#EEF2FF) → 연한 주황으로. 축제가 주황 계열이라
+     *    선택한 날과 축제 점(.has-event::after)의 색이 한 갈래로 읽힌다.
+     *  · 선택한 날의 '숫자'를 굵게 — 색만으로는 어느 날을 골랐는지 약하다. */
     .cal-day {
       text-align: center; font-size: 13px; color: var(--text-sub);
       padding: 8px 2px 10px; border-radius: 8px; cursor: pointer; position: relative;
-      transition: background 0.12s;
+      transition: background 0.12s, color 0.12s;
     }
-    .cal-day:hover:not(.today) { background: var(--bg); }
+    .cal-day:hover:not(.today):not(.cal-selected) { background: var(--bg); }
     .cal-day.sun { color: #EF4444; }
     .cal-day.sat { color: #3B82F6; }
     .cal-day.has-event::after {
       content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
       width: 5px; height: 5px; border-radius: 50%; background: var(--orange);
     }
+    /* 오늘 — 네모 유지. 파랑은 '오늘' 을 가리키는 색이라 그대로 둔다. */
     .cal-day.today {
-      background: var(--primary) !important; color: #fff !important;
-      font-weight: 700; border-radius: 50%;
+      background: var(--primary); color: #fff;
+      font-weight: 800; border-radius: 8px;
     }
-    .cal-day.today::after { background: rgba(255,255,255,0.8) !important; }
-    .cal-day.cal-selected:not(.today) { background: #EEF2FF; color: var(--primary); font-weight: 700; border-radius: 50%; }
+    .cal-day.today::after { background: rgba(255,255,255,0.85); }
+    /* 선택한 날 — 연한 주황 + 굵은 숫자. 오늘을 골랐을 때도 같은 규칙을 쓴다
+     * (아래 :not 없이 today 보다 뒤에 둬서 이긴다). */
+    .cal-day.cal-selected {
+      background: #FFEDD5; color: #C2410C;
+      font-weight: 800; border-radius: 8px;
+    }
+    .cal-day.cal-selected::after { background: #C2410C; }
     /* 캘린더 이벤트 목록 */
     .cal-event-item {
       display: flex; align-items: center; gap: 12px;
