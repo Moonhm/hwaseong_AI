@@ -56,6 +56,42 @@
   </div>
   <div class="home-search-results" id="home-search-results"></div>
 
+  <!-- 날씨·미세먼지 바 — initWeatherBar()가 fetch 완료 후 display:flex로 전환 -->
+  <div id="home-weather-bar" style="display:none">
+    <!-- 위치 헤더 -->
+    <div class="hwb-header">
+      <span class="hwb-loc-icon">📍</span>
+      <span id="hwb-loc-name">화성시</span>
+      <span id="hwb-date" class="hwb-date"></span>
+      <button id="hwb-gps-btn" onclick="weatherBarGPS()" title="내 위치 날씨" aria-label="내 위치 날씨">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+          <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+          <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
+        </svg>
+        <span>내 위치</span>
+      </button>
+    </div>
+    <!-- 현재 날씨 -->
+    <div class="hwb-current">
+      <span id="hwb-icon" class="hwb-cur-icon">🌡️</span>
+      <div class="hwb-cur-info">
+        <div id="hwb-temp" class="hwb-cur-temp">—°C</div>
+        <div id="hwb-desc" class="hwb-cur-desc">—</div>
+        <div id="hwb-range" class="hwb-cur-range"></div>
+      </div>
+    </div>
+    <!-- 시간별 예보 + 미세먼지 -->
+    <div class="hwb-bottom">
+      <div class="hwb-hourly" id="hwb-hourly"></div>
+      <div id="hwb-air-section" class="hwb-air-section">
+        <div class="hwb-air-lbl">미세먼지</div>
+        <span id="hwb-grade" class="hwb-grade">—</span>
+        <div id="hwb-pm25-val" class="hwb-pm25-val"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- 관광/생활 토글 -->
   <div class="toggle-tabs">
     <button class="ttab active" data-tab="tourism" onclick="switchHomeTab(this,'tourism')">관광</button>
@@ -557,7 +593,7 @@
 <script src="js/nav.js?v=2026082616"></script>
 <script src="js/quiz.js?v=2026082616"></script>
 <script src="js/mapnav.js?v=2026082616"></script>
-<script src="js/home.js?v=2026082616"></script>
+<script src="js/home.js?v=2026082625"></script>
 <script src="js/tourism.js?v=2026082616"></script>
 <script src="js/living.js?v=2026082616"></script>
 <script src="js/favorites.js?v=2026082616"></script>

@@ -179,8 +179,153 @@ function renderNearbyResult(myLat, myLng, gen) {
 
 }
 
+/* ══════════════════════════════════════════════════
+   홈 날씨·미세먼지 바
+   날씨: Open-Meteo API (무료, API 키 불필요)
+   미세먼지: 에어코리아 getMsrstnAcctoRltmMesureDnsty
+             data.go.kr 에서 '한국환경공단_에어코리아_대기오염정보' 활용신청(무료)
+             발급받은 키를 AIRKOREA_KEY에 입력하면 동탄 측정소 PM2.5 표시
+══════════════════════════════════════════════════ */
+var AIRKOREA_KEY = '';  /* TODO: data.go.kr 무료 키 입력 */
+
+var _hwLat = 37.199, _hwLon = 126.831, _hwLocName = '화성시';
+
+var _WMO = {
+  0:'☀️,맑음', 1:'🌤️,대체로 맑음', 2:'⛅,구름 조금', 3:'☁️,흐림',
+  45:'🌫️,안개', 48:'🌫️,안개',
+  51:'🌦️,이슬비', 53:'🌦️,이슬비', 55:'🌦️,이슬비',
+  61:'🌧️,비', 63:'🌧️,비', 65:'🌧️,강한 비',
+  71:'🌨️,눈', 73:'🌨️,눈', 75:'🌨️,폭설',
+  77:'🌨️,눈', 80:'🌦️,소나기', 81:'🌦️,소나기', 82:'⛈️,강한 소나기',
+  85:'🌨️,소나기눈', 86:'🌨️,폭설 소나기',
+  95:'⛈️,뇌우', 96:'⛈️,뇌우', 99:'⛈️,강한 뇌우'
+};
+
+function _pm25Grade(v) {
+  if (v <= 15) return ['좋음', 'hwb-grade-good'];
+  if (v <= 35) return ['보통', 'hwb-grade-normal'];
+  if (v <= 75) return ['나쁨', 'hwb-grade-bad'];
+  return ['매우나쁨', 'hwb-grade-vbad'];
+}
+
+function _weatherUrl(lat, lon) {
+  return 'https://api.open-meteo.com/v1/forecast' +
+    '?latitude=' + lat + '&longitude=' + lon +
+    '&current=temperature_2m,weather_code' +
+    '&hourly=temperature_2m,weather_code' +
+    '&daily=temperature_2m_max,temperature_2m_min' +
+    '&timezone=Asia%2FSeoul&forecast_days=2';
+}
+
+function _renderWeather(d) {
+  var bar = document.getElementById('home-weather-bar');
+  if (!bar) return;
+
+  /* 현재 날씨 */
+  var wmo = _WMO[d.current.weather_code] || '🌡️,—';
+  var p   = wmo.split(',');
+  document.getElementById('hwb-icon').textContent     = p[0];
+  document.getElementById('hwb-temp').textContent     = Math.round(d.current.temperature_2m) + '°C';
+  document.getElementById('hwb-desc').textContent     = p[1] || '';
+  document.getElementById('hwb-range').textContent    =
+    '최고 ' + Math.round(d.daily.temperature_2m_max[0]) +
+    '° · 최저 ' + Math.round(d.daily.temperature_2m_min[0]) + '°';
+  document.getElementById('hwb-loc-name').textContent = _hwLocName;
+  var _nd = new Date();
+  var _days = ['일','월','화','수','목','금','토'];
+  document.getElementById('hwb-date').textContent =
+    (_nd.getMonth()+1) + '월 ' + _nd.getDate() + '일 (' + _days[_nd.getDay()] + ')';
+
+  /* 시간별 예보: 지금 + 1h/2h/3h 후 */
+  var curH   = new Date().getHours();
+  var today  = d.daily.time[0];
+  var times  = d.hourly.time;
+  var hTemps = d.hourly.temperature_2m;
+  var hWmos  = d.hourly.weather_code;
+  var idx    = 0;
+  for (var i = 0; i < times.length; i++) {
+    if (times[i].slice(0, 10) === today &&
+        parseInt(times[i].slice(11, 13), 10) === curH) { idx = i; break; }
+  }
+  var html = '';
+  for (var s = 0; s < 4; s++) {
+    var si    = idx + s;
+    var label = s === 0 ? '지금' : s + '시간 후';
+    var icon  = (_WMO[hWmos[si]] || '🌡️,—').split(',')[0];
+    var temp  = Math.round(hTemps[si]) + '°';
+    html += '<div class="hwb-hour-slot">' +
+      '<span class="hwb-hour-label">' + label + '</span>' +
+      '<span class="hwb-hour-icon">'  + icon  + '</span>' +
+      '<span class="hwb-hour-temp">'  + temp  + '</span>' +
+      '</div>';
+  }
+  document.getElementById('hwb-hourly').innerHTML = html;
+  bar.style.display = 'flex';
+}
+
+function _fetchAirKorea() {
+  if (!AIRKOREA_KEY) return;
+  fetch('https://apis.data.go.kr/B552584/ArpltnInforInqireSvc' +
+        '/getMsrstnAcctoRltmMesureDnsty' +
+        '?stationName=%EB%8F%99%ED%83%84' +
+        '&dataTerm=daily&pageNo=1&numOfRows=1' +
+        '&returnType=json&serviceKey=' + encodeURIComponent(AIRKOREA_KEY) + '&ver=1.0')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var v = parseFloat(d.response.body.items[0].pm25Value);
+      if (isNaN(v)) return;
+      var g  = _pm25Grade(v);
+      var el = document.getElementById('hwb-grade');
+      el.textContent = g[0];
+      el.className   = 'hwb-grade ' + g[1];
+      document.getElementById('hwb-pm25-val').textContent = v + ' ㎍/㎥';
+      document.getElementById('hwb-air-section').style.display = 'flex';
+    })
+    .catch(function() {});
+}
+
+function initWeatherBar() {
+  fetch(_weatherUrl(_hwLat, _hwLon))
+    .then(function(r) { return r.json(); })
+    .then(_renderWeather)
+    .catch(function() {});
+  _fetchAirKorea();
+}
+
+function weatherBarGPS() {
+  if (!navigator.geolocation) return;
+  var btn = document.getElementById('hwb-gps-btn');
+  if (btn) btn.classList.add('active');
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      _hwLat = pos.coords.latitude;
+      _hwLon = pos.coords.longitude;
+      /* Nominatim 역지오코딩으로 한국어 주소명 조회 */
+      fetch('https://nominatim.openstreetmap.org/reverse' +
+            '?lat=' + _hwLat + '&lon=' + _hwLon +
+            '&format=json&accept-language=ko',
+            { headers: { 'Accept-Language': 'ko' } })
+        .then(function(r) { return r.json(); })
+        .then(function(geo) {
+          var a = geo.address || {};
+          _hwLocName = a.city_district || a.suburb || a.quarter ||
+                       a.county || a.city || '내 위치';
+        })
+        .catch(function() { _hwLocName = '내 위치'; })
+        .finally(function() {
+          fetch(_weatherUrl(_hwLat, _hwLon))
+            .then(function(r) { return r.json(); })
+            .then(_renderWeather)
+            .catch(function() { if (btn) btn.classList.remove('active'); });
+        });
+    },
+    function() { if (btn) btn.classList.remove('active'); }
+  );
+}
+
 /* ── 홈 페이지 렌더 ── */
 function renderHomePage() {
+  initWeatherBar();
   renderHomeTourism();
   renderHomeLiving();
   if (typeof renderFavSection === 'function') renderFavSection();

@@ -347,3 +347,65 @@
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
       overflow: hidden;
     }
+
+/* ── 홈 날씨·미세먼지 바 ── */
+#home-weather-bar {
+  display: none; flex-direction: column;
+  margin: 10px var(--px) 8px;
+  background: linear-gradient(160deg, #EFF6FF 0%, var(--white) 60%);
+  border: 1px solid #BFDBFE; border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.hwb-header {
+  display: flex; align-items: center; gap: 4px;
+  padding: 10px 14px 0;
+}
+.hwb-loc-icon { font-size: 12px; }
+#hwb-loc-name { font-size: 12px; font-weight: 600; color: var(--primary); }
+.hwb-date     { font-size: 11px; color: var(--text-muted); flex: 1; padding-left: 6px; }
+#hwb-gps-btn  {
+  display: flex; align-items: center; gap: 3px;
+  background: none; border: 1px solid var(--border); border-radius: 99px;
+  padding: 3px 8px; cursor: pointer;
+  color: var(--text-muted); font-size: 11px; line-height: 1.2;
+  transition: all .2s;
+}
+#hwb-gps-btn:hover, #hwb-gps-btn.active {
+  background: rgba(37,99,235,.08); color: var(--primary); border-color: #93C5FD;
+}
+.hwb-current {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 14px 12px;
+}
+.hwb-cur-icon { font-size: 38px; line-height: 1; flex-shrink: 0; }
+.hwb-cur-info { display: flex; flex-direction: column; gap: 2px; }
+.hwb-cur-temp { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; }
+.hwb-cur-desc { font-size: 13px; color: var(--text-sub); }
+.hwb-cur-range{ font-size: 11.5px; color: var(--text-muted); }
+.hwb-bottom {
+  display: flex; align-items: stretch;
+  border-top: 1px solid #BFDBFE;
+  background: rgba(255,255,255,.55);
+}
+.hwb-hourly { display: flex; flex: 1; }
+.hwb-hour-slot {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 3px; padding: 8px 4px;
+  border-right: 1px solid rgba(191,219,254,.5);
+}
+.hwb-hour-slot:last-of-type { border-right: none; }
+.hwb-hour-label { font-size: 10px; color: var(--text-muted); }
+.hwb-hour-icon  { font-size: 18px; line-height: 1.1; }
+.hwb-hour-temp  { font-size: 12px; font-weight: 700; color: var(--text); }
+.hwb-air-section {
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  gap: 3px; padding: 8px 14px;
+  border-left: 1px solid #BFDBFE; min-width: 68px; text-align: center;
+}
+.hwb-air-lbl  { font-size: 10px; color: var(--text-muted); }
+.hwb-grade    { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
+.hwb-grade-good   { background: #DCFCE7; color: #16A34A; }
+.hwb-grade-normal { background: #FEF9C3; color: #A16207; }
+.hwb-grade-bad    { background: #FFEDD5; color: #C2410C; }
+.hwb-grade-vbad   { background: #FEE2E2; color: #DC2626; }
+.hwb-pm25-val { font-size: 10px; color: var(--text-muted); }
