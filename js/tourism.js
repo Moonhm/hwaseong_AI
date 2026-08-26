@@ -517,7 +517,15 @@ function showFestivalDetail(id) {
           <div class="fd-info-icon">📍</div>
           <div style="flex:1;min-width:0">
             <div class="fd-info-label">장소</div>
-            <div class="fd-info-val">${shortAddr}</div>
+            <!-- 눌러서 주소 복사 (2026-08-26 사용자 요청).
+                 지도 슬라이드 카드가 쓰던 것과 같은 copyAddress(js/ui.js) 다 —
+                 여기만 없어서 '왜 여기선 안 되지' 가 됐다.
+                 전체 주소를 복사한다. 화면에는 '경기도 화성시' 를 뗀 짧은 형태를
+                 보여 주지만, 붙여넣기해서 쓸 때는 시 이름이 있어야 검색이 된다. -->
+            <div class="fd-info-val fd-addr" role="button" tabindex="0"
+                 data-addr="${(place.address || '').replace(/"/g, '&quot;')}"
+                 onclick="copyAddress(this.dataset.addr)"
+                 title="눌러서 주소 복사">${shortAddr}<span class="fd-addr-copy">복사</span></div>
             <button class="fd-map-btn" onclick="goMapFocus(${place.lat},${place.lng},4,${place.id})">
               지도에서 위치 보기 →
             </button>

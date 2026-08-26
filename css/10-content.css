@@ -614,3 +614,20 @@
     }
     .fd-titlebar .fd-dday.soon { background: #C2410C; color: #fff; }
 
+    /* 축제 상세 장소 — 눌러서 복사 (2026-08-26)
+     * 지도 슬라이드(.sl-addr)와 같은 동작인데 배경이 밝은 카드라 색을 따로 잡는다.
+     * '복사' 라벨을 붙인 이유: .sl-addr 은 핀 아이콘으로 눌리는 곳임을 알렸지만
+     * 여기는 정보 카드 안이라 그냥 텍스트로 읽힌다 — 누를 수 있다고 말해 줘야 한다. */
+    .fd-addr {
+      display: inline-flex; align-items: center; gap: 6px;
+      cursor: pointer; border-radius: 6px;
+      transition: color 0.12s, opacity 0.12s;
+    }
+    .fd-addr:hover  { color: var(--primary); }
+    .fd-addr:active { opacity: 0.6; }
+    .fd-addr-copy {
+      font-size: 10.5px; font-weight: 700; color: var(--primary);
+      background: #EFF6FF; border: 1px solid #BFDBFE;
+      padding: 1px 6px; border-radius: 20px; flex-shrink: 0;
+    }
+
