@@ -29,7 +29,7 @@ tools/optimize_images.py — assets/ 사진 전처리 (배포 Claude 담당)
    확장자가 바뀌면(.png → .jpg) 그 경로를 만드는 코드도 함께 고쳐야 한다.
    예: js/datalab.js 의 _dlCourseHeroSrc()
 """
-import argparse, os, sys, unicodedata
+import argparse, io, os, sys, unicodedata
 from pathlib import Path
 
 try:
@@ -41,6 +41,7 @@ except ImportError:
 ROOT = Path(os.environ.get("HW_ROOT") or Path(__file__).resolve().parent.parent)
 MAX_W = 1200          # places 사진의 실측 상한과 맞췄다
 QUALITY = 82
+MIN_SAVING = 0.15     # 재인코딩이 이만큼 이상 줄일 때만 교체한다(측정 기반 판정)
 EXTS = (".jpg", ".jpeg", ".png", ".webp")
 # 사진이 아니라 그래픽이라 PNG 로 둬야 하는 것들 (투명도·선명한 경계)
 # 파일명 토큰만으로는 한글 이름 로고를 못 지킨다(assets 의 PNG 4장이 전부 한글 이름
@@ -85,7 +86,29 @@ def process(d: Path, check: bool):
         need_resize = im.width > MAX_W
         need_jpeg = (f.suffix.lower() == ".png") and not keep_png
         need_rename = (nfc != f.stem)
-        if not (need_resize or need_jpeg or need_rename):
+
+        # 이미 JPEG 이고 폭도 작지만 **품질만 과한** 경우 (2026-08-26 추가).
+        #   이 도구의 첫 판(같은 날)은 '폭 1200 초과' 와 'PNG' 만 봤다. 그래서
+        #   places/ 346장을 처리했다고 보고해 놓고 **한 장도 재인코딩하지 않았다** —
+        #   대부분이 이미 JPEG 이고 폭이 1200 이하였기 때문이다. 실측 bpp(비트/픽셀)
+        #   중앙값이 2.01 인데 최대가 14.84 였다(q99 + 4:4:4 서브샘플링 추정).
+        #
+        # 임계 bpp 를 정해 거르지 않는 이유: 어떤 값을 잡아도 경계에서 틀린다.
+        #   대신 **실제로 다시 구워 보고, 뚜렷하게 작아질 때만 교체**한다.
+        #   이미 잘 압축된 파일은 다시 구워도 안 줄어들어 자동으로 건너뛰어진다.
+        #   되돌릴 수 없는 작업이므로 판정을 추측이 아니라 측정에 맡기는 쪽이 맞다.
+        requality = None
+        if not (need_resize or need_jpeg or need_rename) and f.suffix.lower() in (".jpg", ".jpeg"):
+            try:
+                buf = io.BytesIO()
+                im.convert("RGB").save(buf, "JPEG", quality=QUALITY,
+                                       optimize=True, progressive=True)
+                if buf.tell() < s0 * (1 - MIN_SAVING):
+                    requality = buf.tell()
+            except Exception:
+                requality = None
+
+        if not (need_resize or need_jpeg or need_rename or requality):
             after += s0
             continue
 
@@ -104,8 +127,10 @@ def process(d: Path, check: bool):
 
         if check:
             why = ",".join(w for w, c in
-                           (("크기", need_resize), ("JPEG", need_jpeg), ("NFC", need_rename)) if c)
-            print("  %6dKB  %s → %s  [%s]" % (s0 // 1024, f.name, out.name, why))
+                           (("크기", need_resize), ("JPEG", need_jpeg),
+                            ("NFC", need_rename), ("품질", requality)) if c)
+            est = requality or s0
+            print("  %6dKB → %5dKB  %s  [%s]" % (s0 // 1024, est // 1024, f.name, why))
             after += s0
             changed += 1
             continue
