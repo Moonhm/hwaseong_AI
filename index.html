@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082656">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082657">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082656">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082656">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082656">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082656">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082656">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082658">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082658">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082658">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082658">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082658">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082658">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082658">
 </head>
 <body>
 
@@ -112,12 +112,6 @@
     </div>
   </div>
 
-  <!-- 관광/생활 토글 -->
-  <div class="toggle-tabs">
-    <button class="ttab active" data-tab="tourism" onclick="switchHomeTab(this,'tourism')">관광</button>
-    <button class="ttab"        data-tab="living"  onclick="switchHomeTab(this,'living')">생활</button>
-  </div>
-
   <!-- 즐겨찾기 섹션 -->
   <div id="home-favs-section" style="display:none;margin-top:16px"></div>
 
@@ -126,6 +120,15 @@
        한 번도 본 적 없어도 이 칸은 남는다 — 숨겨 두면 이런 기능이 있다는 것 자체를
        아무도 모른다. 대신 빈 상자가 아니라 무엇이 쌓이는지 안내를 띄운다. -->
   <div id="home-recent-section" style="margin-top:16px"></div>
+
+  <!-- 관광/생활 토글 — 2026-08-26 사용자 요청으로 '최근 본' 아래로 내렸다.
+       이 토글이 조작하는 대상은 바로 아래 #home-tourism / #home-living 이다.
+       위에 있을 때는 즐겨찾기·최근 본을 사이에 두고 조작 대상과 떨어져 있어
+       무엇을 바꾸는 버튼인지 알기 어려웠다. -->
+  <div class="toggle-tabs" style="margin-top:18px">
+    <button class="ttab active" data-tab="tourism" onclick="switchHomeTab(this,'tourism')">관광</button>
+    <button class="ttab"        data-tab="living"  onclick="switchHomeTab(this,'living')">생활</button>
+  </div>
 
 
   <!-- 관광 탭 콘텐츠 (JS 렌더) -->
@@ -464,6 +467,22 @@
   </div>
 
   <!-- 필터 칩 -->
+  <!-- 지도 검색창 — 2026-08-26 사용자 요청. 홈 검색창과 같은 .search-bar 를 쓰고
+       .search-bar--map 으로 위치만 바꾼다(칩 위, 반투명).
+       ⚠ 결과 목록은 홈의 #home-search-results 를 재사용하지 않는다 —
+         그건 #page-home 안에 있어 지도 탭에서는 안 보인다. 전용 컨테이너를 둔다.
+       입력은 홈과 같은 doHomeSearch 를 거치지만, 어느 창에서 쳤는지에 따라
+       결과를 그릴 곳이 달라야 해서 js/home.js 가 활성 창을 기억한다. -->
+  <div class="search-bar search-bar--map" id="map-search-bar">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="map-search-input" placeholder="지도에서 장소·주소 검색"
+           oninput="homeSearchInput(this.value, 'map')"
+           onkeydown="if(event.key==='Enter')doHomeSearch(this.value,'map')"
+           autocomplete="off" />
+    <div class="search-clear" id="map-search-clear" onclick="clearHomeSearch('map')">✕</div>
+  </div>
+  <div class="home-search-results map-search-results" id="map-search-results"></div>
+
   <div class="map-chips" id="map-chips">
     <!-- 지역(구) 칩 — 2026-08-26. 카테고리 칩과 '축' 이 다르다: 지역은 카메라를 옮기고
          카테고리는 무엇을 그릴지 정한다. 둘은 곱해서 쓴다('동탄구' + '음식점').
@@ -805,33 +824,33 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082656"></script>
-<script src="js/quiz.js?v=2026082656"></script>
-<script src="js/mapnav.js?v=2026082656"></script>
-<script src="js/home.js?v=2026082656"></script>
-<script src="js/tourism.js?v=2026082656"></script>
-<script src="js/living.js?v=2026082656"></script>
-<script src="js/favorites.js?v=2026082656"></script>
-<script src="js/ui.js?v=2026082656"></script>
-<script src="js/calendar.js?v=2026082656"></script>
-<script src="js/boot.js?v=2026082656"></script>
+<script src="js/nav.js?v=2026082658"></script>
+<script src="js/quiz.js?v=2026082658"></script>
+<script src="js/mapnav.js?v=2026082658"></script>
+<script src="js/home.js?v=2026082658"></script>
+<script src="js/tourism.js?v=2026082658"></script>
+<script src="js/living.js?v=2026082658"></script>
+<script src="js/favorites.js?v=2026082658"></script>
+<script src="js/ui.js?v=2026082658"></script>
+<script src="js/calendar.js?v=2026082658"></script>
+<script src="js/boot.js?v=2026082658"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082656"></script>
-<script src="js/convenience.js?v=2026082656"></script>
-<script src="js/data.js?v=2026082656"></script>
-<script src="js/map.js?v=2026082656"></script>
-<script src="js/conv_map.js?v=2026082656"></script>
-<script src="js/parking.js?v=2026082656"></script>
-<script src="js/localcurrency.js?v=2026082656"></script>
+<script src="js/photos.js?v=2026082658"></script>
+<script src="js/convenience.js?v=2026082658"></script>
+<script src="js/data.js?v=2026082658"></script>
+<script src="js/map.js?v=2026082658"></script>
+<script src="js/conv_map.js?v=2026082658"></script>
+<script src="js/parking.js?v=2026082658"></script>
+<script src="js/localcurrency.js?v=2026082658"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082656"></script>
-<script src="js/tide.js?v=2026082656"></script>
-<script src="js/restaurants.js?v=2026082656"></script>
-<script src="js/weather.js?v=2026082656"></script>
-<script src="js/today.js?v=2026082656"></script>
-<script src="js/district.js?v=2026082656"></script>
+<script src="js/datalab.js?v=2026082658"></script>
+<script src="js/tide.js?v=2026082658"></script>
+<script src="js/restaurants.js?v=2026082658"></script>
+<script src="js/weather.js?v=2026082658"></script>
+<script src="js/today.js?v=2026082658"></script>
+<script src="js/district.js?v=2026082658"></script>
 </body>
 </html>

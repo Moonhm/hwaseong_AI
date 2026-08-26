@@ -373,22 +373,40 @@ var _CAT_STYLE = {
   camping:      { bg: '#DCFCE7', em: '⛺' },
 };
 
-function homeSearchInput(val) {
-  /* 직접 타이핑해도 칩 상태가 따라오게 한다 — 칩과 입력창이 어긋나면
-   * 어느 쪽이 진짜인지 알 수 없다. (2026-08-26) */
-  if (typeof _syncHomeGuChips === 'function' && typeof splitGuQuery === 'function') {
+/* 검색창이 둘이다 — 홈(#home-search-*)과 지도(#map-search-*).
+ * 로직은 하나를 쓰고 '어느 창에서 쳤는가'만 where 로 받는다.
+ * where 를 안 넘기면 홈이다(기존 호출부 호환). (2026-08-26) */
+var _SR_DOM = {
+  home: { input: 'home-search-input', clear: 'home-search-clear',
+          results: 'home-search-results', bar: 'home-search-bar' },
+  map:  { input: 'map-search-input',  clear: 'map-search-clear',
+          results: 'map-search-results',  bar: 'map-search-bar' },
+};
+var _srWhere = 'home';
+function _srEl(where, key) {
+  var d = _SR_DOM[where] || _SR_DOM.home;
+  return document.getElementById(d[key]);
+}
+
+function homeSearchInput(val, where) {
+  where = where || 'home';
+  _srWhere = where;
+  /* 지역 칩은 홈에만 있다. 지도에서 친 것으로 홈 칩을 건드리면 안 된다. */
+  if (where === 'home' && typeof _syncHomeGuChips === 'function' && typeof splitGuQuery === 'function') {
     _syncHomeGuChips(splitGuQuery(val).gu);
   }
   clearTimeout(_srTimer);
-  var clearBtn = document.getElementById('home-search-clear');
+  var clearBtn = _srEl(where, 'clear');
   if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
-  if (!val.trim()) { closeHomeSearch(); return; }
-  _srTimer = setTimeout(function() { doHomeSearch(val); }, 220);
+  if (!val.trim()) { closeHomeSearch(where); return; }
+  _srTimer = setTimeout(function() { doHomeSearch(val, where); }, 220);
 }
 
-function doHomeSearch(q) {
+function doHomeSearch(q, where) {
+  where = where || 'home';
+  _srWhere = where;
   q = (q || '').trim();
-  if (!q) { closeHomeSearch(); return; }
+  if (!q) { closeHomeSearch(where); return; }
 
   /* 검색어 앞뒤의 구 이름을 떼어낸다 — '동탄구 카페' → 구=동탄구, 검색어=카페.
    * '동탄' 처럼 '구' 를 빼고 쳐도 잡는다 (js/district.js splitGuQuery).
@@ -490,8 +508,9 @@ function doHomeSearch(q) {
 }
 
 function renderHomeSearchResults(results, q) {
-  var el = document.getElementById('home-search-results');
-  var bar = document.getElementById('home-search-bar');
+  /* _srWhere 가 홈/지도 중 어디에 그릴지 정한다 — 위 _SR_DOM 주석 참고. */
+  var el  = _srEl(_srWhere, 'results');
+  var bar = _srEl(_srWhere, 'bar');
   if (!el) return;
 
   if (!results.length) {
@@ -516,7 +535,7 @@ function renderHomeSearchResults(results, q) {
 function _srClick(idx) {
   var r = (window._srResults || [])[idx];
   if (!r) return;
-  clearHomeSearch();
+  clearHomeSearch(_srWhere);
   /* 지역(구) 결과 — 지도 탭으로 가서 그 동네 화면으로 옮긴다.
    * go('map') 직후엔 카카오 SDK 가 아직 초기화 전일 수 있어(autoload=false) 한 박자 늦춘다. */
   if (r.type === 'gu') {
@@ -583,20 +602,22 @@ function _syncHomeGuChips(gu) {
   });
 }
 
-function closeHomeSearch() {
-  var el  = document.getElementById('home-search-results');
-  var bar = document.getElementById('home-search-bar');
+function closeHomeSearch(where) {
+  where = where || _srWhere || 'home';
+  var el  = _srEl(where, 'results');
+  var bar = _srEl(where, 'bar');
   if (el)  { el.classList.remove('open'); el.innerHTML = ''; }
   if (bar) bar.style.borderRadius = '';
 }
 
-function clearHomeSearch() {
-  if (typeof _syncHomeGuChips === 'function') _syncHomeGuChips(null);
-  var inp = document.getElementById('home-search-input');
-  var clr = document.getElementById('home-search-clear');
+function clearHomeSearch(where) {
+  where = where || 'home';
+  if (where === 'home' && typeof _syncHomeGuChips === 'function') _syncHomeGuChips(null);
+  var inp = _srEl(where, 'input');
+  var clr = _srEl(where, 'clear');
   if (inp) inp.value = '';
   if (clr) clr.style.display = 'none';
-  closeHomeSearch();
+  closeHomeSearch(where);
 }
 
 function renderHomeTourism() {

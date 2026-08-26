@@ -31,8 +31,10 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* 필터 칩 (지도 상단) */
+    /* 검색창(.search-bar--map, top:12px · 높이 약 38px)이 위에 생기면서
+     * 칩과 필터 바를 그만큼 내렸다 (2026-08-26). 12 + 38 + 10 = 60px. */
     .map-chips {
-      position: absolute; top: 12px; left: 0; right: 0; z-index: 10;
+      position: absolute; top: 60px; left: 0; right: 0; z-index: 10;
       display: flex; gap: 8px; padding: 0 16px;
       overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
     }
@@ -45,7 +47,7 @@
 
     /* 칩 스크롤 화살표 */
     .chip-arrow {
-      position: absolute; top: 8px; height: 40px; width: 48px;
+      position: absolute; top: 56px; height: 40px; width: 48px;
       z-index: 11; display: flex; align-items: center; justify-content: center;
       border: none; cursor: pointer; padding: 0;
       opacity: 0; pointer-events: none;
@@ -60,7 +62,7 @@
 
     /* 지역화폐 업종 필터 바 */
     #lc-filter-bar {
-      display: none; position: absolute; top: 56px; left: 0; right: 0; z-index: 9;
+      display: none; position: absolute; top: 104px; left: 0; right: 0; z-index: 9;
       padding: 7px 0 6px;
     }
     #lc-filter-scroll {
@@ -88,7 +90,7 @@
      * 좌우 화살표는 두지 않았다 — 칩이 8개뿐이라 스크롤이 거의 없어서
      * 화살표가 오히려 칩을 가린다(지역화폐는 12개라 필요했다). */
     #rs-filter-bar {
-      display: none; position: absolute; top: 56px; left: 0; right: 0; z-index: 9;
+      display: none; position: absolute; top: 104px; left: 0; right: 0; z-index: 9;
       padding: 7px 0 6px;
     }
     #rs-filter-scroll {
@@ -394,3 +396,12 @@
     .lc-spot-item:active { background: #EFF6FF; }
     .lc-spot-name { font-size: 13.5px; font-weight: 700; color: var(--text); word-break: keep-all; }
     .lc-spot-cat  { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    /* 지도 검색 결과 — 홈과 같은 .home-search-results 모양이되 지도 위에 뜬다.
+     * 검색창(top:12 + 높이 38) 바로 아래에서 시작한다. */
+    .map-search-results {
+      position: absolute; top: 50px; left: 0; right: 0; z-index: 13;
+      margin: 0 var(--px); border-top: 1.5px solid var(--border);
+      border-radius: 16px; max-height: 46vh; overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
