@@ -314,13 +314,21 @@
       position: relative; z-index: 1;
     }
 
-    /* 주차장은 사진이 없다. 지도 핀과 같은 파랑(--primary)으로 통일해
+    /* 주차장은 사진이 없다. 지도 핀과 같은 파랑(--primary-bg)으로 통일해
      * 목록에서 관광지와 한눈에 구분되게 한다. */
     .recent-thumb-park {
       background: var(--primary-bg);
+      /* 🅿️ 는 컬러 이모지라 이 color 가 먹지 않는다. 이모지 폰트가 없는 환경에서
+       * 흑백 글리프로 떨어질 때를 위한 대비책으로만 남긴다. */
       color: var(--primary);
       font-size: 30px; font-weight: 900;
     }
+    /* ⚠ 이 규칙이 없으면 주차장 카드에 🏞️ 가 겹쳐 그려진다.
+     * 마크업이 class="recent-thumb recent-thumb-park" 로 두 클래스를 다 받으므로
+     * 위 .recent-thumb::before 가 그대로 적용되고, 그게 position:absolute 라
+     * 자리를 차지하지 않고 🅿️ 바로 위에 포개진다. 주차장은 사진 자체가 없어
+     * 대체 이모지가 필요 없다. (2026-08-26 사용자 지적) */
+    .recent-thumb-park::before { content: none; }
 
     /* 한 번도 본 적 없을 때. 빈 상자가 아니라 '무엇이 쌓이는지'를 말한다 —
      * 그래야 기능이 있다는 걸 알고, 고장으로 오해하지도 않는다. */
