@@ -41,6 +41,11 @@ FLOOR = {
     "parking-static.json":          131,
     "localcurrency-static.json":  27374,
     "ratings.json":                 159,   # 코드 참조 0건이지만 kakaoId 159건의 유일한 사본
+    # 2026-08-26 감사에서 '하한이 없어 통째로 사라져도 통과' 하던 것들을 채웠다.
+    # 변조 실험으로 확인한 사각지대였다 — 데이터가 비어도 검사는 초록불이었다.
+    "restaurants-static.json":     3754,   # js/restaurants-static.json rows (지도 음식점 칩)
+    "CONVENIENCE.touristFacilities": 10,   # 지도 🏘️ 관광편의시설 칩
+    "CONVENIENCE.cinemas":           10,   # 지도 🎬 영화상영관 칩
 }
 # templeStay(용주사) 는 배열이 아니라 객체 1건이라 건수가 아니라 '존재 여부'로 본다 (check_counts 참조)
 
@@ -278,6 +283,9 @@ PRINTED = [
     (r'id="living-list-count">([\d,]+)곳', "CONVENIENCE.restaurants",   1),  # index.html:1590
     (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">모범음식점', "CONVENIENCE.restaurants", 1),        # :1557
     (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">관광식당업', "CONVENIENCE.touristRestaurants", 1), # :1558
+    # 2026-08-26 감사 보강 — 같은 문단의 다른 숫자는 전부 지켜지는데 이 둘만 빠져 있었다.
+    (r"지정문화재\s*([\d,]+)곳",       "PLACES.heritage",              2),  # About 문단 + 칩
+    (r"음식점\s*([\d,]+)</div>",       "restaurants-static.json",      1),  # 지도 칩 '🍜 음식점 3,754'
 ]
 # index.html:2698-2718 의 카드 숫자
 PRINTED_CARD = [

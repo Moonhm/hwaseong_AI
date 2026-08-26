@@ -37,13 +37,30 @@ const CAT_COLOR = {
 };
 
 /* 편의정보 카테고리 목록 */
-var CONV_CATS = ['mobeom','touristrest','hotel','camping','temple','jebu'];
+/* ⚠ 이 목록에서 빠진 카테고리는 지도 칩이 있어도 '죽은 칩' 이 된다 —
+ * setFilter 가 isConvCat=false 로 보고 일반 PLACES 필터 경로로 흘려보내는데,
+ * PLACES 에는 그 category 가 없어 핀이 0개가 되고 화면이 통째로 비워진다.
+ * 2026-08-26 감사에서 touristfacility·cinema 가 빠져 있는 것을 발견했다 —
+ * 칩·CONV_CAT_CFG·데이터(각 10건)는 8/25 에 들어왔는데 이 줄만 8/19 그대로였다.
+ * 편의정보 카테고리를 새로 추가하면 반드시 여기에도 넣을 것. */
+var CONV_CATS = ['mobeom','touristrest','hotel','camping','temple','jebu','touristfacility','cinema'];
 
 /* ── 실제 컨테이너 너비 계산 (max-width:480px 반영) ── */
 function mapW() { return Math.min(window.innerWidth, 480); }
 function mapH() { return window.innerHeight - 46; }
 
-/* ── 지도 초기화 ── */
+/* ── 지도 초기화 ─────────────────────────────────────────────────────────
+   SDK 를 &autoload=false 로 부른다(index.html). 그러면 스크립트가 내려와도
+   kakao.maps 본체(약 43KB)는 아직 실행되지 않고 kakao.maps.load 만 있다.
+   그래서 지도 탭을 한 번도 안 여는 사용자는 그 43KB 를 쓰지 않고,
+   홈 콘텐츠가 SDK 실행을 기다리며 멈추지도 않는다.
+
+   ⚠ autoload=false 를 붙였으면 반드시 kakao.maps.load() 로 감싸야 한다.
+     안 그러면 kakao.maps.Map 이 없어 지도가 영영 안 뜬다.
+     load 는 이미 로드된 뒤 다시 불러도 콜백을 즉시 실행하므로 재진입에 안전하다.
+   ⚠ 다른 파일(conv_map·localcurrency·parking·restaurants)이 kakao.maps 를 쓰지만
+     전부 이 초기화 뒤에 도는 경로라 그대로 둬도 된다 — 최상위에서 kakao 를
+     즉시 만지는 코드는 없다(감사에서 확인). */
 function initMap() {
   var container = document.getElementById('kakao-map');
   if (!container) return;
@@ -60,6 +77,30 @@ function initMap() {
     showMapError('카카오맵을 불러올 수 없습니다.<br>페이지를 새로고침 해주세요.');
     return;
   }
+
+  /* 본체가 아직 실행 전이면 여기서 로드하고 끝난 뒤 이어서 그린다. */
+  if (!kakao.maps.Map) {
+    if (typeof kakao.maps.load !== 'function') {
+      showMapError('카카오맵을 불러올 수 없습니다.<br>페이지를 새로고침 해주세요.');
+      return;
+    }
+    /* 안전망: load 콜백이 끝내 안 오면 빈 지도가 아니라 새로고침 버튼을 보여 준다.
+     * autoload=false 는 2026-08-26 에 넣었는데 개발 환경에서 카카오 CDN 이 막혀
+     * 실동작을 검증하지 못했다 — 조용히 실패하는 것만은 막아 둔다. */
+    var _guard = setTimeout(function () {
+      if (!mapReady) showMapError('지도를 불러오지 못했습니다.<br>네트워크를 확인하고 새로고침 해주세요.');
+    }, 8000);
+    kakao.maps.load(function () {
+      clearTimeout(_guard);
+      _initMapCore(container);
+    });
+    return;
+  }
+  _initMapCore(container);
+}
+
+function _initMapCore(container) {
+  if (mapReady) return;   /* load 콜백이 두 번 도는 경우를 막는다 */
 
   var loader = document.getElementById('map-loader');
   if (loader) loader.remove();

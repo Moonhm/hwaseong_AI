@@ -74,7 +74,11 @@ var CONV_CAT_CFG = {
 };
 
 /* 제부도: 지도 중심 좌표 (fitBounds 폴백용) */
-var JEBU_LAT = 37.1578, JEBU_LNG = 126.5764;
+/* 제부도 숙박 115곳의 실제 중심값이다(2026-08-26 감사에서 교정).
+ * 이전 값 37.1578,126.5764 는 실제 중심에서 4.54km 서쪽 바다 위였다 —
+ * 칩을 켜면 '115곳 표시됨' 토스트만 뜨고 화면은 빈 바다였다.
+ * 숫자를 바꿀 때는 js/convenience.js 의 jebu 블록 좌표 평균을 다시 내라. */
+var JEBU_LAT = 37.1670, JEBU_LNG = 126.6264;
 
 /* state */
 var CONV_PLACES = {};   /* cat → [{id, name, category, address, lat, lng, tags, desc, extra}] */
