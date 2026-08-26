@@ -358,3 +358,19 @@
     .nav-item               { transition: color 0.14s, transform 0.1s; }
     .nav-item:active                { transform: scale(0.88); }
 
+
+    /* 지역(구) 칩 — 카테고리 칩과 '축' 이 달라 색을 갈랐다 (2026-08-26).
+     * 카테고리 = 무엇을 그릴까(파랑), 지역 = 어디를 볼까(보라).
+     * 같은 파랑이면 둘 중 하나만 켜지는 것처럼 보인다. */
+    .map-chips .chip--gu {
+      border-color: rgba(124,58,237,0.35); color: #6D28D9;
+    }
+    .map-chips .chip--gu.active {
+      background: #7C3AED; color: #fff; border-color: #7C3AED;
+    }
+    /* 두 축 사이 구분선 — 없으면 지역 칩이 카테고리의 한 종류로 보인다 */
+    .map-chips .chip-sep {
+      flex-shrink: 0; align-self: center;
+      width: 1px; height: 18px; margin: 0 2px;
+      background: rgba(0,0,0,0.16);
+    }

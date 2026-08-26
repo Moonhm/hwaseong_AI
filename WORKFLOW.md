@@ -881,6 +881,8 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 개발 Claude 인계: 캠핑장 17장·호텔 6장은 `js/convenience.js` 소속이라 인덱서가 못 읽고,
 축제 사진 44장은 축제 카드가 CSS 배너를 써서 화면에 안 나온다.
 
+## 27-G. 행정구역(4개 구)별 지도 보기 · 검색 → [`docs/log/2026-08-26-dev-district.md`](docs/log/2026-08-26-dev-district.md)
+
 ## 27-H. PLACES 주소 32건 보정 · 개발 Claude 인계 3건 판별 (배포) → [`docs/log/2026-08-26-deploy-photo-dedup-weather.md#7`](docs/log/2026-08-26-deploy-photo-dedup-weather.md)
 
 `address:"경기도 화성시"` 로 시(市) 단위에서 끊긴 관광지 31건 + 구 누락 1건을 읍면동까지 채웠다.

@@ -384,8 +384,28 @@ function homeSearchInput(val) {
 function doHomeSearch(q) {
   q = (q || '').trim();
   if (!q) { closeHomeSearch(); return; }
-  var ql = q.toLowerCase();
+
+  /* 검색어 앞뒤의 구 이름을 떼어낸다 — '동탄구 카페' → 구=동탄구, 검색어=카페.
+   * '동탄' 처럼 '구' 를 빼고 쳐도 잡는다 (js/district.js splitGuQuery).
+   * 구만 치면(검색어가 비면) 그 동네 목록을 그대로 보여 준다. (2026-08-26) */
+  var _gq = (typeof splitGuQuery === 'function') ? splitGuQuery(q) : { gu: null, rest: q };
+  var _gu = _gq.gu;
+  var _qt = _gq.rest;
+  var ql  = _qt.toLowerCase();
+  var _guOnly = !!(_gu && !_qt);
+  /* 구 안에서 이름 일치를 볼 때 쓰는 판정. 구만 쳤으면 전부 통과시킨다. */
+  function _hit(txt) { return _guOnly || String(txt || '').toLowerCase().includes(ql); }
+  function _inGu(item, kind) {
+    if (!_gu) return true;
+    return (typeof guOf === 'function') ? guOf(item, kind) === _gu : true;
+  }
   var results = [];
+
+  /* 구만 쳤으면 '지도에서 그 동네 보기' 를 맨 위에 둔다 — 목록보다 이게 하고 싶은 일이다. */
+  if (_gu) {
+    results.push({ type: 'gu', name: _gu + ' 지도에서 보기', sub: '그 동네 화면으로 이동해요',
+                   em: '🗺️', bg: '#EEF2FF', gu: _gu });
+  }
 
   /* 1) 지역명 */
   _REGIONS.forEach(function(r) {
@@ -397,10 +417,18 @@ function doHomeSearch(q) {
   /* 2) PLACES (관광지·축제·맛집·주차장 등) */
   if (typeof PLACES !== 'undefined') {
     PLACES.forEach(function(p) {
-      if ((p.name || '').toLowerCase().includes(ql) || (p.address || '').toLowerCase().includes(ql)) {
+      /* 구를 지정했으면 축제는 뺀다 — 장소 미정 21건이 지도 중심 좌표에 몰려 있어
+       * 어느 구로 넣어도 거짓이 된다 (2026-08-26 사용자 지시). */
+      if (_gu && p.category === 'festival') return;
+      if (_hit(p.name) || _hit(p.address)) {
+        if (!_inGu(p, 't')) return;
         var s = _CAT_STYLE[p.category] || { bg: '#F3F4F6', em: '📌' };
         var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        results.push({ type: 'place', name: p.name, sub: addr, em: s.em, bg: s.bg, lat: p.lat, lng: p.lng, id: p.id, cat: p.category });
+        /* 주소에 이미 구가 들어 있으면 배지를 또 붙이지 않는다 —
+         * 안 그러면 '동탄구 · 동탄구 청계동' 이 된다. */
+        var _g = (typeof guOf === 'function') ? guOf(p, 't') : null;
+        var _pre = (_g && addr.indexOf(_g) < 0) ? _g + ' · ' : '';
+        results.push({ type: 'place', name: p.name, sub: _pre + addr, em: s.em, bg: s.bg, lat: p.lat, lng: p.lng, id: p.id, cat: p.category });
       }
     });
   }
@@ -408,10 +436,13 @@ function doHomeSearch(q) {
   /* 3) 공영주차장 (parkingData) */
   if (typeof parkingData !== 'undefined') {
     parkingData.forEach(function(p) {
-      if ((p.name || '').toLowerCase().includes(ql)) {
+      if (_hit(p.name)) {
+        if (!_inGu(p, 'p')) return;
         var isFree = p.free || (p.tags && p.tags.includes('무료'));
         var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + addr, em: '🅿️', bg: '#EFF6FF', lat: p.lat, lng: p.lng, id: p.id });
+        var _g2 = (typeof guOf === 'function') ? guOf(p, 'p') : null;
+        var _pre2 = (_g2 && addr.indexOf(_g2) < 0) ? _g2 + ' · ' : '';
+        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + _pre2 + addr, em: '🅿️', bg: '#EFF6FF', lat: p.lat, lng: p.lng, id: p.id });
       }
     });
   }
@@ -481,6 +512,15 @@ function _srClick(idx) {
   var r = (window._srResults || [])[idx];
   if (!r) return;
   clearHomeSearch();
+  /* 지역(구) 결과 — 지도 탭으로 가서 그 동네 화면으로 옮긴다.
+   * go('map') 직후엔 카카오 SDK 가 아직 초기화 전일 수 있어(autoload=false) 한 박자 늦춘다. */
+  if (r.type === 'gu') {
+    go('map');
+    setTimeout(function () {
+      if (typeof setGuView === 'function') setGuView(r.gu);
+    }, 420);
+    return;
+  }
   if (r.type === 'place' && r.lat && r.lng) {
     goMapFocus(r.lat, r.lng, 4, r.id != null ? r.id : null);
   } else if (r.type === 'parking' && r.lat) {

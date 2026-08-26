@@ -122,6 +122,11 @@ function _initMapCore(container) {
   if (typeof initParking       === 'function') initParking(kakaoMap);
   if (typeof initLocalCurrency === 'function') initLocalCurrency(kakaoMap);
   if (typeof initRestaurants   === 'function') initRestaurants(kakaoMap);   /* 2026-08-26 */
+  /* 지역(구) 라벨을 채운다. coord2RegionCode 는 SDK 가 뜬 뒤에만 쓸 수 있어서
+   * 지도 초기화 시점이 가장 이른 안전 지점이다. PLACES(축제 제외)+주차장 382건을
+   * 10건/200ms 로 약 8초에 끝내고 localStorage 에 캐시한다 — 두 번째부터는 0건 호출.
+   * 실패해도 검색은 주소·bbox 폴백으로 그대로 동작한다. */
+  if (typeof resolveDistricts === 'function') setTimeout(resolveDistricts, 1200);
   mapReady = true;
   /* 최초 진입 시 아무것도 표시하지 않음 */
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
@@ -630,6 +635,7 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
   if (typeof hideAllConv       === 'function') hideAllConv();
   if (typeof setParkingVisible === 'function') setParkingVisible(false);
   document.querySelectorAll('#map-chips .chip').forEach(function (c) { c.classList.remove('active'); });
+    if (typeof resetGuView === 'function') resetGuView();   /* 지역 상태도 함께 (2026-08-26) */
   Object.keys(overlayMap).forEach(function (id) { overlayMap[id].setMap(null); });
 
   /* 장소 하이라이트 핀 */
@@ -911,7 +917,9 @@ function setFilter(cat) {
   var wasActive = chip && chip.classList.contains('active');
 
   /* 주차장 제외 모든 칩 비활성화 */
-  document.querySelectorAll('#map-chips .chip:not([data-cat="parking"])').forEach(function (c) {
+  /* [data-gu] 제외 — 지역 칩은 다른 축이다. 카테고리를 바꾼다고 보고 있던 동네가
+   * 풀리면 안 된다(2026-08-26). */
+  document.querySelectorAll('#map-chips .chip:not([data-cat="parking"]):not([data-gu])').forEach(function (c) {
     c.classList.remove('active');
   });
 
