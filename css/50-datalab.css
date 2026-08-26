@@ -207,13 +207,18 @@
       border-radius: 20px 20px 0 0;
       max-height: 50vh; display: flex; flex-direction: column;
       visibility: hidden;
-      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.26s;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  max-height 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  visibility 0s linear 0.26s;
       box-shadow: 0 -6px 28px rgba(0,0,0,0.18);
     }
     #tide-panel.open {
       transform: translate(-50%, 0); visibility: visible;
-      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  max-height 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  visibility 0s;
     }
+    #tide-panel.expanded { max-height: 92vh; }
     .tide-head {
       display: flex; align-items: flex-start; justify-content: space-between;
       padding: 18px var(--px) 12px; border-bottom: 1px solid var(--border);
@@ -330,13 +335,18 @@
       border-radius: 20px 20px 0 0;
       max-height: 50vh; display: flex; flex-direction: column;
       visibility: hidden;
-      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s linear 0.26s;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  max-height 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  visibility 0s linear 0.26s;
       box-shadow: 0 -6px 28px rgba(0,0,0,0.18);
     }
     #today-panel.open, #settings-panel.open {
       transform: translate(-50%, 0); visibility: visible;
-      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1), visibility 0s;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  max-height 0.3s cubic-bezier(0.22, 0.61, 0.36, 1),
+                  visibility 0s;
     }
+    #today-panel.expanded, #settings-panel.expanded { max-height: 92vh; }
     #today-body, #settings-body {
       overflow-y: auto; -webkit-overflow-scrolling: touch;
       padding-bottom: calc(18px + env(safe-area-inset-bottom));

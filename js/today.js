@@ -29,7 +29,7 @@ function openToday() {
 }
 function closeToday() {
   var p = document.getElementById('today-panel');
-  if (p) p.classList.remove('open');
+  if (p) { p.classList.remove('open'); p.classList.remove('expanded'); }
   var d = document.getElementById('today-dim');
   if (d) d.classList.remove('show');
 }
@@ -122,7 +122,7 @@ function openSettings() {
 }
 function closeSettings() {
   var p = document.getElementById('settings-panel');
-  if (p) p.classList.remove('open');
+  if (p) { p.classList.remove('open'); p.classList.remove('expanded'); }
   var d = document.getElementById('today-dim');
   if (d) { d.classList.remove('show'); delete d.dataset.for; }
 }
@@ -199,4 +199,57 @@ function clearGeoCache() {
     if (typeof showToast === 'function') showToast(del.length + '건을 비웠어요');
   } catch (e) {}
   _renderSettings();
+}
+
+/* ── 패널 드래그 핸들 (today / tide / settings) ──────────────────────────
+ * 위로 스와이프(40px↑) → 92vh 확장
+ * 아래로 스와이프(50px↓) → 확장 상태면 축소, 아니면 닫기
+ * 손가락 이동 중에는 패널을 따라 내려가 손 놓으면 복귀 or 닫기 */
+function _panelClose(panel) {
+  var id = panel.id;
+  if      (id === 'tide-panel'     && typeof closeTide     === 'function') closeTide();
+  else if (id === 'today-panel'    && typeof closeToday    === 'function') closeToday();
+  else if (id === 'settings-panel' && typeof closeSettings === 'function') closeSettings();
+}
+
+function setupPanelDrags() {
+  document.querySelectorAll('.panel-drag-zone').forEach(function (zone) {
+    var panel = zone.parentElement;
+    var startY = 0, live = false;
+
+    function onStart(y) { startY = y; live = true; }
+    function onMove(y) {
+      if (!live) return;
+      var dy = y - startY;
+      if (dy > 0) panel.style.transform = 'translate(-50%, ' + dy + 'px)';
+    }
+    function onEnd(y) {
+      if (!live) return;
+      live = false;
+      panel.style.transform = '';
+      var dy = y - startY;
+      if (dy < -40) {
+        panel.classList.add('expanded');
+      } else if (dy > 50) {
+        if (panel.classList.contains('expanded')) panel.classList.remove('expanded');
+        else _panelClose(panel);
+      }
+    }
+
+    zone.addEventListener('touchstart', function (e) { onStart(e.touches[0].clientY); },      { passive: true });
+    zone.addEventListener('touchmove',  function (e) { onMove(e.touches[0].clientY); },       { passive: true });
+    zone.addEventListener('touchend',   function (e) { onEnd(e.changedTouches[0].clientY); });
+
+    /* 데스크탑 테스트용 */
+    zone.addEventListener('mousedown', function (e) { onStart(e.clientY); e.preventDefault(); });
+    document.addEventListener('mousemove', function (e) { if (live) onMove(e.clientY); });
+    document.addEventListener('mouseup',   function (e) { if (live) onEnd(e.clientY); });
+  });
+}
+
+/* DOM 파싱 완료 후 한 번만 설정한다. */
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupPanelDrags);
+} else {
+  setupPanelDrags();
 }

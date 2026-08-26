@@ -90,7 +90,7 @@ function openTide() {
 
 function closeTide() {
   var p = document.getElementById('tide-panel');
-  if (p) p.classList.remove('open');
+  if (p) { p.classList.remove('open'); p.classList.remove('expanded'); }
   var d = document.getElementById('tide-dim');
   if (d) d.classList.remove('show');
 }
