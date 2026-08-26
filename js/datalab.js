@@ -56,7 +56,11 @@ function _dlEmpty(msg) {
 /* 이름이 곧 관광지일 때 지도로 보낸다. PLACES 에 있으면 그 핀으로, 없으면 검색만. */
 function dlGoPlace(name) {
   if (typeof PLACES === 'undefined') return;
-  var hit = PLACES.find(function (p) { return p.name === name; });
+  /* 데이터랩 이름과 PLACES 이름의 공백 표기가 다를 수 있다(예: "율암온천숯가마 테마파크" vs "율암온천숯가마테마파크").
+   * 공백을 제거한 값으로 비교해 매칭이 끊기지 않도록 한다. */
+  var norm = function(s) { return (s || '').replace(/\s+/g, ''); };
+  var nq = norm(name);
+  var hit = PLACES.find(function (p) { return p.name === name || norm(p.name) === nq; });
   if (hit && typeof goMapFocus === 'function') {
     goMapFocus(hit.lat, hit.lng, 4, hit.id);
   } else if (typeof showToast === 'function') {
