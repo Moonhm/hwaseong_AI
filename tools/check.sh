@@ -6,8 +6,8 @@
 #   - 빌드 도구·번들러·패키지 매니저가 없다. push 하면 Cloudflare 터널이
 #     로컬 파일을 그대로 서빙하므로 push = 즉시 실서비스다.
 #   - 개발 Claude와 배포 Claude 둘이 같은 저장소를 동시에 쓴다.
-#   - 실패가 전부 조용하다. index.html:1935/2316/2636 등의 방어 가드와
-#     index.html:3882 / index.html:2336 / js/parking.js:73 의 빈 catch 가
+#   - 실패가 전부 조용하다. index.html 곳곳의 방어 가드와
+#     index.html 과 js/parking.js:73 의 빈 catch 가
 #     "데이터가 통째로 깨짐" 을 "목록이 비어 있음" 으로 번역한다.
 #     그래서 207개가 0개가 되든 10개가 사라지든 화면 상태가 구분되지 않는다.
 #
@@ -165,7 +165,7 @@ precommit_guard() {
   # (a) js/ 를 고쳤는데 index.html 의 ?v= 를 안 올렸나
   if [ -n "$(git status --porcelain -- js/ 2>/dev/null | grep -E '\.js$')" ] \
      && [ -z "$(git status --porcelain -- index.html 2>/dev/null)" ]; then
-    echo "  FAIL js/*.js 를 고쳤는데 index.html 은 안 고쳤다 — index.html:3891-3897 의 ?v= 를 올렸는가?"
+    echo "  FAIL js/*.js 를 고쳤는데 index.html 은 안 고쳤다 — <script src> 의 ?v= 를 올렸는가?"
     git status --porcelain -- js/ | sed 's/^/         /'
     bad=1
   fi
@@ -209,7 +209,7 @@ live_drift() {
     else echo "  FAIL $f  배포=$lh 저장소=$rh — 사용자가 받는 바이트가 다르다"; bad=1; fi
   done
   lb=$(curl -s --max-time 30 "$LIVE_URL/" | wc -c); rb=$(wc -c < index.html)
-  # 알려진 차이: Cloudflare 이메일 난독화 +243B (index.html:1443 의 mailto:).
+  # 알려진 차이: Cloudflare 이메일 난독화 +243B (index.html 의 mailto: 링크).
   # 0 을 요구하면 상시 빨간불이 되므로 상한으로 박는다. 늘어나면 다른 것이 주입된 것이다.
   if [ "$((lb - rb))" -gt 300 ]; then
     echo "  FAIL index.html 배포=${lb}B 저장소=${rb}B (차 $((lb-rb))B, 알려진 상한 300B 초과)"

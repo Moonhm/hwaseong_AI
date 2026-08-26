@@ -85,7 +85,7 @@ def info(msg): INFO.append(msg)
 # 4.2MB 짜리 localcurrency-static.json 을 두 번 파싱하지 않도록 한 번만 읽어 캐시한다.
 # (실측: json.load 1회 0.195초. 캐시 없으면 건수 검사와 필드 검사가 각각 파싱해 0.4초를 쓴다.)
 # 굳이 완전 파싱을 고집하는 이유: 파싱 자체가 "파일이 잘렸는가" 검사를 겸하기 때문이다.
-# index.html:3607 의 빈 catch 가 브라우저에서 그 실패를 통째로 삼키므로, 여기서 안 잡으면 아무도 못 잡는다.
+# index.html 의 빈 catch 가 브라우저에서 그 실패를 통째로 삼키므로, 여기서 안 잡으면 아무도 못 잡는다.
 _JSON = {}
 def load_json(fn):
     if fn in _JSON: return _JSON[fn]
@@ -192,7 +192,7 @@ def check_counts():
     for k in ("restaurants", "touristRestaurants", "hotels", "camping", "cinemas"):
         got["CONVENIENCE." + k] = array_len(
             src_c, k, "js/convenience.js",
-            "index.html:2141 의 `CONVENIENCE[srcMap[convCat]]` 가 undefined 를 받아 목록이 빈다")
+            "js/mapnav.js goConvItem 의 `CONVENIENCE[srcMap[convCat]]` 가 undefined 를 받아 목록이 빈다")
     for k in ("pension_outside", "inside", "nearby", "minbak_inside", "minbak_nearby"):
         got["CONVENIENCE.jebu." + k] = array_len(
             src_c, k, "js/convenience.js",
@@ -315,7 +315,7 @@ PRINTED = [
     # 이 두 줄도 되살려라 — 안 그러면 화면 숫자가 데이터와 어긋나도 아무도 모른다.
     # 모범음식점 건수는 지금도 소식 탭에서 living-list-count 규칙이 지키고 있다.
 ]
-# index.html:2698-2718 의 카드 숫자
+# 홈 '관광' 토글의 편의정보 카드 숫자 (js/home.js renderHomeTourism)
 PRINTED_CARD = [
     ("모범음식점", "CONVENIENCE.restaurants"),
     ("관광식당업", "CONVENIENCE.touristRestaurants"),
@@ -369,7 +369,7 @@ def check_printed(got):
         if occ < 1:
             fail("index.html+js/  카드 라벨「%s」의 건수 표기를 못 찾았다 — 마크업이 바뀌었다" % label)
 
-    # js/convenience.js:196 의 summary — 화면 숫자(index.html:2937-2945, js/conv_map.js:394-396)의 실제 출처
+    # js/convenience.js:196 의 summary — 화면 숫자(js/conv_map.js 슬라이드)의 실제 출처
     src = open(os.path.join(ROOT, "js/convenience.js"), encoding="utf-8").read()
     m = re.search(r"summary\s*:\s*\{([^}]*)\}", src)
     if not m:
@@ -438,9 +438,9 @@ def check_tool_regex():
 
 # ─── 5. 사진 ↔ 이름 연결 ─────────────────────────────────────────────────────
 # assets/images/places/{name}.jpg 는 data.js 의 name 과 글자 단위로 일치해야 뜬다
-#   (js/map.js:401, index.html:2037/2355/3085). 중간 매핑 테이블이 없다.
+#   (js/map.js:401 및 index.html 의 필터 칩). 중간 매핑 테이블이 없다.
 # 이름을 다듬는 순간 사진이 영영 안 보이는데, onerror 가 404 를 삼켜 아무 표시도 안 난다
-#   (js/map.js:409, index.html:3088).
+#   (js/map.js:409).
 # assets/ 는 .gitignore:7 에 걸려 있어 개발 워킹트리에는 없는 것이 정상이다.
 # 없을 때 실패시키면 상시 빨간불이 되어 아무도 안 쓰게 된다 → 명시적으로 "건너뜀"을 찍는다.
 def check_photos():
@@ -544,7 +544,7 @@ def check_photos():
 
 
 # ─── 6. 캐시 무효화 ──────────────────────────────────────────────────────────
-# index.html:3891 의 "js/ 파일을 수정하면 ?v= 를 함께 올릴 것" 규율이
+# index.html <script src> 옆 주석의 "js/ 파일을 수정하면 ?v= 를 함께 올릴 것" 규율이
 # 정작 데이터가 든 JSON 2개만 정확히 비껴간다.
 def check_cachebust():
     h = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
@@ -564,7 +564,7 @@ def check_cachebust():
              % (len(nover), CEILING["fetch_without_cachebust"],
                 ", ".join("%s:%d→%s" % (f, ln, t) for t, f, ln in nover)))
         warn("  → 갱신한 주차장·지역화폐 데이터가 재방문자 브라우저 캐시에 막힌다. "
-             "index.html:3891 의 규율에 맞춰 이 fetch 들에도 ?v= 를 붙여라")
+             "index.html <script src> 의 ?v= 규율에 맞춰 이 fetch 들에도 ?v= 를 붙여라")
     # <script src="js/*.js?v="> 쪽은 전부 붙어 있는지 확인
     # js/ 뿐 아니라 css/ 도 본다. 파일명에 숫자·하이픈이 들어가므로([A-Za-z_] 만으로는
     # 00-base.css 류가 통째로 안 잡힌다) 문자클래스를 넓혔다. 2026-08-25 CSS 분리 때
