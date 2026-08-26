@@ -526,7 +526,13 @@ function showFestivalDetail(id) {
                  data-addr="${(place.address || '').replace(/"/g, '&quot;')}"
                  onclick="copyAddress(this.dataset.addr)"
                  title="눌러서 주소 복사">${shortAddr}<span class="fd-addr-copy">복사</span></div>
-            <button class="fd-map-btn" onclick="goMapFocus(${place.lat},${place.lng},4,${place.id})">
+            <!-- ⚠ placeId 를 넘기지 마라 (2026-08-26 실측으로 잡은 버그).
+                 goMapFocus 는 placeId 가 축제면 '지도에 핀이 없다' 며 openFestView 로
+                 되돌린다(js/mapnav.js). 그래서 이 버튼을 눌러도 같은 상세가 다시
+                 그려질 뿐 아무 일도 안 일어났다.
+                 축제는 지도 핀이 없으니 좌표만 넘겨 그 자리로 카메라를 옮긴다.
+                 핀이 없어도 어디쯤인지는 보이고, 주차장·맛집 칩이 지도 위에 있다. -->
+            <button class="fd-map-btn" onclick="goMapFocus(${place.lat},${place.lng},4)">
               지도에서 위치 보기 →
             </button>
           </div>
