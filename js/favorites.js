@@ -56,18 +56,35 @@ function _refreshFavUi() {
   renderMenuFavs();
 }
 
-/* 카테고리별 시각 정보 (CATEGORY_CONFIG 미로드 환경 대비 인라인) */
+/* 카테고리별 시각 정보 (CATEGORY_CONFIG 미로드 환경 대비 인라인)
+ *
+ * ⚠ 여기는 '목록' 이다. WORKFLOW.md §3 규칙상 관광지는 **핀에서만 ★** 이고
+ *   목록·검색에서는 🎡 다. 2026-08-26 사용자 지적으로 고쳤다 —
+ *   §3 이 "이모지를 바꿀 때 손대야 하는 곳은 네 군데" 라고 적으면서 이 파일을
+ *   빠뜨려, 다른 네 곳만 🎡 로 바뀌고 즐겨찾기만 ★ 로 남아 있었다.
+ *   (§3 의 목록도 이 파일을 포함하도록 함께 고쳤다)
+ *
+ * ⚠ heritage 가 없어서 문화재 즐겨찾기가 기본값 ★ 로 떨어지고 있었다.
+ *   즐겨찾기 버튼을 다는 곳은 showPlaceSlide(js/map.js) 하나뿐이고 거기에
+ *   들어오는 place.category 는 tourist·festival·heritage 셋이다.
+ *   셋을 전부 덮어야 기본값으로 새지 않는다.
+ *
+ * mobeom·touristrest 는 지금 도달 경로가 없다(편의시설 슬라이드에는 즐겨찾기
+ * 버튼이 없다). 나중에 붙일 때를 위해 남겨 둔다 — 있으면 그때 바로 맞는다. */
 function _favCfg(f) {
   var map = {
-    tourist:     { emoji:'★',  bg:'#FEF3C7', label:'관광지'    },
+    tourist:     { emoji:'🎡', bg:'#FEF3C7', label:'관광지'    },
     festival:    { emoji:'🎉', bg:'#FEE2E2', label:'축제'      },
+    heritage:    { emoji:'🏛️', bg:'#EDE9FE', label:'문화재'    },
     mobeom:      { emoji:'🍽️', bg:'#FEF3C7', label:'모범음식점' },
     touristrest: { emoji:'🥢', bg:'#FEE2E2', label:'관광식당'  },
     lc:          { emoji:'💳', bg:'#D1FAE5', label:'가맹점'    },
     parking:     { emoji:'🅿️', bg:'#DBEAFE', label:'주차장'    }
   };
   var key = f.type === 'lc' || f.type === 'parking' ? f.type : (f.cat || 'tourist');
-  return map[key] || { emoji:'★', bg:'#F3F4F6', label:'장소' };
+  /* 기본값을 ★ 로 두면 안 된다 — ★ 는 지도 핀의 관광지 기호라 다른 뜻이 된다.
+   * 분류를 모르는 것은 분류를 모르는 것처럼 보여야 한다. */
+  return map[key] || { emoji:'📍', bg:'#F3F4F6', label:'장소' };
 }
 
 function navToFav(id) {
