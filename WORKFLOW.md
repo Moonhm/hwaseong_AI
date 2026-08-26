@@ -389,7 +389,7 @@ git pull
 | 주차장 | 131개 |
 | 제부도 숙박 | 115개 (lat/lng 하드코딩, convenience.js) |
 | 편의정보 | 모범음식점 94(88좌표이식), 관광식당 35, 호텔 10, 캠핑 17, 템플스테이 1, **관광편의시설 10(신규)**, **영화상영관 10(신규)** |
-| 음식점 데이터 | 3754건 — `data/restaurants-static.json` (665KB, `{n,c,a,t,x,y}`) — **지도 모듈 구현 대기** |
+| 음식점 데이터 | 3754건 — `js/restaurants-static.json` (665KB, `{n,c,a,t,x,y}`) — **지도 모듈 구현 대기** |
 
 ### Kakao API
 
@@ -421,7 +421,7 @@ python tools/server.py --port 8080
 | ~~id:41 화성예술의전당~~ | ✅ 2026-08-26 해결 — 주소 동탄구 노작로 11-1로 수정 |
 | ~~id:102 송산포도축제~~ | ✅ 2026-08-26 해결 — 날짜 9.5-6, 장소 궁평항, 좌표 수정 |
 | ~~convenience.js 대부분 lat/lng 없음~~ | ✅ 2026-08-26 해결 — 모범음식점 88/94 좌표 이식, 관광편의시설·영화상영관 신규 섹션 추가 |
-| 음식점 3754건 미표시 | `data/restaurants-static.json` 준비 완료. **개발 Claude의 `js/restaurants.js` 모듈 구현 필요** (§13-R 참조) |
+| 음식점 3754건 미표시 | `js/restaurants-static.json` 준비 완료. **개발 Claude의 `js/restaurants.js` 모듈 구현 필요** (§13-R 참조) |
 
 ---
 
@@ -433,7 +433,7 @@ python tools/server.py --port 8080
 
 | 파일 | 크기 | 스키마 |
 |------|------|--------|
-| `data/restaurants-static.json` | 665KB | `{ meta: {...}, rows: [{n,c,a,t,x,y}] }` |
+| `js/restaurants-static.json` | 665KB | `{ meta: {...}, rows: [{n,c,a,t,x,y}] }` |
 
 - `n` 이름, `c` 카테고리(18종), `a` 주소, `t` 전화, `x` lat, `y` lng
 - 18개 카테고리: 한식 1575, 카페/음료 975, 분식 182, 베이커리 143, 치킨 138, 한식_고기 124, 탕/국밥 116, 해산물 93, 술집/포차 70, 일식 66, 피자 56, 중식 53, 면류 49, 뷔페 33, 족발/보쌈 26, 아시안/외국 24, 양식 19, 패스트푸드 12
@@ -444,7 +444,7 @@ python tools/server.py --port 8080
 
 ```js
 // js/restaurants.js 핵심 구조
-var rsData = [];          // fetch로 data/restaurants-static.json 로드
+var rsData = [];          // fetch로 js/restaurants-static.json 로드
 var rsCatFilter = 'all';  // 카테고리 필터
 var RS_MAX_PINS = 250;    // 뷰포트 내 핀 상한
 var RS_PIN_LEVEL = 6;     // 이 레벨 이하에서 개별 핀, 초과시 클러스터
@@ -837,3 +837,27 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 ## 25. 문화재 UI 연결 · 관광지 이모지 🎡 · PLACES 빈칸 장애 → [`docs/log/2026-08-26-dev-heritage-wiring-emoji.md`](docs/log/2026-08-26-dev-heritage-wiring-emoji.md)
 
 ## 26. 선택 핀 강조를 모든 핀 종류로 확대 → [`docs/log/2026-08-26-dev-pin-selection-all.md`](docs/log/2026-08-26-dev-pin-selection-all.md)
+
+---
+
+## §27 배포 평가서 정정 — 개발 Claude 검증 결과 (2026-08-26)
+
+개발 Claude가 배포 Claude 보고서를 실저장소와 대조한 결과:
+
+### 수정 완료
+
+| 항목 | 기존 기술 | 실제 | 조치 |
+|------|----------|------|------|
+| `restaurants-static.json` 경로 | `data/` | `js/`로 이동 완료 | **`tools/server.py` `_PUBLIC_DIRS`에 `data/`가 없어 브라우저 fetch 불가. `js/restaurants-static.json`으로 이동함** |
+| 공간정보 CSV 수량 | "12종" | 10개 (나머지 9개는 JSON 변환 완료된 원본) | 오기 정정 |
+
+### 확인된 정확한 사실
+
+- `AIRKOREA_KEY` — `js/home.js:189`에 실제 키 입력됨, 미세먼지 표시 중
+- `air_quality_sensors_hwaseong.json` — 좌표 없는 스냅샷, 지도 활용 구조적 불가
+- `restaurants-static.json` — 3,754건, 좌표 100%, 업종 18종, 649KB
+
+### 개발 Claude 우선순위 제안 (수용)
+
+1. **음식점 3,754건** (`js/restaurants-static.json`) — 기존 conv_map.js 핀 구조 재사용 가능
+2. **제부도 조수** (`data/processed/jebu_tide_2026.json`) — PLACES id:1 상세 패널 연동
