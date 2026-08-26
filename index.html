@@ -19,7 +19,7 @@
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
   <link rel="stylesheet" href="css/00-base.css?v=2026082630">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082630">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082632">
   <link rel="stylesheet" href="css/20-map.css?v=2026082630">
   <link rel="stylesheet" href="css/30-panel.css?v=2026082630">
   <link rel="stylesheet" href="css/40-quiz.css?v=2026082630">
@@ -60,6 +60,9 @@
   <div id="home-weather-bar" style="display:none">
     <!-- 위치 헤더 -->
     <div class="hwb-header">
+      <span class="hwb-loc-icon">📍</span>
+      <span id="hwb-loc-name">화성시</span>
+      <span id="hwb-date" class="hwb-date"></span>
       <button id="hwb-gps-btn" onclick="weatherBarGPS()" title="내 위치 날씨" aria-label="내 위치 날씨">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
@@ -68,9 +71,6 @@
         </svg>
         <span>내 위치</span>
       </button>
-      <span class="hwb-loc-icon">📍</span>
-      <span id="hwb-loc-name">화성시</span>
-      <span id="hwb-date" class="hwb-date"></span>
     </div>
     <!-- 현재 날씨 -->
     <div class="hwb-current">
@@ -617,7 +617,7 @@
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082631"></script>
+<script src="js/photos.js?v=2026082632"></script>
 <script src="js/convenience.js?v=2026082630"></script>
 <script src="js/data.js?v=2026082630"></script>
 <script src="js/map.js?v=2026082630"></script>
