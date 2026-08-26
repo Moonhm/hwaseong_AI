@@ -121,7 +121,10 @@ function _renderWeekly() {
           '<span class="wk-min">' + tmin + '°</span>' +
           '<span class="wk-bar"><i style="left:' + left.toFixed(1) + '%;width:' + Math.max(6, wide).toFixed(1) + '%"></i></span>' +
           '<span class="wk-max">' + tmax + '°</span>' +
-          '<span class="wk-caret">' + (open ? '▴' : '▾') + '</span>' +
+          /* ⚠ 여기 있던 ▾/▴ 화살표를 뺐다 (2026-08-26 사용자 지시).
+           * 오른쪽 끝에서 온도 숫자와 세로 정렬이 어긋나 보였고, 줄 전체가 버튼이라
+           * 화살표가 없어도 눌러서 펼쳐진다 — 없는 편이 깔끔하다.
+           * 펼침 상태는 aria-expanded 와 .is-open 이 계속 알린다. */
         '</button>' +
         (open ? _wkHourly(i, nowH) : '') +
       '</div>';
