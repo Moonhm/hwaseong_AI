@@ -132,17 +132,23 @@
     <span class="home-about-badge">About</span>
     <h2 class="home-about-title">화성잇다란?</h2>
     <p class="home-about-desc">
-      화성잇다는 경기도 화성특례시의 관광지·축제·맛집·공영주차장·지역화폐 가맹점을
-      카카오맵 기반으로 통합 제공하는 모바일 여행 정보 앱이에요.
-      화성시 공식 공공데이터와 실시간 주차 API를 연동해 관광지 159곳, 축제 50건, 지정문화재 42곳,
-      공영주차장 131개, 지역화폐 가맹점 27,374개의 정보를 한눈에 확인할 수 있어요.
+      화성잇다는 화성특례시로 떠나기 전과 도착한 뒤에 필요한 정보를 한 앱에 모아둔 서비스예요.
+      제부도에 간다면 바닷길이 열리는 시간을 먼저 확인하고, 도착해서는 가까운 공영주차장에
+      자리가 남았는지 약 1분 간격으로 갱신되는 여유 대수로 살펴보고, 머무는 동안에는
+      지금 서 있는 자리 근처의 지역화폐 가맹점을 찾아볼 수 있어요.
+      어디부터 가야 할지 모르겠다면 짧은 취향 질문에 답해 추천을 받고,
+      원하는 구를 골라 지도를 그 동네만 남기고 좁혀 볼 수도 있어요.
+      여행 정보와 생활 정보는 탭으로 나눠 담아서, 놀러 온 분도 여기 사는 분도
+      각자 필요한 쪽만 보면 돼요.
+      여기저기 흩어져 있던 화성시 공공데이터를 하루의 동선대로 잇는 것,
+      그게 화성잇다가 하려는 일이에요.
     </p>
     <div class="home-about-chips">
-      <span class="home-about-chip">🗺️ 카카오맵 API</span>
-      <span class="home-about-chip">🎡 관광지 159곳</span>
-      <span class="home-about-chip">🎉 축제 50건</span>
-      <span class="home-about-chip">🏛️ 지정문화재 42곳</span>
-      <span class="home-about-chip">🅿️ 실시간 공영주차장</span>
+      <span class="home-about-chip">🌊 제부도 바닷길 물때</span>
+      <span class="home-about-chip">🎡 관광지</span>
+      <span class="home-about-chip">🎉 축제</span>
+      <span class="home-about-chip">🏛️ 지정문화재</span>
+      <span class="home-about-chip">🅿️ 공영주차장 여유 대수</span>
       <span class="home-about-chip"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>
     </div>
   </div>
@@ -152,33 +158,41 @@
     <p class="dn-heading">데이터 출처 및 유의사항</p>
 
     <p class="dn-body">
-      본 서비스는 <strong>화성시 공식 관광 포털</strong>(tour.hscity.go.kr),
-      <strong>화성시 공식 행사 예약</strong>(yeyak.hscity.go.kr),
-      <strong>한국관광 데이터랩</strong>, <strong>공공데이터포털</strong>에서 제공하는
-      데이터를 활용합니다.
+      화성잇다는 화성특례시의 공식 앱이 아니며, 화성특례시를 비롯한 공공기관과 제휴하거나
+      승인받은 관계가 없는 팀 제작 서비스입니다. 화성시가 운영하는
+      <strong>관광 포털</strong>(tour.hscity.go.kr)과 <strong>통합예약</strong>(yeyak.hscity.go.kr),
+      <strong>공공데이터포털</strong>(data.go.kr), <strong>한국관광 데이터랩</strong>이 공개한 자료를
+      2026년 8월에 내려받아 정비했습니다. 지도와 주소 검색은 카카오맵 API를, 날씨와 대기질은
+      Open-Meteo를, 현재 위치의 주소 표시는 OpenStreetMap Nominatim을 사용하며,
+      원본 자료의 권리는 각 제공 기관에 있습니다.
     </p>
 
     <p class="dn-body">
-      <strong>실시간 주차 데이터 (화성시 스마트파킹)</strong> — smartparking.hscity.go.kr
-      공공 API 기반. 주차 여유 대수는 실시간 추정치로 실제 현장 상황과 차이가 있을 수 있으며,
-      60초 주기로 자동 갱신됩니다.
+      <strong>주차 여유 대수</strong> — 화성시 스마트파킹(smartparking.hscity.go.kr) 공공 API에서
+      받아 오며, 지도 화면을 보고 있는 동안 약 60초 간격으로 갱신됩니다. 다른 화면을 보고 있거나
+      통신에 실패하면 마지막으로 받은 값이 그대로 남고, 실시간 응답을 한 번도 받지 못한 주차장은
+      남은 자리가 총 주차면수로 표시되므로 실제 현장 상황과 차이가 있을 수 있습니다.
     </p>
 
     <p class="dn-body">
-      <strong>지역화폐 가맹점 (희망화성지역화폐)</strong> — 화성사랑카드 가맹점 현황
-      데이터 기반. 등록·폐업 현황은 실시간으로 변동될 수 있으며, 최신 정보는
-      화성사랑카드 공식 채널에서 확인하세요.
+      <strong>지역화폐와 제부도 바닷길</strong> — 경기데이터드림이 공개한
+      희망화성지역화폐(화성사랑카드) 가맹점 현황을 2026년 8월에 받은 자료를 기준으로 합니다.
+      가맹 등록과 폐업은 수시로 변동되므로 결제 전 매장에 사용 가능 여부를 확인하시기 바랍니다.
+      제부도 바닷길 통행 시간 역시 공개 자료를 옮겨 둔 것이며, 기상과 물때에 따라 실제 통제 시간이
+      달라질 수 있으므로 현장 안내를 우선하여 따르시기 바랍니다.
     </p>
 
     <p class="dn-body">
-      <strong>관광지·편의시설 데이터</strong> — 화성시 공식 관광 포털 및 한국관광
-      데이터랩의 공개 데이터를 기반으로 수집·정비하였습니다. 좌표는 웹 검증을 거쳤으나
-      100–200m 오차가 있을 수 있습니다. 모범음식점·관광식당 등 편의시설 정보는
-      화성시 공공데이터 기준이며 현장 상황과 다를 수 있습니다.
+      <strong>위치와 표시 정보의 한계</strong> — 관광지와 편의시설 좌표는 원본 주소와 장소명 검색으로
+      채운 값이라 전수 검증이 이뤄지지 않았고, 원본 주소가 불완전한 곳은 실제 위치와 수백 미터까지
+      어긋날 수 있습니다. 구별 보기는 좌표와 주소를 기준으로 한 근사 분류여서 경계 부근 장소는 다른
+      구로 묶일 수 있으며, 관광지에 표시되는 별점과 리뷰 수는 실제 이용자 평가가 아니라 화면 구성을
+      위한 예시값입니다. 영업시간과 휴무일, 행사 일정은 변경될 수 있으므로 방문 전 해당 기관에
+      확인하시기 바랍니다.
     </p>
 
     <p class="dn-copy">
-      © 데이터 출처: 화성시 공식 관광포털 · 화성시 스마트파킹 · 희망화성지역화폐 · 한국관광 데이터랩 · 공공데이터포털
+      © 데이터 출처: 화성시 관광 포털 · 화성시 통합예약 · 공공데이터포털 · 화성시 스마트파킹 · 경기데이터드림 · 한국관광 데이터랩 | 지도: 카카오맵 · 위치 정보: OpenStreetMap · 날씨: Open-Meteo
     </p>
     <p class="dn-copy dn-dev">
       개발자: 서교연, 문형민 &nbsp;|&nbsp; 문의:
