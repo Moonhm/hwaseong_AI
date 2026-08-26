@@ -156,6 +156,11 @@ function go(page) {
                       : sub === 'spot'     ? 'tourist-only'
                       : sub === 'heritage' ? 'heritage-only' : 'all');
     }
+
+    /* 배너 확장 구간(마지막 퀴즈의 1위)은 서브탭과 무관하게 늘 최신이어야 한다.
+     * localStorage 를 읽으므로 이 창 밖에서도 바뀔 수 있다 — 홈에서 즐겨찾기·최근 본을
+     * 진입마다 다시 그리는 것과 같은 이유다. 배너 한 줄이라 진입마다 불러도 비용이 없다. */
+    if (typeof renderRecBannerTop === 'function') renderRecBannerTop();
   }
 
   /* 축제 캐러셀 좌/우 화살표. 2026-08-26 에 캐러셀이 추천 → 소식 탭으로 옮겨가면서

@@ -68,6 +68,91 @@
       margin-top: 14px; color: #fff; font-size: 13px; font-weight: 700;
     }
 
+    /* ── 배너 확장 구간 — 마지막 퀴즈의 1위 (2026-08-26, 사용자 요청) ──────────
+     * "이 네모 칸 약간 연장시켜서 페이드로 색깔 연하게 한 다음 1등 관광지 하나"
+     * 상자는 계속 하나다. 아래로 80px 만 늘리고 그 80px 안에서만 배경 위에
+     * 흰 베일을 덧씌워 진한 주황 → 연한 살구색으로 내려간다.
+     * 아래 겹(135deg)은 위 .menu-rec-banner 의 것을 글자 그대로 옮겼다 — 윗부분 색은 안 변한다.
+     *
+     * ⚠ 80px 은 임의의 수가 아니다:  padding-bottom 14 + 행 44 + 행 위 여백 22 = 80.
+     *   셋 중 하나를 고치면 아래 background 의 80px 도 반드시 같이 고칠 것.
+     *   베일이 0 인 지점(0%)이 '시작하기 →' 의 밑변, 0.88 에 닿는 지점(28%)이
+     *   행의 윗변이다. 즉 페이드 22px 이 두 텍스트 사이 빈 공간 안에서만 일어난다.
+     *   80 을 키우면 페이드가 위로 번져 흰 글씨 '시작하기 →' 가 안 읽힌다.
+     *
+     * %가 아니라 px 인 이유: 배너 높이가 확장 유무로 달라져서 %는 페이드 시작점이
+     * 떠돈다. 아래에서 잰 고정 px 만 두 텍스트 사이에 정확히 머문다.
+     *
+     * 클래스는 JS 가 붙인다. :has() 로 하지 않은 이유 — :has() 를 모르는 브라우저에서
+     * 베일 없는 진한 주황 위에 갈색 글씨가 얹혀 아예 안 읽힌다. 클래스는 어디서나 같다. */
+    .menu-rec-banner--top {
+      padding-bottom: 14px;
+      background:
+        linear-gradient(180deg,
+          rgba(255,255,255,0)    0%,
+          rgba(255,255,255,0.35) 14%,
+          rgba(255,255,255,0.88) 28%,
+          rgba(255,255,255,0.90) 100%) center bottom / 100% 80px no-repeat,
+        linear-gradient(135deg, #F97316, #EA580C);
+      /* 밑변이 연해지면 카드가 페이지 배경(--bg)에 묻는다.
+       * 안쪽 1px 링이 그 변을 잡아 준다 — 진한 주황 구간에서는 보이지 않는다. */
+      box-shadow: 0 4px 16px rgba(249,115,22,0.25),
+                  inset 0 0 0 1px rgba(194,65,12,0.14);
+    }
+
+    .menu-rec-top {
+      display: flex; align-items: center; gap: 11px;
+      height: 44px;                  /* ⚠ 위 80px 계산의 일부 */
+      margin: 22px -8px 0;           /* ⚠ 22 도 마찬가지. 음수 좌우는 눌림 효과만 넓힌다 */
+      padding: 0 8px; border-radius: 12px;
+      cursor: pointer; transition: background 0.12s;
+    }
+    .menu-rec-top:active { background: rgba(249,115,22,0.14); }
+    /* 확장 구간을 눌렀는데 배너 전체가 줄어들면 '퀴즈가 열린다' 는 잘못된 신호가 된다.
+     * :has() 미지원 브라우저는 예전처럼 배너가 줄 뿐 동작에는 영향이 없다.
+     * ⚠ .menu-rec-banner:active 보다 뒤에 있어야 한다. */
+    .menu-rec-banner:has(.menu-rec-top:active) { transform: none; }
+
+    /* 썸네일은 두 갈래로 들어온다 — 사진이 있으면 photoThumb 의 .ph-thumb,
+     * 없으면 아래 .menu-rec-top-fb. 둘을 같은 모습으로 맞춰 둔다.
+     * .ph-thumb 는 radius 10px 에 배경이 var(--bg)(차가운 회색)이고
+     * .ph-thumb-fb 는 font-size:60%(상속 기준 약 9px)라, 사진이 404 로 숨는 순간
+     * 살구색 위에 회색 사각형과 좁쌀만 한 이모지가 남는다(css/10-content.css:480). */
+    .ph-thumb.menu-rec-top-ph {
+      border-radius: 11px; background: rgba(255,255,255,0.72);
+      box-shadow: inset 0 0 0 1px rgba(194,65,12,0.12);
+    }
+    .menu-rec-top-ph .ph-thumb-fb { font-size: 21px; }
+    .menu-rec-top-fb {
+      width: 44px; height: 44px; border-radius: 11px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 21px; background: rgba(255,255,255,0.72);
+      box-shadow: inset 0 0 0 1px rgba(194,65,12,0.12);
+    }
+
+    .menu-rec-top-info { flex: 1; min-width: 0; }
+    /* 색 대비 — 베일 0.88 지점의 바탕은 #FBE1D3 이다.
+     *   #9A3412 / #FBE1D3 = 5.85:1,  #7C2D12 / #FBE1D3 = 7.5:1 (둘 다 AA 통과).
+     *   var(--text-muted) 는 2.13:1 이라 이 바탕에 절대 쓰면 안 된다. */
+    .menu-rec-top-label {
+      font-size: 10.5px; font-weight: 800; color: #9A3412;
+      letter-spacing: 0.02em; line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* 이름이 두 줄이 되면 행이 44px 을 넘어 위 80px 계산이 어긋난다 → 한 줄로 못 박는다. */
+    .menu-rec-top-name {
+      font-size: 14px; font-weight: 800; color: #7C2D12;
+      line-height: 1.35; margin-top: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    /* 알약('지도 ›')이 아니라 셰브론이다. 알약은 약 55px 을 먹어 360px 화면에서
+     * 이름 칸이 127px(한글 8자)까지 줄었다 — '서해랑 제부도해상케이블카' 가 잘린다.
+     * 앱의 다른 목록(.place-item)도 오른쪽 끝은 셰브론이라 모양도 그쪽에 맞는다. */
+    .menu-rec-top-go {
+      flex-shrink: 0; display: flex; align-items: center;
+      color: #9A3412; opacity: 0.75;
+    }
+
     /* ── TOAST ── */
     #toast {
       position: fixed; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 14px); left: 50%;
