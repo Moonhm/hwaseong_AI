@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082686">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082686">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082686">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082686">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082686">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082687">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082687">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082687">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082687">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082687">
   <link rel="stylesheet" href="css/50-datalab.css?v=2026082688">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082686">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082687">
 </head>
 <body>
 
@@ -132,12 +132,12 @@
     <span class="home-about-badge">About</span>
     <h2 class="home-about-title">화성잇다란?</h2>
     <p class="home-about-desc">
-      화성잇다는 화성특례시로 떠나기 전과 도착한 뒤에 필요한 정보를 한 앱에 모아둔 서비스예요.
+      화성잇다는 화성특례시로 떠나기 전과 도착한 뒤에 필요한 정보를 한곳에 모아둔 앱이에요.
       제부도에 간다면 바닷길이 열리는 시간을 먼저 확인하고, 도착해서는 가까운 공영주차장에
-      자리가 남았는지 약 1분 간격으로 갱신되는 여유 대수로 살펴보고, 머무는 동안에는
-      지금 서 있는 자리 근처의 지역화폐 가맹점을 찾아볼 수 있어요.
+      자리가 남았는지 살펴보고, 머무는 동안에는 지금 서 있는 자리 근처의
+      지역화폐 가맹점을 찾아볼 수 있어요.
       어디부터 가야 할지 모르겠다면 짧은 취향 질문에 답해 추천을 받고,
-      원하는 구를 골라 지도를 그 동네만 남기고 좁혀 볼 수도 있어요.
+      보고 싶은 구를 골라 그 지역만 지도에 띄워 볼 수도 있어요.
       여행 정보와 생활 정보는 탭으로 나눠 담아서, 놀러 온 분도 여기 사는 분도
       각자 필요한 쪽만 보면 돼요.
       여기저기 흩어져 있던 화성시 공공데이터를 하루의 동선대로 잇는 것,
@@ -145,10 +145,10 @@
     </p>
     <div class="home-about-chips">
       <span class="home-about-chip">🌊 제부도 바닷길 물때</span>
-      <span class="home-about-chip">🎡 관광지</span>
-      <span class="home-about-chip">🎉 축제</span>
-      <span class="home-about-chip">🏛️ 지정문화재</span>
-      <span class="home-about-chip">🅿️ 공영주차장 여유 대수</span>
+      <span class="home-about-chip">🎡 관광지 159곳</span>
+      <span class="home-about-chip">🎉 축제 50건</span>
+      <span class="home-about-chip">🏛️ 지정문화재 42곳</span>
+      <span class="home-about-chip">🅿️ 공영주차장 131곳</span>
       <span class="home-about-chip"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px"> 지역화폐 가맹점</span>
     </div>
   </div>
@@ -158,8 +158,8 @@
     <p class="dn-heading">데이터 출처 및 유의사항</p>
 
     <p class="dn-body">
-      화성잇다는 화성특례시의 공식 앱이 아니며, 화성특례시를 비롯한 공공기관과 제휴하거나
-      승인받은 관계가 없는 팀 제작 서비스입니다. 화성시가 운영하는
+      화성잇다는 화성특례시가 만든 공식 앱이 아니라, 시가 공개한 데이터를 활용해 만든
+      팀 제작 서비스입니다. 화성시
       <strong>관광 포털</strong>(tour.hscity.go.kr)과 <strong>통합예약</strong>(yeyak.hscity.go.kr),
       <strong>공공데이터포털</strong>(data.go.kr), <strong>한국관광 데이터랩</strong>이 공개한 자료를
       2026년 8월에 내려받아 정비했습니다. 지도와 주소 검색은 카카오맵 API를, 날씨와 대기질은
@@ -185,9 +185,10 @@
     <p class="dn-body">
       <strong>위치와 표시 정보의 한계</strong> — 관광지와 편의시설 좌표는 원본 주소와 장소명 검색으로
       채운 값이라 전수 검증이 이뤄지지 않았고, 원본 주소가 불완전한 곳은 실제 위치와 수백 미터까지
-      어긋날 수 있습니다. 구별 보기는 좌표와 주소를 기준으로 한 근사 분류여서 경계 부근 장소는 다른
-      구로 묶일 수 있으며, 관광지에 표시되는 별점과 리뷰 수는 실제 이용자 평가가 아니라 화면 구성을
-      위한 예시값입니다. 영업시간과 휴무일, 행사 일정은 변경될 수 있으므로 방문 전 해당 기관에
+      어긋날 수 있습니다. 구를 골라 보는 기능은 그 구를 감싸는 사각형 범위로 지도를 옮기는
+      방식이어서, 경계가 맞물리는 곳에서는 이웃 구의 장소가 함께 보일 수 있습니다.
+      관광지에 표시되는 별점과 리뷰 수는 실제 이용자 평가가 아니라 화면 구성을 위한
+      예시값입니다. 영업시간과 휴무일, 행사 일정은 변경될 수 있으므로 방문 전 해당 기관에
       확인하시기 바랍니다.
     </p>
 
@@ -838,34 +839,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082686"></script>
-<script src="js/quiz.js?v=2026082686"></script>
-<script src="js/mapnav.js?v=2026082686"></script>
-<script src="js/home.js?v=2026082686"></script>
-<script src="js/tourism.js?v=2026082686"></script>
-<script src="js/living.js?v=2026082686"></script>
-<script src="js/favorites.js?v=2026082686"></script>
-<script src="js/ui.js?v=2026082686"></script>
-<script src="js/calendar.js?v=2026082686"></script>
-<script src="js/boot.js?v=2026082686"></script>
+<script src="js/nav.js?v=2026082687"></script>
+<script src="js/quiz.js?v=2026082687"></script>
+<script src="js/mapnav.js?v=2026082687"></script>
+<script src="js/home.js?v=2026082687"></script>
+<script src="js/tourism.js?v=2026082687"></script>
+<script src="js/living.js?v=2026082687"></script>
+<script src="js/favorites.js?v=2026082687"></script>
+<script src="js/ui.js?v=2026082687"></script>
+<script src="js/calendar.js?v=2026082687"></script>
+<script src="js/boot.js?v=2026082687"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082686"></script>
-<script src="js/convenience.js?v=2026082686"></script>
-<script src="js/data.js?v=2026082686"></script>
-<script src="js/map.js?v=2026082686"></script>
-<script src="js/conv_map.js?v=2026082686"></script>
-<script src="js/parking.js?v=2026082686"></script>
-<script src="js/localcurrency.js?v=2026082686"></script>
+<script src="js/photos.js?v=2026082687"></script>
+<script src="js/convenience.js?v=2026082687"></script>
+<script src="js/data.js?v=2026082687"></script>
+<script src="js/map.js?v=2026082687"></script>
+<script src="js/conv_map.js?v=2026082687"></script>
+<script src="js/parking.js?v=2026082687"></script>
+<script src="js/localcurrency.js?v=2026082687"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082686"></script>
+<script src="js/datalab.js?v=2026082687"></script>
 <script src="js/tide.js?v=2026082687"></script>
-<script src="js/weather.js?v=2026082686"></script>
+<script src="js/weather.js?v=2026082687"></script>
 <script src="js/today.js?v=2026082687"></script>
-<script src="js/district.js?v=2026082686"></script>
+<script src="js/district.js?v=2026082687"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=2026082686"></script>
+<script src="js/hscroll.js?v=2026082687"></script>
 </body>
 </html>
