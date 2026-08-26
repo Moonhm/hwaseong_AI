@@ -15,7 +15,7 @@ function switchTourismSub(el, tab) {
   el.classList.add('active');
   _tourismSub = tab;
 
-  var sections = ['tourism-default','tourism-stay','tourism-camp','tourism-temple'];
+  var sections = ['tourism-default','tourism-stay','tourism-camp','tourism-temple','tourism-tour'];
   sections.forEach(function(id) {
     var el2 = document.getElementById(id);
     if (el2) el2.style.display = 'none';
@@ -36,7 +36,7 @@ function switchTourismSub(el, tab) {
     var tchips = document.getElementById('tourism-theme-chips');
     var plist  = document.getElementById('tourism-place-list');
 
-    /* 큐레이션 4종(#dl-sections — 인기·세대별·시티투어·요즘 뜨는 곳)은 '인기' 에서만
+    /* 큐레이션 3종(#dl-sections — 인기·세대별·요즘 뜨는 곳)은 '인기' 에서만
      * 보인다. 관광지·문화재는 목적이 뚜렷한 목록이라 그 위에 큐레이션이 끼면 방해가 된다.
      * 데이터는 보일 때 처음 한 번만 받는다(js/datalab.js 가 캐시한다).
      * ⚠ renderDlPopular() 를 이 블록 안에서 부른다 — 2026-08-26 에 '인기 있는 곳'이
@@ -77,6 +77,16 @@ function switchTourismSub(el, tab) {
       if (thdr)  thdr.style.display  = 'none';
       if (tchips) tchips.style.display = 'none';
       if (plist) plist.style.display = 'none';
+    }
+  } else if (tab === 'tour') {
+    /* 2026-08-26 사용자 지시로 '인기' 큐레이션에서 떼어낸 전용 서브탭.
+     * 숙박·캠핑과 같은 모양이다 — 전용 컨테이너를 켜고 자기 렌더러만 부른다.
+     * renderDlCityTour 는 js/datalab.js 소속이고 데이터를 캐시하므로
+     * 서브탭을 오갈 때마다 다시 받지 않는다. */
+    var tr = document.getElementById('tourism-tour');
+    if (tr) {
+      tr.style.display = 'block';
+      if (typeof renderDlCityTour === 'function') renderDlCityTour();
     }
   } else if (tab === 'stay') {
     var s = document.getElementById('tourism-stay');

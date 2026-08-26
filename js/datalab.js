@@ -20,7 +20,7 @@
  *   쓰는 방식(showCalendar/hideCalendar)과 동일하다.
  * ========================================================================== */
 
-var DL_VER   = '20260826103';
+var DL_VER   = '20260826105';
 var _dlCache = {};      /* 파일명 → 파싱된 JSON. 한 번 받으면 다시 안 받는다 */
 var _dlLoading = {};    /* 같은 파일을 동시에 두 번 요청하지 않게 하는 잠금 */
 
@@ -523,7 +523,10 @@ function renderDatalabSections() {
    * (js/tourism.js:50-51). 여기로 옮겨도 되나 그러면 '인기 있는 곳'만 따로
    * 다시 그리고 싶을 때 방법이 없어진다 — 부르는 쪽에서 고르게 둔다. */
   renderDlAge();
-  renderDlCityTour();
+  /* renderDlCityTour() 는 2026-08-26 에 여기서 빠졌다. 시티투어가 '인기' 큐레이션에서
+   * 전용 서브탭(#tourism-tour)으로 옮겨갔고, 그 분기(js/tourism.js switchTourismSub)가
+   * 직접 부른다. 여기 남겨 두면 '인기' 를 열 때마다 숨어 있는 #dl-tour-body 를
+   * 헛되이 다시 그린다. */
   renderDlReport();
 }
 
