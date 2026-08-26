@@ -368,6 +368,19 @@ function getFestivalMeta(place) {
   return { status: status, date: date };
 }
 
+/* 사진이 로드되면 그 비율로 히어로 상자를 맞춘다 (2026-08-26).
+ * 고정 비율 상자에 contain 을 쓰면 가로 사진에는 위아래, 세로 포스터에는 좌우로
+ * 흐린 띠가 크게 남는다. 실제 비율을 알고 나서 맞추면 그 띠가 거의 사라진다.
+ * ⚠ 다만 그대로 두면 안 된다 — 아주 긴 세로 포스터가 화면을 통째로 먹는다.
+ *   가로는 16:9, 세로는 4:5 로 잘라 둔다. 그 밖은 흐린 배경이 받는다. */
+function _fdFitHero(img) {
+  var box = img.closest('.fd-hero');
+  if (!box || !img.naturalWidth || !img.naturalHeight) return;
+  var r = img.naturalWidth / img.naturalHeight;
+  r = Math.max(0.8, Math.min(1.78, r));      /* 4:5 ~ 16:9 */
+  box.style.aspectRatio = r.toFixed(3);
+}
+
 function showFestivalDetail(id) {
   const place = PLACES.find(p => p.id === id);
   if (!place) return;
@@ -461,16 +474,43 @@ function showFestivalDetail(id) {
   /* 끝난 행사에 '예약하기' 는 말이 안 된다. 행사 안내로 보낸다. */
   const _ended = _hb.text === '종료';
 
+  /* ── 히어로 사진 (2026-08-26 재설계) ──────────────────────────────────────
+   * 사용자 지적: "사진이 너무 잘리고 길고 글씨에 가려."
+   * 원인 둘. (1) .fd-hero 가 height:210px 고정에 object-fit:cover 라 비율이 다른
+   * 사진이 통째로 잘렸다. (2) 그 위에 제목·날짜를 얹고 검은 그라데이션까지 덮었다.
+   *
+   * 고친 방향: **자르지 않고 가리지 않는다.**
+   *   · object-fit 을 contain 으로 바꿔 사진 전체를 보여 준다.
+   *   · 남는 여백은 같은 사진을 흐리게 깐 배경으로 채운다(레터박스가 빈 검정이
+   *     되지 않는다). 사진마다 비율이 다른데 그걸 모르는 상태에서 쓸 수 있는
+   *     유일한 방법이다 — 데이터에 가로·세로가 없다.
+   *   · 제목·날짜는 사진 위가 아니라 아래 흰 바탕으로 내렸다.
+   *
+   * 사진이 없을 때는 예전 그대로다(그라데이션 + 글씨 얹기). 축제 50건은 전부
+   * 사진이 있어 실제로는 안 타지만, 다른 분류가 이 화면을 쓰게 되면 필요하다. */
+  const _hasPh = hasPhoto(place);
+  const _phSrc = _hasPh ? placePhotoSrc(place) : '';
+
   document.getElementById('fd-content').innerHTML = `
+    ${_hasPh ? `
+    <div class="fd-hero fd-hero--photo" id="fd-hero">
+      <div class="fd-hero-blur" style="background-image:url('${_phSrc}')"></div>
+      <img class="fd-hero-img" src="${_phSrc}" alt="${place.name}"
+           decoding="async" onload="_fdFitHero(this)"
+           onerror="this.closest('.fd-hero').classList.add('no-img')">
+    </div>
+    <div class="fd-titlebar">
+      <span class="badge ${_hb.cls}">${_hbIcon} ${_hb.text}</span>
+      <div class="fd-tb-title">${place.name}</div>
+      <div class="fd-tb-date">${detailDate ? '📅 ' + detailDate : ''}${ddayHtml}</div>
+    </div>` : `
     <div class="fd-hero ${imgClass}">
-      ${hasPhoto(place) ? `<img class="fd-hero-img" src="${placePhotoSrc(place)}" alt=""
-             decoding="async" onerror="this.style.display='none'">` : ''}
       <div class="fd-hero-body">
         <div class="fd-hero-badge">${_hbIcon} ${_hb.text}</div>
         <div class="fd-hero-title">${place.name}</div>
         <div class="fd-hero-date">${detailDate ? '📅 ' + detailDate : ''}${ddayHtml}</div>
       </div>
-    </div>
+    </div>`}
     <div class="fd-body">
       <div class="fd-info-card">
         <div class="fd-info-row">

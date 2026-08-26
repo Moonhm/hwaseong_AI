@@ -552,3 +552,65 @@
     /* 본문이 짧아도 하단 내비에 붙지 않게 */
     .fd-tail { height: 20px; }
 
+    /* ── 히어로 사진 재설계 (2026-08-26) ────────────────────────────────────
+     * 사용자 지적: "사진이 너무 잘리고 길고 글씨에 가려."
+     * 원인은 height:210px 고정 + object-fit:cover + 글씨 오버레이 셋이었다.
+     * 자르지 않고(contain) 가리지 않는(글씨를 아래로) 쪽으로 바꿨다.
+     * 자세한 근거는 js/tourism.js showFestivalDetail 의 주석 참고. */
+    .fd-hero--photo {
+      /* ⚠ width:100% 를 반드시 명시한다. aspect-ratio 만 두면 max-height 에 걸릴 때
+       * 브라우저가 '비율을 지키려고 폭을 줄인다' — 세로 포스터에서 상자가 351px 로
+       * 좁아져 오른쪽에 흰 여백이 남았다(실측). 폭을 고정하면 높이만 잘리고,
+       * 남는 좌우는 아래 .fd-hero-blur 가 받는다. */
+      width: 100%;
+      height: auto;
+      aspect-ratio: 3 / 2;          /* js/_fdFitHero 가 사진 실제 비율로 덮어쓴다 */
+      max-height: 52vh;             /* 세로 포스터가 화면을 통째로 먹지 않게 */
+      padding: 0;
+      background: #0F172A;          /* 사진 로드 전 잠깐 보이는 바탕 */
+      display: block;
+    }
+    /* 검은 그라데이션은 글씨를 읽히게 하려던 것이다. 글씨가 아래로 내려갔으니
+     * 사진을 어둡게 할 이유가 없다. */
+    .fd-hero--photo::after { display: none; }
+
+    /* 남는 여백을 같은 사진의 흐린 판으로 채운다 — 빈 검정 띠를 없앤다.
+     * inset 을 음수로 두는 이유: blur 는 가장자리에서 바깥 픽셀을 못 읽어
+     * 테두리가 옅어진다. 상자보다 크게 깔아 그 부분을 잘라낸다. */
+    .fd-hero-blur {
+      position: absolute; inset: -30px;
+      background-size: cover; background-position: center;
+      filter: blur(24px) saturate(1.25) brightness(0.62);
+      transform: scale(1.08);
+    }
+    .fd-hero--photo .fd-hero-img {
+      object-fit: contain;          /* 잘라내지 않는다 */
+      z-index: 1;
+    }
+    /* 사진이 끝내 안 뜨면 흐린 배경만 남아 뿌옇다 — 그때는 상자를 접는다. */
+    .fd-hero--photo.no-img { aspect-ratio: auto; height: 0; }
+
+    /* 제목줄 — 사진 아래 흰 바탕. 사진을 가리지 않는다. */
+    .fd-titlebar {
+      background: var(--white);
+      padding: 16px var(--px) 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .fd-titlebar .badge { font-size: 11px; }
+    .fd-tb-title {
+      font-size: 20px; font-weight: 900; color: var(--text);
+      line-height: 1.32; margin: 9px 0 6px; word-break: keep-all;
+    }
+    .fd-tb-date {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      font-size: 13px; color: var(--text-sub); font-weight: 500;
+      padding-bottom: 12px;
+    }
+    /* 흰 바탕 위의 D-day — 히어로용(흰 글씨)과 색이 달라야 읽힌다.
+     * #C2410C 는 흰 배경 대비 4.6:1 로 AA 를 넘는다. */
+    .fd-titlebar .fd-dday {
+      background: #FFEDD5; color: #C2410C;
+      backdrop-filter: none; -webkit-backdrop-filter: none;
+    }
+    .fd-titlebar .fd-dday.soon { background: #C2410C; color: #fff; }
+
