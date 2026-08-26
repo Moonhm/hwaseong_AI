@@ -287,6 +287,11 @@ function _renderDatalabView(kind) {
 function dlShowCourse(no) { showDatalab('course:' + no); }
 
 function _dlCourseHeroSrc(c) {
+  /* 코스 전용 이미지가 있으면 우선 사용 (assets/images/courses/<코스명>.png) */
+  if (c.name) {
+    return 'assets/images/courses/' + encodeURIComponent(c.name) + '.png';
+  }
+  /* 없으면 첫 장소 사진으로 대체 */
   var s = (c.spots || []).filter(function (x) { return x.id != null; });
   for (var i = 0; i < s.length; i++) {
     if (typeof hasPhoto === 'function' && hasPhoto({ id: s[i].id, name: s[i].name })) {
