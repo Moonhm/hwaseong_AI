@@ -20,7 +20,7 @@
  *   쓰는 방식(showCalendar/hideCalendar)과 동일하다.
  * ========================================================================== */
 
-var DL_VER   = '2026082685';
+var DL_VER   = '2026082686';
 var _dlCache = {};      /* 파일명 → 파싱된 JSON. 한 번 받으면 다시 안 받는다 */
 var _dlLoading = {};    /* 같은 파일을 동시에 두 번 요청하지 않게 하는 잠금 */
 
@@ -89,6 +89,7 @@ function _dlDedupe(rows) {
    ① 화성에서 인기 있는 곳 — 내비게이션 목적지 기준
    ══════════════════════════════════════════════════════════════════════════ */
 var DL_NAVI = 'datalab_naviranking_hwaseong_2026.json';
+var DL_MEDALS = ['🥇', '🥈', '🥉'];   /* 금 · 은 · 동 */
 
 function renderDlPopular() {
   var el = document.getElementById('dl-popular-body');
@@ -100,8 +101,10 @@ function renderDlPopular() {
     var list = _dlDedupe(d && d.interest_spots_domestic);
     if (!list.length) { el2.innerHTML = _dlEmpty('순위 정보를 불러오지 못했어요'); return; }
     el2.innerHTML =
+      /* 3위까지만 (2026-08-26 사용자 지시). 전체 68개는 '전체 보기' 가 맡는다 —
+       * 미리보기에서 10개를 옆으로 밀게 하느니 시상대만 보여 주는 편이 읽기 쉽다. */
       '<div class="dl-photo-row">' +
-      list.slice(0, 10).map(function (r, i) {
+      list.slice(0, 3).map(function (r, i) {
         /* 접고 난 뒤 자리로 다시 매긴다. 원본 rank 를 그대로 쓰면 중복이 빠진 만큼
          * '1, 3, 5…' 로 건너뛰어 고장으로 보인다. 접힌 항목은 같은 장소를 다른
          * 분류로 한 번 더 센 것이라, 합친 뒤 순번을 다시 매기는 쪽이 사실에 가깝다. */
@@ -115,7 +118,13 @@ function renderDlPopular() {
                  '<div class="dl-photo-thumb">' +
                    '<img src="' + src + '" alt="" loading="lazy" decoding="async" ' +
                         'onerror="this.style.display=\'none\'">' +
-                   '<div class="dl-photo-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
+                   /* 금·은·동 (2026-08-26 사용자 지시).
+                    * 트로피 이모지는 🏆 한 종류뿐이라 은/동을 구분할 수 없다.
+                    * 메달 3종(🥇🥈🥉)이 금·은·동을 그대로 나타내므로 이쪽을 쓴다.
+                    * aria-label 은 스크린리더가 '1등 메달' 로 읽게 하려는 것 —
+                    * 이모지만 두면 읽는 방식이 리더마다 제각각이다. */
+                   '<div class="dl-photo-no" aria-label="' + (i + 1) + '위">' +
+                     DL_MEDALS[i] + '</div>' +
                  '</div>' +
                  '<div class="dl-photo-name">' + r.name + '</div>' +
                  '<div class="dl-rank-cat">' + (r.category || '') + '</div>' +

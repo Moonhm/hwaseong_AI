@@ -26,7 +26,8 @@
 
 var HS_SELECTORS = [
   '.recent-row',      /* 홈 · 최근 본 곳 */
-  '.dl-photo-row',    /* 추천 · 인기 있는 곳(사진) */
+  /* '.dl-photo-row' 는 뺐다 — 3위까지만 3등분 격자로 놓이므로 넘치지 않는다
+     (2026-08-26, css/50-datalab.css 참고) */
   '.dl-rank-row',     /* 추천 · 요즘 뜨는 곳 */
   '.dl-tour-row',     /* 추천 · 시티투어 */
   '.dl-chip-row',     /* 추천 · 구·연령·탭 칩 */

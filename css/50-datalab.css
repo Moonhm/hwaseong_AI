@@ -409,18 +409,21 @@
     .td-btn:active { opacity: 0.86; transform: scale(0.98); }
 
     /* ══════════════ 인기 순위 사진 카드 (2026-08-26) ══════════════ */
+    /* 3위까지만 보여 주므로(2026-08-26) 가로 스크롤이 아니라 3등분 격자다.
+     * 132px 고정 3장 + 여백이면 390px 화면에서 26px 넘쳐 '조금만 밀리는'
+     * 어정쩡한 스크롤이 생긴다. 1fr 로 나누면 한 화면에 딱 떨어진다.
+     * (js/hscroll.js 의 대상 목록에서도 함께 뺐다 — 더 이상 안 넘친다) */
     .dl-photo-row {
-      display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain;
-      padding: 2px var(--px) 4px; scrollbar-width: none;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+      padding: 2px var(--px) 4px;
     }
-    .dl-photo-row::-webkit-scrollbar { display: none; }
-    .dl-photo-card { flex-shrink: 0; width: 132px; cursor: pointer; }
+    .dl-photo-card { min-width: 0; cursor: pointer; }
     .dl-photo-card:active { transform: scale(0.97); }
     .dl-photo-card { transition: transform 0.12s; }
     /* 사진이 없을 때(assets/ 는 배포 서버에만 있다) onerror 로 img 가 숨고
      * 이 배경 + ::before 이모지가 그대로 보인다. 빈 사각형이 남지 않는다. */
     .dl-photo-thumb {
-      position: relative; width: 132px; height: 94px;
+      position: relative; width: 100%; height: 84px;
       border-radius: var(--r-md); overflow: hidden; margin-bottom: 7px;
       background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
       display: flex; align-items: center; justify-content: center;
@@ -429,16 +432,18 @@
     .dl-photo-thumb img {
       width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1;
     }
-    /* 순위 배지는 사진 위에 떠야 하므로 img(z-index:1)보다 위 */
+    /* 순위 배지는 사진 위에 떠야 하므로 img(z-index:1)보다 위.
+     * 메달 이모지는 색이 있어서 어두운 배경 위에 놓으면 탁해진다 —
+     * 흰 원판으로 바꿔 사진이 밝든 어둡든 메달 색이 그대로 보이게 한다. */
     .dl-photo-no {
       position: absolute; top: 6px; left: 6px; z-index: 2;
-      min-width: 22px; height: 22px; padding: 0 6px; border-radius: 7px;
+      width: 26px; height: 26px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 12px; font-weight: 900;
-      background: rgba(17,24,39,0.72); color: #fff;
+      font-size: 15px; line-height: 1;
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.22);
       backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     }
-    .dl-photo-no.top { background: var(--primary); }
     .dl-photo-name {
       font-size: 13px; font-weight: 700; color: var(--text);
       line-height: 1.3; word-break: keep-all;
