@@ -96,6 +96,13 @@ function _getFestDays(year, month) {
   PLACES.filter(function(p) { return p.category === 'festival' && p.date; })
     .forEach(function(p) {
       var ranges  = p.date.split('~');
+      /* ⚠ '2026년 10월 중' 같은 미확정 일정은 파서가 그 달 1일로 채운다.
+       * 그대로 달력에 찍으면 10월 1일에만 점이 몰려 확정 일정처럼 보인다
+       * (실측 10건). 근사면 날짜 칸에서 뺀다 — 목록에는 그대로 나오고
+       * 배지가 '예정' 으로 알려 준다. 2026-08-26 감사. */
+      var _sm = (typeof _parseFestDateMeta === 'function')
+        ? _parseFestDateMeta(ranges[0]) : null;
+      if (_sm && _sm.approx) return;
       var sp      = _parseFestDate(ranges[0]);
       var ep      = _parseFestDate(ranges[1] || ranges[0]);
       if (!sp || !ep) return;
@@ -163,11 +170,12 @@ function renderCalEventList(festivals, labelText, emptyHtml) {
     return;
   }
   el.innerHTML = festivals.map(function(p) {
-    var isOngoing = (typeof festStatus === 'function') && festStatus(p) === 'ongoing';
-    var badgeStyle = isOngoing
-      ? 'background:#DCFCE7;color:#16A34A'
-      : 'background:#FFF7ED;color:#F59E0B';
-    var badgeText  = isOngoing ? '진행중' : '예정';
+    /* ⚠ 배지를 여기서 따로 계산하지 마라 (2026-08-26 감사).
+     * 예전에는 ongoing 이냐 아니냐 2분기라 '종료'가 없었고, 이미 끝난 축제가
+     * 달력에서는 '예정' 인데 소식 탭 '행사 전체' 에서는 '종료' 로 보였다.
+     * 상태 판정은 festBadge() 한 곳만 쓴다 — 3분기(진행중·종료·예정)를 다 안다. */
+    var _b = (typeof festBadge === 'function')
+      ? festBadge(p) : { cls: 'badge-upcoming', text: '예정' };
     var dateStr = (p.date || '').replace(/^\d{4}-/,'').replace(/-/g,'.').replace(' ~ ',' ~ ');
     /* 사진이 있으면 점(dot) 대신 썸네일. 없으면 기존 점 그대로다. */
     var thumb = (typeof photoThumb === 'function') ? photoThumb(p, 38, '🎉', 'ph-sm') : '';
@@ -177,7 +185,7 @@ function renderCalEventList(festivals, labelText, emptyHtml) {
       + '<div class="cal-ev-name">' + p.name + '</div>'
       + '<div class="cal-ev-date">📅 ' + dateStr + '</div>'
       + '</div>'
-      + '<div class="cal-ev-badge" style="' + badgeStyle + '">' + badgeText + '</div>'
+      + '<div class="cal-ev-badge badge ' + _b.cls + '">' + _b.text + '</div>'
       + '</div>';
   }).join('');
 }

@@ -384,7 +384,11 @@ function showFestivalDetail(id) {
   const imgClass = IMG_CLASSES_FD[Math.max(0, festIdx) % IMG_CLASSES_FD.length];
 
   const { status, date } = getFestivalMeta(place);
-  const isOngoing = (typeof festStatus === 'function') && festStatus(place) === 'ongoing';
+  /* 배지는 festBadge() 한 곳에서만 판정한다 — 여기서 ongoing 2분기로 따로 계산하던
+   * 탓에 이미 끝난 축제가 상세 히어로에서 '📅 예정' 으로 떴다 (2026-08-26 감사). */
+  const _hb = (typeof festBadge === 'function')
+    ? festBadge(place) : { cls: 'badge-upcoming', text: '예정' };
+  const _hbIcon = _hb.text === '진행중' ? '🎪' : _hb.text === '종료' ? '🏁' : '📅';
 
   const descParts = place.desc ? place.desc.split('|').map(s => s.trim()) : [];
   const detailDate = descParts.length > 1 ? descParts[1] : (descParts[0] || '');
@@ -396,7 +400,7 @@ function showFestivalDetail(id) {
       ${hasPhoto(place) ? `<img class="fd-hero-img" src="${placePhotoSrc(place)}" alt=""
              decoding="async" onerror="this.style.display='none'">` : ''}
       <div class="fd-hero-body">
-        <div class="fd-hero-badge">${isOngoing ? '🎪 진행중' : '📅 예정'}</div>
+        <div class="fd-hero-badge">${_hbIcon} ${_hb.text}</div>
         <div class="fd-hero-title">${place.name}</div>
         ${detailDate ? `<div class="fd-hero-date">📅 ${detailDate}</div>` : ''}
       </div>

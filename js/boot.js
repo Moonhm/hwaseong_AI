@@ -96,11 +96,19 @@ function scrollLcFilter(dir) {
 
 /* ── 초기 렌더 ── */
 /* 검색창 외부 클릭 시 결과 닫기 */
+/* ⚠ 검색창은 홈과 지도 둘이다. 예전에는 홈 것만 보고 닫아서, 지도 검색 결과가
+ * 뜬 상태로 '지도 검색창' 을 다시 누르면(오타 고치려고) 결과가 즉시 사라졌다 —
+ * 자기 자신을 눌렀는데 닫히는 셈이었다. 활성 창(_srWhere)의 DOM 을 본다.
+ * _SR_DOM/_srWhere 는 js/home.js 의 top-level var 이고 index.html 에서 home.js 가
+ * boot.js 보다 먼저 로드되므로 여기서 참조해도 안전하다. (2026-08-26 감사) */
 document.addEventListener('click', function(e) {
-  var bar = document.getElementById('home-search-bar');
-  var res = document.getElementById('home-search-results');
+  var where = (typeof _srWhere !== 'undefined' && _srWhere) ? _srWhere : 'home';
+  var ids   = (typeof _SR_DOM !== 'undefined' && _SR_DOM[where])
+    ? _SR_DOM[where] : { bar: 'home-search-bar', results: 'home-search-results' };
+  var bar = document.getElementById(ids.bar);
+  var res = document.getElementById(ids.results);
   if (bar && res && !bar.contains(e.target) && !res.contains(e.target)) {
-    closeHomeSearch();
+    closeHomeSearch(where);
   }
 });
 

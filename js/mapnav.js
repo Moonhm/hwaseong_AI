@@ -126,6 +126,16 @@ function goMapFocus(lat, lng, level, placeId) {
       return;
     }
   }
+  /* ⚠ 좌표 없이 placeId 만 주는 호출부가 있다 — js/datalab.js 의 시티투어
+   * '들르는 곳' 이 goMapFocus(0,0,4,id) 로 부른다. 그대로 두면 카메라가 위도 0·
+   * 경도 0(기니만)으로 한 번 갔다가 스냅해 빈 바다가 잠깐 보이고 타일까지 받는다.
+   * 호출부를 하나씩 고치는 대신 여기서 막는다 — 이 파일 위쪽 축제 처리와 같은 방침이다.
+   * (2026-08-26 감사) */
+  if ((!lat || !lng) && placeId != null && typeof PLACES !== 'undefined') {
+    var _fx = PLACES.find(function (x) { return x.id === placeId; });
+    if (_fx && _fx.lat && _fx.lng) { lat = _fx.lat; lng = _fx.lng; }
+  }
+
   go('map');
   setTimeout(function () {
     if (!kakaoMap) {
