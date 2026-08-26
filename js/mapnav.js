@@ -197,3 +197,24 @@ function goMapLc(lat, lng) {
   }, 350);
 }
 
+/* ── 편의정보 칩 + 좌표로 지도 열기 (2026-08-26) ────────────────────────────
+ * 영화관을 PLACES 에서 CONVENIENCE.cinemas 로 옮기면서 필요해졌다.
+ * 그전에는 관광지라 goMapFocus(=PLACES 핀)로 갔는데, 이제 편의정보 칩을 켜야
+ * 핀이 그려진다. 위 goMapLc 와 같은 구조다 — 칩을 먼저 켜고 한 박자 뒤에
+ * 카메라를 옮긴다. 순서를 바꾸면 칩이 켜지며 지도를 다시 그려 중심이 되돌아간다.
+ * cat 은 js/conv_map.js 의 CONV_CAT_CFG 키다('cinema'·'camping'·'hotel' 등). */
+function goMapConv(cat, lat, lng) {
+  go('map');
+  setTimeout(function () {
+    if (!kakaoMap) return;
+    var chip = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
+    if (!chip || !chip.classList.contains('active')) setFilter(cat);
+    if (lat && lng) {
+      setTimeout(function () {
+        kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
+        kakaoMap.setLevel(4);
+      }, 150);
+    }
+  }, 350);
+}
+

@@ -510,6 +510,20 @@ function doHomeSearch(q, where) {
         }
       });
     });
+
+    /* 영화관 (최대 3개) — 2026-08-26 에 PLACES 에서 CONVENIENCE.cinemas 로 옮기면서
+     * 검색에서 통째로 사라졌다. 그전에는 관광지라 위 PLACES 검색에 걸렸다.
+     * 위 convSets 에 끼우지 않은 이유: 저쪽은 목적지가 소식 탭 목록(type:'conv')인데
+     * 영화관은 소식 탭에 목록이 없어 지도로 보내야 한다 — 타입을 따로 둔다. */
+    var cinHits = 0;
+    (CONVENIENCE.cinemas || []).forEach(function(p) {
+      if (cinHits >= 3) return;
+      if ((p.name || '').toLowerCase().replace(/\s+/g, '').includes(ql.replace(/\s+/g, ''))) {
+        results.push({ type: 'cinema', name: p.name, sub: '영화상영관' + (p.addr ? ' · ' + p.addr : ''),
+                       em: '🎬', bg: '#FCE7F3', lat: p.lat, lng: p.lng });
+        cinHits++;
+      }
+    });
   }
 
   renderHomeSearchResults(results.slice(0, 9), q);
@@ -557,6 +571,9 @@ function _srClick(idx) {
     goMapFocus(r.lat, r.lng, 4, r.id != null ? r.id : null);
   } else if (r.type === 'parking' && r.lat) {
     goMapPark(r.lat, r.lng, r.id);
+  } else if (r.type === 'cinema' && r.lat) {
+    /* 영화관은 편의정보라 지도의 🎬 칩을 켜야 핀이 그려진다(js/mapnav.js goMapConv). */
+    goMapConv('cinema', r.lat, r.lng);
   } else if (r.type === 'lc' && r.lat) {
     go('map');
     setTimeout(function() {

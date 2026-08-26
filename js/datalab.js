@@ -54,16 +54,58 @@ function _dlEmpty(msg) {
   return '<div class="dl-empty">' + msg + '</div>';
 }
 /* 이름이 곧 관광지일 때 지도로 보낸다. PLACES 에 있으면 그 핀으로, 없으면 검색만. */
+/* 데이터랩 이름과 우리 데이터의 공백 표기가 다르다
+ * (예: "율암온천숯가마 테마파크" vs "율암온천숯가마테마파크"). 공백을 지우고 비교한다. */
+function _dlNorm(s) { return (s || '').replace(/\s+/g, ''); }
+
+/* 영화관은 2026-08-26 에 PLACES → CONVENIENCE.cinemas 로 옮겼다(사용자 지시).
+ * 내비랭킹 상위에 영화관이 10곳이나 있어서, 그대로 두면 누를 때마다
+ * '지도에 등록되지 않은 곳이에요' 토스트만 뜬다.
+ *
+ * ⚠ 이름이 세 갈래로 어긋난다. 접두 일치를 아무렇게나 쓰면 안 된다:
+ *     "메가박스동탄역" 은 "메가박스동탄" 으로 **시작**하므로
+ *     단순 접두 매칭이면 엉뚱하게 '메가박스 동탄' 으로 간다.
+ *   그래서 우선순위를 둔다 —
+ *     ① 완전 일치
+ *     ② 우리 이름이 검색어로 시작 ("메가박스동탄역점" ⊃ "메가박스동탄역") : 가장 짧은 것
+ *     ③ 검색어가 우리 이름으로 시작 ("롯데시네마병점" ⊃ "롯데시네마병점"…) : 가장 긴 것
+ *   ②를 ③보다 앞에 둬야 위 사고가 안 난다. */
+function _dlFindCinema(nq) {
+  var cs = (typeof CONVENIENCE !== 'undefined' && CONVENIENCE.cinemas) || [];
+  var exact = null, fwd = null, bwd = null;
+  cs.forEach(function (c) {
+    var cn = _dlNorm(c.name);
+    if (!cn) return;
+    if (cn === nq) { exact = c; return; }
+    if (cn.indexOf(nq) === 0) {            /* ② 우리 이름이 더 길다 */
+      if (!fwd || cn.length < _dlNorm(fwd.name).length) fwd = c;
+    } else if (nq.indexOf(cn) === 0) {     /* ③ 검색어가 더 길다 */
+      if (!bwd || cn.length > _dlNorm(bwd.name).length) bwd = c;
+    }
+  });
+  return exact || fwd || bwd;
+}
+
+/* 이름이 곧 장소일 때 지도로 보낸다. PLACES 에 있으면 그 핀으로,
+ * 없으면 영화관(편의정보)을 찾아보고, 그래도 없으면 토스트로 알린다. */
 function dlGoPlace(name) {
-  if (typeof PLACES === 'undefined') return;
-  /* 데이터랩 이름과 PLACES 이름의 공백 표기가 다를 수 있다(예: "율암온천숯가마 테마파크" vs "율암온천숯가마테마파크").
-   * 공백을 제거한 값으로 비교해 매칭이 끊기지 않도록 한다. */
-  var norm = function(s) { return (s || '').replace(/\s+/g, ''); };
-  var nq = norm(name);
-  var hit = PLACES.find(function (p) { return p.name === name || norm(p.name) === nq; });
-  if (hit && typeof goMapFocus === 'function') {
-    goMapFocus(hit.lat, hit.lng, 4, hit.id);
-  } else if (typeof showToast === 'function') {
+  var nq = _dlNorm(name);
+
+  if (typeof PLACES !== 'undefined') {
+    var hit = PLACES.find(function (p) { return p.name === name || _dlNorm(p.name) === nq; });
+    if (hit && typeof goMapFocus === 'function') {
+      goMapFocus(hit.lat, hit.lng, 4, hit.id);
+      return;
+    }
+  }
+
+  var cin = _dlFindCinema(nq);
+  if (cin && typeof goMapConv === 'function') {
+    goMapConv('cinema', cin.lat, cin.lng);
+    return;
+  }
+
+  if (typeof showToast === 'function') {
     showToast('지도에 등록되지 않은 곳이에요 — ' + name);
   }
 }
