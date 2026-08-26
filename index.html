@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=20260826100">
-  <link rel="stylesheet" href="css/10-content.css?v=20260826100">
-  <link rel="stylesheet" href="css/20-map.css?v=20260826100">
-  <link rel="stylesheet" href="css/30-panel.css?v=20260826100">
-  <link rel="stylesheet" href="css/40-quiz.css?v=20260826100">
-  <link rel="stylesheet" href="css/50-datalab.css?v=20260826100">
-  <link rel="stylesheet" href="css/90-misc.css?v=20260826100">
+  <link rel="stylesheet" href="css/00-base.css?v=20260826101">
+  <link rel="stylesheet" href="css/10-content.css?v=20260826101">
+  <link rel="stylesheet" href="css/20-map.css?v=20260826101">
+  <link rel="stylesheet" href="css/30-panel.css?v=20260826101">
+  <link rel="stylesheet" href="css/40-quiz.css?v=20260826101">
+  <link rel="stylesheet" href="css/50-datalab.css?v=20260826101">
+  <link rel="stylesheet" href="css/90-misc.css?v=20260826101">
 </head>
 <body>
 
@@ -765,7 +765,16 @@
         <div class="menu-item-sub">지도에서 빈자리 확인 · 131곳</div>
       </div>
     </div>
-    <!-- 2026-08-26 추가: 하루 단위로 쓰는 것 셋을 맨 위에 모았다. -->
+    <!-- 제부도 바닷길 시간표 — 2026-08-26 사용자 지시로 주차장 다음 두 번째 자리다.
+         제부도는 하루 두 번 길이 잠긴다. 모르고 가면 못 건너거나 섬에 갇히므로
+         화성 관광에서 가장 먼저 확인해야 할 정보다. -->
+    <div class="menu-item" onclick="openTide()">
+      <div class="menu-item-icon" style="background:#CFFAFE;">🌊</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">제부도 바닷길 시간표</div>
+        <div class="menu-item-sub">오늘 건널 수 있는 시간 확인</div>
+      </div>
+    </div>
     <div class="menu-item" onclick="openToday()">
       <div class="menu-item-icon" style="background:#FEF9C3;">☀️</div>
       <div class="menu-item-text">
@@ -780,28 +789,15 @@
         <div class="menu-item-sub">가장 가까운 관광지·공영주차장</div>
       </div>
     </div>
-    <!-- 2026-08-26 — 누르면 토스트로 '준비 중'을 알린다(사용자 지시).
-         원래 onclick 은 goMapCat('restaurant') 였는데, 지도에 data-cat="restaurant"
-         칩이 없어서 지도 탭으로 넘어간 뒤 아무 일도 일어나지 않았다.
-         (음식점 3,754건은 js/restaurants.js 와 함께 지도에서 빠졌고,
-          data/restaurants-static.json 은 현재 어떤 코드도 읽지 않는다.)
-         메뉴는 닫지 않는다 — 닫으면 토스트만 남아 무엇에 대한 말인지 알 수 없다. -->
-    <div class="menu-item" onclick="showToast('아직 준비 중이에요')">
-      <div class="menu-item-icon" style="background:#FEF3C7;">🍜</div>
+    <!-- 2026-08-26 — 축제가 추천 탭 서브탭에서 소식 탭으로 옮겨가면서 목적지도 바꿨다.
+         예전 menuGoTourism('festival') 은 이제 없는 칩을 찾아 아무 일도 안 한다. -->
+    <div class="menu-item" onclick="goFestivalAll()">
+      <div class="menu-item-icon" style="background:#FEF2F2;">🎉</div>
       <div class="menu-item-text">
-        <div class="menu-item-label">음식점 전체</div>
-        <div class="menu-item-sub">준비 중이에요</div>
+        <div class="menu-item-label">행사</div>
+        <div class="menu-item-sub">진행 중인 행사부터 순서대로</div>
       </div>
     </div>
-      <!-- 2026-08-26 — 축제가 추천 탭 서브탭에서 소식 탭으로 옮겨가면서 목적지도 바꿨다.
-           예전 menuGoTourism('festival') 은 이제 없는 칩을 찾아 아무 일도 안 한다. -->
-      <div class="menu-item" onclick="goFestivalAll()">
-        <div class="menu-item-icon" style="background:#FEF2F2;">🎉</div>
-        <div class="menu-item-text">
-          <div class="menu-item-label">행사 전체</div>
-          <div class="menu-item-sub">진행 중인 행사부터 순서대로</div>
-        </div>
-      </div>
     <div class="menu-item" onclick="closeMenu();goMapCat('localcurrency')">
       <div class="menu-item-icon" style="background:#F0FDF4;display:flex;align-items:center;justify-content:center;"><img src="img/gyeonggi_currency_logo.png" alt="" style="width:22px;height:22px;object-fit:contain"></div>
       <div class="menu-item-text">
@@ -809,37 +805,13 @@
         <div class="menu-item-sub">경기지역화폐 사용 가능 매장</div>
       </div>
     </div>
-    <div class="menu-item" onclick="menuGoLiving('restaurant')">
-      <div class="menu-item-icon" style="background:#FEF3C7;">🍽️</div>
-      <div class="menu-item-text">
-        <div class="menu-item-label">모범음식점</div>
-        <div class="menu-item-sub">화성시 인증 맛집 94곳</div>
-      </div>
-    </div>
-    <div class="menu-item" onclick="menuGoTourism('stay')">
-      <div class="menu-item-icon" style="background:#EDE9FE;">🏨</div>
-      <div class="menu-item-text">
-        <div class="menu-item-label">숙박</div>
-        <div class="menu-item-sub">관광호텔·리조트</div>
-      </div>
-    </div>
-    <div class="menu-item" onclick="menuGoTourism('camp')">
-      <div class="menu-item-icon" style="background:#DCFCE7;">⛺</div>
-      <div class="menu-item-text">
-        <div class="menu-item-label">캠핑장</div>
-        <div class="menu-item-sub">화성시 캠핑장 17곳</div>
-      </div>
-    </div>
-    <!-- 제부도 바닷길 시간표 (2026-08-26, 사용자 지시로 여기에 넣었다).
-         제부도는 하루 두 번 길이 잠긴다 — 모르고 가면 못 건너거나 섬에 갇힌다.
-         '제부도 숙박' 바로 위에 둔 이유: 제부도로 가려는 사람이 반드시 먼저 볼 정보다. -->
-    <div class="menu-item" onclick="openTide()">
-      <div class="menu-item-icon" style="background:#CFFAFE;">🌊</div>
-      <div class="menu-item-text">
-        <div class="menu-item-label">제부도 바닷길 시간표</div>
-        <div class="menu-item-sub">오늘 건널 수 있는 시간 확인</div>
-      </div>
-    </div>
+    <!-- 2026-08-26 사용자 지시로 '음식점 전체'·'모범음식점'·'숙박'·'캠핑장' 넷을 뺐다.
+         기능이 사라진 게 아니라 진입점이 하나로 정리된 것이다 —
+         모범음식점은 소식 탭의 생활 정보 카테고리(#liv-cat-restaurant),
+         숙박·캠핑은 추천 탭 서브탭(data-sub="stay"/"camp")에 그대로 있다.
+         '음식점 전체'는 원래 '준비 중' 토스트만 띄우던 자리라 잃은 기능이 없다.
+         js/mapnav.js 의 menuGoLiving·menuGoTourism 은 남겨 둔다 — 지금은 부르는
+         곳이 없지만 지우면 그 둘을 언급하는 주석 여러 개가 함께 거짓이 된다. -->
     <div class="menu-item" onclick="closeMenu();goMapCat('jebu')">
       <div class="menu-item-icon" style="background:#E0F2FE;">⛱️</div>
       <div class="menu-item-text">
@@ -886,34 +858,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=20260826100"></script>
-<script src="js/quiz.js?v=20260826100"></script>
-<script src="js/mapnav.js?v=20260826100"></script>
-<script src="js/home.js?v=20260826100"></script>
-<script src="js/tourism.js?v=20260826100"></script>
-<script src="js/living.js?v=20260826100"></script>
-<script src="js/favorites.js?v=20260826100"></script>
-<script src="js/ui.js?v=20260826100"></script>
-<script src="js/calendar.js?v=20260826100"></script>
-<script src="js/boot.js?v=20260826100"></script>
+<script src="js/nav.js?v=20260826101"></script>
+<script src="js/quiz.js?v=20260826101"></script>
+<script src="js/mapnav.js?v=20260826101"></script>
+<script src="js/home.js?v=20260826101"></script>
+<script src="js/tourism.js?v=20260826101"></script>
+<script src="js/living.js?v=20260826101"></script>
+<script src="js/favorites.js?v=20260826101"></script>
+<script src="js/ui.js?v=20260826101"></script>
+<script src="js/calendar.js?v=20260826101"></script>
+<script src="js/boot.js?v=20260826101"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=20260826100"></script>
-<script src="js/convenience.js?v=20260826100"></script>
-<script src="js/data.js?v=20260826100"></script>
-<script src="js/map.js?v=20260826100"></script>
-<script src="js/conv_map.js?v=20260826100"></script>
-<script src="js/parking.js?v=20260826100"></script>
-<script src="js/localcurrency.js?v=20260826100"></script>
+<script src="js/photos.js?v=20260826101"></script>
+<script src="js/convenience.js?v=20260826101"></script>
+<script src="js/data.js?v=20260826101"></script>
+<script src="js/map.js?v=20260826101"></script>
+<script src="js/conv_map.js?v=20260826101"></script>
+<script src="js/parking.js?v=20260826101"></script>
+<script src="js/localcurrency.js?v=20260826101"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=20260826100"></script>
-<script src="js/tide.js?v=20260826100"></script>
-<script src="js/weather.js?v=20260826100"></script>
-<script src="js/today.js?v=20260826100"></script>
-<script src="js/district.js?v=20260826100"></script>
+<script src="js/datalab.js?v=20260826101"></script>
+<script src="js/tide.js?v=20260826101"></script>
+<script src="js/weather.js?v=20260826101"></script>
+<script src="js/today.js?v=20260826101"></script>
+<script src="js/district.js?v=20260826101"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=20260826100"></script>
+<script src="js/hscroll.js?v=20260826101"></script>
 </body>
 </html>
