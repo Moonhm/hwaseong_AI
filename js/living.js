@@ -160,6 +160,15 @@ function resetLivingPage() {
    * (go() 의 scrollTop=0 은 js/nav.js:21 로 renderLivingPage() 보다 '앞'이다 — 그 순서를 바꾸지 말 것) */
   var p = document.getElementById('page-living');
   if (p) p.scrollTop = 0;
+
+  /* '이번 달 축제' 캐러셀 가로 스크롤 — 2026-08-26 추천 탭에서 넘어오면서 함께 옮겼다.
+   * renderFestivalScroll() 은 boot 에서 딱 한 번만 불려 다시 그려지지 않으므로
+   * scrollLeft 가 앱 수명 내내 남는다. 다시 그리지는 말 것 — PLACES 가 불변이라
+   * 결과 HTML 이 같은 순수 낭비다(카드 DOM 전량 재생성 + 리스너 재등록).
+   * 좌/우 화살표(.visible)는 scrollLeft 파생 상태라 함께 갱신한다. */
+  var fs = document.getElementById('festival-scroll-list');
+  if (fs) fs.scrollLeft = 0;
+  if (typeof updateFestArrows === 'function') updateFestArrows();
 }
 
 /* ══════════════════════════════════════════════════

@@ -18,12 +18,12 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082616">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082629">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082616">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082616">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082616">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082616">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082630">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082630">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082630">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082630">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082630">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082630">
 </head>
 <body>
 
@@ -189,22 +189,11 @@
 
   <!-- 축제 리스트 뷰 -->
   <div id="view-tourism-list">
-    <!-- 헤더 + 서브탭을 하나의 sticky 컨테이너로 묶어 틈 없이 고정 -->
-    <div style="position:sticky;top:0;z-index:100;background:var(--white)">
-      <div class="page-header" style="position:relative;border-bottom:none">
-        <div class="page-header-title">추천</div>
-        <img src="img/logo-name.png" alt="화성잇다" style="height:22px;object-fit:contain;">
-      </div>
-      <!-- 서브탭 -->
-      <div class="tourism-subnav">
-        <div class="chip active" data-sub="all" onclick="switchTourismSub(this,'all')">전체</div>
-        <div class="chip" data-sub="festival" onclick="switchTourismSub(this,'festival')">축제</div>
-        <div class="chip" data-sub="spot" onclick="switchTourismSub(this,'spot')">관광지</div>
-        <div class="chip" data-sub="heritage" onclick="switchTourismSub(this,'heritage')">문화재</div>
-        <div class="chip" data-sub="stay" onclick="switchTourismSub(this,'stay')">숙박</div>
-        <div class="chip" data-sub="camp" onclick="switchTourismSub(this,'camp')">캠핑</div>
-        <div class="chip" data-sub="temple" onclick="switchTourismSub(this,'temple')">템플스테이</div>
-      </div>
+    <!-- 서브탭을 아래로 내리면서 sticky 묶음이 헤더 하나만 남았다.
+         .page-header 자체가 이미 position:sticky;top:0 이라 래퍼가 필요 없다. -->
+    <div class="page-header">
+      <div class="page-header-title">추천</div>
+      <img src="img/logo-name.png" alt="화성잇다" style="height:22px;object-fit:contain;">
     </div>
 
     <!-- 내 위치 추천 — 2026-08-26 홈 탭에서 여기로 옮겼다.
@@ -213,7 +202,7 @@
          관련 함수는 js/home.js 에 그대로 있다 — 파일 이동은 위험 대비 이득이 없어 미뤘다. -->
     <div class="nearby-wrap" id="nearby-section">
       <div class="nearby-cta" onclick="requestNearbyRec()">
-        <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
+        <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="38" height="38" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
         <div>
           <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 공영주차장</div>
           <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
@@ -234,19 +223,27 @@
       </div>
     </div>
 
+    <!-- 서브탭 — 2026-08-26 상단 sticky 에서 여기로 내렸다 (사용자 요청).
+         맨 위 자리는 '내 위치 추천'·'AI 추천 퀴즈' 두 진입점에 내주고,
+         이 칩들은 자기가 거르는 목록 바로 위에 둔다. 원래 위치는 조작 대상과
+         두 블록이나 떨어져 있어서 무엇을 거르는 컨트롤인지 알기 어려웠다.
+         sticky 를 뗀 이유: 헤더(top:0)와 겹치지 않으려면 헤더 높이만큼 top 을
+         하드코딩해야 하는데, 그 값이 어긋나면 칩이 헤더 아래로 파고든다. -->
+    <div class="tourism-subnav">
+      <div class="chip active" data-sub="all" onclick="switchTourismSub(this,'all')">전체</div>
+      <div class="chip" data-sub="festival" onclick="switchTourismSub(this,'festival')">축제</div>
+      <div class="chip" data-sub="spot" onclick="switchTourismSub(this,'spot')">관광지</div>
+      <div class="chip" data-sub="heritage" onclick="switchTourismSub(this,'heritage')">문화재</div>
+      <div class="chip" data-sub="stay" onclick="switchTourismSub(this,'stay')">숙박</div>
+      <div class="chip" data-sub="camp" onclick="switchTourismSub(this,'camp')">캠핑</div>
+      <div class="chip" data-sub="temple" onclick="switchTourismSub(this,'temple')">템플스테이</div>
+    </div>
+
     <!-- 전체/축제/관광지 콘텐츠 -->
     <div id="tourism-default">
-      <div class="section" id="tourism-festival-header">
-        <div class="section-header">
-          <div class="section-title">이번 달 축제</div>
-          <button class="section-link" onclick="showCalendar()">캘린더 보기</button>
-        </div>
-      </div>
-      <div class="fscroll-wrap" id="festival-scroll-wrap">
-        <button class="fsc-arr fsc-arr-left" id="fsc-arr-left" onclick="scrollFestArr(-1)" aria-label="이전">‹</button>
-        <div class="festival-scroll" id="festival-scroll-list"></div>
-        <button class="fsc-arr fsc-arr-right" id="fsc-arr-right" onclick="scrollFestArr(1)" aria-label="다음">›</button>
-      </div>
+      <!-- '이번 달 축제' 캐러셀은 2026-08-26 소식 탭으로 옮겼다 (사용자 요청).
+           날짜가 걸린 정보라 '이번 주 소식' 바로 아래가 맞는 자리다.
+           마크업은 #page-living 의 #living-news 아래에 있다. -->
 
       <div id="tourism-theme-header" style="padding:var(--px) var(--px) 0">
         <div class="section-title">테마별 추천</div>
@@ -319,6 +316,23 @@
        내용은 js/living.js 의 renderNewsSection() 이 채운다 —
        PLACES 의 축제만 읽으므로 새 데이터도 네트워크 요청도 없다. -->
   <div id="living-news" style="padding:14px var(--px) 0"></div>
+
+  <!-- 이번 달 축제 — 2026-08-26 추천 탭에서 여기로 옮겼다 (사용자 요청).
+       날짜가 걸린 정보라 '이번 주 소식' 바로 아래가 맞는 자리다.
+       내용은 js/home.js 의 renderFestivalScroll() 이 채운다. 그 함수는 id 로만
+       엘리먼트를 찾으므로 마크업이 옮겨와도 그대로 동작한다 —
+       boot.js 에서 딱 한 번 불리고 PLACES 는 불변이라 다시 부를 필요도 없다. -->
+  <div class="section" id="tourism-festival-header">
+    <div class="section-header">
+      <div class="section-title">이번 달 축제</div>
+      <button class="section-link" onclick="showCalendar()">캘린더 보기</button>
+    </div>
+  </div>
+  <div class="fscroll-wrap" id="festival-scroll-wrap">
+    <button class="fsc-arr fsc-arr-left" id="fsc-arr-left" onclick="scrollFestArr(-1)" aria-label="이전">‹</button>
+    <div class="festival-scroll" id="festival-scroll-list"></div>
+    <button class="fsc-arr fsc-arr-right" id="fsc-arr-right" onclick="scrollFestArr(1)" aria-label="다음">›</button>
+  </div>
 
   <!-- 아래는 기존 생활 정보 그대로다. 지우지 않고 제목만 붙였다. -->
   <div class="section-header" style="padding:18px var(--px) 0;margin-bottom:0">
@@ -590,25 +604,25 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082616"></script>
-<script src="js/quiz.js?v=2026082616"></script>
-<script src="js/mapnav.js?v=2026082616"></script>
-<script src="js/home.js?v=2026082629"></script>
-<script src="js/tourism.js?v=2026082616"></script>
-<script src="js/living.js?v=2026082616"></script>
-<script src="js/favorites.js?v=2026082616"></script>
-<script src="js/ui.js?v=2026082616"></script>
-<script src="js/calendar.js?v=2026082616"></script>
-<script src="js/boot.js?v=2026082616"></script>
+<script src="js/nav.js?v=2026082630"></script>
+<script src="js/quiz.js?v=2026082630"></script>
+<script src="js/mapnav.js?v=2026082630"></script>
+<script src="js/home.js?v=2026082630"></script>
+<script src="js/tourism.js?v=2026082630"></script>
+<script src="js/living.js?v=2026082630"></script>
+<script src="js/favorites.js?v=2026082630"></script>
+<script src="js/ui.js?v=2026082630"></script>
+<script src="js/calendar.js?v=2026082630"></script>
+<script src="js/boot.js?v=2026082630"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082616"></script>
-<script src="js/convenience.js?v=2026082616"></script>
-<script src="js/data.js?v=2026082616"></script>
-<script src="js/map.js?v=2026082616"></script>
-<script src="js/conv_map.js?v=2026082616"></script>
-<script src="js/parking.js?v=2026082616"></script>
-<script src="js/localcurrency.js?v=2026082616"></script>
+<script src="js/photos.js?v=2026082630"></script>
+<script src="js/convenience.js?v=2026082630"></script>
+<script src="js/data.js?v=2026082630"></script>
+<script src="js/map.js?v=2026082630"></script>
+<script src="js/conv_map.js?v=2026082630"></script>
+<script src="js/parking.js?v=2026082630"></script>
+<script src="js/localcurrency.js?v=2026082630"></script>
 </body>
 </html>

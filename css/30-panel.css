@@ -156,17 +156,24 @@
     .stat-lbl-sm { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
     /* ── 내 위치 추천 카드 ── */
-    .nearby-wrap { padding: 0 var(--px) 0; margin-top: 4px; }
+    .nearby-wrap { padding: 0 var(--px) 0; margin-top: 10px; }
+    /* 2026-08-26 사용자 요청으로 키웠다 — 추천 탭 맨 위의 주 진입점이라
+     * 한눈에 들어와야 한다. 세로 패딩 18→26, 제목 14→16.5, 아이콘 30→38.
+     * 점선 테두리도 1.5→2px 로 함께 올려야 커진 상자에 눌리지 않는다. */
     .nearby-cta {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
       background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
-      border: 1.5px dashed #93C5FD; border-radius: var(--r-md);
-      padding: 18px 16px; cursor: pointer; transition: box-shadow 0.15s;
+      border: 2px dashed #93C5FD; border-radius: var(--r-md);
+      padding: 26px 18px; cursor: pointer; transition: box-shadow 0.15s;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.10);
     }
     .nearby-cta:active { transform: scale(0.98); }
-    .nearby-cta-icon { font-size: 28px; }
-    .nearby-cta-text { font-size: 14px; font-weight: 700; color: var(--primary); line-height: 1.4; }
-    .nearby-cta-sub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .nearby-cta-icon { font-size: 28px; display: flex; align-items: center; }
+    /* word-break:keep-all 이 없으면 '공영주차장' 이 '공 / 영주차장' 으로 잘린다.
+     * 브라우저 기본값은 한글을 글자 단위로 끊어서, 글씨를 키우자마자 바로 드러났다.
+     * 어절 단위로 넘기게 한다. */
+    .nearby-cta-text { font-size: 16.5px; font-weight: 800; color: var(--primary); line-height: 1.35; word-break: keep-all; }
+    .nearby-cta-sub  { font-size: 12.5px; color: var(--text-muted); margin-top: 4px; word-break: keep-all; }
     /* 결과 카드 */
     .nearby-card { border-radius: var(--r-md); overflow: hidden; box-shadow: var(--shadow-md); background: var(--white); border: 1px solid var(--border); }
     .nearby-photo {

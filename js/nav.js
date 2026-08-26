@@ -144,8 +144,12 @@ function go(page) {
       _resetThemeChips();
       renderTourismList(sub === 'festival' ? 'festival-only' : sub === 'spot' ? 'tourist-only' : 'all');
     }
-    setTimeout(updateFestArrows, 60);
   }
+
+  /* 축제 캐러셀 좌/우 화살표. 2026-08-26 에 캐러셀이 추천 → 소식 탭으로 옮겨가면서
+   * 이 호출도 함께 왔다. 화살표는 clientWidth 를 재서 정하는데, 탭이 숨어 있는 동안은
+   * 0 이라 판정이 틀린다. 그래서 그 탭이 보이게 된 '뒤'에 한 박자 늦춰 부른다. */
+  if (page === 'living') setTimeout(updateFestArrows, 60);
 }
 
 /* ── 사이드 메뉴 ── */

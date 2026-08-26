@@ -25,32 +25,26 @@ function switchTourismSub(el, tab) {
     _resetThemeChips();
     var def = document.getElementById('tourism-default');
     if (def) def.style.display = 'block';
-    var fhdr   = document.getElementById('tourism-festival-header');
-    var fwrap  = document.getElementById('festival-scroll-wrap');
+    /* ⚠ 여기서 #tourism-festival-header / #festival-scroll-wrap 을 건드리지 말 것.
+     * 2026-08-26 에 '이번 달 축제' 캐러셀을 소식 탭으로 옮겼다(index.html #page-living).
+     * id 는 그대로라 예전 코드가 그대로 돌면 추천 탭에서 서브탭을 누를 때마다
+     * '다른 탭'의 캐러셀이 숨겨진다. 실제로 옮기면서 이 네 줄 쌍을 전부 걷어냈다. */
     var thdr   = document.getElementById('tourism-theme-header');
     var tchips = document.getElementById('tourism-theme-chips');
     if (tab === 'festival') {
-      if (fhdr)  fhdr.style.display  = 'block';
-      if (fwrap) fwrap.style.display = 'block';
       if (thdr)  thdr.style.display  = 'none';
       if (tchips) tchips.style.display = 'none';
       renderTourismList('festival-only');
     } else if (tab === 'spot') {
-      if (fhdr)  fhdr.style.display  = 'none';
-      if (fwrap) fwrap.style.display = 'none';
       if (thdr)  thdr.style.display  = 'block';
       if (tchips) tchips.style.display = 'flex';
       renderTourismList('tourist-only');
     } else if (tab === 'heritage') {
-      /* 문화재는 테마 태그(바다·자연·가족)와 맞지 않아 테마 칩을 숨긴다. 축제 캐러셀도 무관하다. */
-      if (fhdr)  fhdr.style.display  = 'none';
-      if (fwrap) fwrap.style.display = 'none';
+      /* 문화재는 테마 태그(바다·자연·가족)와 맞지 않아 테마 칩을 숨긴다. */
       if (thdr)  thdr.style.display  = 'none';
       if (tchips) tchips.style.display = 'none';
       renderTourismList('heritage-only');
     } else {
-      if (fhdr)  fhdr.style.display  = 'block';
-      if (fwrap) fwrap.style.display = 'block';
       if (thdr)  thdr.style.display  = 'block';
       if (tchips) tchips.style.display = 'flex';
       renderTourismList('all');
@@ -457,21 +451,13 @@ function resetTourismPage() {
     renderTourismList('all');    /* expanded 미전달 = 5개 미리보기 + '더보기 +N' (js/tourism.js:225-227,266-272) */
   }
 
-  /* ⑤ 가로 스크롤 3곳 — 첫 진입은 전부 왼쪽 끝.
-   *    특히 #festival-scroll-list 는 renderFestivalScroll() 이 boot.js:117 에서 딱 한 번만
-   *    불려 다시 그려지지 않으므로, scrollLeft 가 앱 수명 내내 남는다.
-   *    renderFestivalScroll() 을 다시 부르지 말 것 — PLACES 는 불변이라 결과 HTML 이 동일한
-   *    순수 낭비다(카드 DOM 전량 재생성 + 리스너 재등록, js/home.js:561-580). */
+  /* ⑤ 가로 스크롤 — 첫 진입은 왼쪽 끝.
+   *    #festival-scroll-list 는 2026-08-26 에 소식 탭으로 옮겨서 여기서 빠졌다.
+   *    그 리셋은 js/living.js 의 resetLivingPage() 가 맡는다. */
   var _sn = document.querySelector('.tourism-subnav');
   if (_sn) _sn.scrollLeft = 0;
   var _tc = document.getElementById('tourism-theme-chips');
   if (_tc) _tc.scrollLeft = 0;
-  var _fs = document.getElementById('festival-scroll-list');
-  if (_fs) _fs.scrollLeft = 0;
-  /* 좌/우 화살표(.visible)는 scrollLeft 파생 상태. go() 가 js/nav.js:45 에서
-   * setTimeout(updateFestArrows,60) 을 이미 걸어 두므로 그게 정리한다.
-   * 즉시성도 확보하려면 한 번 더 부른다 — 멱등하다. */
-  if (typeof updateFestArrows === 'function') updateFestArrows();
 
   /* ⑥ 캘린더 → 오늘 달.
    *    _calYear/_calMonth 만 되돌리면 안 된다. showCalendar(js/tourism.js:391)는
