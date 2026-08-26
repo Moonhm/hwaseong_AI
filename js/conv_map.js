@@ -177,43 +177,93 @@ function hideAllConv() {
 
 /* ── Geocoding ── */
 function _geocodeCat(cat) {
-  if (typeof kakao === 'undefined' || !kakao.maps || !kakao.maps.services) {
-    showToast('위치 변환 서비스를 불러오지 못했어요.');
-    return;
-  }
-
-  var cfg      = CONV_CAT_CFG[cat];
+  var cfg = CONV_CAT_CFG[cat];
   if (!cfg) return;
-  CONV_STATUS[cat] = 'loading';
 
   var rawItems = cfg.getItems();
   if (!rawItems || !rawItems.length) { CONV_STATUS[cat] = 'done'; return; }
 
-  showToast(cfg.label + ' 위치 로딩 중...');
+  CONV_STATUS[cat] = 'loading';
 
-  var geocoder = new kakao.maps.services.Geocoder();
   var results  = [];
   var total    = rawItems.length;
   var finished = 0;
   var _done    = false;
 
-  /* 콜백이 끝내 오지 않을 경우 대비 — 마지막 배치 발송 후 10초 뒤 강제 완료 */
-  var maxDelay = Math.floor((total - 1) / 10) * 200 + 10000;
-  setTimeout(function () {
+  /* 완료 처리는 한 곳으로 모은다 — '좌표만으로 끝난 경우'·'지오코딩이 끝난 경우'·
+   * '타임아웃' 셋이 같은 마무리를 해야 한다. 예전에는 두 군데에 복사돼 있었다. */
+  function _finish(why) {
     if (_done) return;
     _done = true;
     CONV_STATUS[cat] = 'done';
     CONV_PLACES[cat] = results;
-    /* 타임아웃은 일시적 지연일 수 있다. 부분 결과를 캐시하면 누락이 영구히 굳는다. */
+    /* ⚠ 부분 결과를 캐시하면 누락이 영구히 굳는다. 전건일 때만 저장한다.
+     * 타임아웃(지연)도, SDK 미로드(좌표 가진 것만 채워진 상태)도 마찬가지다. */
     if (results.length === total) _saveConvCache(cat, results);
     if (_isConvCatActive(cat)) {
       _buildOverlays(cat, results);
-      showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨 (타임아웃)');
+      showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨' +
+                (why === 'timeout' ? ' (타임아웃)' : why === 'nosdk' ? ' (위치 변환 불가)' : ''));
       _fitConv(cat);
     }
-  }, maxDelay);
+  }
 
+  /* ── ① 이미 좌표가 있는 항목은 지오코딩하지 않는다 (2026-08-26 감사) ──────────
+   * convenience.js 에 검증된 lat/lng 이 있는데도 주소 문자열을 매번 다시
+   * 지오코딩하고 있었다. 문제가 둘이었다.
+   *   · 핀은 지오코딩 결과, 카메라(goMapConv·홈 검색·dlGoPlace)는 convenience.js
+   *     좌표라 출처가 갈렸다 — 미세하게 어긋나고, 지오코딩이 실패하면 핀만 없다.
+   *   · 층·호수·건물명이 남은 주소는 지오코더가 못 읽는다. 영화관 13곳 중 일부가
+   *     '9/13곳 표시됨' 으로 조용히 빠지던 원인이다.
+   * 실측 보유율: cinemas 13/13 · touristFacilities 10/10 · restaurants 88/94 ·
+   *              touristRestaurants 0/35 · hotels 0/10 · camping 0/17.
+   * 카테고리가 아니라 '항목' 단위로 거르므로 좌표가 없는 셋은 동작이 그대로다.
+   *
+   * ⚠ id 는 원본 인덱스(i)를 그대로 쓴다 — 캐시(_saveConvCache)에 이 id 로
+   *   들어가 있어서, 순번을 다시 매기면 예전 캐시와 어긋난다. */
+  var needGeo = [];
   rawItems.forEach(function (item, i) {
+    if (item.lat && item.lng) {
+      results.push({
+        id:       'conv_' + cat + '_' + i,
+        name:     item.name,
+        category: cat,
+        address:  '화성시 ' + item.addr,
+        lat:      item.lat,
+        lng:      item.lng,
+        tags:     [],
+        desc:     '',
+        extra:    item,
+      });
+      finished++;
+    } else {
+      needGeo.push({ item: item, i: i });
+    }
+  });
+
+  /* 전건이 좌표를 갖고 있으면 API 를 한 번도 안 부른다.
+   * 여기서 동기로 끝내도 된다 — setFilter(js/map.js:949)가 칩을 active 로 만든
+   * '뒤' 에 showConvCat → _geocodeCat 이 오므로 _isConvCatActive 가 참이다. */
+  if (!needGeo.length) { _finish(''); return; }
+
+  if (typeof kakao === 'undefined' || !kakao.maps || !kakao.maps.services) {
+    /* 좌표로 채운 것이라도 먼저 띄운다 — 예전에는 여기서 통째로 return 해
+     * 좌표를 가진 항목까지 함께 사라졌다. */
+    showToast('위치 변환 서비스를 불러오지 못했어요.');
+    _finish('nosdk');   /* 좌표 가진 것만 채워진 상태라 캐시되지 않는다 */
+    return;
+  }
+
+  showToast(cfg.label + ' 위치 로딩 중...');
+
+  var geocoder = new kakao.maps.services.Geocoder();
+  /* 배치 지연은 '지오코딩이 필요한 것' 기준이다. 전체 건수로 잡으면
+   * 88/94 처럼 대부분 좌표가 있는 카테고리에서 남은 6건이 헛되이 오래 기다린다. */
+  var maxDelay = Math.floor((needGeo.length - 1) / 10) * 200 + 10000;
+  setTimeout(function () { _finish('timeout'); }, maxDelay);
+
+  needGeo.forEach(function (g, n) {
+    var item = g.item, i = g.i;
     /* 괄호·건물명 제거 — 도로명+번지만 남겨 geocoding 정확도 향상
      * 예) "동탄대로 469-12 Alice" → "동탄대로 469-12"
      *     "남양동 1365 선주빌딩" → "남양동 1365"
@@ -227,7 +277,7 @@ function _geocodeCat(cat) {
       : '경기도 화성시 ' + cleanAddr;
 
     /* 10개씩 배치로 나눠 200ms 간격 — API 부하 분산 */
-    var delay = Math.floor(i / 10) * 200;
+    var delay = Math.floor(n / 10) * 200;
 
     setTimeout(function () {
       geocoder.addressSearch(fullAddr, function (data, status) {
@@ -246,19 +296,7 @@ function _geocodeCat(cat) {
           });
         }
         finished++;
-
-        if (finished === total && !_done) {
-          _done = true;
-          CONV_STATUS[cat] = 'done';
-          CONV_PLACES[cat] = results;
-          _saveConvCache(cat, results); /* 다음 방문 시 재사용 */
-          /* 제오코딩 중 사용자가 다른 필터로 전환했으면 표시 안 함 */
-          if (_isConvCatActive(cat)) {
-            _buildOverlays(cat, results);
-            showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨');
-            _fitConv(cat);
-          }
-        }
+        if (finished === total && !_done) _finish('');
       });
     }, delay);
   });
