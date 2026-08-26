@@ -11,18 +11,22 @@
 function menuGoTourism(sub) {
   closeMenu();
   go('tourism');
-  setTimeout(function() {
-    var chip = document.querySelector('.tourism-subnav .chip[data-sub="' + sub + '"]');
-    if (chip && typeof switchTourismSub === 'function') switchTourismSub(chip, sub);
-  }, 250);
+  /* 지연 없이 동기로. go() 가 이미 _tourismSub 기준(기본 '인기')으로 목록을 다 그려
+   * 놓기 때문에, 늦추면 그 '엉뚱한 서브탭' 화면이 그동안 보인다 — 메뉴에서 숙박을
+   * 눌렀는데 인기 목록이 먼저 뜨고 나중에 바뀌었다.
+   * switchTourismSub 은 클래스 토글과 display 교체뿐이고 CONVENIENCE 도 동기 로드라
+   * 지금 불러도 안전하다(js/boot.js 의 goLivingCat 이 같은 모양이다). */
+  var chip = document.querySelector('.tourism-subnav .chip[data-sub="' + sub + '"]');
+  if (chip && typeof switchTourismSub === 'function') switchTourismSub(chip, sub);
 }
 function menuGoLiving(cat) {
   closeMenu();
   go('living');
-  setTimeout(function() {
-    var el = document.getElementById('liv-cat-' + cat);
-    if (typeof switchLivingCat === 'function') switchLivingCat(el, cat);
-  }, 300);
+  /* menuGoTourism 과 같은 이유로 동기다. go() 안의 renderLivingPage() 가 이미
+   * '모범음식점'으로 그려 놓으므로, 늦추면 다른 카테고리가 그동안 보이거나
+   * (같은 카테고리라도) 목록을 두 번 그려 .place-item 등장 애니메이션이 두 번 재생된다. */
+  var el = document.getElementById('liv-cat-' + cat);
+  if (el && typeof switchLivingCat === 'function') switchLivingCat(el, cat);
 }
 
 /* setFilter 는 같은 칩 재클릭 시 해제하는 토글이다.
@@ -115,10 +119,10 @@ function goMapFocus(lat, lng, level, placeId) {
   if (placeId != null && typeof PLACES !== 'undefined') {
     var _fp = PLACES.find(function (x) { return x.id === placeId; });
     if (_fp && _fp.category === 'festival') {
-      /* openFestView 가 '어느 탭에서 왔는지'를 기억해 뒤로가기와 헤더 라벨을 맞춘다
-       * (js/tourism.js, 2026-08-26). 탭 전환과 260ms 지연도 그 안에 있다. */
-      if (typeof openFestView === 'function') openFestView('detail', placeId);
-      else { go('tourism'); setTimeout(function () { showFestivalDetail(placeId); }, 260); }
+      /* openFestView 가 '어느 탭에서 왔는지'를 기억해 뒤로가기와 헤더 라벨을 맞추고,
+       * 탭 전환까지 맡는다(js/tourism.js, 2026-08-26). 지연은 없다 — go() 뒤에
+       * setTimeout 을 두면 추천 탭 목록이 한 프레임 번쩍인다. */
+      openFestView('detail', placeId);
       return;
     }
   }

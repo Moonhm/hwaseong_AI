@@ -567,11 +567,14 @@ function _srClick(idx) {
       if (r._raw && typeof showLcSlide === 'function') showLcSlide(r._raw);
     }, 400);
   } else if (r.type === 'conv') {
+    /* go('living') 은 renderLivingPage() 를 동기로 돌려 목록을 '모범음식점'으로 채워 놓는다
+     * (js/living.js). 여기서 늦추면 검색해 고른 것과 다른 카테고리가 그동안 떠 있다가
+     * 통째로 갈린다. 같은 태스크 안에서 덮어 페인트를 한 번만 낸다.
+     * liv-cat-* 는 정적 요소고 CONVENIENCE 도 동기 로드라 지금 불러도 안전하다
+     * (js/boot.js 의 goLivingCat 이 이미 같은 모양이다). */
     go('living');
-    setTimeout(function() {
-      var el = document.getElementById('liv-cat-' + r.convCat);
-      if (typeof switchLivingCat === 'function') switchLivingCat(el, r.convCat);
-    }, 300);
+    var _cvEl = document.getElementById('liv-cat-' + r.convCat);
+    if (_cvEl && typeof switchLivingCat === 'function') switchLivingCat(_cvEl, r.convCat);
   } else if (r.lat) {
     go('map');
     setTimeout(function() {
@@ -724,7 +727,10 @@ function _renderHomePopular() {
       '</div>';
     }).join('') +
     '<div style="text-align:right;margin-top:6px">' +
-      '<button class="section-link" onclick="go(\'tourism\');setTimeout(function(){showDatalab(\'popular\')},300)">전체 순위 보기 ›</button>' +
+      /* ⚠ go() 뒤에 setTimeout 을 두지 말 것. 300ms 동안 추천 탭 '목록'이 완성된 채
+       * 보였다가 데이터랩으로 갈아끼워졌다 — js/tourism.js openFestView 와 같은 증상이다.
+       * go() 가 뷰 교체와 목록 렌더까지 동기로 끝내므로 바로 뒤에서 덮으면 프레임이 안 샌다. */
+      '<button class="section-link" onclick="go(\'tourism\');showDatalab(\'popular\')">전체 순위 보기 ›</button>' +
     '</div>';
   });
 }

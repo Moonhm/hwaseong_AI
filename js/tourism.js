@@ -334,6 +334,17 @@ function showFestivalDetail(id) {
 
   document.getElementById('view-tourism-list').style.display = 'none';
   document.getElementById('view-calendar').style.display = 'none';
+  /* ⚠ #view-datalab 도 반드시 함께 숨긴다. 이 줄이 없어서, 데이터랩 '전체 보기'
+   * (세대별로 많이 찾는 곳 → 만세구 · 30대 27위 '화성뱃놀이축제')에서 축제를 누르면
+   * 데이터랩 화면이 그대로 남고 상세는 그 아래에 그려져, 눌러도 아무 일이 없는 것처럼
+   * 보였다. 추천 탭의 네 뷰는 서로 배타여야 한다 —
+   * #view-tourism-list · #view-calendar · #view-festival-detail · #view-datalab. */
+  var _dlv = document.getElementById('view-datalab');
+  if (_dlv) _dlv.style.display = 'none';
+  /* _dlView 는 '지금 데이터랩 어느 화면인가'를 들고 있다. display 만 내리고
+   * 이 값을 남기면 dlLoad 의 늦은 콜백이 `if (_dlView !== 'popular') return;`
+   * 검사를 통과해 숨긴 뷰를 다시 그린다(js/datalab.js). 같이 내린다. */
+  if (typeof _dlView !== 'undefined') _dlView = null;
   document.getElementById('view-festival-detail').style.display = 'block';
 
   /* BUG-9: 인덱스 기반 이미지 클래스 */
@@ -455,12 +466,19 @@ function openFestView(kind, id) {
     else if (typeof showFestivalDetail === 'function') showFestivalDetail(id);
   };
 
-  if (!_festViewFrom) { open(); return; }   /* 이미 추천 탭이면 탭 전환도 지연도 필요 없다 */
+  if (!_festViewFrom) { open(); return; }   /* 이미 추천 탭이면 탭 전환이 필요 없다 */
 
+  /* ⚠ go() 뒤에 setTimeout 을 두면 안 된다. 여기 있던 260ms 지연 때문에
+   * 소식에서 행사를 누르면 추천 탭 '목록'이 한 번 번쩍 뜬 뒤 상세로 바뀌었다
+   * (사용자 지적). go('tourism') 은 뷰 display 교체와 목록 렌더까지 전부
+   * 동기로 끝내므로(js/nav.js), 바로 뒤에서 상세로 덮으면 그 사이에 브라우저가
+   * 그릴 프레임 자체가 없다. 지연은 원래 필요하지 않았고, 옮겨 오기 전
+   * 호출부들이 복사해 쓰던 값을 그대로 들고 온 것이었다.
+   *
+   * 슬라이드 전환(_playPageTransition)은 #page-tourism 에 클래스만 거는 방식이라
+   * 안쪽 뷰를 먼저 바꿔 둬도 상관없다 — 상세가 실린 채로 미끄러져 들어온다. */
   go('tourism');
-  /* go() 는 #page-tourism 을 active 로 바꾸고 나서야 뷰 display 가 화면에 반영된다.
-   * 260ms 는 이 기능을 옮기기 전 호출부들이 쓰던 값 그대로다. */
-  setTimeout(open, 260);
+  open();
 }
 
 /* 뒤로가기 버튼 전용. 온 곳이 다른 탭이면 그 탭으로, 아니면 추천 탭 목록으로. */
@@ -471,12 +489,11 @@ function _returnFromFestView() {
   _festViewFrom = null; _festViewScroll = 0;
   _setFestBackLabel();
   go(info.page);
-  /* go() 가 scrollTop 을 0 으로 밀고 living 은 renderLivingPage() 까지 돈다(js/nav.js:126).
-   * 그 뒤에 복원해야 보고 있던 자리로 돌아온다 — 뒤로가기인데 맨 위로 튀면 길을 잃는다. */
-  setTimeout(function () {
-    var pg = document.getElementById(info.page === 'living' ? 'page-living' : 'page-' + info.page);
-    if (pg) pg.scrollTop = scroll;
-  }, 40);
+  /* go() 는 scrollTop 을 0 으로 밀고 living 이면 renderLivingPage() 까지 동기로 끝낸다
+   * (js/nav.js). 그러니 리턴 직후에 복원하면 된다 — 여기 있던 40ms 지연 때문에
+   * 뒤로가기 직후 두 프레임 동안 맨 위가 보였다가 원래 자리로 툭 튀었다. */
+  var pg = document.getElementById('page-' + info.page);
+  if (pg) pg.scrollTop = scroll;
 }
 
 function backFromCalendar()       { hideCalendar();       _returnFromFestView(); }
@@ -486,6 +503,10 @@ function showCalendar() {
   document.getElementById('view-tourism-list').style.display = 'none';
   document.getElementById('view-calendar').style.display = 'block';
   document.getElementById('view-festival-detail').style.display = 'none';
+  /* showFestivalDetail 과 같은 이유로 데이터랩도 닫는다 — 네 뷰는 서로 배타다. */
+  var _dlv2 = document.getElementById('view-datalab');
+  if (_dlv2) _dlv2.style.display = 'none';
+  if (typeof _dlView !== 'undefined') _dlView = null;
   /* 초기 진입 시 동적 렌더 (하드코딩된 날짜 제거 후 첫 호출) */
   if (!_calInitDone) { _calInitDone = true; _renderCalendar(); }
 }

@@ -403,8 +403,10 @@ function goFestivalAll() {
   var here = pg && pg.classList.contains('active');
   if (here) { _scrollToFestivalAll(); return; }
   go('living');
-  /* go() → renderLivingPage() 가 목록을 다시 그린 뒤라야 높이가 확정된다.
-   * menuGoLiving() 과 같은 지연 폭을 쓴다. */
+  /* go() 는 renderLivingPage() 까지 동기로 끝내므로 높이는 이미 확정돼 있다.
+   * 다만 여기서는 스크롤이 목적이라 페이지 전환 애니메이션(0.26s)이 끝난 뒤에
+   * 움직여야 자연스럽다 — 화면이 미끄러지는 중에 같이 스크롤하면 어지럽다.
+   * 뷰를 갈아끼우는 경우(openFestView)와 달리 '중간 상태가 보이는' 문제가 아니다. */
   setTimeout(_scrollToFestivalAll, 280);
 }
 
