@@ -36,6 +36,7 @@ from collections import defaultdict
 ROOT = os.environ.get("HW_ROOT") or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PHOTO_DIR = os.path.join(ROOT, "assets", "images", "places")
 DATA_JS = os.path.join(ROOT, "js", "data.js")
+CONV_JS = os.path.join(ROOT, "js", "convenience.js")
 OUT_JS = os.path.join(ROOT, "js", "photos.js")
 
 EXTS = ("jpg", "jpeg", "png", "webp")
@@ -50,6 +51,32 @@ def load_places():
     rows = re.findall(
         r'id:(\d+),\s*name:"([^"]+)",\s*category:"([a-z]+)"[^}]*?address:"([^"]*)"', src)
     return [{"id": int(i), "name": n, "category": c, "address": a} for i, n, c, a in rows]
+
+
+def load_conv_places():
+    """js/convenience.js → [{id:None, name, category:"convenience", address}]
+
+    왜 필요한가 (2026-08-26): 이 빌더는 js/data.js 만 읽었다. 그래서 영화관·캠핑장·
+    관광호텔처럼 CONVENIENCE 에 사는 장소의 사진은 assets/ 에 파일이 있어도
+    js/photos.js 에 한 줄도 안 들어갔고, 화면에서 영영 안 떴다. 실측 34장 31곳이
+    그 상태였다. tools/check_data.py 는 고아 판정에 convenience.js 를 이미 넣고
+    있어서(:478) 검사만 통과하고 아무도 눈치채지 못했다.
+
+    id 는 None 이다 — CONVENIENCE 항목에는 id 가 없다. 사진은 이름으로만 찾으므로
+    byName 에만 들어간다. build() 의 by_id_place 에 None 키가 하나 생기지만
+    신규 규칙 경로는 정수 id 로만 조회하므로 부딪히지 않는다.
+    """
+    if not os.path.exists(CONV_JS):
+        return []
+    src = open(CONV_JS, encoding="utf-8").read()
+    out, seen = [], set()
+    # CONVENIENCE 항목은 전부 {name:"…", addr:"…"} 꼴이다(tel 등은 뒤에 붙기도 한다).
+    for n, a in re.findall(r'name:\s*"([^"]+)"\s*,\s*addr:\s*"([^"]*)"', src):
+        if n in seen:
+            continue
+        seen.add(n)
+        out.append({"id": None, "name": n, "category": "convenience", "address": a})
+    return out
 
 
 def scan_photos():
@@ -198,6 +225,10 @@ def main():
 
     places = load_places()
     tourist = [p for p in places if p["category"] == "tourist"]
+    # 편의정보(영화관·캠핑장·관광호텔 등)도 사진 대상이다. 이름이 겹치면 PLACES 를 남긴다.
+    _known = {p["name"] for p in places}
+    conv = [p for p in load_conv_places() if p["name"] not in _known]
+    places = places + conv
 
     if args.list:
         print("id,읍면동(주소에서 추정),이름,권장_파일명")

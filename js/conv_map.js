@@ -404,9 +404,24 @@ function _showConvSlide(place) {
   var safeName = (place.name || '').replace(/['"\\]/g, '');
   var addr     = place.address || '';
 
+  /* 사진 (2026-08-26) — 영화관·캠핑장·관광호텔에도 사진이 있는데 여태 안 떴다.
+   * tools/build_photo_index.py 가 js/data.js 만 읽어 CONVENIENCE 장소가 아예
+   * 인덱스에 없었기 때문이다. 빌더를 고쳐 31곳 34장이 들어왔다.
+   * 이모지를 상자 배경에 남겨 두고 그 위에 <img> 를 덮는다 — 사진이 404 나면
+   * onerror 로 img 만 숨어 이모지가 그대로 보인다(빈 사각형이 남지 않는다). */
+  var _phSrc = (typeof hasPhoto === 'function' && hasPhoto({ name: place.name }))
+    ? placePhotoSrc({ name: place.name }) : '';
+
   var html =
-    '<div style="width:100%;height:80px;border-radius:12px;background:' + cfg.bg + ';' +
-    'display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:12px">' + cfg.emoji + '</div>' +
+    '<div style="width:100%;height:' + (_phSrc ? '150px' : '80px') + ';border-radius:12px;background:' + cfg.bg + ';' +
+    'display:flex;align-items:center;justify-content:center;font-size:44px;margin-bottom:12px;' +
+    'position:relative;overflow:hidden">' + cfg.emoji +
+    (_phSrc
+      ? '<img src="' + _phSrc + '" alt="" loading="lazy" decoding="async" ' +
+        'style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" ' +
+        'onerror="this.style.display=\'none\'">'
+      : '') +
+    '</div>' +
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
     '<span class="sl-cat" style="background:' + cfg.bg + ';color:' + cfg.color + '">' + cfg.emoji + ' ' + cfg.label + '</span>' +
     '</div>' +
