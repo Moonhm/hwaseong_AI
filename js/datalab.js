@@ -515,12 +515,13 @@ function _dlViewTour(el) {
 
 
 /* ── 추천 탭 진입 시 세 미리보기를 한 번에 ──────────────────────────────────
-   '전체' 서브탭에서만 보인다(js/tourism.js switchTourismSub). 다른 서브탭은
+   '인기' 서브탭에서만 보인다(js/tourism.js switchTourismSub). 다른 서브탭은
    목적이 뚜렷한 목록이라 큐레이션이 끼면 오히려 방해가 된다. */
 function renderDatalabSections() {
-  /* renderDlPopular() 는 여기 없다 — 2026-08-26 에 인기 섹션이 #dl-sections 밖
-   * (추천 탭 맨 위)으로 나가면서 서브탭과 무관하게 늘 보이게 됐다.
-   * 그래서 호출도 이 묶음이 아니라 탭 진입·서브탭 전환 양쪽에서 따로 한다. */
+  /* renderDlPopular() 는 여기 없다. 인기 섹션은 2026-08-26 에 #dl-sections 안
+   * 첫 자리로 돌아왔지만, 호출은 switchTourismSub 이 이 함수와 나란히 한다
+   * (js/tourism.js:50-51). 여기로 옮겨도 되나 그러면 '인기 있는 곳'만 따로
+   * 다시 그리고 싶을 때 방법이 없어진다 — 부르는 쪽에서 고르게 둔다. */
   renderDlAge();
   renderDlCityTour();
   renderDlReport();

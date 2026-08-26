@@ -257,21 +257,6 @@
       </div>
     </div>
 
-    <!-- 🔥 인기 순위 — 2026-08-26 사용자 지시로 추천 탭 맨 위로 올렸다.
-         #dl-sections 안에 있을 때는 '전체' 서브탭에서만 보였는데, 여기로 나오면서
-         서브탭과 무관하게 늘 보인다. 이 탭에서 가장 먼저 보여 줄 것이라는 판단이다.
-         사진은 같은 지시로 붙였다 — js/datalab.js renderDlPopular() 참고. -->
-    <div class="section" style="padding-top:12px">
-      <div class="section-header">
-        <div class="section-title">🔥 화성에서 인기 있는 곳</div>
-        <button class="section-link" onclick="showDatalab('popular')">전체 보기</button>
-      </div>
-    </div>
-    <div id="dl-popular-body"></div>
-
-
-
-
     <!-- 서브탭 — 2026-08-26 상단 sticky 에서 여기로 내렸다 (사용자 요청).
          맨 위 자리는 '내 위치 추천'·'AI 추천 퀴즈' 두 진입점에 내주고,
          이 칩들은 자기가 거르는 목록 바로 위에 둔다. 원래 위치는 조작 대상과
@@ -287,19 +272,31 @@
       <div class="chip" data-sub="temple" onclick="switchTourismSub(this,'temple')">템플스테이</div>
     </div>
 
-    <!-- 전체/축제/관광지 콘텐츠 -->
+    <!-- 인기/관광지/문화재 콘텐츠 -->
     <div id="tourism-default">
       <!-- '이번 달 축제' 캐러셀은 2026-08-26 소식 탭으로 옮겼다 (사용자 요청).
            날짜가 걸린 정보라 '이번 주 소식' 바로 아래가 맞는 자리다.
            마크업은 #page-living 의 #living-news 아래에 있다.
 
-           그 빈자리를 큐레이션 3종이 채운다 (2026-08-26, 사용자 지시).
+           그 빈자리를 큐레이션이 채운다 (2026-08-26, 사용자 지시).
            표시 방식은 '살짝 미리보기 + 옆에 전체 보기 버튼' — 앱에 이미 있는
            「이번 주 소식 … 전체 보기」와 같은 패턴이다.
-           내용은 js/datalab.js 가 지연 로드해 채운다. 셋 다 '전체' 서브탭에서만
+           내용은 js/datalab.js 가 지연 로드해 채운다. 넷 다 '인기' 서브탭에서만
            보인다(js/tourism.js switchTourismSub) — 목적이 뚜렷한 다른 서브탭에
            큐레이션이 끼면 방해가 된다. -->
       <div id="dl-sections">
+        <!-- 🔥 인기 순위 — 2026-08-26 사용자 지시로 '인기' 서브탭 안 첫 자리로 들어왔다.
+             그전에는 서브탭 바깥에 있어 관광지·문화재·숙박 어디를 눌러도 따라다녔다.
+             '인기' 라는 이름의 서브탭이 생긴 이상 인기 데이터는 그 안에 있어야 한다.
+             사진은 같은 지시로 붙였다 — js/datalab.js renderDlPopular() 참고. -->
+        <div class="section" style="padding-top:18px">
+          <div class="section-header">
+            <div class="section-title">🔥 화성에서 인기 있는 곳</div>
+            <button class="section-link" onclick="showDatalab('popular')">전체 보기</button>
+          </div>
+        </div>
+        <div id="dl-popular-body"></div>
+
         <div class="section" style="padding-top:18px">
           <div class="section-header">
             <div class="section-title">👥 세대별로 많이 찾는 곳</div>

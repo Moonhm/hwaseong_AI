@@ -34,35 +34,49 @@ function switchTourismSub(el, tab) {
      * '다른 탭'의 캐러셀이 숨겨진다. 실제로 옮기면서 이 네 줄 쌍을 전부 걷어냈다. */
     var thdr   = document.getElementById('tourism-theme-header');
     var tchips = document.getElementById('tourism-theme-chips');
+    var plist  = document.getElementById('tourism-place-list');
 
-    /* 큐레이션 3종(#dl-sections)은 '전체' 에서만 보인다 — 축제·관광지·문화재는
-     * 목적이 뚜렷한 목록이라 그 위에 큐레이션이 끼면 방해가 된다.
-     * 데이터는 보일 때 처음 한 번만 받는다(js/datalab.js 가 캐시한다). */
-    if (typeof renderDlPopular === 'function') renderDlPopular();
+    /* 큐레이션 4종(#dl-sections — 인기·세대별·시티투어·요즘 뜨는 곳)은 '인기' 에서만
+     * 보인다. 관광지·문화재는 목적이 뚜렷한 목록이라 그 위에 큐레이션이 끼면 방해가 된다.
+     * 데이터는 보일 때 처음 한 번만 받는다(js/datalab.js 가 캐시한다).
+     * ⚠ renderDlPopular() 를 이 블록 안에서 부른다 — 2026-08-26 에 '인기 있는 곳'이
+     *   서브탭 바깥에서 #dl-sections 안으로 들어왔다. 밖에서 부르면 숨어 있는
+     *   #dl-popular-body 를 매 서브탭 전환마다 헛되이 다시 그린다. */
     var dls = document.getElementById('dl-sections');
     if (dls) {
       var showDl = (tab === 'all');
       dls.style.display = showDl ? 'block' : 'none';
-      if (showDl && typeof renderDatalabSections === 'function') renderDatalabSections();
+      if (showDl) {
+        if (typeof renderDlPopular === 'function') renderDlPopular();
+        if (typeof renderDatalabSections === 'function') renderDatalabSections();
+      }
     }
 
     if (tab === 'festival') {
       if (thdr)  thdr.style.display  = 'none';
       if (tchips) tchips.style.display = 'none';
+      if (plist) plist.style.display = 'block';
       renderTourismList('festival-only');
     } else if (tab === 'spot') {
       if (thdr)  thdr.style.display  = 'block';
       if (tchips) tchips.style.display = 'flex';
+      if (plist) plist.style.display = 'block';
       renderTourismList('tourist-only');
     } else if (tab === 'heritage') {
       /* 문화재는 테마 태그(바다·자연·가족)와 맞지 않아 테마 칩을 숨긴다. */
       if (thdr)  thdr.style.display  = 'none';
       if (tchips) tchips.style.display = 'none';
+      if (plist) plist.style.display = 'block';
       renderTourismList('heritage-only');
     } else {
-      if (thdr)  thdr.style.display  = 'block';
-      if (tchips) tchips.style.display = 'flex';
-      renderTourismList('all');
+      /* '인기'(all) 는 큐레이션만 보여 준다 (2026-08-26 사용자 지시).
+       * 여기 있던 '테마별 추천' + 그 목록은 '관광지' 서브탭이 그대로 갖고 있어
+       * 두 탭이 같은 것을 보여 주고 있었다. 칩만 숨기고 목록을 남기면
+       * 필터 없는 전체 목록이 덩그러니 남아 '인기' 라는 이름과 어긋난다 —
+       * 셋을 함께 숨긴다. renderTourismList 도 부르지 않는다(그릴 대상이 없다). */
+      if (thdr)  thdr.style.display  = 'none';
+      if (tchips) tchips.style.display = 'none';
+      if (plist) plist.style.display = 'none';
     }
   } else if (tab === 'stay') {
     var s = document.getElementById('tourism-stay');

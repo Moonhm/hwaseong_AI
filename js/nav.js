@@ -137,29 +137,24 @@ function go(page) {
     if (_dl) _dl.style.display = 'none';
     if (_vl) _vl.style.display = 'block';
     var sub = _tourismSub || 'all';
-    if (sub === 'stay' || sub === 'camp' || sub === 'temple') {
-      /* 비리스트 서브탭은 switchTourismSub로 상태 복원 */
-      var chip = document.querySelector('.tourism-subnav .chip.active');
-      if (chip) switchTourismSub(chip, sub);
-      else renderTourismList('all');
+    /* 서브탭 복원을 switchTourismSub 하나로 통일한다 (2026-08-26).
+     * 그전에는 이 경로가 목록(renderTourismList)만 다시 그리고 display 는 손대지
+     * 않아, 서브탭이 감추기로 한 것들과 어긋났다. '인기'(all)가 테마별 추천과
+     * 관광지 목록을 숨기게 되면서 그 어긋남이 눈에 보이는 버그가 된다 —
+     * 첫 진입에 '인기' 탭인데 관광지 목록이 그대로 남는다.
+     * switchTourismSub 은 칩 active·4개 섹션·테마칩·목록·#dl-sections 를
+     * 한 번에 맞춰 주므로, 여기서 그 일부만 흉내 내면 반드시 다시 어긋난다. */
+    var _chip = document.querySelector('.tourism-subnav .chip[data-sub="' + sub + '"]');
+    if (_chip) {
+      switchTourismSub(_chip, sub);
     } else {
+      /* 칩이 없는 값 — 'festival' 은 2026-08-26 에 소식 탭으로 옮겨져 칩이 사라졌다.
+       * 옛 링크가 그 값을 남겨 둘 수 있으니 목록만이라도 맞춰 둔다.
+       * ⚠ heritage 를 빠뜨리면 칩은 '문화재' 인데 목록만 '전체' 로 바뀐다. */
       _resetThemeChips();
-      /* ⚠ heritage 를 빠뜨리면 칩은 '문화재' 인데 목록만 '전체' 로 바뀐다
-       * (탭을 벗어났다 돌아올 때). 2026-08-26 감사에서 발견. */
       renderTourismList(sub === 'festival' ? 'festival-only'
                       : sub === 'spot'     ? 'tourist-only'
                       : sub === 'heritage' ? 'heritage-only' : 'all');
-    }
-    /* 큐레이션 3종(#dl-sections)은 '전체' 서브탭에서만 보인다. switchTourismSub 을
-     * 거치지 않는 이 경로에서도 채워 줘야 첫 진입에 빈칸이 남지 않는다.
-     * 데이터는 js/datalab.js 가 캐시하므로 두 번 받지 않는다. */
-    /* 인기 순위는 서브탭과 무관하게 늘 보인다(추천 탭 맨 위). */
-    if (typeof renderDlPopular === 'function') renderDlPopular();
-    var _dls = document.getElementById('dl-sections');
-    if (_dls) {
-      var _showDl = (sub === 'all');
-      _dls.style.display = _showDl ? 'block' : 'none';
-      if (_showDl && typeof renderDatalabSections === 'function') renderDatalabSections();
     }
   }
 
