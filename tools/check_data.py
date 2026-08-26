@@ -279,9 +279,7 @@ PRINTED = [
     (r"축제\s*([\d,]+)건",              "PLACES.festival",              2),  # index.html:1396, 1402
     (r"공영주차장\s*([\d,]+)개",        "parking-static.json",          1),  # index.html:1397
     (r"지역화폐 가맹점\s*([\d,]+)개",   "localcurrency-static.json",    1),  # index.html:1397
-    (r"인증 맛집\s*([\d,]+)곳",         "CONVENIENCE.restaurants",      1),  # index.html:1754
-    (r"화성시 캠핑장\s*([\d,]+)곳",     "CONVENIENCE.camping",          1),  # index.html:1768
-    (r"펜션·민박\s*([\d,]+)곳",         "CONVENIENCE.jebu.total",       1),  # index.html:1775
+    (r"펜션·민박\s*([\d,]+)곳",         "CONVENIENCE.jebu.total",       1),  # 메뉴 '제부도 숙박'
     (r'id="living-list-count">([\d,]+)곳', "CONVENIENCE.restaurants",   1),  # index.html:1590
     (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">모범음식점', "CONVENIENCE.restaurants", 1),        # :1557
     (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">관광식당업', "CONVENIENCE.touristRestaurants", 1), # :1558
@@ -289,6 +287,15 @@ PRINTED = [
     (r"지정문화재\s*([\d,]+)곳",       "PLACES.heritage",              2),  # About 문단 + 칩
     # 지도 칩 '🍜 음식점 3,754' 는 2026-08-26 에 제거했다. 데이터 파일은 남아 있어
     # 아래 FLOOR 가 건수를 계속 지킨다 — 다시 띄울 때 이 PRINTED 항목도 되살려라.
+    #
+    # 같은 날 햄버거 메뉴 바로가기에서 '모범음식점'('화성시 인증 맛집 94곳')과
+    # '캠핑장'('화성시 캠핑장 17곳') 항목을 뺐다(사용자 지시). 그 두 문구가 화면에서
+    # 사라져 아래 두 줄이 0회로 FAIL 이 됐으므로 함께 걷어낸다:
+    #   (r"인증 맛집\s*([\d,]+)곳",     "CONVENIENCE.restaurants", 1)
+    #   (r"화성시 캠핑장\s*([\d,]+)곳", "CONVENIENCE.camping",     1)
+    # 데이터는 그대로 있고 FLOOR 가 건수를 계속 지킨다. 두 문구를 다시 띄우면
+    # 이 두 줄도 되살려라 — 안 그러면 화면 숫자가 데이터와 어긋나도 아무도 모른다.
+    # 모범음식점 건수는 지금도 소식 탭에서 living-list-count 규칙이 지키고 있다.
 ]
 # index.html:2698-2718 의 카드 숫자
 PRINTED_CARD = [
