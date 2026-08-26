@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082683">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082683">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082683">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082683">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082683">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082683">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082683">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082685">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082685">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082685">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082685">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082685">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082685">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082685">
 </head>
 <body>
 
@@ -208,17 +208,23 @@
       <img src="img/logo-name.png" alt="화성잇다" style="height:22px;object-fit:contain;">
     </div>
 
-    <!-- 🔥 인기 순위 — 2026-08-26 사용자 지시로 추천 탭 맨 위로 올렸다.
-         #dl-sections 안에 있을 때는 '전체' 서브탭에서만 보였는데, 여기로 나오면서
-         서브탭과 무관하게 늘 보인다. 이 탭에서 가장 먼저 보여 줄 것이라는 판단이다.
-         사진은 같은 지시로 붙였다 — js/datalab.js renderDlPopular() 참고. -->
-    <div class="section" style="padding-top:12px">
-      <div class="section-header">
-        <div class="section-title">🔥 화성에서 인기 있는 곳</div>
-        <button class="section-link" onclick="showDatalab('popular')">전체 보기</button>
+    <!-- 2026-08-26 사용자 지시 순서: 내 위치 추천 → AI 퀴즈 → 인기 순위.
+         "지금 내 옆" 이 가장 먼저 하고 싶은 일이고, 그다음이 취향 기반 추천,
+         마지막이 남들이 많이 간 곳이라는 순서다. -->
+    <!-- 내 위치 추천 — 2026-08-26 홈 탭에서 여기로 옮겼다.
+         '지금 내 옆에 뭐가 있나' 는 추천의 한 갈래라 이 탭이 맞는 자리다.
+         id 는 home-nearby-section → nearby-section 으로 바꿨다(더는 홈이 아니다).
+         관련 함수는 js/home.js 에 그대로 있다 — 파일 이동은 위험 대비 이득이 없어 미뤘다.
+         같은 날 사용자 지시로 AI 퀴즈 배너 아래로 내려왔다. -->
+    <div class="nearby-wrap" id="nearby-section">
+      <div class="nearby-cta" onclick="requestNearbyRec()">
+        <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
+        <div>
+          <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 공영주차장</div>
+          <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
+        </div>
       </div>
     </div>
-    <div id="dl-popular-body"></div>
 
     <!-- AI 추천 퀴즈 진입 (2026-08-26 추가)
          탭 이름이 '추천' 이 되면서 자리가 맞아 올렸다. 그전까지 이 기능의 진입점은
@@ -234,20 +240,20 @@
       </div>
     </div>
 
-    <!-- 내 위치 추천 — 2026-08-26 홈 탭에서 여기로 옮겼다.
-         '지금 내 옆에 뭐가 있나' 는 추천의 한 갈래라 이 탭이 맞는 자리다.
-         id 는 home-nearby-section → nearby-section 으로 바꿨다(더는 홈이 아니다).
-         관련 함수는 js/home.js 에 그대로 있다 — 파일 이동은 위험 대비 이득이 없어 미뤘다.
-         같은 날 사용자 지시로 AI 퀴즈 배너 아래로 내려왔다. -->
-    <div class="nearby-wrap" id="nearby-section">
-      <div class="nearby-cta" onclick="requestNearbyRec()">
-        <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="38" height="38" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
-        <div>
-          <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 공영주차장</div>
-          <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
-        </div>
+    <!-- 🔥 인기 순위 — 2026-08-26 사용자 지시로 추천 탭 맨 위로 올렸다.
+         #dl-sections 안에 있을 때는 '전체' 서브탭에서만 보였는데, 여기로 나오면서
+         서브탭과 무관하게 늘 보인다. 이 탭에서 가장 먼저 보여 줄 것이라는 판단이다.
+         사진은 같은 지시로 붙였다 — js/datalab.js renderDlPopular() 참고. -->
+    <div class="section" style="padding-top:12px">
+      <div class="section-header">
+        <div class="section-title">🔥 화성에서 인기 있는 곳</div>
+        <button class="section-link" onclick="showDatalab('popular')">전체 보기</button>
       </div>
     </div>
+    <div id="dl-popular-body"></div>
+
+
+
 
     <!-- 서브탭 — 2026-08-26 상단 sticky 에서 여기로 내렸다 (사용자 요청).
          맨 위 자리는 '내 위치 추천'·'AI 추천 퀴즈' 두 진입점에 내주고,
@@ -821,34 +827,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082683"></script>
-<script src="js/quiz.js?v=2026082683"></script>
-<script src="js/mapnav.js?v=2026082683"></script>
-<script src="js/home.js?v=2026082683"></script>
-<script src="js/tourism.js?v=2026082683"></script>
-<script src="js/living.js?v=2026082683"></script>
-<script src="js/favorites.js?v=2026082683"></script>
-<script src="js/ui.js?v=2026082683"></script>
-<script src="js/calendar.js?v=2026082683"></script>
-<script src="js/boot.js?v=2026082683"></script>
+<script src="js/nav.js?v=2026082685"></script>
+<script src="js/quiz.js?v=2026082685"></script>
+<script src="js/mapnav.js?v=2026082685"></script>
+<script src="js/home.js?v=2026082685"></script>
+<script src="js/tourism.js?v=2026082685"></script>
+<script src="js/living.js?v=2026082685"></script>
+<script src="js/favorites.js?v=2026082685"></script>
+<script src="js/ui.js?v=2026082685"></script>
+<script src="js/calendar.js?v=2026082685"></script>
+<script src="js/boot.js?v=2026082685"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082683"></script>
-<script src="js/convenience.js?v=2026082683"></script>
-<script src="js/data.js?v=2026082683"></script>
-<script src="js/map.js?v=2026082683"></script>
-<script src="js/conv_map.js?v=2026082683"></script>
-<script src="js/parking.js?v=2026082683"></script>
-<script src="js/localcurrency.js?v=2026082683"></script>
+<script src="js/photos.js?v=2026082685"></script>
+<script src="js/convenience.js?v=2026082685"></script>
+<script src="js/data.js?v=2026082685"></script>
+<script src="js/map.js?v=2026082685"></script>
+<script src="js/conv_map.js?v=2026082685"></script>
+<script src="js/parking.js?v=2026082685"></script>
+<script src="js/localcurrency.js?v=2026082685"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082683"></script>
-<script src="js/tide.js?v=2026082683"></script>
-<script src="js/weather.js?v=2026082683"></script>
-<script src="js/today.js?v=2026082683"></script>
-<script src="js/district.js?v=2026082683"></script>
+<script src="js/datalab.js?v=2026082685"></script>
+<script src="js/tide.js?v=2026082685"></script>
+<script src="js/weather.js?v=2026082685"></script>
+<script src="js/today.js?v=2026082685"></script>
+<script src="js/district.js?v=2026082685"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=2026082683"></script>
+<script src="js/hscroll.js?v=2026082685"></script>
 </body>
 </html>
