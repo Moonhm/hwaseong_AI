@@ -143,32 +143,95 @@ function showRsViewportMarkers(bounds) {
            p.lng >= sw.getLng() - lngPad && p.lng <= ne.getLng() + lngPad;
   });
 
-  /* 상한을 넘으면 화면 중심에서 가까운 순으로 자른다.
-   * 배열 순서로 자르면 화면 구석 것만 남을 수 있다. */
-  if (hits.length > RS_MAX_PINS) {
+  /* ⚠ 같은 좌표에 여러 곳이 쌓여 있다 — 한 건물에 입점한 가게들이다.
+   * 3,754건의 고유 좌표는 2,269개뿐이고 한 점에 최대 38곳이 겹친다(실측).
+   * '가게' 단위로 그리면 겹친 자리는 맨 위 1곳만 클릭돼 나머지는 닿을 방법이 없다.
+   * 지역화폐(js/localcurrency.js)에서 같은 문제를 겪고 좌표 단위로 바꿨다 —
+   * 여기도 같은 방식으로 묶는다. */
+  var buckets = {};
+  hits.forEach(function (p) {
+    var k = p.lat + ',' + p.lng;
+    (buckets[k] || (buckets[k] = { lat: p.lat, lng: p.lng, items: [] })).items.push(p);
+  });
+  var spots = Object.keys(buckets).map(function (k) { return buckets[k]; });
+
+  if (spots.length > RS_MAX_PINS) {
     var ctr = rsMap.getCenter(), cy = ctr.getLat(), cx = ctr.getLng();
-    hits.sort(function (a, b) {
+    spots.sort(function (a, b) {
       return ((a.lat - cy) * (a.lat - cy) + (a.lng - cx) * (a.lng - cx)) -
              ((b.lat - cy) * (b.lat - cy) + (b.lng - cx) * (b.lng - cx));
     });
+    spots = spots.slice(0, RS_MAX_PINS);
+    var shown = spots.reduce(function (n, s) { return n + s.items.length; }, 0);
     if (_rsCapNotifiedLevel !== rsMap.getLevel() && typeof showToast === 'function') {
       _rsCapNotifiedLevel = rsMap.getLevel();
       showToast('음식점 ' + hits.length.toLocaleString() + '곳 중 가까운 ' +
-                RS_MAX_PINS + '곳만 표시 — 더 확대해 주세요');
+                shown.toLocaleString() + '곳 표시 — 더 확대하면 전부 보여요');
     }
-    hits = hits.slice(0, RS_MAX_PINS);
   }
 
-  hits.forEach(function (p) {
+  spots.forEach(function (sp) {
     var marker = new kakao.maps.Marker({
-      position: new kakao.maps.LatLng(p.lat, p.lng),
+      position: new kakao.maps.LatLng(sp.lat, sp.lng),
       map: rsMap,
     });
-    marker._clickHandler = (function (pp) { return function () { showRsSlide(pp); }; })(p);
+    marker._clickHandler = (function (bucket) {
+      return function () {
+        if (bucket.items.length === 1) showRsSlide(bucket.items[0]);
+        else showRsSpotSlide(bucket);
+      };
+    })(sp);
     kakao.maps.event.addListener(marker, 'click', marker._clickHandler);
     rsDisplayItems.push(marker);
+
+    /* 2곳 이상인 자리에만 개수 배지 — 전부 붙이면 화면이 숫자로 덮인다.
+     * pointer-events:none 이라 마커 클릭을 가로채지 않는다(.lc-count-badge 공용). */
+    if (sp.items.length > 1) {
+      var el = document.createElement('div');
+      el.className = 'lc-count-badge rs-count-badge';
+      el.textContent = sp.items.length;
+      rsDisplayItems.push(new kakao.maps.CustomOverlay({
+        position: new kakao.maps.LatLng(sp.lat, sp.lng),
+        content: el, yAnchor: 2.2, xAnchor: -0.15, zIndex: 5, map: rsMap,
+      }));
+    }
   });
 }
+
+/* 한 좌표에 여러 곳이 있을 때 — 그 건물의 목록을 보여 준다. */
+function showRsSpotSlide(bucket) {
+  if (typeof clearSelectedPin === 'function') clearSelectedPin();
+  _rsSelect(bucket.items[0]);
+  if (typeof registerSelectedPin === 'function') registerSelectedPin(_rsSelClear);
+  if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(bucket.lat, bucket.lng, 50, 300);
+
+  var addr = (bucket.items[0].a || '').replace('경기도 화성시 ', '');
+  var inner = document.getElementById('slide-inner');
+  if (!inner) return;
+  _rsSpotBucket = bucket;
+  inner.innerHTML =
+    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">' +
+      '<span style="background:#FEF3C7;color:#B45309;font-size:11px;font-weight:700;' +
+      'padding:3px 10px;border-radius:20px">🍽️ 음식점 ' + bucket.items.length + '곳</span>' +
+    '</div>' +
+    '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px">' + addr + '</div>' +
+    '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">이 건물에 있는 음식점이에요</div>' +
+    '<div class="lc-spot-list">' +
+      bucket.items.map(function (p, i) {
+        return '<div class="lc-spot-item" onclick="showRsSlide(_rsSpotPick(' + i + '))">' +
+                 '<div class="lc-spot-name">' + (p.n || '') + '</div>' +
+                 '<div class="lc-spot-cat">' + (p.c || '') + '</div>' +
+               '</div>';
+      }).join('') +
+    '</div>';
+
+  var slide = document.getElementById('place-slide');
+  var dim   = document.getElementById('map-dim');
+  if (slide) slide.classList.add('open');
+  if (dim) dim.classList.add('show');
+}
+var _rsSpotBucket = null;
+function _rsSpotPick(i) { return (_rsSpotBucket && _rsSpotBucket.items[i]) || null; }
 
 function showRsClusters(bounds, level) {
   var sw = bounds.getSouthWest(), ne = bounds.getNorthEast();
@@ -274,7 +337,12 @@ function goNearestParkingRs(lat, lng, name) {
     var chip = document.querySelector('#map-chips .chip[data-cat="restaurant"]');
     if (chip) chip.classList.add('active');
     setRsVisible(true);
-    var p = rsData.find(function (x) { return x.n === name; });
+    /* ⚠ 이름으로 되찾으면 안 된다 — 같은 상호가 97건 있고, 슬라이드에 넘길 때
+     * 작은따옴표를 지운 이름(safeName)이라 9곳은 아예 못 찾는다.
+     * 좌표는 그 가게를 유일하게 가리킨다(2026-08-26 감사). */
+    var p = rsData.find(function (x) {
+      return Math.abs(x.lat - lat) < 1e-7 && Math.abs(x.lng - lng) < 1e-7;
+    });
     if (p) showRsSlide(p);
   });
 }

@@ -825,7 +825,9 @@ function renderFestivalScroll() {
     const dateStr = p.date ? (p.date.includes('~')
       ? p.date.split('~')[0].trim().replace(/^\d{4}-/,'').replace(/-/g,'.') + ' ~'
       : p.date.trim().replace(/^\d{4}-/,'').replace(/-/g,'.')) : '';
-    return `<div class="festival-scroll-card" onclick="showFestivalDetail(${p.id})">
+    /* 이 캐러셀은 2026-08-26 에 소식 탭으로 옮겨졌다 — go('tourism') 이 없으면 먹통이다.
+     * 위 js/living.js 의 news-item 과 같은 이유다. */
+    return `<div class="festival-scroll-card" onclick="go('tourism');setTimeout(function(){showFestivalDetail(${p.id})},260)">
       <div class="fsc-img ${img}">${badge}</div>
       <div class="fsc-body"><div class="fsc-date">${dateStr}</div><div class="fsc-title">${p.name}</div></div>
     </div>`;

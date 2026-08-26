@@ -144,7 +144,11 @@ function go(page) {
       else renderTourismList('all');
     } else {
       _resetThemeChips();
-      renderTourismList(sub === 'festival' ? 'festival-only' : sub === 'spot' ? 'tourist-only' : 'all');
+      /* ⚠ heritage 를 빠뜨리면 칩은 '문화재' 인데 목록만 '전체' 로 바뀐다
+       * (탭을 벗어났다 돌아올 때). 2026-08-26 감사에서 발견. */
+      renderTourismList(sub === 'festival' ? 'festival-only'
+                      : sub === 'spot'     ? 'tourist-only'
+                      : sub === 'heritage' ? 'heritage-only' : 'all');
     }
     /* 큐레이션 3종(#dl-sections)은 '전체' 서브탭에서만 보인다. switchTourismSub 을
      * 거치지 않는 이 경로에서도 채워 줘야 첫 진입에 빈칸이 남지 않는다.

@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082658">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082658">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082658">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082658">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082658">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082658">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082658">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082661">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082661">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082661">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082661">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082661">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082661">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082661">
 </head>
 <body>
 
@@ -399,7 +399,7 @@
   <div class="section" id="tourism-festival-header">
     <div class="section-header">
       <div class="section-title">이번 달 축제</div>
-      <button class="section-link" onclick="showCalendar()">캘린더 보기</button>
+      <button class="section-link" onclick="go('tourism');setTimeout(showCalendar,260)">캘린더 보기</button>
     </div>
   </div>
   <div class="fscroll-wrap" id="festival-scroll-wrap">
@@ -534,6 +534,11 @@
       <button class="lc-fchip"        data-lcat="car"    onclick="setLcFilter('car')">🚗 자동차</button>
       <button class="lc-fchip"        data-lcat="edu"    onclick="setLcFilter('edu')">📚 학원</button>
     </div>
+    </div>
+    <button id="lc-arr-right" class="lc-arr" onclick="scrollLcFilter(1)" aria-label="다음">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
     <!-- 음식점 업종 필터 (2026-08-26) — 원본 업종 18종을 8개 묶음으로 접었다.
          칩이 18개면 가로 스크롤만 길어지고 아무도 안 쓴다. 원본 분류는 슬라이드 카드에 그대로 보인다.
          구조·CSS 는 위 지역화폐 필터 바를 그대로 쓴다. -->
@@ -548,11 +553,7 @@
         <button class="rs-fchip"        data-rcat="fast"   onclick="setRsFilter('fast')">치킨·패스트푸드</button>
         <button class="rs-fchip"        data-rcat="etc"    onclick="setRsFilter('etc')">기타</button>
       </div>
-    </div>
-    <button id="lc-arr-right" class="lc-arr" onclick="scrollLcFilter(1)" aria-label="다음">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-  </div>
+
 
   <!-- 실시간 주차 여유 뱃지 -->
   <div id="parking-count-badge" style="
@@ -824,33 +825,33 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082658"></script>
-<script src="js/quiz.js?v=2026082658"></script>
-<script src="js/mapnav.js?v=2026082658"></script>
-<script src="js/home.js?v=2026082658"></script>
-<script src="js/tourism.js?v=2026082658"></script>
-<script src="js/living.js?v=2026082658"></script>
-<script src="js/favorites.js?v=2026082658"></script>
-<script src="js/ui.js?v=2026082658"></script>
-<script src="js/calendar.js?v=2026082658"></script>
-<script src="js/boot.js?v=2026082658"></script>
+<script src="js/nav.js?v=2026082661"></script>
+<script src="js/quiz.js?v=2026082661"></script>
+<script src="js/mapnav.js?v=2026082661"></script>
+<script src="js/home.js?v=2026082661"></script>
+<script src="js/tourism.js?v=2026082661"></script>
+<script src="js/living.js?v=2026082661"></script>
+<script src="js/favorites.js?v=2026082661"></script>
+<script src="js/ui.js?v=2026082661"></script>
+<script src="js/calendar.js?v=2026082661"></script>
+<script src="js/boot.js?v=2026082661"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082659"></script>
-<script src="js/convenience.js?v=2026082658"></script>
-<script src="js/data.js?v=2026082658"></script>
-<script src="js/map.js?v=2026082658"></script>
-<script src="js/conv_map.js?v=2026082658"></script>
-<script src="js/parking.js?v=2026082658"></script>
-<script src="js/localcurrency.js?v=2026082658"></script>
+<script src="js/photos.js?v=2026082661"></script>
+<script src="js/convenience.js?v=2026082661"></script>
+<script src="js/data.js?v=2026082661"></script>
+<script src="js/map.js?v=2026082661"></script>
+<script src="js/conv_map.js?v=2026082661"></script>
+<script src="js/parking.js?v=2026082661"></script>
+<script src="js/localcurrency.js?v=2026082661"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082658"></script>
-<script src="js/tide.js?v=2026082658"></script>
-<script src="js/restaurants.js?v=2026082658"></script>
-<script src="js/weather.js?v=2026082658"></script>
-<script src="js/today.js?v=2026082658"></script>
-<script src="js/district.js?v=2026082658"></script>
+<script src="js/datalab.js?v=2026082661"></script>
+<script src="js/tide.js?v=2026082661"></script>
+<script src="js/restaurants.js?v=2026082661"></script>
+<script src="js/weather.js?v=2026082661"></script>
+<script src="js/today.js?v=2026082661"></script>
+<script src="js/district.js?v=2026082661"></script>
 </body>
 </html>

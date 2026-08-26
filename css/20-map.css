@@ -405,3 +405,5 @@
       border-radius: 16px; max-height: 46vh; overflow-y: auto;
       -webkit-overflow-scrolling: touch;
     }
+    /* 음식점 겹침 배지 — .lc-count-badge 와 모양은 같고 색만 음식점 계열이다 */
+    .rs-count-badge { background: #D97706; }

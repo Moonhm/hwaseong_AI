@@ -183,10 +183,15 @@
     /* 사이드 메뉴(z-index 200대) 위에 떠야 한다 — 메뉴에서 열기 때문이다. */
     #tide-dim {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      opacity: 0; pointer-events: none; transition: opacity 0.22s; z-index: 300;
+      opacity: 0; pointer-events: none; transition: opacity 0.22s; z-index: 610;
     }
     #tide-dim.show { opacity: 1; pointer-events: auto; }
-    /* ⚠ translate(-50%,100%) 만으로는 '위로 뻗는' box-shadow 가 화면에 남는다.
+    /* ⚠ z-index 는 사이드 메뉴(딤 600 · 서랍 601, css/30-panel.css)보다 위여야 한다.
+     * 이 패널들은 전부 메뉴에서 열리는데, 310 이던 시절에는 메뉴 딤 아래에서
+     * 회색으로 떴다가 딤이 사라지며 밝아졌다 (2026-08-26 감사).
+     * 딤 610 · 패널 620 으로 올렸다.
+     *
+     * ⚠ translate(-50%,100%) 만으로는 '위로 뻗는' box-shadow 가 화면에 남는다.
      * 패널은 bottom:0 이라 100% 내리면 윗변이 화면 맨 아래에 걸치는데,
      * 그림자는 거기서 위로 34px(6+28) 번져 하단 내비 자리에 어두운 띠가 생긴다.
      * (2026-08-26 사용자 지적 "탭 선택하는거 밑에 무슨 그늘이 생겼는데")
@@ -198,7 +203,7 @@
     #tide-panel {
       position: fixed; left: 50%; bottom: 0;
       width: 100%; max-width: 480px; transform: translate(-50%, 100%);
-      background: var(--white); z-index: 310;
+      background: var(--white); z-index: 620;
       border-radius: 20px 20px 0 0;
       max-height: 86vh; display: flex; flex-direction: column;
       visibility: hidden;
@@ -314,14 +319,14 @@
      * 전부 메뉴에서 열리고, 열 때 closeMenu() 를 먼저 부른다. */
     #today-dim {
       position: fixed; inset: 0; background: rgba(0,0,0,0.45);
-      opacity: 0; pointer-events: none; transition: opacity 0.22s; z-index: 300;
+      opacity: 0; pointer-events: none; transition: opacity 0.22s; z-index: 610;
     }
     #today-dim.show { opacity: 1; pointer-events: auto; }
     /* 위 #tide-panel 과 같은 이유로 visibility 를 쓴다 — 그 주석 참고 */
     #today-panel, #settings-panel {
       position: fixed; left: 50%; bottom: 0;
       width: 100%; max-width: 480px; transform: translate(-50%, 100%);
-      background: var(--white); z-index: 310;
+      background: var(--white); z-index: 620;
       border-radius: 20px 20px 0 0;
       max-height: 86vh; display: flex; flex-direction: column;
       visibility: hidden;

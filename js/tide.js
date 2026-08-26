@@ -42,6 +42,10 @@ function _tideOpenNow(seg, nowMin) {
   if (o === null && c === null) return true;          /* 양쪽 다 계속통행 */
   if (o === null) return nowMin <= c;                 /* 새벽부터 c 까지 */
   if (c === null) return nowMin >= o;                 /* o 부터 자정까지 */
+  /* ⚠ 자정을 넘기는 구간(예: 17:13 ~ 03:12)은 o > c 다. 이걸 빠뜨리면
+   * nowMin >= o && nowMin <= c 가 영원히 거짓이 되어 통행 가능한 시간이
+   * 통째로 '잠김' 으로 뒤집힌다 — 365일 중 131일이 그랬다(2026-08-26 감사). */
+  if (c < o) return nowMin >= o || nowMin <= c;
   return nowMin >= o && nowMin <= c;
 }
 /* 두 구간을 그날 시각 순으로 돌려준다.

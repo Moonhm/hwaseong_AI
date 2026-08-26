@@ -223,7 +223,10 @@ function renderNewsSection() {
                 : d === 0 ? '오늘' : d === 1 ? '내일' : 'D-' + d;
       var hot   = d <= 3 ? ' news-badge-hot' : '';
       return '<div class="news-item" style="animation-delay:' + (i * 0.045) + 's"' +
-             ' onclick="showFestivalDetail(' + it.p.id + ')">' +
+             /* ⚠ go('tourism') 없이 showFestivalDetail 만 부르면 아무 일도 안 일어난다 —
+              * 그 함수는 #page-tourism '안의' 뷰 display 만 뒤집는데 사용자는 소식 탭에
+              * 남아 있기 때문이다. 게다가 추천 탭 상태만 오염된다. (2026-08-26 감사) */
+             ' onclick="go(\'tourism\');setTimeout(function(){showFestivalDetail(' + it.p.id + ')},260)">' +
                '<div class="news-badge' + hot + '">' + badge + '</div>' +
                '<div class="news-body">' +
                  '<div class="news-title">' + (it.p.name || '') + '</div>' +
