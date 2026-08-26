@@ -156,6 +156,10 @@ function _kbEnhance() {
   /* :not([tabindex]) 로 이미 처리한 것을 건너뛴다 — 멱등하고 비용이 거의 없다. */
   document.querySelectorAll('[onclick]:not([tabindex])').forEach(function (el) {
     if (_KB_NATIVE[el.tagName]) return;
+    /* ⚠ 배경 오버레이(.dim / #*-dim)는 제외한다. '바깥을 눌러 닫는' 자리라
+     * 버튼이 아니고, 포커스 대상으로 만들면 탭 순서에 빈 정거장이 생긴다.
+     * 닫기는 이미 각 패널의 ✕ 버튼과 Esc 로 되므로 기능 손실이 없다. */
+    if (el.classList.contains('dim') || /(^|-)dim$/.test(el.id || '')) return;
     el.setAttribute('tabindex', '0');
     /* role 이 이미 있으면(예: 앞으로 role="tab" 을 쓸 수도 있다) 존중한다. */
     if (!el.hasAttribute('role')) el.setAttribute('role', 'button');

@@ -104,6 +104,48 @@ function pinColor(p) {
   if (ratio <= 0) return '#EF4444';
   return 'hsl(' + Math.round(ratio * 118) + ',72%,42%)';
 }
+/* ── 핀 글자 대비 (2026-08-26 감사) ────────────────────────────────────────
+ * 핀 배경은 빨강→초록 그라데이션이라 색상마다 밝기가 크게 다르다.
+ * 흰 글씨를 고정으로 쓰면 노랑~연두 구간에서 대비가 2.1:1 까지 떨어진다
+ * (WCAG AA 는 4.5:1). 명도를 30% 까지 낮춰 봐도 노랑은 3.99:1 이라 못 넘기고,
+ * 색으로 상태를 알리는 게 이 핀의 존재 이유라 그라데이션을 포기할 수도 없다.
+ * 그래서 배경을 어둡게 하는 대신 **글자를 뒤집는다** — 색은 그대로 두고
+ * 밝은 핀에는 검은 글씨, 어두운 핀에는 흰 글씨를 쓴다.
+ *
+ * ⚠ 흰 원판 위의 'P'(.pk-p-badge)는 반대 방향이다 — 배경이 흰색이라
+ *   밝은 핀 색을 그대로 글자에 쓰면 안 보인다. 그쪽은 어둡게 눌러 쓴다. */
+function _pkLum(color) {
+  var r, g, b;
+  var h = /^#([0-9a-fA-F]{6})$/.exec(color);
+  if (h) {
+    var n = parseInt(h[1], 16);
+    r = (n >> 16 & 255) / 255; g = (n >> 8 & 255) / 255; b = (n & 255) / 255;
+  } else {
+    var m = /hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%/.exec(color);
+    if (!m) return 0;
+    var H = +m[1] / 360, S = +m[2] / 100, L = +m[3] / 100;
+    var c = (1 - Math.abs(2 * L - 1)) * S;
+    var x = c * (1 - Math.abs(((H * 6) % 2) - 1));
+    var mm = L - c / 2;
+    var seg = Math.floor(H * 6) % 6;
+    var t = [[c,x,0],[x,c,0],[0,c,x],[0,x,c],[x,0,c],[c,0,x]][seg];
+    r = t[0] + mm; g = t[1] + mm; b = t[2] + mm;
+  }
+  var f = function (v) { return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+}
+/* 흰 글씨 대비가 4.5:1 에 못 미치면 검은 글씨로 뒤집는다. */
+function pkTextOn(color) {
+  return (1.05 / (_pkLum(color) + 0.05)) >= 4.5 ? '#fff' : '#111827';
+}
+/* 흰 원판 위에 얹는 'P' — 밝은 색을 그대로 쓰면 안 보이므로 눌러 쓴다. */
+function pkInkOn(color) {
+  var m = /hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%/.exec(color);
+  if (!m) return color;                       /* #EF4444 · #9CA3AF 는 그대로 */
+  return 'hsl(' + m[1] + ',' + m[2] + '%,28%)';
+}
+
+
 function statusText(p) {
   if (!p.open)      return '미운영';
   if (p.avail <= 0) return '만차';
@@ -250,8 +292,8 @@ function pinHtml(p) {
     + ' onmouseover="pkHoverIn(' + p.id + ')"'
     + ' onmouseout="pkHoverOut(' + p.id + ')">'
     + '<div class="pk-circle" style="background:' + color + '">'
-    + '<span class="pk-p-badge" style="color:' + color + '">P</span>'
-    + '<span class="pk-count">' + status + '</span>'
+    + '<span class="pk-p-badge" style="color:' + pkInkOn(color) + '">P</span>'
+    + '<span class="pk-count" style="color:' + pkTextOn(color) + '">' + status + '</span>'
     + '</div>'
     + '<div class="pk-tail" style="border-top-color:' + color + '"></div>'
     + '</div>';

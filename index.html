@@ -26,13 +26,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=20260826121">
-  <link rel="stylesheet" href="css/10-content.css?v=20260826121">
-  <link rel="stylesheet" href="css/20-map.css?v=20260826121">
-  <link rel="stylesheet" href="css/30-panel.css?v=20260826121">
-  <link rel="stylesheet" href="css/40-quiz.css?v=20260826121">
-  <link rel="stylesheet" href="css/50-datalab.css?v=20260826121">
-  <link rel="stylesheet" href="css/90-misc.css?v=20260826121">
+  <link rel="stylesheet" href="css/00-base.css?v=20260826122">
+  <link rel="stylesheet" href="css/10-content.css?v=20260826122">
+  <link rel="stylesheet" href="css/20-map.css?v=20260826122">
+  <link rel="stylesheet" href="css/30-panel.css?v=20260826122">
+  <link rel="stylesheet" href="css/40-quiz.css?v=20260826122">
+  <link rel="stylesheet" href="css/50-datalab.css?v=20260826122">
+  <link rel="stylesheet" href="css/90-misc.css?v=20260826122">
 </head>
 <body>
 
@@ -61,7 +61,7 @@
            oninput="homeSearchInput(this.value)"
            onkeydown="if(event.key==='Enter')doHomeSearch(this.value)"
            autocomplete="off" />
-    <div class="search-clear" id="home-search-clear" onclick="clearHomeSearch()">✕</div>
+    <div class="search-clear" id="home-search-clear" role="button" aria-label="검색어 지우기" onclick="clearHomeSearch()">✕</div>
   </div>
   <div class="home-search-results" id="home-search-results"></div>
 
@@ -405,9 +405,9 @@
       <button class="back-btn" onclick="backFromCalendar()">← 추천</button>
     </div>
     <div class="calendar-nav">
-      <button class="cal-arrow" onclick="calNav(-1)">‹</button>
+      <button class="cal-arrow" aria-label="이전 달" onclick="calNav(-1)">‹</button>
       <span class="cal-month" id="cal-month-label">2026년 8월</span>
-      <button class="cal-arrow" onclick="calNav(1)">›</button>
+      <button class="cal-arrow" aria-label="다음 달" onclick="calNav(1)">›</button>
     </div>
     <div class="calendar-grid" id="calendar-grid">
       <div class="cal-day-hd">일</div><div class="cal-day-hd">월</div><div class="cal-day-hd">화</div><div class="cal-day-hd">수</div><div class="cal-day-hd">목</div><div class="cal-day-hd">금</div><div class="cal-day-hd">토</div>
@@ -544,7 +544,7 @@
            oninput="homeSearchInput(this.value, 'map')"
            onkeydown="if(event.key==='Enter')doHomeSearch(this.value,'map')"
            autocomplete="off" />
-    <div class="search-clear" id="map-search-clear" onclick="clearHomeSearch('map')">✕</div>
+    <div class="search-clear" id="map-search-clear" role="button" aria-label="검색어 지우기" onclick="clearHomeSearch('map')">✕</div>
   </div>
   <div class="home-search-results map-search-results" id="map-search-results"></div>
 
@@ -663,7 +663,7 @@
     <div class="slide-drag-zone" id="slide-drag-zone">
       <div class="slide-handle"></div>
     </div>
-    <button class="sl-close" onclick="closePlaceSlide()">✕</button>
+    <button class="sl-close" aria-label="닫기" onclick="closePlaceSlide()">✕</button>
     <div class="slide-inner" id="slide-inner"></div>
   </div>
   <div class="dim" id="map-dim" onclick="closePlaceSlide()"></div>
@@ -717,7 +717,7 @@
       <div class="tide-title">🌊 제부도 바닷길</div>
       <div class="tide-sub">물이 빠져야 건널 수 있어요</div>
     </div>
-    <button class="menu-close" onclick="closeTide()">✕</button>
+    <button class="menu-close" aria-label="제부도 시간표 닫기" onclick="closeTide()">✕</button>
   </div>
   <div id="tide-body"></div>
 </div>
@@ -734,7 +734,7 @@
       <div class="tide-title">☀️ 오늘의 화성 날씨</div>
       <div class="tide-sub">지금 날씨와 이번 주 예보</div>
     </div>
-    <button class="menu-close" onclick="closeToday()">✕</button>
+    <button class="menu-close" aria-label="날씨 닫기" onclick="closeToday()">✕</button>
   </div>
   <div id="today-body"></div>
 </div>
@@ -747,7 +747,7 @@
       <div class="tide-title">⚙️ 설정</div>
       <div class="tide-sub">저장된 정보와 위치 권한</div>
     </div>
-    <button class="menu-close" onclick="closeSettings()">✕</button>
+    <button class="menu-close" aria-label="설정 닫기" onclick="closeSettings()">✕</button>
   </div>
   <div id="settings-body"></div>
 </div>
@@ -757,7 +757,7 @@
 <div id="menu-drawer">
   <div class="menu-header">
     <div style="font-size:16px;font-weight:800;color:var(--text);">화성잇다 메뉴</div>
-    <button class="menu-close" onclick="closeMenu()">✕</button>
+    <button class="menu-close" aria-label="메뉴 닫기" onclick="closeMenu()">✕</button>
   </div>
   <div id="menu-content" style="padding-bottom:32px;">
       <!-- AI 추천 퀴즈 배너는 2026-08-26 에 이 드로어에서 뺐다 (사용자 지시).
@@ -912,7 +912,7 @@
 <!-- ══ 관광지 추천 퀴즈 오버레이 ══ -->
 <div id="quiz-overlay">
   <div class="quiz-header">
-    <button class="quiz-back-btn" onclick="closeQuiz()">←</button>
+    <button class="quiz-back-btn" aria-label="퀴즈 닫기" onclick="closeQuiz()">←</button>
     <div class="quiz-header-title">🎯 화성 관광지 추천</div>
     <div style="width:32px"></div>
   </div>
@@ -925,34 +925,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=20260826121"></script>
-<script src="js/quiz.js?v=20260826121"></script>
-<script src="js/mapnav.js?v=20260826121"></script>
-<script src="js/home.js?v=20260826121"></script>
-<script src="js/tourism.js?v=20260826121"></script>
-<script src="js/living.js?v=20260826121"></script>
-<script src="js/favorites.js?v=20260826121"></script>
-<script src="js/ui.js?v=20260826121"></script>
-<script src="js/calendar.js?v=20260826121"></script>
-<script src="js/boot.js?v=20260826121"></script>
+<script src="js/nav.js?v=20260826122"></script>
+<script src="js/quiz.js?v=20260826122"></script>
+<script src="js/mapnav.js?v=20260826122"></script>
+<script src="js/home.js?v=20260826122"></script>
+<script src="js/tourism.js?v=20260826122"></script>
+<script src="js/living.js?v=20260826122"></script>
+<script src="js/favorites.js?v=20260826122"></script>
+<script src="js/ui.js?v=20260826122"></script>
+<script src="js/calendar.js?v=20260826122"></script>
+<script src="js/boot.js?v=20260826122"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=20260826121"></script>
-<script src="js/convenience.js?v=20260826121"></script>
-<script src="js/data.js?v=20260826121"></script>
-<script src="js/map.js?v=20260826121"></script>
-<script src="js/conv_map.js?v=20260826121"></script>
-<script src="js/parking.js?v=20260826121"></script>
-<script src="js/localcurrency.js?v=20260826121"></script>
+<script src="js/photos.js?v=20260826122"></script>
+<script src="js/convenience.js?v=20260826122"></script>
+<script src="js/data.js?v=20260826122"></script>
+<script src="js/map.js?v=20260826122"></script>
+<script src="js/conv_map.js?v=20260826122"></script>
+<script src="js/parking.js?v=20260826122"></script>
+<script src="js/localcurrency.js?v=20260826122"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=20260826121"></script>
-<script src="js/tide.js?v=20260826121"></script>
-<script src="js/weather.js?v=20260826121"></script>
-<script src="js/today.js?v=20260826121"></script>
-<script src="js/district.js?v=20260826121"></script>
+<script src="js/datalab.js?v=20260826122"></script>
+<script src="js/tide.js?v=20260826122"></script>
+<script src="js/weather.js?v=20260826122"></script>
+<script src="js/today.js?v=20260826122"></script>
+<script src="js/district.js?v=20260826122"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=20260826121"></script>
+<script src="js/hscroll.js?v=20260826122"></script>
 </body>
 </html>
