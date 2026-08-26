@@ -233,6 +233,17 @@ const THEME_TAGS = { sea:['바다'], nature:['자연'], history:['역사','세�
 function pickTheme(el, theme) {
   document.querySelectorAll('#tourism-theme-chips .chip').forEach(c => c.classList.remove('active'));
   if (el) el.classList.add('active');
+
+  /* ⚠ 테마 '전체' 는 '테마 조건 없음' 이지 '모든 카테고리' 가 아니다.
+   * 그냥 renderTourismList('all') 을 부르면 서브탭이 '관광지' 인데 축제·문화재까지
+   * 다시 들어온다. 서브탭이 정한 목록으로 되돌려야 한다.
+   * (테마 칩은 '관광지' 서브탭에서만 보이지만, 서브탭이 늘어나도 견디게 분기로 쓴다) */
+  if (theme === 'all') {
+    renderTourismList(_tourismSub === 'spot'     ? 'tourist-only'
+                    : _tourismSub === 'heritage' ? 'heritage-only'
+                    : _tourismSub === 'festival' ? 'festival-only' : 'all');
+    return;
+  }
   renderTourismList(theme);
 }
 
@@ -257,7 +268,16 @@ function renderTourismList(theme, expanded) {
   } else {
     /* 'restaurant' 는 PLACES 에 0건이다 — 맛집은 CONVENIENCE(생활 탭) 소속이라 여기 오지 않는다.
      * 대신 heritage 42건이 빠져 있어 '전체'에서 문화재가 통째로 안 보였다. (2026-08-26) */
-    const cats = ['tourist','festival','heritage'];
+    /* ⚠ 카테고리 축과 테마 축은 '곱해서' 써야 한다 (2026-08-26 감사).
+     * 여기서 늘 세 카테고리를 다 담으면, '관광지' 서브탭에서 테마 '역사' 를 누를 때
+     * 문화재 42건이 통째로 섞여 들어온다(실측: 63건 = 관광지 21 + 문화재 42).
+     * 서브탭 칩은 여전히 '관광지' 라 사용자는 왜 섞였는지 알 수 없다.
+     * 서브탭이 정한 카테고리로 먼저 좁힌 뒤 테마 태그를 얹는다. */
+    const _sub  = _tourismSub || 'all';
+    const cats  = _sub === 'spot'     ? ['tourist']
+                : _sub === 'heritage' ? ['heritage']
+                : _sub === 'festival' ? ['festival']
+                : ['tourist','festival','heritage'];
     items = PLACES.filter(p => cats.includes(p.category));
     if (theme !== 'all' && THEME_TAGS[theme]) {
       const tags = THEME_TAGS[theme];

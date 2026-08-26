@@ -90,6 +90,10 @@ var _jebuOv     = null;
 var CONV_CACHE_VER = 'v6'; /* 좌표 데이터 변경 시 올려서 캐시 무효화 */
 
 /* localStorage 캐시 키 */
+/* 캐시 키 접두사를 만드는 유일한 자리. js/today.js 설정 패널이 이걸 써야 한다 —
+ * 거기서 'hwaseong_conv_v5_' 를 하드코딩해 두는 바람에 v6 로 올린 뒤로 캐시 용량이
+ * 늘 0건으로 나오고 '비우기' 버튼이 영영 안 떴다 (2026-08-26 감사). */
+function convCachePrefix() { return 'hwaseong_conv_' + CONV_CACHE_VER + '_'; }
 function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat; }
 
 /* 해당 카테고리 칩이 켜져 있는지.

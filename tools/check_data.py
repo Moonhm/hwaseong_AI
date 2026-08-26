@@ -280,16 +280,27 @@ def check_shape():
 # 검사가 그 줄을 못 보고 조용히 통과한다. 0건이면 그 자체를 실패로 만든다.
 PRINTED = [
     # (정규식, 기대 키, 최소 출현 횟수)
-    (r"관광지\s*([\d,]+)곳",            "PLACES.tourist",               2),  # index.html:1396, 1401
-    (r"축제\s*([\d,]+)건",              "PLACES.festival",              2),  # index.html:1396, 1402
-    (r"공영주차장\s*([\d,]+)개",        "parking-static.json",          1),  # index.html:1397
-    (r"지역화폐 가맹점\s*([\d,]+)개",   "localcurrency-static.json",    1),  # index.html:1397
+    # 2026-08-26 — About 본문을 다시 쓰면서 "관광지 159곳 / 축제 50건 / 공영주차장 131개 /
+    # 지역화폐 가맹점 27,374개" 5연속 수치 나열을 걷어냈다(사용자 지시). 그래서 아래 넷은
+    # '문단 + 칩' 2회에서 '칩' 1회로 줄었다. 기대 횟수를 안 내리면 이 검사가 통째로 빨간불이
+    # 되어 아무도 안 보게 된다 — 실제로 그 상태로 며칠 갔다.
+    (r"관광지\s*([\d,]+)곳",            "PLACES.tourist",               1),  # About 칩
+    (r"축제\s*([\d,]+)건",              "PLACES.festival",              1),  # About 칩
+    (r"지정문화재\s*([\d,]+)곳",        "PLACES.heritage",              1),  # About 칩
+    # 단위가 '개' → '곳' 으로 바뀌었다(About 칩 재작성).
+    (r"공영주차장\s*([\d,]+)곳",        "parking-static.json",          1),  # About 칩
     (r"펜션·민박\s*([\d,]+)곳",         "CONVENIENCE.jebu.total",       1),  # 메뉴 '제부도 숙박'
-    (r'id="living-list-count">([\d,]+)곳', "CONVENIENCE.restaurants",   1),  # index.html:1590
-    (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">모범음식점', "CONVENIENCE.restaurants", 1),        # :1557
-    (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">관광식당업', "CONVENIENCE.touristRestaurants", 1), # :1558
-    # 2026-08-26 감사 보강 — 같은 문단의 다른 숫자는 전부 지켜지는데 이 둘만 빠져 있었다.
-    (r"지정문화재\s*([\d,]+)곳",       "PLACES.heritage",              2),  # About 문단 + 칩
+    (r'id="living-list-count">([\d,]+)곳', "CONVENIENCE.restaurants",   1),  # 소식 탭 목록 머리
+    #
+    # ── 화면에서 사라져 뺀 것 (되살리면 이 줄도 되살려라) ───────────────────────
+    # 2026-08-26 About 칩에서 지역화폐만 숫자를 안 쓴다(로고 + '지역화폐 가맹점'):
+    #   (r"지역화폐 가맹점\s*([\d,]+)개", "localcurrency-static.json", 1)
+    #   → 27,374 는 이제 화면 어디에도 정적 문자열로 안 박힌다. 소식 탭 건수는 JS 가
+    #     lcData.length 로 찍으므로 정규식으로 잡을 수 없다. 데이터는 아래 FLOOR 가 지킨다.
+    # 2026-08-26 소식 탭 '통계 4칸' 을 통째로 뺐다(사용자 지시). 그 안의 두 숫자:
+    #   (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">모범음식점', "CONVENIENCE.restaurants", 1)
+    #   (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">관광식당업', "CONVENIENCE.touristRestaurants", 1)
+    #   → 모범음식점 건수는 지금도 living-list-count 규칙이 지킨다.
     # 지도 칩 '🍜 음식점 3,754' 는 2026-08-26 에 제거했다. 데이터 파일은 남아 있어
     # 아래 FLOOR 가 건수를 계속 지킨다 — 다시 띄울 때 이 PRINTED 항목도 되살려라.
     #

@@ -109,7 +109,7 @@ function _renderToday() {
 /* ══════════════════════════════════════════════════════════════════════════
    설정
    지금까지 사용자가 손댈 수 있는 저장값이 하나도 노출돼 있지 않았다.
-   특히 지오코딩 캐시(hwaseong_conv_v5_*)는 한 번 어긋나면 되돌릴 방법이 없었다.
+   특히 지오코딩 캐시(hwaseong_conv_*)는 한 번 어긋나면 되돌릴 방법이 없었다.
    ══════════════════════════════════════════════════════════════════════════ */
 function openSettings() {
   if (typeof closeMenu === 'function') closeMenu();
@@ -148,7 +148,14 @@ function _lsSize(prefix) {
 function _renderSettings() {
   var el = document.getElementById('settings-body');
   if (!el) return;
-  var geo  = _lsSize('hwaseong_conv_v5_');
+  /* ⚠ 접두사를 여기서 하드코딩하면 안 된다. CONV_CACHE_VER 이 v5→v6 로 올라간 뒤
+   *   이 줄만 v5 로 남아 캐시가 늘 '0건' 으로 나오고 아래 '비우기' 버튼이 영영
+   *   렌더되지 않았다(삼항이 항상 빈 문자열) — clearGeoCache() 는 호출처가 0이 됐다.
+   *   키를 만드는 쪽(js/conv_map.js convCachePrefix)에서 받아 쓴다.
+   *   conv_map.js 가 아직 안 떴을 때를 대비한 폴백은 버전 없는 접두사다 —
+   *   그러면 옛 버전 잔여 키까지 함께 세어 사용자에게 이득이다. */
+  var _cvP = (typeof convCachePrefix === 'function') ? convCachePrefix() : 'hwaseong_conv_';
+  var geo  = _lsSize(_cvP);
   var favN = (typeof getFavs === 'function') ? getFavs().length : 0;
   var recN = (typeof getRecent === 'function') ? getRecent().length : 0;
 
@@ -193,7 +200,8 @@ function clearGeoCache() {
     var del = [];
     for (var i = 0; i < localStorage.length; i++) {
       var k = localStorage.key(i);
-      if (k.indexOf('hwaseong_conv_v5_') === 0) del.push(k);
+      /* 지울 때는 버전을 가리지 않는다 — 옛 버전 잔여 키가 남으면 용량만 먹는다. */
+      if (k.indexOf('hwaseong_conv_') === 0) del.push(k);
     }
     del.forEach(function (k) { localStorage.removeItem(k); });
     if (typeof showToast === 'function') showToast(del.length + '건을 비웠어요');

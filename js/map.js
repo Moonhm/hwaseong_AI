@@ -1148,7 +1148,7 @@ function setupZoomSlider() {
      · setFilter() 호출  → 토글이라 이미 켜진 칩에 부르면 '해제'가 되고(js/map.js:852-861),
        setFilter('all') 은 첫 진입에 없는 '전체' 칩을 켜고 fitPlaces 로 카메라까지 옮긴다(:864,:903-904)
      · exitNearestParkMode()  → 120ms 뒤 onBack 콜백이 방금 지운 칩·레이어를 되살린다(js/map.js:753-758, 612-617)
-     · localStorage 삭제  → 'hsida_favs'(사용자 데이터) / 'hwaseong_conv_v5_*'(지오코딩 캐시, 재실행 시 수십 초)
+     · localStorage 삭제  → 'hsida_favs'(사용자 데이터) / 'hwaseong_conv_*'(지오코딩 캐시, 재실행 시 수십 초)
      · lcData=[] / CONV_STATUS='idle'  → 4.2MB 재다운로드, 수백 건 Geocoder 재요청
      · #map-loader 되살리기  → initMap 첫 실행에서 영구 remove 됐다(js/map.js:63-64).
        '초기화'는 로딩 화면 재현이 아니다.

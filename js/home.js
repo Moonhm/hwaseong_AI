@@ -623,7 +623,20 @@ function renderHomeTourism() {
   const el = document.getElementById('home-tourism-content');
   if (!el || typeof PLACES === 'undefined') return;
 
-  const festivals = PLACES.filter(p => p.category === 'festival');
+  /* ⚠ PLACES 순서의 첫 축제를 쓰면 안 된다 (2026-08-26 감사).
+   * 배열 순서는 수집 순서라 이미 끝난 축제가 맨 앞에 올 수 있고, 실제로
+   * 홈 대표 카드에 '종료' 배지가 뜬다. 진행 중 → 예정(가까운 순) 으로 골라
+   * 소식 탭 '행사 전체' 의 정렬 기준과 맞춘다(js/living.js _festAllSorted). */
+  const _festAll = PLACES.filter(p => p.category === 'festival');
+  const _festRank = { ongoing: 0, upcoming: 1, unknown: 2, ended: 3 };
+  const festivals = _festAll.slice().sort((a, b) => {
+    const sa = (typeof festStatus === 'function') ? festStatus(a) : 'unknown';
+    const sb = (typeof festStatus === 'function') ? festStatus(b) : 'unknown';
+    const ra = _festRank[sa] !== undefined ? _festRank[sa] : 2;
+    const rb = _festRank[sb] !== undefined ? _festRank[sb] : 2;
+    if (ra !== rb) return ra - rb;
+    return String(a.date || '').localeCompare(String(b.date || ''));
+  });
 
   const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>`;
 
@@ -881,8 +894,21 @@ function scrollFestArr(dir) {
 function renderFestivalScroll() {
   const el = document.getElementById('festival-scroll-list');
   if (!el || typeof PLACES === 'undefined') return;
-  const festivals = PLACES.filter(p => p.category === 'festival');
-  if (!festivals.length) { el.innerHTML = '<div style="padding:8px var(--px);color:var(--text-muted);font-size:13px">축제 데이터 준비 중</div>'; return; }
+  /* ⚠ 제목이 '이번 달 축제' 다 — 전부를 그리면 안 된다 (2026-08-26 감사).
+   * 예전에는 PLACES 의 축제 50건을 통째로 실어, 5월에 끝난 것과 12월 것까지
+   * '이번 달' 이라는 제목 아래 나왔다. 바로 아래 '행사 전체' 가 이미 50건을
+   * 세로로 보여 주므로 두 섹션이 같은 말을 두 번 하기도 했다.
+   * _getFestsInMonth(js/calendar.js)는 '그 달에 하루라도 걸치는 축제' 를 주고
+   * '2026년 8월 중' 같은 근사 일정도 그 달로 쳐 준다 — 캘린더와 같은 기준이다. */
+  const _now = new Date();
+  let festivals = (typeof _getFestsInMonth === 'function')
+    ? _getFestsInMonth(_now.getFullYear(), _now.getMonth())
+    : PLACES.filter(p => p.category === 'festival');
+  if (!festivals.length) {
+    /* 이번 달에 아무것도 없을 수 있다. 그때 '준비 중' 은 거짓말이라 사실대로 적는다. */
+    el.innerHTML = '<div style="padding:8px var(--px);color:var(--text-muted);font-size:13px">이번 달에는 예정된 행사가 없어요</div>';
+    return;
+  }
   el.innerHTML = festivals.map((p, i) => {
     const img = IMG_CLASSES[i % IMG_CLASSES.length];
     /* status 필드는 죽었다(50건 전부 upcoming) — 날짜로 계산한다. js/calendar.js festBadge 참고 */
