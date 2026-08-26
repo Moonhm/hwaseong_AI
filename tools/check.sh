@@ -152,7 +152,36 @@ asset_guard() {
   echo "  i     git clean -xdf 를 지금 돌리면 $(git clean -xdn 2>/dev/null | wc -l)개가 삭제된다 (드라이런)"
   return $bad
 }
+# ── 5-b. ?v= 캐시 버스팅 이력 검사 (2026-08-26) ────────────────────────────
+# 왜 기본 검사인가: 2026-08-26 에 서버가 ?v= 를 단 js/css 를
+#   Cache-Control: max-age=31536000, immutable 로 내보내기 시작했다(tools/server.py).
+#   그때부터 '같은 ?v= 로 다른 내용' 은 되돌릴 수 없는 사고가 된다 —
+#   그 URL 을 이미 받은 브라우저는 1년간 새 파일을 보지 않고, 강제 새로고침도
+#   Firefox·Safari 에서는 immutable 을 무시하지 못한다.
+#
+# 기존 precommit_guard 는 `git status`(작업트리)만 봐서, 커밋을 나눠 하면
+#   그대로 빠져나갔다. 실제로 f7d7e84 가 js/ui.js·js/home.js 를 고치면서
+#   index.html 을 건드리지 않았는데 아무 검사도 잡지 못했다.
+#   그래서 '작업트리'가 아니라 '커밋 이력'을 본다.
+version_guard() {
+  local c files
+  c=$(git log -1 --format=%H -- js/ css/ 2>/dev/null)
+  [ -z "$c" ] && { echo "  i     js/·css/ 커밋 이력이 없다"; return 0; }
+  files=$(git show --name-only --format="" "$c" 2>/dev/null)
+  if echo "$files" | grep -qx "index.html"; then
+    echo "  i     최신 js/css 커밋($(git log -1 --format=%h "$c"))이 index.html 도 함께 고쳤다"
+    return 0
+  fi
+  echo "  FAIL  js/ 또는 css/ 를 고친 최신 커밋이 index.html 을 안 고쳤다 — ?v= 가 안 올랐다"
+  echo "        커밋: $(git log -1 --format='%h %s' "$c")"
+  echo "$files" | sed 's/^/          /'
+  echo "        서버가 ?v= 를 immutable 로 내보내므로(tools/server.py) 같은 ?v= 에"
+  echo "        다른 내용이 실리면 되돌릴 수 없다. index.html 의 ?v= 를 올려 커밋하라."
+  return 1
+}
+
 if [ $HAVE_GIT = 1 ]; then
+  run "캐시 버스팅 이력 (version-guard)" version_guard
   run "자산·추적 상태 (asset-guard)" asset_guard
 else
   skip "자산·추적 상태 (asset-guard)" "git 이 없다 — .gitignore 가 데이터 파일을 삼켰는지 못 본다"
