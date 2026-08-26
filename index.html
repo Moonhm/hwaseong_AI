@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082667">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082667">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082667">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082667">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082667">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082667">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082667">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082670">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082670">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082670">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082670">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082670">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082670">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082670">
 </head>
 <body>
 
@@ -73,10 +73,10 @@
         <span>내 위치</span>
       </button>
     </div>
-    <!-- 현재 날씨 — 누르면 '오늘의 화성'(주간 예보·물때·오늘 축제)이 열린다.
+    <!-- 현재 날씨 — 누르면 '오늘의 화성 날씨'(현재 날씨 + 주간 예보)가 열린다.
          헤더의 GPS 버튼은 자기 일을 하므로 stopPropagation 으로 여기서 뺐다. -->
     <div class="hwb-current hwb-tap" onclick="openToday()"
-         role="button" tabindex="0" aria-label="오늘의 화성 열기"
+         role="button" tabindex="0" aria-label="오늘의 화성 날씨 열기"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openToday()}">
       <span id="hwb-icon" class="hwb-cur-icon">🌡️</span>
       <div class="hwb-cur-info">
@@ -95,7 +95,7 @@
     </div>
     <!-- 시간별 예보 — 여기도 '오늘 날씨'라 같은 곳으로 보낸다 -->
     <div class="hwb-bottom hwb-tap" onclick="openToday()"
-         role="button" tabindex="0" aria-label="오늘의 화성 열기"
+         role="button" tabindex="0" aria-label="오늘의 화성 날씨 열기"
          onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openToday()}">
       <div class="hwb-hourly" id="hwb-hourly"></div>
     </div>
@@ -615,14 +615,14 @@
   <div id="tide-body"></div>
 </div>
 
-<!-- 오늘의 화성 · 설정 (2026-08-26) — 조수 패널과 같은 '딤 + 하단 슬라이드' 구조.
+<!-- 오늘의 화성 날씨 · 설정 (2026-08-26) — 조수 패널과 같은 '딤 + 하단 슬라이드' 구조.
      딤은 한 장을 둘이 공유하고 closeTodayDim() 이 열려 있는 쪽을 닫는다. -->
 <div id="today-dim" onclick="closeTodayDim()"></div>
 <div id="today-panel">
   <div class="tide-head">
     <div>
-      <div class="tide-title">☀️ 오늘의 화성</div>
-      <div class="tide-sub">나가기 전에 한 번</div>
+      <div class="tide-title">☀️ 오늘의 화성 날씨</div>
+      <div class="tide-sub">지금 날씨와 이번 주 예보</div>
     </div>
     <button class="menu-close" onclick="closeToday()">✕</button>
   </div>
@@ -706,8 +706,8 @@
     <div class="menu-item" onclick="openToday()">
       <div class="menu-item-icon" style="background:#FEF9C3;">☀️</div>
       <div class="menu-item-text">
-        <div class="menu-item-label">오늘의 화성</div>
-        <div class="menu-item-sub">날씨·미세먼지·물때·오늘 축제 한눈에</div>
+        <div class="menu-item-label">오늘의 화성 날씨</div>
+        <div class="menu-item-sub">현재 날씨·미세먼지·주간 예보 한눈에</div>
       </div>
     </div>
     <div class="menu-item" onclick="closeMenu();go('tourism');requestNearbyRec()">
@@ -815,34 +815,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082667"></script>
-<script src="js/quiz.js?v=2026082667"></script>
-<script src="js/mapnav.js?v=2026082667"></script>
-<script src="js/home.js?v=2026082667"></script>
-<script src="js/tourism.js?v=2026082667"></script>
-<script src="js/living.js?v=2026082667"></script>
-<script src="js/favorites.js?v=2026082667"></script>
-<script src="js/ui.js?v=2026082667"></script>
-<script src="js/calendar.js?v=2026082667"></script>
-<script src="js/boot.js?v=2026082667"></script>
+<script src="js/nav.js?v=2026082670"></script>
+<script src="js/quiz.js?v=2026082670"></script>
+<script src="js/mapnav.js?v=2026082670"></script>
+<script src="js/home.js?v=2026082670"></script>
+<script src="js/tourism.js?v=2026082670"></script>
+<script src="js/living.js?v=2026082670"></script>
+<script src="js/favorites.js?v=2026082670"></script>
+<script src="js/ui.js?v=2026082670"></script>
+<script src="js/calendar.js?v=2026082670"></script>
+<script src="js/boot.js?v=2026082670"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082667"></script>
-<script src="js/convenience.js?v=2026082667"></script>
-<script src="js/data.js?v=2026082667"></script>
-<script src="js/map.js?v=2026082668"></script>
-<script src="js/conv_map.js?v=2026082667"></script>
-<script src="js/parking.js?v=2026082667"></script>
-<script src="js/localcurrency.js?v=2026082667"></script>
+<script src="js/photos.js?v=2026082670"></script>
+<script src="js/convenience.js?v=2026082670"></script>
+<script src="js/data.js?v=2026082670"></script>
+<script src="js/map.js?v=2026082670"></script>
+<script src="js/conv_map.js?v=2026082670"></script>
+<script src="js/parking.js?v=2026082670"></script>
+<script src="js/localcurrency.js?v=2026082670"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082667"></script>
-<script src="js/tide.js?v=2026082667"></script>
-<script src="js/weather.js?v=2026082667"></script>
-<script src="js/today.js?v=2026082667"></script>
-<script src="js/district.js?v=2026082667"></script>
+<script src="js/datalab.js?v=2026082670"></script>
+<script src="js/tide.js?v=2026082670"></script>
+<script src="js/weather.js?v=2026082670"></script>
+<script src="js/today.js?v=2026082670"></script>
+<script src="js/district.js?v=2026082670"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=2026082667"></script>
+<script src="js/hscroll.js?v=2026082670"></script>
 </body>
 </html>
