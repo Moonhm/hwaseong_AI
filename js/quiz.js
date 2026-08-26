@@ -317,8 +317,11 @@ function renderRecBannerTop() {
 
   var p     = top.place;
   var fb    = _recFbEmoji(top.tags);
-  var parts = (p.address || '').split(' ');
-  var dong  = parts[2] || parts[1] || '';            /* "경기도 화성시 서신면 제부리" → "서신면" */
+  /* 읍·면·동으로 끝나는 첫 토큰을 고른다. parts[2] 로 집으면 화성시가 4개 구로
+   * 개편된 뒤의 주소("경기도 화성시 동탄구 …")에서 '동탄구' 가 잡힌다 — 구는
+   * 읍면동이 아니다. 못 찾으면 아예 안 쓴다(틀린 지명을 보여 주느니 낫다). */
+  var _m   = /([가-힣]+(?:읍|면|동))(?:\s|$)/.exec(p.address || '');
+  var dong = _m ? _m[1] : '';
 
   /* photoThumb 은 hasPhoto 로 먼저 걸러 사진이 없으면 '' 를 준다.
    * 그 '' 를 그대로 쓰면 빈칸이 되므로 이모지 상자로 갈아 끼운다.

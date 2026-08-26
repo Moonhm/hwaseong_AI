@@ -99,6 +99,19 @@ function navToFav(id) {
 
   /* 관광지·축제 등 PLACES 핀: goMapFocus가 go('map') + 필터 + onPinClick 일괄 처리 */
   if (f.type === 'place') {
+    /* 2026-08-26 영화관 이관으로 PLACES 에서 빠진 항목이 즐겨찾기에 남아 있을 수 있다.
+     * 그대로 goMapFocus 로 보내면 핀이 없어 지도만 움직이고 카드가 안 뜬다 —
+     * 사용자에게는 '눌러도 아무 일이 없는' 죽은 항목이 된다.
+     * 이름으로 편의정보(영화관)를 찾아 그쪽 지도로 보낸다. */
+    var _live = (typeof PLACES !== 'undefined') &&
+                PLACES.some(function (p) { return p.id === f.placeId; });
+    if (!_live && typeof _dlFindCinema === 'function' && typeof _dlNorm === 'function') {
+      var _cin = _dlFindCinema(_dlNorm(f.name));
+      if (_cin && typeof goMapConv === 'function') {
+        goMapConv('cinema', _cin.lat, _cin.lng);
+        return;
+      }
+    }
     goMapFocus(f.lat, f.lng, 4, f.placeId || null);
     return;
   }

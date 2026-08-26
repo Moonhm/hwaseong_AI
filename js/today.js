@@ -225,7 +225,14 @@ function setupPanelDrags() {
     var panel = zone.parentElement;
     var startY = 0, live = false;
 
-    function onStart(y) { startY = y; live = true; }
+    function onStart(y) {
+      startY = y; live = true;
+      /* ⚠ 패널에 transform 0.26s 트랜지션이 걸려 있다(css/50-datalab.css).
+       * 끄는 동안 매 프레임 인라인 transform 을 갈아 끼우면 값 하나하나가
+       * 260ms 이징으로 재생돼 판이 손가락을 한 박자 늦게 쫓아온다.
+       * 잡고 있는 동안만 트랜지션을 끄고, 손을 떼면 되돌려 복귀는 부드럽게 둔다. */
+      panel.style.transition = 'none';
+    }
     function onMove(y) {
       if (!live) return;
       var dy = y - startY;
@@ -234,6 +241,7 @@ function setupPanelDrags() {
     function onEnd(y) {
       if (!live) return;
       live = false;
+      panel.style.transition = '';   /* CSS 트랜지션 복원 — 복귀·닫기는 부드럽게 */
       panel.style.transform = '';
       var dy = y - startY;
       if (dy < -40) {

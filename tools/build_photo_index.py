@@ -58,7 +58,7 @@ def load_conv_places():
 
     왜 필요한가 (2026-08-26): 이 빌더는 js/data.js 만 읽었다. 그래서 영화관·캠핑장·
     관광호텔처럼 CONVENIENCE 에 사는 장소의 사진은 assets/ 에 파일이 있어도
-    js/photos.js 에 한 줄도 안 들어갔고, 화면에서 영영 안 떴다. 실측 34장 31곳이
+    js/photos.js 에 한 줄도 안 들어갔고, 화면에서 영영 안 떴다. 실측 33장 30곳이
     그 상태였다. tools/check_data.py 는 고아 판정에 convenience.js 를 이미 넣고
     있어서(:478) 검사만 통과하고 아무도 눈치채지 못했다.
 
@@ -141,12 +141,19 @@ def build(files, places):
         for k in d:
             d[k].sort()
 
-    covered = set(idx_id) | {by_name_place[n]["id"] for n in idx_name}
+    # ⚠ None 을 걸러야 한다. 편의정보는 id 가 None 이라 그냥 넣으면 covered 에
+    # None 한 개가 섞이고, 아래 `p["id"] not in covered` 가 id:None 인 293곳 전부를
+    # '커버됨' 으로 판정해 카테고리별 공백 집계가 통째로 무력화된다.
+    covered = set(idx_id) | {by_name_place[n]["id"] for n in idx_name
+                             if by_name_place[n]["id"] is not None}
+    # 이름으로 사진이 붙은 편의정보는 id 가 없으므로 이름 집합으로 따로 센다.
+    covered_names = set(idx_name)
     missing = [p for p in places if p["category"] == "tourist" and p["id"] not in covered]
     # 카테고리별 공백도 함께 센다 — tourist 만 보면 heritage 42건이 통째로 빈 것을 놓친다
     gap = {}
     for p in places:
-        if p["id"] not in covered:
+        hit = (p["id"] in covered) if p["id"] is not None else (p["name"] in covered_names)
+        if not hit:
             gap.setdefault(p["category"], []).append(p)
     dups = {k: v for k, v in idx_id.items() if len(v) > 1}
     return {

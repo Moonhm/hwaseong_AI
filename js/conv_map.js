@@ -417,8 +417,20 @@ function _showConvSlide(place) {
    * 인덱스에 없었기 때문이다. 빌더를 고쳐 31곳 34장이 들어왔다.
    * 이모지를 상자 배경에 남겨 두고 그 위에 <img> 를 덮는다 — 사진이 404 나면
    * onerror 로 img 만 숨어 이모지가 그대로 보인다(빈 사각형이 남지 않는다). */
-  var _phSrc = (typeof hasPhoto === 'function' && hasPhoto({ name: place.name }))
-    ? placePhotoSrc({ name: place.name }) : '';
+  var _phSrc = '';
+  if (typeof hasPhoto === 'function') {
+    if (hasPhoto({ name: place.name })) {
+      _phSrc = placePhotoSrc({ name: place.name });
+    } else if (typeof PLACES !== 'undefined') {
+      /* 이름 표기가 갈리는 곳이 있다 — CONVENIENCE 는 '호텔 푸르미르'(공백),
+       * 사진은 PLACES id 로 붙어 있다(향남읍_153_호텔푸르미르.jpg).
+       * 공백을 지우고 PLACES 를 뒤져 그 id 로 다시 찾는다. 실측 3곳(호텔 푸르미르·
+       * 신라스테이 동탄·라비돌호텔)이 사진을 두고도 못 쓰고 있었다. */
+      var _nq = (place.name || '').replace(/\s+/g, '');
+      var _hit = PLACES.find(function (p) { return (p.name || '').replace(/\s+/g, '') === _nq; });
+      if (_hit && hasPhoto(_hit)) _phSrc = placePhotoSrc(_hit);
+    }
+  }
 
   var html =
     '<div style="width:100%;height:' + (_phSrc ? '150px' : '80px') + ';border-radius:12px;background:' + cfg.bg + ';' +

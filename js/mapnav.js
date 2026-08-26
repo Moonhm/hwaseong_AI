@@ -223,6 +223,20 @@ function goMapConv(cat, lat, lng) {
       setTimeout(function () {
         kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
         kakaoMap.setLevel(4);
+        /* 카메라만 옮기면 이름·주소가 안 보여 이관 전보다 정보가 준다.
+         * 그 자리의 핀을 찾아 슬라이드 카드까지 연다(지역화폐 goMapLc 와 같은 마무리).
+         * 핀은 지오코딩이 끝나야 생기므로 한 박자 더 늦춘다. */
+        setTimeout(function () {
+          var arr = (typeof CONV_PLACES !== 'undefined' && CONV_PLACES[cat]) || [];
+          var hit = null, best = 9e9;
+          arr.forEach(function (pl) {
+            if (!pl.lat || !pl.lng) return;
+            var d = Math.abs(pl.lat - lat) + Math.abs(pl.lng - lng);
+            if (d < best) { best = d; hit = pl; }
+          });
+          /* 약 100m 안쪽일 때만 연다 — 엉뚱한 카드를 띄우느니 안 띄우는 게 낫다 */
+          if (hit && best < 0.0015 && typeof _showConvSlide === 'function') _showConvSlide(hit);
+        }, 450);
       }, 150);
     }
   }, 350);

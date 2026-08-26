@@ -52,7 +52,7 @@ want_all |= {N(m) for m in re.findall(r'name:\s*"([^"]+)"', open(conv).read())}
 `unicodedata.normalize("NFC", s)` 일 뿐이라 **공백을 지우지 않는다**(:448).
 
 PLACES 이름은 공백이 없고(`CGV동탄`) CSV/CONVENIENCE 는 있다(`CGV 동탄`).
-그대로 두면 사진 6장이 즉시 고아가 되어 상한 3을 넘겨 FAIL 이다. 파일명을 고쳤다:
+그대로 두면 사진 4장이 즉시 고아가 되어 상한 3을 넘겨 FAIL 이다. 파일명을 고쳤다:
 
 ```
 CGV동탄.jpg        → CGV 동탄.jpg
@@ -199,7 +199,7 @@ FAIL 기준선 7건 유지. 인라인 핸들러 고유 함수 88개 전부 선�
 
 `tools/build_photo_index.py` 가 **`js/data.js` 만 읽었다**. 그래서 영화관·캠핑장·
 관광호텔처럼 `CONVENIENCE` 에 사는 장소는 `assets/` 에 사진이 있어도
-`js/photos.js` 에 한 줄도 안 들어갔다. 실측 **34장 31곳**이 그 상태였다.
+`js/photos.js` 에 한 줄도 안 들어갔다. 실측 **33장 30곳**이 그 상태였다.
 
 `tools/check_data.py` 는 고아 판정에 `convenience.js` 를 이미 넣고 있어서(:478)
 **검사는 통과했다.** 그래서 아무도 눈치채지 못했다 — 검사가 보는 것과 화면이
