@@ -410,6 +410,17 @@
 .hwb-grade-bad    { color: #C2410C; }
 .hwb-grade-vbad   { color: #DC2626; }
 .hwb-pm25-val { font-size: 11px; color: var(--text-muted); }
+/* 날씨 바를 누르면 '오늘의 화성'(주간 예보·물때·오늘 축제)이 열린다.
+   헤더 줄은 제외했다 — 거기 GPS 버튼이 있어서 오탭이 난다. */
+.hwb-tap { cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .15s; }
+.hwb-tap:active { background: rgba(37,99,235,.06); }
+.hwb-tap:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.hwb-tap-hint {
+  margin-left: auto; padding-left: 10px;
+  font-size: 10.5px; line-height: 1.35; text-align: right;
+  color: var(--text-muted); flex-shrink: 0; white-space: nowrap;
+}
+
 .hwb-bottom {
   display: flex; align-items: stretch;
   border-top: 1px solid #BFDBFE;

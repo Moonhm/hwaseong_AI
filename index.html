@@ -19,7 +19,7 @@
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
   <link rel="stylesheet" href="css/00-base.css?v=2026082656">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082656">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082657">
   <link rel="stylesheet" href="css/20-map.css?v=2026082656">
   <link rel="stylesheet" href="css/30-panel.css?v=2026082656">
   <link rel="stylesheet" href="css/40-quiz.css?v=2026082656">
@@ -75,7 +75,7 @@
       <span class="hwb-loc-icon">📍</span>
       <span id="hwb-loc-name">화성시</span>
       <span id="hwb-date" class="hwb-date"></span>
-      <button id="hwb-gps-btn" onclick="weatherBarGPS()" title="내 위치 날씨" aria-label="내 위치 날씨">
+      <button id="hwb-gps-btn" onclick="event.stopPropagation();weatherBarGPS()" title="내 위치 날씨" aria-label="내 위치 날씨">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
           <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
@@ -84,8 +84,11 @@
         <span>내 위치</span>
       </button>
     </div>
-    <!-- 현재 날씨 -->
-    <div class="hwb-current">
+    <!-- 현재 날씨 — 누르면 '오늘의 화성'(주간 예보·물때·오늘 축제)이 열린다.
+         헤더의 GPS 버튼은 자기 일을 하므로 stopPropagation 으로 여기서 뺐다. -->
+    <div class="hwb-current hwb-tap" onclick="openToday()"
+         role="button" tabindex="0" aria-label="오늘의 화성 열기"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openToday()}">
       <span id="hwb-icon" class="hwb-cur-icon">🌡️</span>
       <div class="hwb-cur-info">
         <div id="hwb-temp" class="hwb-cur-temp">—°C</div>
@@ -97,9 +100,14 @@
         <span id="hwb-grade" class="hwb-grade">—</span>
         <span id="hwb-pm25-val" class="hwb-pm25-val"></span>
       </div>
+      <!-- 눌러도 아무 일 없어 보이면 아무도 안 누른다. 오른쪽 빈 자리에 안내를 둔다.
+           .hwb-cur-info 가 flex:0 1 auto 라 여기 90px 쯤 남는다. -->
+      <span class="hwb-tap-hint">주간<br>예보 ›</span>
     </div>
-    <!-- 시간별 예보 -->
-    <div class="hwb-bottom">
+    <!-- 시간별 예보 — 여기도 '오늘 날씨'라 같은 곳으로 보낸다 -->
+    <div class="hwb-bottom hwb-tap" onclick="openToday()"
+         role="button" tabindex="0" aria-label="오늘의 화성 열기"
+         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openToday()}">
       <div class="hwb-hourly" id="hwb-hourly"></div>
     </div>
   </div>
