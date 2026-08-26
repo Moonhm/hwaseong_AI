@@ -603,9 +603,7 @@ function renderHomeTourism() {
   const el = document.getElementById('home-tourism-content');
   if (!el || typeof PLACES === 'undefined') return;
 
-  const festivals   = PLACES.filter(p => p.category === 'festival');
-  const restaurants = (typeof CONVENIENCE !== 'undefined' && CONVENIENCE.restaurants) ? CONVENIENCE.restaurants.slice(0, 4) : [];
-  const parkings    = (typeof parkingData  !== 'undefined' && parkingData.length)      ? parkingData.slice(0, 1) : [];
+  const festivals = PLACES.filter(p => p.category === 'festival');
 
   const emptyCard = `<div style="padding:32px 0;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>`;
 
@@ -613,7 +611,7 @@ function renderHomeTourism() {
     ? `<div onclick="go('tourism');showFestivalDetail(${festivals[0].id})"
         style="background:var(--white);border-radius:var(--r-md);border:1px solid var(--border);
         border-left:3px solid var(--orange);padding:14px 16px;
-        display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:8px;transition:box-shadow 0.15s;">
+        display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:12px;transition:box-shadow 0.15s;">
         ${photoThumb(festivals[0], 48, '🎉', 'ph-sm')}
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
@@ -627,34 +625,21 @@ function renderHomeTourism() {
       </div>`
     : emptyCard;
 
-  const restaurantGrid = restaurants.length
-    ? `<div class="place-grid" style="margin-bottom:10px">${restaurants.map(r => `
-        <div class="place-card-sm" onclick="goMapCat('mobeom')">
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="pi pi-food">🍽️</div>
-            <div><div class="place-card-sm-name">${r.name}</div><div class="place-card-sm-addr">${(r.addr||'').split(' ').slice(0,3).join(' ')}</div></div>
-          </div>
-        </div>`).join('')}</div>` : '';
-
-  const parkingCard = parkings.length
-    ? `<div class="place-card-sm" style="flex-direction:row;display:flex;align-items:center;gap:12px;padding:14px" onclick="goMapCat('parking')">
-        <div class="pi pi-parking">P</div>
-        <div style="flex:1"><div class="place-card-sm-name">${parkings[0].name}</div><div class="place-card-sm-addr">${(parkings[0].address||'').replace('경기도 화성시 ','')}</div></div>
-        <span class="park-badge ${(parkings[0].tags||[]).includes('무료') ? 'pb-free' : 'pb-paid'}">${(parkings[0].tags||[]).includes('무료') ? '무료' : '유료'}</span>
-      </div>` : '';
-
   el.innerHTML = `
-    <div class="section">
+    <div class="section" style="padding-top:10px">
       <div class="section-header">
         <div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="section-title">행사</div>
             ${festivals.some(f => festStatus(f) === 'ongoing') ? '<span class="badge badge-ongoing" style="font-size:10px">진행중</span>' : ''}
           </div>
-          <div class="section-sub" style="margin-top:2px">이번 주 축제 · 맛집 · 주차</div>
+          <div class="section-sub" style="margin-top:2px">이번 축제 · 화성 인기 장소</div>
         </div>
+        <button class="section-link" onclick="go('tourism')">전체보기</button>
       </div>
-      ${festivalBig}${restaurantGrid}${parkingCard}
+      ${festivalBig}
+      <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px">🔥 화성에서 인기있는 곳</div>
+      <div id="home-pop-body"></div>
     </div>
     <div class="section" style="padding-bottom:24px">
       <div class="section-header">
@@ -688,6 +673,36 @@ function renderHomeTourism() {
         </div>
       </div>
     </div>`;
+  _renderHomePopular();
+}
+
+function _renderHomePopular() {
+  var el = document.getElementById('home-pop-body');
+  if (!el || typeof dlLoad === 'undefined') return;
+  el.innerHTML = '<div style="padding:10px 0;text-align:center;color:var(--text-muted);font-size:12px">불러오는 중...</div>';
+  dlLoad('datalab_naviranking_hwaseong_2026.json', function(d) {
+    var el2 = document.getElementById('home-pop-body');
+    if (!el2) return;
+    var list = (typeof _dlDedupe === 'function') ? _dlDedupe(d && d.interest_spots_domestic) : ((d && d.interest_spots_domestic) || []);
+    if (!list.length) { el2.innerHTML = ''; return; }
+    el2.innerHTML = list.slice(0, 5).map(function(r, i) {
+      var src = (typeof placePhotoSrc === 'function') ? placePhotoSrc({name: r.name}) : '';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="dlGoPlace(\'' + r.name.replace(/'/g, '') + '\')">' +
+        '<div style="width:22px;text-align:center;font-size:13px;font-weight:700;color:' + (i < 3 ? 'var(--orange)' : 'var(--text-muted)') + '">' + (i + 1) + '</div>' +
+        '<div style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#F3F4F6">' +
+          '<img src="' + src + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' +
+        '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + r.name + '</div>' +
+          '<div style="font-size:11px;color:var(--text-muted)">' + (r.category || '') + '</div>' +
+        '</div>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
+      '</div>';
+    }).join('') +
+    '<div style="text-align:right;margin-top:6px">' +
+      '<button class="section-link" onclick="go(\'tourism\');setTimeout(function(){showDatalab(\'popular\')},300)">전체 순위 보기 ›</button>' +
+    '</div>';
+  });
 }
 
 function renderHomeLiving() {
