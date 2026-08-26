@@ -20,7 +20,7 @@
  *   쓰는 방식(showCalendar/hideCalendar)과 동일하다.
  * ========================================================================== */
 
-var DL_VER   = '2026082671';
+var DL_VER   = '2026082672';
 var _dlCache = {};      /* 파일명 → 파싱된 JSON. 한 번 받으면 다시 안 받는다 */
 var _dlLoading = {};    /* 같은 파일을 동시에 두 번 요청하지 않게 하는 잠금 */
 
@@ -210,8 +210,10 @@ function renderDlCityTour() {
       '<div class="dl-tour-row">' +
       cs.slice(0, 6).map(function (c, i) {
         var col = DL_TOUR_COLORS[i % DL_TOUR_COLORS.length];
-        return '<div class="dl-tour-card" onclick="showDatalab(\'tour\')">' +
+        var _hero = _dlCourseHeroSrc(c);
+        return '<div class="dl-tour-card" onclick="dlShowCourse(' + c.no + ')">' +
                  '<div class="dl-tour-hero" style="background:linear-gradient(135deg,' + col + ',' + col + 'CC)">' +
+                   (_hero ? '<img class="dl-tour-hero-img" src="' + _hero + '" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\'">' : '') +
                    '<span class="dl-tour-no">코스 ' + c.no + '</span>' +
                  '</div>' +
                  '<div class="dl-tour-body">' +
@@ -273,6 +275,101 @@ function _renderDatalabView(kind) {
   if (kind === 'age')     return _dlViewAge(el);
   if (kind === 'tour')    return _dlViewTour(el);
   if (kind === 'report')  return _dlViewReport(el);
+  /* 'course:3' 처럼 코스 번호를 붙여 부른다. 축제 상세와 같은 방식으로
+     목록 위에 화면 하나를 더 얹는다 (2026-08-26). */
+  if (kind && kind.indexOf('course:') === 0) return _dlViewCourse(el, +kind.slice(7));
+}
+
+/* ── 시티투어 코스 상세 ─────────────────────────────────────────────────
+   축제 상세(js/tourism.js showFestivalDetail)와 같은 얼개다:
+   사진 히어로 + 한 줄 소개 + 본문 + 들르는 곳 목록.
+   장소 사진은 새로 받지 않고 PLACES 사진을 그대로 쓴다 — spots[].id 로 잇는다. */
+function dlShowCourse(no) { showDatalab('course:' + no); }
+
+function _dlCourseHeroSrc(c) {
+  var s = (c.spots || []).filter(function (x) { return x.id != null; });
+  for (var i = 0; i < s.length; i++) {
+    if (typeof hasPhoto === 'function' && hasPhoto({ id: s[i].id, name: s[i].name })) {
+      return placePhotoSrc({ id: s[i].id, name: s[i].name });
+    }
+  }
+  return '';
+}
+
+function _dlSpotRow(sp, col) {
+  var has = (sp.id != null) && (typeof hasPhoto === 'function') &&
+            hasPhoto({ id: sp.id, name: sp.name });
+  var thumb = has
+    ? photoThumb({ id: sp.id, name: sp.name }, 46, '📍', 'ph-sm')
+    : '<div class="dl-spot-dot" style="background:' + col + '"></div>';
+  /* PLACES 에 있는 곳만 지도로 보낸다. 입파도·옥란재처럼 데이터가 없는 곳은
+     눌러도 갈 데가 없으므로 주소만 보여 준다. */
+  var go = (sp.id != null)
+    ? ' onclick="hideDatalab();goMapFocus(0,0,4,' + sp.id + ')"' : '';
+  return '<div class="dl-spot' + (go ? ' is-link' : '') + '"' + go + '>' +
+           thumb +
+           '<div class="dl-spot-main">' +
+             '<div class="dl-spot-name">' + sp.name + '</div>' +
+             (sp.addr ? '<div class="dl-spot-sub">' + sp.addr + '</div>' : '') +
+           '</div>' +
+           (go ? '<span class="dl-spot-arr">›</span>' : '') +
+         '</div>';
+}
+
+function _dlViewCourse(el, no) {
+  el.innerHTML = _dlHead('시티투어') + _dlSkeleton(3);
+  dlLoad(DL_TOUR, function (d) {
+    if (String(_dlView) !== 'course:' + no) return;
+    var c = ((d && d.courses) || []).filter(function (x) { return x.no === no; })[0];
+    if (!c) { el.innerHTML = _dlHead('시티투어') + _dlEmpty('코스를 찾지 못했어요'); return; }
+    var col = c.color || '#2563EB';
+    var hero = _dlCourseHeroSrc(c);
+
+    var body =
+      '<div class="dl-c-hero" style="background:linear-gradient(135deg,' + col + ',' + col + 'CC)">' +
+        (hero ? '<img class="dl-c-hero-img" src="' + hero + '" alt="" decoding="async" onerror="this.style.display=\'none\'">' : '') +
+        '<div class="dl-c-hero-body">' +
+          '<div class="dl-c-hero-badge">코스 ' + c.no + ' · ' + (c.theme || '') + '</div>' +
+          '<div class="dl-c-hero-title">' + c.name + '</div>' +
+        '</div>' +
+      '</div>' +
+      (c.tagline ? '<div class="dl-c-tag" style="border-left-color:' + col + '">' + c.tagline + '</div>' : '') +
+      (c.desc ? '<div class="dl-c-desc">' + c.desc + '</div>' : '') +
+      (c.notice ? '<div class="dl-c-notice">※ ' + c.notice + '</div>' : '');
+
+    if (c.promises && c.promises.length) {
+      body += '<div class="dl-c-sect">착한여행 \'하루\'의 약속</div>' +
+              '<ul class="dl-c-ul">' + c.promises.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ul>';
+    }
+    if (c.schedule && c.schedule.length) {
+      body += '<div class="dl-c-sect">날짜별 투어 일정</div>' +
+              c.schedule.map(function (s) {
+                return '<div class="dl-c-sch">' +
+                         '<span class="dl-c-sch-d" style="color:' + col + '">' + s.date + '</span>' +
+                         '<div class="dl-c-sch-m"><b>' + s.name + '</b><span>' + s.course + '</span></div>' +
+                       '</div>';
+              }).join('');
+    }
+    if (c.info && c.info.length) {
+      body += '<div class="dl-c-sect">투어 상세 정보</div>' +
+              '<ul class="dl-c-ul">' + c.info.map(function (p) { return '<li>' + p + '</li>'; }).join('') + '</ul>';
+    }
+    if (c.regions && c.regions.length) {
+      body += c.regions.map(function (r) {
+        return '<div class="dl-c-sect">' + r.name + ' — ' + r.desc + '</div>' +
+               r.spots.map(function (sp) { return _dlSpotRow(sp, col); }).join('');
+      }).join('');
+    } else if (c.spots && c.spots.length) {
+      body += '<div class="dl-c-sect">들르는 곳 ' + c.spots.length + '곳</div>' +
+              c.spots.map(function (sp) { return _dlSpotRow(sp, col); }).join('');
+    }
+
+    body += '<div class="dl-c-back" onclick="showDatalab(\'tour\')">‹ 코스 전체 보기</div>' +
+            (d.source ? '<div class="dl-src">예약·문의는 <a href="' + d.source + '" target="_blank" rel="noopener">화성시 시티투어</a>에서 확인하세요</div>' : '') +
+            '<div style="height:28px"></div>';
+
+    el.innerHTML = _dlHead(c.name) + body;
+  });
 }
 
 /* ── 전체: 인기 순위 ── */
@@ -378,13 +475,16 @@ function _dlViewTour(el) {
       (cs.length
         ? cs.map(function (c, i) {
             var col = DL_TOUR_COLORS[i % DL_TOUR_COLORS.length];
-            return '<div class="dl-course">' +
+            return '<div class="dl-course is-link" onclick="dlShowCourse(' + c.no + ')">' +
                      '<div class="dl-course-no" style="background:' + col + '">' + c.no + '</div>' +
                      '<div class="dl-course-main">' +
                        '<div class="dl-course-name">' + c.name + '</div>' +
                        '<div class="dl-course-theme" style="color:' + col + '">' + (c.theme || '') + '</div>' +
-                       '<div class="dl-course-desc">' + (c.desc || '') + '</div>' +
+                       '<div class="dl-course-desc">' + (c.tagline || c.desc || '') + '</div>' +
+                       ((c.spots && c.spots.length)
+                          ? '<div class="dl-course-cnt">들르는 곳 ' + c.spots.length + '곳</div>' : '') +
                      '</div>' +
+                     '<span class="dl-spot-arr">›</span>' +
                    '</div>';
           }).join('')
         : _dlEmpty('코스 정보를 불러오지 못했어요')) +
