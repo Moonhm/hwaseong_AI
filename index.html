@@ -488,7 +488,6 @@
     <div class="chip" data-cat="localcurrency" onclick="setFilter('localcurrency')"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:14px;height:14px;object-fit:contain;vertical-align:middle;margin-right:3px">지역화폐 가맹점</div>
     <div class="chip" data-cat="tourist"       onclick="setFilter('tourist')">🎡 관광지</div>
     <div class="chip" data-cat="heritage" onclick="setFilter('heritage')">🏛️ 문화재</div>
-    <div class="chip" data-cat="restaurant"    onclick="setFilter('restaurant')">🍜 음식점 3,754</div>
     <div class="chip" data-cat="mobeom"        onclick="setFilter('mobeom')">🍽️ 모범음식점</div>
     <div class="chip" data-cat="touristrest"   onclick="setFilter('touristrest')">🥢 관광식당업</div>
     <div class="chip" data-cat="hotel"         onclick="setFilter('hotel')">🏨 관광호텔</div>
@@ -522,27 +521,10 @@
       <button class="lc-fchip"        data-lcat="car"    onclick="setLcFilter('car')">🚗 자동차</button>
       <button class="lc-fchip"        data-lcat="edu"    onclick="setLcFilter('edu')">📚 학원</button>
     </div>
-    </div>
     <button id="lc-arr-right" class="lc-arr" onclick="scrollLcFilter(1)" aria-label="다음">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
-    <!-- 음식점 업종 필터 (2026-08-26) — 원본 업종 18종을 8개 묶음으로 접었다.
-         칩이 18개면 가로 스크롤만 길어지고 아무도 안 쓴다. 원본 분류는 슬라이드 카드에 그대로 보인다.
-         구조·CSS 는 위 지역화폐 필터 바를 그대로 쓴다. -->
-    <div id="rs-filter-bar">
-      <div id="rs-filter-scroll">
-        <button class="rs-fchip active" data-rcat="all"    onclick="setRsFilter('all')">전체</button>
-        <button class="rs-fchip"        data-rcat="korean" onclick="setRsFilter('korean')">한식</button>
-        <button class="rs-fchip"        data-rcat="cafe"   onclick="setRsFilter('cafe')">카페·간식</button>
-        <button class="rs-fchip"        data-rcat="meat"   onclick="setRsFilter('meat')">고기·구이</button>
-        <button class="rs-fchip"        data-rcat="world"  onclick="setRsFilter('world')">양·중·일</button>
-        <button class="rs-fchip"        data-rcat="sea"    onclick="setRsFilter('sea')">해산물</button>
-        <button class="rs-fchip"        data-rcat="fast"   onclick="setRsFilter('fast')">치킨·패스트푸드</button>
-        <button class="rs-fchip"        data-rcat="etc"    onclick="setRsFilter('etc')">기타</button>
-      </div>
-
-
   <!-- 실시간 주차 여유 뱃지 -->
   <div id="parking-count-badge" style="
     display:none; position:absolute; top:96px; left:50%; transform:translateX(-50%); z-index:10;
@@ -848,7 +830,7 @@
 <script src="js/photos.js?v=2026082667"></script>
 <script src="js/convenience.js?v=2026082667"></script>
 <script src="js/data.js?v=2026082667"></script>
-<script src="js/map.js?v=2026082667"></script>
+<script src="js/map.js?v=2026082668"></script>
 <script src="js/conv_map.js?v=2026082667"></script>
 <script src="js/parking.js?v=2026082667"></script>
 <script src="js/localcurrency.js?v=2026082667"></script>
@@ -856,7 +838,6 @@
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
 <script src="js/datalab.js?v=2026082667"></script>
 <script src="js/tide.js?v=2026082667"></script>
-<script src="js/restaurants.js?v=2026082667"></script>
 <script src="js/weather.js?v=2026082667"></script>
 <script src="js/today.js?v=2026082667"></script>
 <script src="js/district.js?v=2026082667"></script>

@@ -32,7 +32,6 @@ var HS_SELECTORS = [
   '.dl-chip-row',     /* 추천 · 구·연령·탭 칩 */
   '.theme-chips',     /* 추천 · 테마별 */
   '.tourism-subnav',  /* 추천 · 서브탭 */
-  '#rs-filter-scroll' /* 지도 · 음식점 업종 */
 ];
 
 var HS_STEP = 0.8;   /* 한 번 누르면 보이는 폭의 80% 만큼 — 끝이 살짝 겹쳐 맥락이 남는다 */

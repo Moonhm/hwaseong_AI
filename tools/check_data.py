@@ -287,7 +287,8 @@ PRINTED = [
     (r'stat-val-sm">([\d,]+)</div><div class="stat-lbl-sm">관광식당업', "CONVENIENCE.touristRestaurants", 1), # :1558
     # 2026-08-26 감사 보강 — 같은 문단의 다른 숫자는 전부 지켜지는데 이 둘만 빠져 있었다.
     (r"지정문화재\s*([\d,]+)곳",       "PLACES.heritage",              2),  # About 문단 + 칩
-    (r"음식점\s*([\d,]+)</div>",       "restaurants-static.json",      1),  # 지도 칩 '🍜 음식점 3,754'
+    # 지도 칩 '🍜 음식점 3,754' 는 2026-08-26 에 제거했다. 데이터 파일은 남아 있어
+    # 아래 FLOOR 가 건수를 계속 지킨다 — 다시 띄울 때 이 PRINTED 항목도 되살려라.
 ]
 # index.html:2698-2718 의 카드 숫자
 PRINTED_CARD = [

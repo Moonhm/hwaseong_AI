@@ -975,8 +975,11 @@ function setFilter(cat) {
   /* '전체'에 가맹점을 포함하면 칩 한 번에 4.2MB 다운로드가 시작된다.
    * 27,374건은 전용 칩으로 명시 선택했을 때만 로드한다. */
   if (typeof setLcVisible === 'function') setLcVisible(cat === 'localcurrency');
-  /* 음식점 3,754건(649KB)도 같은 이유로 '전체'에 넣지 않는다 — 전용 칩으로만 로드한다. */
-  if (typeof setRsVisible === 'function') setRsVisible(cat === 'restaurant');
+  /* 음식점 3,754건은 지도에서 뺐다 (2026-08-26 사용자 결정).
+     js/restaurants.js 를 index.html 에서 로드하지 않으므로 setRsVisible 은 없다.
+     아래 두 줄은 그 모듈이 남아 있던 흔적을 끄는 안전장치다 —
+     다시 붙일 때는 이 줄과 지도 칩, check_data.py PRINTED 항목을 함께 되살려라. */
+  if (typeof setRsVisible === 'function') setRsVisible(false);
   if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive);
   if (typeof updateParkingCount === 'function') updateParkingCount();
 
@@ -988,9 +991,6 @@ function setFilter(cat) {
     }, 50);
   }
 
-  /* 음식점은 PLACES 소속이 아니라 rsData 다. 여기서 fitPlaces 를 부르면 0건이라
-   * 카메라가 엉뚱하게 튄다 — 현재 화면을 그대로 두고 뷰포트 렌더에 맡긴다. */
-  if (cat === 'restaurant') return;
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
   fitPlaces(targets);
 }
