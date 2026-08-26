@@ -391,10 +391,6 @@ function _srEl(where, key) {
 function homeSearchInput(val, where) {
   where = where || 'home';
   _srWhere = where;
-  /* 지역 칩은 홈에만 있다. 지도에서 친 것으로 홈 칩을 건드리면 안 된다. */
-  if (where === 'home' && typeof _syncHomeGuChips === 'function' && typeof splitGuQuery === 'function') {
-    _syncHomeGuChips(splitGuQuery(val).gu);
-  }
   clearTimeout(_srTimer);
   var clearBtn = _srEl(where, 'clear');
   if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
@@ -424,10 +420,22 @@ function doHomeSearch(q, where) {
   }
   var results = [];
 
-  /* 구만 쳤으면 '지도에서 그 동네 보기' 를 맨 위에 둔다 — 목록보다 이게 하고 싶은 일이다. */
+  /* 지역 제안 — 2026-08-26 사용자 지시로 '칩' 대신 '검색 결과'로 낸다.
+   * 누르면 지도 탭으로 넘어가 그 동네 화면이 되므로, 검색에서 지도로 끊김 없이 이어진다.
+   *
+   * splitGuQuery 는 '동탄구'·'동탄' 같은 온전한 이름만 잡는다. 한 글자만 쳤거나
+   * 조합 중일 때도 제안이 떠야 쓸모가 있어서, 부분 일치로 한 번 더 훑는다. */
   if (_gu) {
-    results.push({ type: 'gu', name: _gu + ' 지도에서 보기', sub: '그 동네 화면으로 이동해요',
+    results.push({ type: 'gu', name: _gu + ' 전체 보기', sub: '지도에서 이 동네만 봐요',
                    em: '🗺️', bg: '#EEF2FF', gu: _gu });
+  } else if (typeof GU_NAMES !== 'undefined') {
+    GU_NAMES.forEach(function (g) {
+      /* '동' 한 글자에도 동탄구가 뜨게 — 앞부분만 겹쳐도 제안한다 */
+      if (g.indexOf(q) === 0 || g.slice(0, g.length - 1).indexOf(q) === 0) {
+        results.push({ type: 'gu', name: g + ' 전체 보기', sub: '지도에서 이 동네만 봐요',
+                       em: '🗺️', bg: '#EEF2FF', gu: g });
+      }
+    });
   }
 
   /* 1) 지역명 */
@@ -574,34 +582,6 @@ function _srClick(idx) {
   }
 }
 
-/* 홈 검색창 아래 지역 칩 (2026-08-26).
- * 검색창에 구 이름을 넣고 기존 검색을 그대로 돌린다 — doHomeSearch 가 이미
- * 구를 알아듣는다(js/district.js splitGuQuery). 같은 칩을 다시 누르면 해제한다. */
-function pickHomeGu(gu) {
-  var input = document.getElementById('home-search-input');
-  if (!input) return;
-  var cur = (typeof splitGuQuery === 'function') ? splitGuQuery(input.value).gu : null;
-  if (cur === gu) {                      /* 재클릭 = 해제 */
-    var rest = splitGuQuery(input.value).rest;
-    input.value = rest;
-    _syncHomeGuChips(null);
-    if (rest) doHomeSearch(rest); else closeHomeSearch();
-    return;
-  }
-  /* 이미 친 검색어가 있으면 유지하고 구만 갈아 끼운다 — '카페' 를 친 뒤
-   * 구를 고르면 '동탄구 카페' 가 되는 게 자연스럽다. */
-  var rest2 = (typeof splitGuQuery === 'function') ? splitGuQuery(input.value).rest : input.value.trim();
-  input.value = rest2 ? (gu + ' ' + rest2) : gu;
-  _syncHomeGuChips(gu);
-  doHomeSearch(input.value);
-}
-
-function _syncHomeGuChips(gu) {
-  document.querySelectorAll('.home-gu-chip').forEach(function (c) {
-    c.classList.toggle('active', c.dataset.gu === gu);
-  });
-}
-
 function closeHomeSearch(where) {
   where = where || _srWhere || 'home';
   var el  = _srEl(where, 'results');
@@ -612,7 +592,6 @@ function closeHomeSearch(where) {
 
 function clearHomeSearch(where) {
   where = where || 'home';
-  if (where === 'home' && typeof _syncHomeGuChips === 'function') _syncHomeGuChips(null);
   var inp = _srEl(where, 'input');
   var clr = _srEl(where, 'clear');
   if (inp) inp.value = '';
