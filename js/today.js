@@ -158,11 +158,19 @@ function _renderToday() {
   el.innerHTML =
     '<div class="td-date">' + date + '</div>' +
     '<div class="td-sect">날씨</div>' + weather +
+    /* 주간 상세는 js/weather.js 가 채운다 (7일 · 하루 펼치면 3시간 간격).
+       여기서 그리지 않는 이유는 그쪽이 별도 fetch 를 하기 때문이다 —
+       홈 바 DOM 을 읽는 위 칸과 달리 자기 데이터를 받는다. */
+    '<div class="td-sect">📅 주간 예보</div>' +
+    '<div id="today-weekly"></div>' +
     '<div class="td-sect">🌊 제부도 바닷길</div>' + tide +
     '<div class="td-sect">🎉 오늘의 축제</div>' + fest +
     '<div class="td-foot">' +
       '<button class="td-btn" onclick="closeToday();go(\'tourism\');requestNearbyRec()">📍 내 주변 추천 받기</button>' +
     '</div>';
+
+  /* innerHTML 로 컨테이너를 갈아 끼운 뒤라야 채울 수 있다. 순서를 바꾸면 지워진다. */
+  if (typeof renderWeeklyWeather === 'function') renderWeeklyWeather();
 }
 
 
