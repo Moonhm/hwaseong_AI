@@ -54,7 +54,14 @@
     .menu-fav-type { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     .menu-fav-empty { padding: 14px 20px; font-size: 13px; color: var(--text-muted); }
     .menu-rec-banner {
-      margin: 16px 16px 0;
+      /* margin: 16px 16px 0 → 0 (2026-08-26). 사이드 드로어에 있던 시절의 값이라
+       * 추천 탭의 래퍼(padding:12px var(--px) 16px = 좌우 20px) 안에서 좌우가
+       * 20+16=36px 로 이중 들여쓰기 됐다. 바로 위 .nearby-wrap(20px)·바로 아래
+       * .tourism-subnav(20px)와 16px 씩 어긋나고, 그 32px 손실이 확장 구간
+       * '최근 내 1위' 의 이름 칸을 그대로 깎았다.
+       * 드로어의 AI 추천 배너는 추천 탭과 중복이라 제거됐고, 이 클래스를 쓰는 곳은
+       * index.html:259 한 곳뿐이다(개발 Claude 확인 + 재확인함). 래퍼가 좌우를 잡게 둔다. */
+      margin: 0;
       background: linear-gradient(135deg, #F97316, #EA580C);
       border-radius: 16px; padding: 18px 20px;
       cursor: pointer; transition: transform 0.12s, box-shadow 0.15s;
