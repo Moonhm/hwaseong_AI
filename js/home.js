@@ -731,22 +731,46 @@ function renderHomeLiving() {
       }).join('')
     : '<div style="padding:24px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>';
 
+  /* 통계 칸 — 2026-08-26 사용자 요청으로 2개 → 6개.
+   * 기존 지역화폐·주차장 칸의 양식(흰 배경·1.5px 테두리·14px 라운드·아이콘+숫자+라벨)을
+   * 그대로 쓴다. 새 양식을 만들면 같은 화면에 두 종류가 섞인다.
+   *
+   * 칸마다 가는 곳이 다르다 — 생활 탭 안에 있는 것은 goLivingCat 으로,
+   * 지도에만 있는 것(문화재·제부도 숙소·캠핑장)은 goMapCat 으로 보낸다.
+   * goLivingCat 은 #liv-cat-<cat> 을 찾으므로 생활 탭에 없는 값을 주면
+   * 조용히 아무 일도 안 난다 — 그래서 갈라 쓴다. */
+  var _S = (typeof CONVENIENCE !== 'undefined') ? CONVENIENCE : {};
+  var _P = (typeof PLACES !== 'undefined') ? PLACES : [];
+  function _cnt(a) { return (a && a.length) || 0; }
+  var statCards = [
+    { n: currencies.length, label: '지역화폐 가맹점', bg: '#DCFCE7',
+      icon: '<img src="img/gyeonggi_currency_logo.png" alt="" style="width:20px;height:20px;object-fit:contain">',
+      go: "goLivingCat('currency')" },
+    { n: parkings.length, label: '공영주차장', bg: '#DBEAFE',
+      icon: '<span style="font-size:15px;font-weight:800;color:#2563EB">P</span>',
+      go: "goLivingCat('parking')" },
+    { n: _cnt(_S.restaurants), label: '모범음식점', bg: '#FEF3C7',
+      icon: '<span style="font-size:15px">🍴</span>', go: "goLivingCat('restaurant')" },
+    { n: _P.filter(function (p) { return p.category === 'heritage'; }).length,
+      label: '지정문화재', bg: '#F5F3FF',
+      icon: '<span style="font-size:15px">🏛️</span>', go: "goMapCat('heritage')" },
+    { n: (_S.jebu && _S.jebu.summary && _S.jebu.summary.total) || 0,
+      label: '제부도 숙소', bg: '#E0F2FE',
+      icon: '<span style="font-size:15px">⛱️</span>', go: "goMapCat('jebu')" },
+    { n: _cnt(_S.camping), label: '캠핑장', bg: '#DCFCE7',
+      icon: '<span style="font-size:15px">⛺</span>', go: "goMapCat('camping')" },
+  ];
+
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 var(--px)">
-      <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;min-width:0" onclick="goLivingCat('currency')">
-        <div style="width:32px;height:32px;border-radius:10px;background:#DCFCE7;display:flex;align-items:center;justify-content:center;flex-shrink:0"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:20px;height:20px;object-fit:contain"></div>
+      ${statCards.map(c => `
+      <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;min-width:0" onclick="${c.go}">
+        <div style="width:32px;height:32px;border-radius:10px;background:${c.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">${c.icon}</div>
         <div style="min-width:0">
-          <div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.1">${currencies.length.toLocaleString()}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">지역화폐 가맹점</div>
+          <div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.1">${c.n.toLocaleString()}</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.label}</div>
         </div>
-      </div>
-      <div style="background:#fff;border:1.5px solid #E5E7EB;border-radius:14px;padding:10px 12px;cursor:pointer;display:flex;align-items:center;gap:10px;min-width:0" onclick="goLivingCat('parking')">
-        <div style="width:32px;height:32px;border-radius:10px;background:#DBEAFE;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#2563EB;flex-shrink:0">P</div>
-        <div style="min-width:0">
-          <div style="font-size:16px;font-weight:800;color:var(--text);line-height:1.1">${parkings.length}</div>
-          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">공영주차장</div>
-        </div>
-      </div>
+      </div>`).join('')}
     </div>
     <div style="margin-top:14px">
       <div class="category-icons">
