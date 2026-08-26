@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082696">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082696">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082696">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082696">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082696">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082696">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082696">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082697">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082697">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082697">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082697">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082697">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082697">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082697">
 </head>
 <body>
 
@@ -748,6 +748,20 @@
 
     <!-- 바로가기 -->
     <div class="menu-section-title">바로가기</div>
+    <!-- 2026-08-26 사용자 지시로 바로가기 첫 줄에 넣었다.
+         목적지는 지도다 — 주차장의 쓸모는 '어디에 자리가 남았나'라서 목록보다
+         지도가 맞고, 바로 아래 '지역화폐 가맹점'도 같은 goMapCat 경로다.
+         goMapCat('parking') 은 필터 칩이 아니라 activateParking() 을 탄다
+         (js/mapnav.js:38) — 실시간 여유 대수를 받아 핀 색을 칠하는 전용 경로다.
+         부제에 '실시간'을 쓰지 않았다: 실시간 응답을 못 받은 주차장은 여유 대수가
+         총 주차면수로 표시된다(js/parking.js:90). 홈 데이터 고지와 같은 이유다. -->
+    <div class="menu-item" onclick="closeMenu();goMapCat('parking')">
+      <div class="menu-item-icon" style="background:#DBEAFE;">🅿️</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">공영주차장</div>
+        <div class="menu-item-sub">지도에서 빈자리 확인 · 131곳</div>
+      </div>
+    </div>
     <!-- 2026-08-26 추가: 하루 단위로 쓰는 것 셋을 맨 위에 모았다. -->
     <div class="menu-item" onclick="openToday()">
       <div class="menu-item-icon" style="background:#FEF9C3;">☀️</div>
@@ -869,34 +883,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082696"></script>
-<script src="js/quiz.js?v=2026082696"></script>
-<script src="js/mapnav.js?v=2026082696"></script>
-<script src="js/home.js?v=2026082696"></script>
-<script src="js/tourism.js?v=2026082696"></script>
-<script src="js/living.js?v=2026082696"></script>
-<script src="js/favorites.js?v=2026082696"></script>
-<script src="js/ui.js?v=2026082696"></script>
-<script src="js/calendar.js?v=2026082696"></script>
-<script src="js/boot.js?v=2026082696"></script>
+<script src="js/nav.js?v=2026082697"></script>
+<script src="js/quiz.js?v=2026082697"></script>
+<script src="js/mapnav.js?v=2026082697"></script>
+<script src="js/home.js?v=2026082697"></script>
+<script src="js/tourism.js?v=2026082697"></script>
+<script src="js/living.js?v=2026082697"></script>
+<script src="js/favorites.js?v=2026082697"></script>
+<script src="js/ui.js?v=2026082697"></script>
+<script src="js/calendar.js?v=2026082697"></script>
+<script src="js/boot.js?v=2026082697"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082696"></script>
-<script src="js/convenience.js?v=2026082696"></script>
-<script src="js/data.js?v=2026082696"></script>
-<script src="js/map.js?v=2026082696"></script>
-<script src="js/conv_map.js?v=2026082696"></script>
-<script src="js/parking.js?v=2026082696"></script>
-<script src="js/localcurrency.js?v=2026082696"></script>
+<script src="js/photos.js?v=2026082697"></script>
+<script src="js/convenience.js?v=2026082697"></script>
+<script src="js/data.js?v=2026082697"></script>
+<script src="js/map.js?v=2026082697"></script>
+<script src="js/conv_map.js?v=2026082697"></script>
+<script src="js/parking.js?v=2026082697"></script>
+<script src="js/localcurrency.js?v=2026082697"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082696"></script>
-<script src="js/tide.js?v=2026082696"></script>
-<script src="js/weather.js?v=2026082696"></script>
-<script src="js/today.js?v=2026082696"></script>
-<script src="js/district.js?v=2026082696"></script>
+<script src="js/datalab.js?v=2026082697"></script>
+<script src="js/tide.js?v=2026082697"></script>
+<script src="js/weather.js?v=2026082697"></script>
+<script src="js/today.js?v=2026082697"></script>
+<script src="js/district.js?v=2026082697"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=2026082696"></script>
+<script src="js/hscroll.js?v=2026082697"></script>
 </body>
 </html>
