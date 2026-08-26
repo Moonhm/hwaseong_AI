@@ -85,8 +85,20 @@ function _renderToday() {
      * 축제는 소식 탭의 '이번 주 소식'·'이번 달 축제'에 있다. 기능이 사라진 게 아니다. */
     '<div class="td-sect">📅 주간 예보</div>' +
     '<div id="today-weekly"></div>' +
-    '<div class="td-foot">' +
-      '<button class="td-btn" onclick="closeToday();go(\'tourism\');requestNearbyRec()">📍 내 주변 추천 받기</button>' +
+    /* 2026-08-26 사용자 지시로 '내 주변 추천 받기' 버튼을 빼고 출처 고지를 넣었다.
+     * 홈 탭의 '데이터 출처 및 유의사항' 과 같은 성격이라 문체도 그쪽을 따른다 —
+     * 앱의 다른 문구는 해요체지만 고지문만 격식체다(사용자 지시, WORKFLOW §3).
+     * 실제 호출하는 엔드포인트만 적는다:
+     *   api.open-meteo.com/v1/forecast          기온·강수·주간 예보
+     *   air-quality-api.open-meteo.com/v1/...   PM2.5
+     *   nominatim.openstreetmap.org/reverse     '내 위치' 를 눌렀을 때 지명 변환 */
+    '<div class="td-src">' +
+      '<div class="td-src-head">데이터 출처 및 유의사항</div>' +
+      '<p class="td-src-body">기상 예보와 미세먼지는 <strong>Open-Meteo</strong> 공개 API 기반이며, ' +
+      '수치는 예보 모델값이라 실제 관측과 차이가 있을 수 있습니다. ' +
+      '기상특보 등 공식 정보는 기상청(weather.go.kr)에서 확인하시기 바랍니다.</p>' +
+      '<p class="td-src-body">‘내 위치’ 지명 표기는 <strong>OpenStreetMap Nominatim</strong>을 이용합니다. ' +
+      '위치 정보는 기기 안에서만 사용하며 서버로 전송하지 않습니다.</p>' +
     '</div>';
 
   /* innerHTML 로 컨테이너를 갈아 끼운 뒤라야 채울 수 있다. 순서를 바꾸면 지워진다. */
