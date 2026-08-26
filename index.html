@@ -76,19 +76,18 @@
     <div class="hwb-current">
       <span id="hwb-icon" class="hwb-cur-icon">🌡️</span>
       <div class="hwb-cur-info">
-        <div id="hwb-temp" class="hwb-cur-temp">—°C</div>
+        <div class="hwb-cur-top">
+          <div id="hwb-temp" class="hwb-cur-temp">—°C</div>
+          <span id="hwb-grade" class="hwb-grade" style="display:none">—</span>
+          <span id="hwb-pm25-val" class="hwb-pm25-val"></span>
+        </div>
         <div id="hwb-desc" class="hwb-cur-desc">—</div>
         <div id="hwb-range" class="hwb-cur-range"></div>
       </div>
     </div>
-    <!-- 시간별 예보 + 미세먼지 -->
+    <!-- 시간별 예보 -->
     <div class="hwb-bottom">
       <div class="hwb-hourly" id="hwb-hourly"></div>
-      <div id="hwb-air-section" class="hwb-air-section">
-        <div class="hwb-air-lbl">미세먼지</div>
-        <span id="hwb-grade" class="hwb-grade">—</span>
-        <div id="hwb-pm25-val" class="hwb-pm25-val"></div>
-      </div>
     </div>
   </div>
 
@@ -593,7 +592,7 @@
 <script src="js/nav.js?v=2026082616"></script>
 <script src="js/quiz.js?v=2026082616"></script>
 <script src="js/mapnav.js?v=2026082616"></script>
-<script src="js/home.js?v=2026082627"></script>
+<script src="js/home.js?v=2026082628"></script>
 <script src="js/tourism.js?v=2026082616"></script>
 <script src="js/living.js?v=2026082616"></script>
 <script src="js/favorites.js?v=2026082616"></script>
