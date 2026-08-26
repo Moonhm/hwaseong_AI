@@ -18,12 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082630">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082632">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082630">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082630">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082630">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082630">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082634">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082634">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082634">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082634">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082634">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082634">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082634">
 </head>
 <body>
 
@@ -196,10 +197,25 @@
       <img src="img/logo-name.png" alt="화성잇다" style="height:22px;object-fit:contain;">
     </div>
 
+    <!-- AI 추천 퀴즈 진입 (2026-08-26 추가)
+         탭 이름이 '추천' 이 되면서 자리가 맞아 올렸다. 그전까지 이 기능의 진입점은
+         사이드 메뉴 배너 단 1곳뿐이라 사실상 아무도 찾지 못했다 —
+         AI 해커톤 출품작인데 AI 기능이 메뉴 안에 숨어 있던 셈이다.
+         CSS 는 기존 .menu-rec-banner 를 그대로 쓴다. 새 규칙을 만들지 않았다.
+         2026-08-26 사용자 지시로 '내 위치 추천' 과 자리를 맞바꿔 맨 위로 올라왔다. -->
+    <div style="padding:12px var(--px) 0">
+      <div class="menu-rec-banner" onclick="openQuiz()">
+        <div class="menu-rec-banner-title">🎯 나에게 맞는 관광지 찾기</div>
+        <div class="menu-rec-banner-sub">5가지 질문이면 딱 맞는 화성 여행지를 골라드려요</div>
+        <div class="menu-rec-banner-arrow">시작하기 →</div>
+      </div>
+    </div>
+
     <!-- 내 위치 추천 — 2026-08-26 홈 탭에서 여기로 옮겼다.
          '지금 내 옆에 뭐가 있나' 는 추천의 한 갈래라 이 탭이 맞는 자리다.
          id 는 home-nearby-section → nearby-section 으로 바꿨다(더는 홈이 아니다).
-         관련 함수는 js/home.js 에 그대로 있다 — 파일 이동은 위험 대비 이득이 없어 미뤘다. -->
+         관련 함수는 js/home.js 에 그대로 있다 — 파일 이동은 위험 대비 이득이 없어 미뤘다.
+         같은 날 사용자 지시로 AI 퀴즈 배너 아래로 내려왔다. -->
     <div class="nearby-wrap" id="nearby-section">
       <div class="nearby-cta" onclick="requestNearbyRec()">
         <div class="nearby-cta-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="38" height="38" fill="#2563EB"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg></div>
@@ -207,19 +223,6 @@
           <div class="nearby-cta-text">내 위치에서 가장 가까운 관광지 · 공영주차장</div>
           <div class="nearby-cta-sub">탭 하면 위치 기반으로 바로 추천해드려요</div>
         </div>
-      </div>
-    </div>
-
-    <!-- AI 추천 퀴즈 진입 (2026-08-26 추가)
-         탭 이름이 '추천' 이 되면서 자리가 맞아 올렸다. 그전까지 이 기능의 진입점은
-         사이드 메뉴 배너 단 1곳뿐이라 사실상 아무도 찾지 못했다 —
-         AI 해커톤 출품작인데 AI 기능이 메뉴 안에 숨어 있던 셈이다.
-         CSS 는 기존 .menu-rec-banner 를 그대로 쓴다. 새 규칙을 만들지 않았다. -->
-    <div style="padding:12px var(--px) 0">
-      <div class="menu-rec-banner" onclick="openQuiz()">
-        <div class="menu-rec-banner-title">🎯 나에게 맞는 관광지 찾기</div>
-        <div class="menu-rec-banner-sub">5가지 질문이면 딱 맞는 화성 여행지를 골라드려요</div>
-        <div class="menu-rec-banner-arrow">시작하기 →</div>
       </div>
     </div>
 
@@ -243,7 +246,39 @@
     <div id="tourism-default">
       <!-- '이번 달 축제' 캐러셀은 2026-08-26 소식 탭으로 옮겼다 (사용자 요청).
            날짜가 걸린 정보라 '이번 주 소식' 바로 아래가 맞는 자리다.
-           마크업은 #page-living 의 #living-news 아래에 있다. -->
+           마크업은 #page-living 의 #living-news 아래에 있다.
+
+           그 빈자리를 큐레이션 3종이 채운다 (2026-08-26, 사용자 지시).
+           표시 방식은 '살짝 미리보기 + 옆에 전체 보기 버튼' — 앱에 이미 있는
+           「이번 주 소식 … 전체 보기」와 같은 패턴이다.
+           내용은 js/datalab.js 가 지연 로드해 채운다. 셋 다 '전체' 서브탭에서만
+           보인다(js/tourism.js switchTourismSub) — 목적이 뚜렷한 다른 서브탭에
+           큐레이션이 끼면 방해가 된다. -->
+      <div id="dl-sections">
+        <div class="section" style="padding-top:14px">
+          <div class="section-header">
+            <div class="section-title">🔥 화성에서 인기 있는 곳</div>
+            <button class="section-link" onclick="showDatalab('popular')">전체 보기</button>
+          </div>
+        </div>
+        <div id="dl-popular-body"></div>
+
+        <div class="section" style="padding-top:18px">
+          <div class="section-header">
+            <div class="section-title">👥 세대별로 많이 찾는 곳</div>
+            <button class="section-link" onclick="showDatalab('age')">전체 보기</button>
+          </div>
+        </div>
+        <div id="dl-age-body" style="padding:0 var(--px)"></div>
+
+        <div class="section" style="padding-top:18px">
+          <div class="section-header">
+            <div class="section-title">🚌 화성 시티투어</div>
+            <button class="section-link" onclick="showDatalab('tour')">전체 보기</button>
+          </div>
+        </div>
+        <div id="dl-tour-body"></div>
+      </div>
 
       <div id="tourism-theme-header" style="padding:var(--px) var(--px) 0">
         <div class="section-title">테마별 추천</div>
@@ -268,6 +303,11 @@
     <div id="tourism-temple" style="display:none"></div>
 
   </div>
+
+  <!-- 큐레이션 전체 보기 뷰 (2026-08-26) — 인기 순위 / 세대별 / 시티투어 셋을
+       한 그릇에 담는다. 어느 것을 보여줄지는 showDatalab(kind) 이 정하고
+       js/datalab.js 가 통째로 그린다. 축제 상세·캘린더와 같은 뷰 교체 방식이다. -->
+  <div id="view-datalab" style="display:none"></div>
 
   <!-- 축제 상세 뷰 -->
   <div id="view-festival-detail">
@@ -513,6 +553,21 @@
 <div id="toast"></div>
 
 <!-- ── 사이드 메뉴 드로어 ── -->
+<!-- 제부도 바닷길 시간표 패널 (2026-08-26) — 햄버거 메뉴에서 연다.
+     사이드 메뉴와 같은 '딤 + 슬라이드 패널' 구조다. 내용은 js/tide.js 가 채운다.
+     사이드 메뉴(z-index 200대)보다 위에 떠야 해서 CSS 에서 z-index 를 더 높게 준다. -->
+<div id="tide-dim" onclick="closeTide()"></div>
+<div id="tide-panel">
+  <div class="tide-head">
+    <div>
+      <div class="tide-title">🌊 제부도 바닷길</div>
+      <div class="tide-sub">물이 빠져야 건널 수 있어요</div>
+    </div>
+    <button class="menu-close" onclick="closeTide()">✕</button>
+  </div>
+  <div id="tide-body"></div>
+</div>
+
 <div id="menu-dim" onclick="closeMenu()"></div>
 <div id="quiz-dim" onclick="closeQuiz()"></div>
 <div id="menu-drawer">
@@ -568,6 +623,16 @@
         <div class="menu-item-sub">화성시 캠핑장 17곳</div>
       </div>
     </div>
+    <!-- 제부도 바닷길 시간표 (2026-08-26, 사용자 지시로 여기에 넣었다).
+         제부도는 하루 두 번 길이 잠긴다 — 모르고 가면 못 건너거나 섬에 갇힌다.
+         '제부도 숙박' 바로 위에 둔 이유: 제부도로 가려는 사람이 반드시 먼저 볼 정보다. -->
+    <div class="menu-item" onclick="openTide()">
+      <div class="menu-item-icon" style="background:#CFFAFE;">🌊</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">제부도 바닷길 시간표</div>
+        <div class="menu-item-sub">오늘 건널 수 있는 시간 확인</div>
+      </div>
+    </div>
     <div class="menu-item" onclick="closeMenu();goMapCat('jebu')">
       <div class="menu-item-icon" style="background:#E0F2FE;">⛱️</div>
       <div class="menu-item-text">
@@ -604,25 +669,29 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082630"></script>
-<script src="js/quiz.js?v=2026082630"></script>
-<script src="js/mapnav.js?v=2026082630"></script>
-<script src="js/home.js?v=2026082630"></script>
-<script src="js/tourism.js?v=2026082630"></script>
-<script src="js/living.js?v=2026082630"></script>
-<script src="js/favorites.js?v=2026082630"></script>
-<script src="js/ui.js?v=2026082630"></script>
-<script src="js/calendar.js?v=2026082630"></script>
-<script src="js/boot.js?v=2026082630"></script>
+<script src="js/nav.js?v=2026082634"></script>
+<script src="js/quiz.js?v=2026082634"></script>
+<script src="js/mapnav.js?v=2026082634"></script>
+<script src="js/home.js?v=2026082634"></script>
+<script src="js/tourism.js?v=2026082634"></script>
+<script src="js/living.js?v=2026082634"></script>
+<script src="js/favorites.js?v=2026082634"></script>
+<script src="js/ui.js?v=2026082634"></script>
+<script src="js/calendar.js?v=2026082634"></script>
+<script src="js/boot.js?v=2026082634"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082632"></script>
-<script src="js/convenience.js?v=2026082630"></script>
-<script src="js/data.js?v=2026082630"></script>
-<script src="js/map.js?v=2026082630"></script>
-<script src="js/conv_map.js?v=2026082630"></script>
-<script src="js/parking.js?v=2026082630"></script>
-<script src="js/localcurrency.js?v=2026082630"></script>
+<script src="js/photos.js?v=2026082634"></script>
+<script src="js/convenience.js?v=2026082634"></script>
+<script src="js/data.js?v=2026082634"></script>
+<script src="js/map.js?v=2026082634"></script>
+<script src="js/conv_map.js?v=2026082634"></script>
+<script src="js/parking.js?v=2026082634"></script>
+<script src="js/localcurrency.js?v=2026082634"></script>
+<!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
+     로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
+<script src="js/datalab.js?v=2026082634"></script>
+<script src="js/tide.js?v=2026082634"></script>
 </body>
 </html>

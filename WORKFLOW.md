@@ -863,3 +863,5 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 2. **제부도 조수** (`data/processed/jebu_tide_2026.json`) — PLACES id:1 상세 패널 연동
 
 ## 27-D. 추천 탭 재배치 · 이번 달 축제 소식 탭 이동 · 놀고있는 데이터 감사 → [`docs/log/2026-08-26-dev-tourism-layout-festival-move.md`](docs/log/2026-08-26-dev-tourism-layout-festival-move.md)
+
+## 27-E. 추천 탭 큐레이션 3종 + 제부도 바닷길 시간표 → [`docs/log/2026-08-26-dev-datalab-tide.md`](docs/log/2026-08-26-dev-datalab-tide.md)

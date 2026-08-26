@@ -131,8 +131,10 @@ function go(page) {
     var _fd = document.getElementById('view-festival-detail');
     var _cv = document.getElementById('view-calendar');
     var _vl = document.getElementById('view-tourism-list');
+    var _dl = document.getElementById('view-datalab');   /* 큐레이션 전체 보기 (2026-08-26) */
     if (_fd) _fd.style.display = 'none';
     if (_cv) _cv.style.display = 'none';
+    if (_dl) _dl.style.display = 'none';
     if (_vl) _vl.style.display = 'block';
     var sub = _tourismSub || 'all';
     if (sub === 'stay' || sub === 'camp' || sub === 'temple') {
@@ -143,6 +145,15 @@ function go(page) {
     } else {
       _resetThemeChips();
       renderTourismList(sub === 'festival' ? 'festival-only' : sub === 'spot' ? 'tourist-only' : 'all');
+    }
+    /* 큐레이션 3종(#dl-sections)은 '전체' 서브탭에서만 보인다. switchTourismSub 을
+     * 거치지 않는 이 경로에서도 채워 줘야 첫 진입에 빈칸이 남지 않는다.
+     * 데이터는 js/datalab.js 가 캐시하므로 두 번 받지 않는다. */
+    var _dls = document.getElementById('dl-sections');
+    if (_dls) {
+      var _showDl = (sub === 'all');
+      _dls.style.display = _showDl ? 'block' : 'none';
+      if (_showDl && typeof renderDatalabSections === 'function') renderDatalabSections();
     }
   }
 

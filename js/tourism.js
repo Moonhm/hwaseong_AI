@@ -31,6 +31,17 @@ function switchTourismSub(el, tab) {
      * '다른 탭'의 캐러셀이 숨겨진다. 실제로 옮기면서 이 네 줄 쌍을 전부 걷어냈다. */
     var thdr   = document.getElementById('tourism-theme-header');
     var tchips = document.getElementById('tourism-theme-chips');
+
+    /* 큐레이션 3종(#dl-sections)은 '전체' 에서만 보인다 — 축제·관광지·문화재는
+     * 목적이 뚜렷한 목록이라 그 위에 큐레이션이 끼면 방해가 된다.
+     * 데이터는 보일 때 처음 한 번만 받는다(js/datalab.js 가 캐시한다). */
+    var dls = document.getElementById('dl-sections');
+    if (dls) {
+      var showDl = (tab === 'all');
+      dls.style.display = showDl ? 'block' : 'none';
+      if (showDl && typeof renderDatalabSections === 'function') renderDatalabSections();
+    }
+
     if (tab === 'festival') {
       if (thdr)  thdr.style.display  = 'none';
       if (tchips) tchips.style.display = 'none';
