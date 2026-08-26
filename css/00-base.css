@@ -22,7 +22,12 @@
       --white:     #FFFFFF;
       --text:      #111827;
       --text-sub:  #374151;
-      --text-muted:#9CA3AF;
+      /* 2026-08-26 #9CA3AF → #6B7280 (감사 HIGH).
+       * 흰 배경 대비가 2.54:1 이라 WCAG AA(4.5:1)에 크게 못 미쳤다.
+       * 이 토큰은 하단 내비 라벨·모든 부제·목록 메타에 걸려 있어서
+       * 앱에서 '작고 흐린 글자' 전부가 여기 묶여 있었다.
+       * #6B7280 은 흰 배경 4.83:1 · 회배경(#F5F6F8) 4.47:1 로 둘 다 통과한다. */
+      --text-muted:#6B7280;
       --border:    #E5E7EB;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.07);
       --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
@@ -162,10 +167,16 @@
       border-color: rgba(37,99,235,0.35);
       box-shadow: 0 2px 12px rgba(37,99,235,0.14);
     }
-    .search-bar--map input { font-size: 13.5px; }
-    .search-bar input {
+    /* ⚠ 입력 글꼴은 16px 아래로 내리지 말 것 (2026-08-26).
+     * iOS Safari 는 16px 미만 입력에 포커스가 가면 페이지를 자동 확대한다.
+     * 예전에는 viewport 에 user-scalable=no 를 걸어 막았는데, 그러면 저시력
+     * 사용자가 글자를 키울 방법까지 사라진다(WCAG 1.4.4). 그 금지를 풀면서
+     * 자동 확대는 이 16px 로 막는다 — 둘을 맞바꾼 것이다.
+     * 지도 검색창도 13.5px 였다가 같은 이유로 함께 올렸다. */
+    .search-bar input,
+    .search-bar--map input {
       border: none; outline: none; flex: 1;
-      font-size: 14px; color: var(--text);
+      font-size: 16px; color: var(--text);
       background: transparent; font-family: inherit;
     }
     .search-bar input::placeholder { color: var(--text-muted); }
@@ -328,3 +339,24 @@
      * 끝난 축제도 '예정' 으로 보이던 것을 날짜 계산(js/calendar.js festStatus)으로
      * 바꾸면서 새로 필요해진 상태다. */
     .badge-ended { background: #E5E7EB; color: #6B7280; }
+
+    /* ── 키보드 포커스 표시 (2026-08-26 감사) ──────────────────────────────
+     * js/boot.js _kbEnhance() 가 onclick 을 단 <div> 에 tabindex 를 붙인다.
+     * 그러면 키보드로 닿기는 하는데, 브라우저 기본 outline 은 배경이 어두운
+     * 카드(축제 캐러셀·퀴즈 배너) 위에서 거의 안 보인다.
+     * :focus-visible 만 쓴다 — :focus 로 걸면 마우스 클릭에도 테두리가 남는다.
+     *
+     * outline-offset 을 2px 준 이유: 칩·카드가 border-radius 를 가져서
+     * 딱 붙이면 모서리에서 테두리가 잘려 보인다. */
+    :focus-visible {
+      outline: 2.5px solid var(--primary);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+    /* 어두운 배경 위에서는 파랑이 묻힌다 — 흰색으로 뒤집는다. */
+    .menu-rec-banner:focus-visible,
+    .festival-scroll-card:focus-visible,
+    .dl-tour-card:focus-visible {
+      outline-color: #fff;
+    }
+

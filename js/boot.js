@@ -131,3 +131,55 @@ window.addEventListener('DOMContentLoaded', () => {
   renderHomePage();
   renderFestivalScroll();
 });
+
+/* ══════════════════════════════════════════════════════════════════════════
+   키보드 조작 지원 (2026-08-26 감사 HIGH)
+
+   문제: onclick 을 단 <div> 가 48곳(정적 마크업 기준, JS 가 그리는 것까지 하면
+   더 많다)인데 tabindex 는 2개뿐이었다. <div> 는 기본 포커스 대상이 아니라
+   칩·메뉴 항목·카테고리 아이콘·목록 행이 **키보드로는 아예 닿지 않았다.**
+   마우스를 못 쓰는 사용자에게는 앱의 절반이 없는 것과 같다.
+
+   왜 마크업 48곳을 고치지 않았나:
+    · JS 가 innerHTML 로 그리는 항목이 더 많아서, 정적 마크업만 고쳐도 절반은 남는다.
+    · 새 목록을 만들 때마다 tabindex 를 잊으면 그 자리만 조용히 닿지 않게 된다.
+    · 여기 한 곳에 두면 '앞으로 생길 것' 까지 자동으로 걸린다.
+
+   ⚠ <button>·<a>·<input> 은 건드리지 않는다. 이미 포커스 대상이고
+     role="button" 을 덧씌우면 스크린리더가 링크를 버튼으로 잘못 읽는다.
+   ⚠ Space 는 기본 동작이 '스크롤' 이라 preventDefault 가 필요하다.
+     Enter 는 막지 않는다 — 폼 안에서 다른 뜻을 가질 수 있다.
+   ========================================================================== */
+var _KB_NATIVE = { BUTTON: 1, A: 1, INPUT: 1, SELECT: 1, TEXTAREA: 1 };
+
+function _kbEnhance() {
+  /* :not([tabindex]) 로 이미 처리한 것을 건너뛴다 — 멱등하고 비용이 거의 없다. */
+  document.querySelectorAll('[onclick]:not([tabindex])').forEach(function (el) {
+    if (_KB_NATIVE[el.tagName]) return;
+    el.setAttribute('tabindex', '0');
+    /* role 이 이미 있으면(예: 앞으로 role="tab" 을 쓸 수도 있다) 존중한다. */
+    if (!el.hasAttribute('role')) el.setAttribute('role', 'button');
+  });
+}
+
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+  var el = e.target;
+  if (!el || !el.getAttribute || !el.hasAttribute('onclick')) return;
+  if (_KB_NATIVE[el.tagName]) return;      /* 네이티브가 알아서 한다 */
+  if (e.key !== 'Enter') e.preventDefault();  /* Space 의 스크롤을 막는다 */
+  el.click();
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  _kbEnhance();
+  /* 목록은 innerHTML 로 통째로 다시 그려진다. 그때 새로 생긴 항목에도 붙여야 한다.
+   * js/hscroll.js 와 같은 방식·같은 디바운스 폭을 쓴다 — 그쪽도 같은 이유로 관찰한다. */
+  if (!window.MutationObserver) return;
+  var t = null;
+  new MutationObserver(function () {
+    clearTimeout(t);
+    t = setTimeout(_kbEnhance, 150);
+  }).observe(document.body, { childList: true, subtree: true });
+});
+
