@@ -135,6 +135,42 @@ function navToFav(id) {
   }
 }
 
+/* ── 주차장 즐겨찾기의 남은 대수 배지 (2026-08-26 사용자 요청) ─────────────
+ * 즐겨찾기 카드 오른쪽이 비어 있어 주차장은 이름만 덩그러니 있었다.
+ * 거기에 남은 대수를 넣고, 여유에 따라 글자색을 바꾼다.
+ *
+ * ⚠ 색은 지도 핀 색(hsl 그라데이션)을 그대로 쓰면 안 된다. 핀은 색 원판 위의
+ *   글자라 밝아도 되지만, 여기는 흰 배경 위 글자라 대비가 무너진다.
+ *   실측(흰 배경): 핀에 쓰는 #16A34A 는 3.3:1, #EF4444 는 3.76:1 로 AA(4.5:1) 미달이다.
+ *   그래서 한 단계 어두운 #15803D · #B45309 · #DC2626 을 쓴다 — 각각 5.02 · 5.02 · 4.83:1.
+ *
+ * ⚠ parkingData 는 지도 탭에서만 실시간 갱신된다(js/parking.js refreshParking).
+ *   홈에서는 마지막으로 받은 값이거나, 한 번도 못 받았으면 총 주차면수가 들어 있다.
+ *   앱 하단 데이터 고지에 그대로 적어 둔 내용이라 여기서 따로 숨기지 않는다. */
+function _favParkBadge(f) {
+  if (f.type !== 'parking' || typeof parkingData === 'undefined') return '';
+  var p = parkingData.find(function (x) { return x.id === f.placeId; });
+  if (!p) return '';
+
+  var txt, col;
+  if (!p.open || p.total <= 0) {
+    txt = '미운영'; col = '#6B7280';
+  } else if (p.avail <= 0) {
+    txt = '만차';   col = '#DC2626';
+  } else {
+    var ratio = p.avail / p.total;
+    /* 절반 이상이면 초록, 5분의 1 이상이면 주황, 그 아래는 빨강.
+     * 핀의 연속 그라데이션과 달리 여기는 글자라 세 단계로 끊는 편이 읽기 쉽다. */
+    col = ratio >= 0.5 ? '#15803D' : ratio >= 0.2 ? '#B45309' : '#DC2626';
+    txt = p.avail + '대';
+  }
+  return '<div style="flex-shrink:0;text-align:right;margin-left:8px">' +
+           '<div style="font-size:14px;font-weight:800;color:' + col + ';line-height:1.2">' + txt + '</div>' +
+           (p.open && p.total > 0
+             ? '<div style="font-size:10px;color:var(--text-muted)">/ ' + p.total + '면</div>' : '') +
+         '</div>';
+}
+
 function renderFavSection() {
   var sec = document.getElementById('home-favs-section');
   if (!sec) return;
@@ -156,6 +192,7 @@ function renderFavSection() {
           '<div class="fav-name">' + (f.name || '') + '</div>' +
           '<div style="font-size:11px;color:var(--text-muted);margin-top:1px">' + cfg.label + '</div>' +
         '</div>' +
+        _favParkBadge(f) +
         '<button class="fav-del" onclick="event.stopPropagation();removeFav(\'' + sid + '\')">×</button>' +
       '</div>';
     }).join('') +
@@ -179,6 +216,7 @@ function renderMenuFavs() {
           '<div class="menu-fav-name">' + (f.name || '') + '</div>' +
           '<div class="menu-fav-type">' + cfg.label + '</div>' +
         '</div>' +
+        _favParkBadge(f) +
         '<button style="background:none;border:none;color:#D1D5DB;font-size:22px;cursor:pointer;padding:0 0 0 8px;line-height:1" ' +
           'onclick="event.stopPropagation();removeFav(\'' + sid + '\')">×</button>' +
       '</div>';
