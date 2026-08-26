@@ -47,7 +47,9 @@ FLOOR = {
     # 2026-08-26 감사에서 '하한이 없어 통째로 사라져도 통과' 하던 것들을 채웠다.
     # 변조 실험으로 확인한 사각지대였다 — 데이터가 비어도 검사는 초록불이었다.
     "restaurants-static.json":     3754,   # js/restaurants-static.json rows (지도 음식점 칩)
-    "CONVENIENCE.touristFacilities": 10,   # 지도 🏘️ 관광편의시설 칩
+    "CONVENIENCE.touristFacilities": 10,   # 지도 칩은 2026-08-26 에 제거(사용자 지시).
+                                          # 데이터는 그대로라 이 FLOOR 로 건수를 계속 지킨다 —
+                                          # 칩을 되살릴 때 이 주석도 고쳐라.
     "CONVENIENCE.cinemas":           13,   # 지도 🎬 영화상영관 칩 (2026-08-26: 10 → 공식 CSV 전건 13)
 }
 # templeStay(용주사) 는 배열이 아니라 객체 1건이라 건수가 아니라 '존재 여부'로 본다 (check_counts 참조)
