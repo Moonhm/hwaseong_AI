@@ -81,6 +81,7 @@ def build(files, places):
 
     idx_id, idx_name = {}, {}
     unknown_id, orphan, legacy_n, desc_n = [], [], 0, 0
+    ambiguous = []
 
     for fn in files:
         stem, _, ext = fn.rpartition(".")
@@ -98,6 +99,12 @@ def build(files, places):
             continue
         hit = next((n for n in names_desc if stem.startswith(n + "_")), None)
         if hit:                                      # 2) 이름_설명
+            # '전곡항_요트.jpg' 는 '전곡항 요트'(id:204) 사진인데 규칙 2 가
+            # 짧은 쪽 '전곡항'(id:3) 으로 흡수한다. 긴 이름은 공백, 파일명은 언더스코어라
+            # startswith(name + '_') 가 긴 쪽을 못 잡는다. 조용히 틀리므로 경고한다.
+            alt = stem.replace("_", " ")
+            if alt in by_name_place and alt != hit:
+                ambiguous.append((fn, hit, alt))
             idx_name.setdefault(hit, []).append(fn)
             desc_n += 1
             continue
@@ -119,6 +126,7 @@ def build(files, places):
         "byId": idx_id, "byName": idx_name, "dups": dups,
         "unknown_id": unknown_id, "orphan": orphan,
         "legacy": legacy_n, "desc": desc_n, "missing": missing, "gap": gap,
+        "ambiguous": ambiguous,
         "cross": cross_place_dupes(idx_id, idx_name, by_name_place),
         "shots": sum(len(v) for v in idx_id.values()) + sum(len(v) for v in idx_name.values()),
     }
@@ -227,6 +235,12 @@ def main():
         print("\n⚠ 어느 장소와도 연결되지 않는 파일 %d개:" % len(r["orphan"]))
         for fn in r["orphan"][:10]:
             print("   %s" % fn)
+    if r["ambiguous"]:
+        rc = 1
+        print("\n❌ 파일명이 두 장소 어느 쪽 것인지 모호합니다 — 짧은 쪽으로 흡수됐습니다:")
+        for fn, got, want in r["ambiguous"]:
+            print("   %s → '%s' 에 붙었으나 '%s' 도 있습니다" % (fn, got, want))
+        print("   → 어느 쪽인지 정하고 '{읍면동}_{id}_{메모}.jpg' 로 바꾸십시오. id 만 대조하므로 안 흔들립니다.")
     if r["cross"]:
         rc = 1
         n = sum(len(f) - 1 for _, f, _ in r["cross"])
