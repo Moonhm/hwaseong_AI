@@ -625,4 +625,6 @@
     .panel-drag-zone {
       padding: 8px 0 2px; display: flex; justify-content: center;
       flex-shrink: 0; user-select: none; -webkit-user-select: none;
+      cursor: grab;
     }
+    .panel-drag-zone:active { cursor: grabbing; }
