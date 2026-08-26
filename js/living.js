@@ -15,13 +15,20 @@ function switchLivingCat(el, cat) {
   if (el) el.classList.add('cat-active');
   renderLivingCatList(cat);
 }
+/* 목록은 5개만 보여 주고 나머지는 더보기로 펼친다 (2026-08-26 사용자 지시).
+   94·131·80건을 통째로 쏟으면 아래 목록이 화면을 다 먹는다. */
+var LIVING_PREVIEW = 5;
 
-function renderLivingCatList(cat) {
+function renderLivingCatList(cat, expanded) {
   var list = document.getElementById('living-main-list');
   var titleEl = document.getElementById('living-list-title');
   var countEl = document.getElementById('living-list-count');
   if (!list) return;
   var empty = '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">준비 중이에요</div>';
+  /* 분기마다 innerHTML 을 직접 넣던 것을 '항목 배열(rows) 만들기' 로 바꿨다 (2026-08-26).
+   * 4개 분기에 각각 '5개만 + 더보기' 를 붙이면 반드시 한쪽이 어긋난다.
+   * 자르기와 버튼은 함수 끝에서 한 번만 한다. footer 는 목록 뒤에 붙는 부가 줄이다. */
+  var rows = null, footer = '';
 
   var items;
   if (cat === 'restaurant') {
@@ -30,14 +37,14 @@ function renderLivingCatList(cat) {
     if (!items) { list.innerHTML = empty; return; }
     if (titleEl) titleEl.textContent = '모범음식점';
     if (countEl) countEl.textContent = items.length + '곳';
-    list.innerHTML = items.map(function(r, i) {
+    rows = items.map(function(r, i) {
       return '<div class="place-item" style="animation-delay:' + (Math.min(i, 10) * 0.03) + 's" onclick="goConvItem(\'mobeom\',' + i + ')">'
         + '<div class="pi ci-food" style="border-radius:12px;background:#FEF3C7;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🍽️</div>'
         + '<div class="pi-content"><div class="pi-name">' + r.name + '</div>'
         + '<div class="pi-meta">화성시 ' + r.addr + '</div></div>'
         + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
         + '</div>';
-    }).join('');
+    });
 
   } else if (cat === 'touristrest') {
     if (typeof CONVENIENCE === 'undefined') { list.innerHTML = empty; return; }
@@ -45,7 +52,7 @@ function renderLivingCatList(cat) {
     if (!items) { list.innerHTML = empty; return; }
     if (titleEl) titleEl.textContent = '관광식당업';
     if (countEl) countEl.textContent = items.length + '곳';
-    list.innerHTML = items.map(function(r, i) {
+    rows = items.map(function(r, i) {
       var tagClass = (r.cuisine || '').includes('네팔') ? 'cuisine-nepal' : (r.cuisine || '').includes('러시아') ? 'cuisine-russia' : '';
       return '<div class="place-item" style="animation-delay:' + (i * 0.03) + 's" onclick="goConvItem(\'touristrest\',' + i + ')">'
         + '<div class="pi" style="border-radius:12px;background:#FEE2E2;width:38px;height:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🥢</div>'
@@ -57,7 +64,7 @@ function renderLivingCatList(cat) {
         + '</div>'
         + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
         + '</div>';
-    }).join('');
+    });
 
   } else if (cat === 'currency') {
     var lcArr = (typeof lcData !== 'undefined') ? lcData : [];
@@ -75,7 +82,7 @@ function renderLivingCatList(cat) {
     var LC_SHOW = 80;
     if (titleEl) titleEl.textContent = '희망화성지역화폐 가맹점';
     if (countEl) countEl.textContent = lcArr.length ? lcArr.length.toLocaleString() + '곳' : '로딩 중...';
-    list.innerHTML = lcArr.length
+    rows = lcArr.length
       ? lcArr.slice(0, LC_SHOW).map(function(p, i) {
           /* lcData 필드: n=이름, c=업종, a=주소, lat, lng */
           var name = p.n || p.name || '';
@@ -93,18 +100,20 @@ function renderLivingCatList(cat) {
             + '</div>'
             + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>'
             + '</div>';
-        }).join('')
-      + (lcArr.length > LC_SHOW
-          ? '<div style="padding:16px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer" onclick="goMapCat(\'localcurrency\')">'
-            + '지도에서 ' + lcArr.length.toLocaleString() + '개 전체 보기 →</div>'
-          : '')
-      : empty;
+        })
+      : [];
+    /* 지역화폐는 80건까지만 DOM 에 올린다 — 27,374건을 그릴 수는 없다.
+     * 나머지는 지도에서 본다. 이 줄은 '더보기' 로 다 펼친 뒤에만 붙는다. */
+    footer = (lcArr.length > LC_SHOW)
+      ? '<div style="padding:16px;text-align:center;color:var(--primary);font-size:13px;font-weight:600;cursor:pointer" onclick="goMapCat(\'localcurrency\')">'
+        + '지도에서 ' + lcArr.length.toLocaleString() + '개 전체 보기 →</div>'
+      : '';
 
   } else if (cat === 'parking') {
     var pkArr = (typeof parkingData !== 'undefined') ? parkingData : [];
     if (titleEl) titleEl.textContent = '공영주차장';
     if (countEl) countEl.textContent = pkArr.length + '곳';
-    list.innerHTML = pkArr.length
+    rows = pkArr.length
       ? pkArr.map(function(p, i) {
           var isFree = p.free === true;
           var avail = (p.avail != null) ? p.avail : p.total;
@@ -124,21 +133,40 @@ function renderLivingCatList(cat) {
             + '<div style="font-size:10px;color:var(--text-muted);margin-top:3px">' + avail + '대</div>'
             + '</div>'
             + '</div>';
-        }).join('')
+        })
+      : [];
+  }
+
+  /* 여기서부터가 4개 분기의 공통 마무리다.
+   * rows 가 null 이면 위에서 이미 innerHTML 을 넣고 return 한 경우다(데이터 미로드 등). */
+  if (!rows) return;
+  if (!rows.length) {
+    /* 지역화폐는 4.2MB 를 지연 로드하는 중일 수 있다. 그때 '준비 중이에요' 는 거짓말이다. */
+    list.innerHTML = (cat === 'currency')
+      ? '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">불러오는 중이에요...</div>'
       : empty;
+    return;
+  }
+
+  var more = rows.length > LIVING_PREVIEW && !expanded;
+  list.innerHTML = (more ? rows.slice(0, LIVING_PREVIEW) : rows).join('') + (more ? '' : footer);
+
+  if (more) {
+    /* 추천 탭 목록·축제 전체와 같은 .tourism-more-btn (css/00-base.css:294).
+     * onclick 속성이 아니라 프로퍼티로 단다 — 재렌더 한 줄이면 되고,
+     * 문자열 onclick 은 cat/expanded 를 문자열로 엮어야 해서 따옴표 사고가 난다. */
+    var btn = document.createElement('div');
+    btn.className = 'tourism-more-btn';
+    btn.innerHTML = '더보기 <span style="color:var(--primary);font-weight:700">+' +
+                    (rows.length - LIVING_PREVIEW) + '</span>';
+    btn.onclick = function () { renderLivingCatList(cat, true); };
+    list.appendChild(btn);
   }
 }
 
 function renderLivingPage() {
-  var cCount = (typeof lcData      !== 'undefined') ? lcData.length      : 0;
-  var pCount = (typeof parkingData !== 'undefined') ? parkingData.length : 0;
-  var scEl = document.getElementById('stat-currency');
-  var spEl = document.getElementById('stat-parking');
-  /* 표기를 js/ui.js:86 · js/living.js:77 과 통일한다 (콤마 없는 27374 로 퇴화하던 버그).
-   * 0 은 '진짜 0곳'이 아니라 '아직 지연 로드 전'이므로 HTML 기본값 '-'(index.html:257-258)로 둔다.
-   * lcData 는 boot 에서 프리페치하지 않고(js/boot.js:114), parking 도 async 라 첫 진입엔 0 이 될 수 있다. */
-  if (scEl) scEl.textContent = cCount ? cCount.toLocaleString() : '-';
-  if (spEl) spEl.textContent = pCount ? pCount.toLocaleString() : '-';
+  /* 통계 4칸(#stat-currency·#stat-parking)은 2026-08-26 에 index.html 에서 걷어냈다.
+   * 카테고리 아이콘과 목록 머리가 같은 정보를 이미 보여 준다. 여기서 채우던 코드도 함께 뺀다. */
 
   renderNewsSection();          /* 소식 섹션은 매 진입마다 다시 그린다 — 날짜가 바뀌면 D-N 도 바뀐다 */
   /* 축제 전체도 같은 이유로 매 진입마다 다시 그린다(진행 중/예정/종료가 날짜에 걸려 있다).

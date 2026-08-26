@@ -146,8 +146,8 @@ function _loadLcData(callback) {
   if (typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중이에요...');
   fetch('js/localcurrency-static.json?v=20260825').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
-    var sc = document.getElementById('stat-currency');
-    if (sc) sc.textContent = lcData.length.toLocaleString();
+    /* 소식 탭 통계 4칸(#stat-currency)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.
+     * 로드가 끝나면 아래 콜백이 renderLivingCatList('currency') 를 다시 부른다. */
     _lcLoading = false;
     var cbs = _lcCallbacks.splice(0);
     cbs.forEach(function(cb) { try { cb(); } catch(e) {} });

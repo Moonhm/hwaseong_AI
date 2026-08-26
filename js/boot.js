@@ -115,8 +115,8 @@ window.addEventListener('DOMContentLoaded', () => {
   /* 주차장 데이터 사전 로드 (76KB) — 홈·가까운관광지 즉시 표시용 */
   fetch('js/parking-static.json?v=20260825').then(function(r) { return r.json(); }).then(function(d) {
     if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
-    var sp = document.getElementById('stat-parking');
-    if (sp) sp.textContent = parkingData.length;
+    /* 소식 탭 통계 4칸(#stat-parking)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.
+     * 건수는 카테고리를 고르면 목록 머리(#living-list-count)가 보여 준다. */
   }).catch(function() {});
   /* localcurrency-static.json(4.2MB)은 탭 클릭 시 지연 로드 */
 
