@@ -214,6 +214,15 @@ function renderNewsSection() {
   if (!el || typeof PLACES === 'undefined') return;
 
   var today = new Date(); today.setHours(0, 0, 0, 0);
+
+  /* '진짜 이번 주'(2026-08-26 사용자 지시). 예전에는 앞으로 30일을 담아
+   * 다음 달 것까지 '이번 주 소식'에 올라왔다.
+   * 월요일 시작 주로 자른다 — getDay() 는 일요일이 0 이라 (getDay()+6)%7 로
+   * 월요일을 0 으로 돌려야 한다. 이 한 줄을 빼먹으면 일요일에 다음 주가 잡힌다. */
+  var dow = (today.getDay() + 6) % 7;
+  var weekStart = new Date(today); weekStart.setDate(today.getDate() - dow);
+  var weekEnd   = new Date(today); weekEnd.setDate(today.getDate() - dow + 6);
+
   var items = [];
 
   PLACES.forEach(function (p) {
@@ -224,35 +233,40 @@ function renderNewsSection() {
     var _dm = (typeof _parseFestDateMeta === 'function') ? _parseFestDateMeta(String(p.date).split('~')[0].trim()) : null;
     var d = _dm ? _dm.ymd : null;
     if (!d) return;
+    /* ⚠ '2026년 8월 중' 같은 근사 일정은 1일로 채워진 값이다. 주 단위로 특정할 수
+     * 없으므로 '이번 주'에서는 뺀다 — 아래 '행사 전체'에는 그대로 들어 있다.
+     * 이걸 남기면 8월 1일로 계산돼 엉뚱한 주에 걸린다. */
+    if (_dm && _dm.approx) return;
     var when = new Date(d[0], d[1] - 1, d[2]); when.setHours(0, 0, 0, 0);
+    if (when < weekStart || when > weekEnd) return;
     var days = Math.round((when - today) / 86400000);
-    if (days < 0 || days > 30) return;            /* 지난 것과 한 달 밖은 '소식'이 아니다 */
-    /* 근사 일정이면 표시할 문구를 여기서 만들어 둔다 — 렌더 시점에 정규식을 다시
-     * 돌리면(RegExp.$1 같은 전역 상태) 다른 매치에 오염될 수 있다. */
-    items.push({ p: p, days: days, when: when,
-                 approxLabel: (_dm && _dm.approx) ? (parseInt(d[1], 10) + '월 중') : null });
+    items.push({ p: p, days: days, when: when });
   });
 
   items.sort(function (a, b) { return a.days - b.days; });
 
   if (!items.length) {
-    el.innerHTML = '<div class="news-empty">다가오는 행사가 없어요</div>';
+    el.innerHTML = '<div class="section-header" style="margin-bottom:10px">' +
+                     '<div class="section-title">이번 주 소식</div>' +
+                   '</div>' +
+                   '<div class="news-empty">이번 주에 예정된 행사가 없어요</div>';
     return;
   }
 
   el.innerHTML =
+    /* '전체 보기' 버튼은 2026-08-26 에 뺐다(사용자 지시). 이 섹션은 이제 이번 주
+     * 것만 담고, 전체는 바로 아래 '행사 전체'가 맡는다 — 같은 화면에 둘 다 있는데
+     * 위쪽에서 아래쪽으로 보내는 버튼은 군더더기다. */
     '<div class="section-header" style="margin-bottom:10px">' +
       '<div class="section-title">이번 주 소식</div>' +
-      /* 예전에는 추천 탭의 '축제' 서브탭으로 건너뛰었다. 2026-08-26 에 축제가
-       * 소식 탭으로 내려오면서 그 칩이 없어졌고, 같은 화면 아래의 '축제 전체'를
-       * 펼치는 쪽이 탭을 옮기는 것보다 짧다. */
-      '<button class="section-link" onclick="showAllFestivals()">전체 보기</button>' +
     '</div>' +
-    items.slice(0, 3).map(function (it, i) {
+    /* 이번 주 것만 남으므로 자르지 않는다 — 많아야 며칠 치다. */
+    items.map(function (it, i) {
       var d = it.days;
-      /* 근사 일정은 날짜를 단정하지 않는다 — '10월 중' 처럼 원문 단위로 말한다 */
-      var badge = it.approxLabel ? it.approxLabel
-                : d === 0 ? '오늘' : d === 1 ? '내일' : 'D-' + d;
+      /* 지난 요일(음수)도 이번 주면 보여 준다 — '이번 주 소식'이니 이미 지난 것도
+       * 이번 주의 소식이다. D+N 으로 지났음을 밝힌다. */
+      var badge = d === 0 ? '오늘' : d === 1 ? '내일'
+                : d  <  0 ? 'D+' + (-d) : 'D-' + d;
       var hot   = d <= 3 ? ' news-badge-hot' : '';
       return '<div class="news-item" style="animation-delay:' + (i * 0.045) + 's"' +
              /* ⚠ go('tourism') 없이 showFestivalDetail 만 부르면 아무 일도 안 일어난다 —
@@ -272,7 +286,7 @@ function renderNewsSection() {
 }
 
 /* ══════════════════════════════════════════════════
-   축제 전체 (2026-08-26)
+   행사 전체 (2026-08-26)
    추천 탭 서브탭('축제' → renderTourismList('festival-only'))에서 소식 탭으로 옮겼다.
    사용자 지시: "추천 탭에서 축제 부분 선택하는거 거기서 빼고 소식으로 가져와 …
    이번달 축제 밑에 놓고 한 4 5개만 띄워놓고 밑에 더보기 버튼 만들어도 되고."
@@ -324,7 +338,7 @@ function renderFestivalAll(expanded) {
   if (cnt) cnt.textContent = rows.length ? rows.length + '건' : '';
 
   if (!rows.length) {
-    list.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">등록된 축제가 없어요</div>';
+    list.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">등록된 행사가 없어요</div>';
     return;
   }
 
@@ -373,19 +387,28 @@ function renderFestivalAll(expanded) {
   }
 }
 
-/* 「이번 주 소식」의 '전체 보기' 와 햄버거 메뉴의 '축제 전체' 가 함께 쓴다.
- * 펼친 뒤 스크롤한다 — 순서가 반대면 접힌 높이 기준으로 스크롤해 어중간한 데서 멈춘다. */
-function showAllFestivals() {
-  renderFestivalAll(true);
-  var sec = document.getElementById('festival-all-section');
-  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+/* '행사 전체' 로 데려다 주는 유일한 진입점이다.
+ * 홈 탭 '행사 → 전체보기'(js/home.js) 와 햄버거 메뉴가 함께 쓴다.
+ *
+ * 펼치지 않고 스크롤만 한다. 이 섹션의 기본은 5개 + 더보기이고(사용자 지시),
+ * 어디서 들어오든 같은 모습이어야 한다 — 입구에 따라 5개였다 전체였다 하면
+ * '더보기' 가 있다 없다 한다.
+ *
+ * 이미 소식 탭에 있으면 go() 를 부르지 않는다. go('living') 은 renderLivingPage() 로
+ * 목록 전체를 다시 그리고 scrollTop 을 0 으로 되돌리므로, 같은 탭에서 부르면
+ * 화면이 한 번 튀었다가 다시 내려온다. */
+function goFestivalAll() {
+  if (typeof closeMenu === 'function') closeMenu();
+  var pg = document.getElementById('page-living');
+  var here = pg && pg.classList.contains('active');
+  if (here) { _scrollToFestivalAll(); return; }
+  go('living');
+  /* go() → renderLivingPage() 가 목록을 다시 그린 뒤라야 높이가 확정된다.
+   * menuGoLiving() 과 같은 지연 폭을 쓴다. */
+  setTimeout(_scrollToFestivalAll, 280);
 }
 
-/* 햄버거 메뉴 → 소식 탭으로 이동한 뒤 축제 전체를 펼친다.
- * go('living') 이 renderLivingPage() 를 부르며 목록을 '접힌 상태'로 다시 그리므로,
- * 펼치기는 반드시 그 뒤여야 한다. menuGoLiving() 과 같은 250ms 지연을 쓴다. */
-function menuGoFestivals() {
-  if (typeof closeMenu === 'function') closeMenu();
-  go('living');
-  setTimeout(showAllFestivals, 260);
+function _scrollToFestivalAll() {
+  var sec = document.getElementById('festival-all-section');
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }

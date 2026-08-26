@@ -635,7 +635,10 @@ function renderHomeTourism() {
           </div>
           <div class="section-sub" style="margin-top:2px">이번 축제 · 화성 인기 장소</div>
         </div>
-        <button class="section-link" onclick="go('tourism')">전체보기</button>
+        <!-- 2026-08-26 — 행사는 소식 탭 '행사 전체'로 모였다(사용자 지시).
+             예전 go('tourism') 은 추천 탭 목록으로 갔는데, 그 탭의 '축제' 서브탭이
+             없어져 이제 행사만 따로 보는 화면이 아니다. -->
+        <button class="section-link" onclick="goFestivalAll()">전체보기</button>
       </div>
       ${festivalBig}
       <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:8px">🔥 화성에서 인기있는 곳</div>
