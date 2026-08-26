@@ -685,10 +685,12 @@ function _renderHomePopular() {
     if (!el2) return;
     var list = (typeof _dlDedupe === 'function') ? _dlDedupe(d && d.interest_spots_domestic) : ((d && d.interest_spots_domestic) || []);
     if (!list.length) { el2.innerHTML = ''; return; }
-    /* 3위까지만 + 금·은·동 (2026-08-26 사용자 지시).
-     * 추천 탭의 renderDlPopular() 와 같은 규칙이다 — 같은 '인기 있는 곳'이
-     * 홈과 추천 두 군데에 각각 다른 렌더러로 있으니, 한쪽만 고치면 어긋난다. */
-    el2.innerHTML = list.slice(0, 3).map(function(r, i) {
+    /* 5위까지 보여 주되 시상대(1~3위)만 금·은·동 메달, 4·5위는 숫자
+     * (2026-08-26 사용자 지시). 홈은 세로 목록이라 5줄이 자연스럽고,
+     * 메달과 숫자가 섞여도 '위에 셋이 시상대'라는 게 오히려 또렷해진다.
+     * 추천 탭의 renderDlPopular() 는 3열 사진 격자라 3위까지만 둔다 — 5장이면
+     * 둘째 줄에 2장만 남아 빈칸이 생긴다. 두 화면의 개수가 다른 건 의도다. */
+    el2.innerHTML = list.slice(0, 5).map(function(r, i) {
       var src = '';
       if (typeof placePhotoSrc === 'function') {
         var _norm = function(s) { return (s || '').replace(/\s+/g, ''); };
@@ -700,9 +702,14 @@ function _renderHomePopular() {
         /* DL_MEDALS 는 js/datalab.js 에 있다. index.html 의 <script> 순서상
          * home.js 가 먼저 오지만, 이 함수는 사용자가 홈을 열어야 도는 런타임
          * 코드라 그때는 이미 정의돼 있다. 그래도 순서가 바뀌면 조용히 깨지므로
-         * 폴백으로 숫자를 남긴다. */
-        '<div style="width:22px;text-align:center;font-size:16px;line-height:1" aria-label="' + (i + 1) + '위">' +
-          (typeof DL_MEDALS !== 'undefined' ? DL_MEDALS[i] : (i + 1)) + '</div>' +
+         * 폴백으로 숫자를 남긴다.
+         * 메달은 16px, 숫자는 13px 로 크기를 달리한다 — 같은 크기로 두면
+         * 이모지가 글자보다 커 보여 4·5위가 눌린 것처럼 보인다. */
+        '<div style="width:22px;text-align:center;' +
+          (i < 3 ? 'font-size:16px;line-height:1'
+                 : 'font-size:13px;font-weight:700;color:var(--text-muted)') +
+        '" aria-label="' + (i + 1) + '위">' +
+          (i < 3 && typeof DL_MEDALS !== 'undefined' ? DL_MEDALS[i] : (i + 1)) + '</div>' +
         '<div style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#F3F4F6">' +
           '<img src="' + src + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' +
         '</div>' +
