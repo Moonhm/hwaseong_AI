@@ -685,10 +685,18 @@ function _renderHomePopular() {
     if (!el2) return;
     var list = (typeof _dlDedupe === 'function') ? _dlDedupe(d && d.interest_spots_domestic) : ((d && d.interest_spots_domestic) || []);
     if (!list.length) { el2.innerHTML = ''; return; }
-    el2.innerHTML = list.slice(0, 5).map(function(r, i) {
+    /* 3위까지만 + 금·은·동 (2026-08-26 사용자 지시).
+     * 추천 탭의 renderDlPopular() 와 같은 규칙이다 — 같은 '인기 있는 곳'이
+     * 홈과 추천 두 군데에 각각 다른 렌더러로 있으니, 한쪽만 고치면 어긋난다. */
+    el2.innerHTML = list.slice(0, 3).map(function(r, i) {
       var src = (typeof placePhotoSrc === 'function') ? placePhotoSrc({name: r.name}) : '';
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="dlGoPlace(\'' + r.name.replace(/'/g, '') + '\')">' +
-        '<div style="width:22px;text-align:center;font-size:13px;font-weight:700;color:' + (i < 3 ? 'var(--orange)' : 'var(--text-muted)') + '">' + (i + 1) + '</div>' +
+        /* DL_MEDALS 는 js/datalab.js 에 있다. index.html 의 <script> 순서상
+         * home.js 가 먼저 오지만, 이 함수는 사용자가 홈을 열어야 도는 런타임
+         * 코드라 그때는 이미 정의돼 있다. 그래도 순서가 바뀌면 조용히 깨지므로
+         * 폴백으로 숫자를 남긴다. */
+        '<div style="width:22px;text-align:center;font-size:16px;line-height:1" aria-label="' + (i + 1) + '위">' +
+          (typeof DL_MEDALS !== 'undefined' ? DL_MEDALS[i] : (i + 1)) + '</div>' +
         '<div style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#F3F4F6">' +
           '<img src="' + src + '" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' +
         '</div>' +
