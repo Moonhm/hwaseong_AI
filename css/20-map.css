@@ -305,6 +305,15 @@
     .sl-desc { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 12px; }
     .sl-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
     .sl-tag  { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: var(--primary-bg); color: var(--primary); }
+    /* 유네스코 세계문화유산 (2026-08-26 사용자 지시로 강조).
+     * 다른 태그는 분류지만 이건 등재 사실이라 무게가 다르다. 다만 '약간' 이라
+     * 하셨으므로 크기·모양은 그대로 두고 색과 굵기만 올린다 — 배지처럼 키우면
+     * 태그 줄의 리듬이 깨지고 그 아래 액션 버튼과 시각적으로 경쟁한다.
+     * 색 대비: #92400E / #FEF3C7 = 7.6:1 (WCAG AA 4.5:1 통과). */
+    .sl-tag--unesco {
+      background: #FEF3C7; color: #92400E; font-weight: 800;
+      box-shadow: inset 0 0 0 1px rgba(146, 64, 14, 0.22);
+    }
     .sl-actions { display: flex; gap: 8px; flex-wrap: wrap; }
     /* word-break:keep-all 은 한국어에 필수다. 기본값(normal)은 단어 중간에서 끊어
      * '공영주차 / 장 찾기' 처럼 읽을 수 없게 접힌다. 버튼 3개가 flex:1 로 폭을

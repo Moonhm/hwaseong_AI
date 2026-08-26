@@ -583,7 +583,16 @@ function showPlaceSlide(place) {
     (place.date ? '<div class="sl-date">📅 ' + place.date + '</div>' : '') +
     descHtml +
     '<div class="sl-tags">' +
-    (place.tags || []).map(function (t) { return '<span class="sl-tag" ' + tagStyle + '>' + t + '</span>'; }).join('') +
+    /* '세계문화유산' 만 강조한다 (2026-08-26 사용자 지시). 나머지 태그는 분류일
+     * 뿐이지만 이건 유네스코 등재라는 사실 자체라 무게가 다르다.
+     * 카테고리 색(tagStyle)을 덮어써야 하므로 이 태그에는 tagStyle 을 붙이지 않는다 —
+     * 붙이면 뒤에 오는 인라인 style 이 클래스 규칙을 이겨 강조가 통째로 사라진다.
+     * 지금 붙은 곳은 융릉·건릉(id:24) 한 곳뿐이다(js/data.js 주석 참고). */
+    (place.tags || []).map(function (t) {
+      return (t === '세계문화유산')
+        ? '<span class="sl-tag sl-tag--unesco">🏛️ ' + t + '</span>'
+        : '<span class="sl-tag" ' + tagStyle + '>' + t + '</span>';
+    }).join('') +
     '</div>' +
     '<div class="sl-actions">' + actionsHtml + '</div>';
 
