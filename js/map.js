@@ -212,7 +212,12 @@ function buildOverlays() {
   }
 
   PLACES.forEach(function (p) {
-    if (p.category === 'tourist') return;
+    /* 축제는 지도에 그리지 않는다 (2026-08-26 사용자 결정).
+       축제 정보는 화성시 공식 사이트와 연계돼 있고, 장소보다 '언제 하는가'가 본질이라
+       지도에서 찾을 일이 없다. 게다가 50건 중 21건이 장소 미정이라 시청 좌표를
+       나선으로 흩뿌려 '가짜 위치'에 찍히고 있었다.
+       지도로 보내는 진입점은 goMapFocus(js/mapnav.js)가 한 곳에서 막는다. */
+    if (p.category === 'tourist' || p.category === 'festival') return;
 
     var color = CAT_COLOR[p.category] || '#6B7280';
     var cfg   = CATEGORY_CONFIG[p.category] || {};

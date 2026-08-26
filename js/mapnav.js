@@ -108,6 +108,20 @@ function _zoomAndShowConv(place) {
  * level  : zoom level (작을수록 확대, 기본 4)
  */
 function goMapFocus(lat, lng, level, placeId) {
+  /* 축제는 지도에서 뺐다 (2026-08-26, js/map.js buildOverlays 참조).
+     핀이 없으므로 지도로 보내면 빈 화면에 필터만 켜진 채 아무 일도 안 일어난다.
+     호출부가 6곳(즐겨찾기·검색·홈·데이터랩·관광목록·상세)이라 각각 고치는 대신
+     여기 한 곳에서 축제 상세로 돌린다 — 새 진입점이 생겨도 자동으로 걸린다. */
+  if (placeId != null && typeof PLACES !== 'undefined') {
+    var _fp = PLACES.find(function (x) { return x.id === placeId; });
+    if (_fp && _fp.category === 'festival') {
+      go('tourism');
+      setTimeout(function () {
+        if (typeof showFestivalDetail === 'function') showFestivalDetail(placeId);
+      }, 260);
+      return;
+    }
+  }
   go('map');
   setTimeout(function () {
     if (!kakaoMap) {
