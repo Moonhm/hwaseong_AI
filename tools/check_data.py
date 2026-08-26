@@ -60,10 +60,10 @@ CEILING = {
     "fetch_without_cachebust": 2,   # ?v= 없는 fetch 대상 수 (parking/localcurrency static)
     # 2026-08-26: 사진 373장 중 162장이 '다른 관광지 사진의 복사본'이었다.
     # 한 장이 6곳을 덮은 사례까지 있어(작은영화관 간판 사진 → CGV·롯데시네마 4곳)
-    # 전부 지웠다. 그 결과 관광지 120곳이 사진 없음이 됐다 — 가짜를 지운 대가이며
+    # 전부 지웠다. 그 결과 관광지 120곳이 사진 없음이 됐고, 2026-08-26 2차 반입(138장)으로 32곳까지 줄었다.
     # 화면은 js/ui.js placePhotoSrc 호출부 4곳의 이모지 폴백으로 안전하게 떨어진다.
     # 사진을 새로 받으면 이 값을 내려라. 올리지는 마라.
-    "photo_missing_tourist": 120,
+    "photo_missing_tourist": 32,
     "photo_orphan": 4,              # PLACES·convenience 어디에도 없는 사진 (행사 사진 4장)
 }
 
