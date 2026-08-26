@@ -42,7 +42,10 @@ ROOT = Path(os.environ.get("HW_ROOT") or Path(__file__).resolve().parent.parent)
 MAX_W = 1200          # places 사진의 실측 상한과 맞췄다
 QUALITY = 82
 MIN_SAVING = 0.15     # 재인코딩이 이만큼 이상 줄일 때만 교체한다(측정 기반 판정)
-EXTS = (".jpg", ".jpeg", ".png", ".webp")
+# .jfif 는 JPEG File Interchange Format — 내용은 그냥 JPEG 인데 확장자만 다르다.
+# 윈도우 크롬에서 이미지를 저장하면 이 확장자가 붙는 일이 흔하다.
+# 2026-08-27: 이걸 빠뜨려 사용자가 올린 33장 중 28장을 통째로 놓쳤다.
+EXTS = (".jpg", ".jpeg", ".jfif", ".png", ".webp")
 # 사진이 아니라 그래픽이라 PNG 로 둬야 하는 것들 (투명도·선명한 경계)
 # 파일명 토큰만으로는 한글 이름 로고를 못 지킨다(assets 의 PNG 4장이 전부 한글 이름
 # 투명 로고였다). 이름 토큰과 **실제 투명도** 둘 다로 판정한다 — 투명 PNG 를 JPEG 로
@@ -84,7 +87,9 @@ def process(d: Path, check: bool):
             keep_png = True
 
         need_resize = im.width > MAX_W
-        need_jpeg = (f.suffix.lower() == ".png") and not keep_png
+        # .jfif 도 .jpg 로 바꾼다 — 내용은 이미 JPEG 이라 재인코딩 손실 없이
+        # 확장자만 통일된다. 앱 어디서도 .jfif 를 기대하지 않는다.
+        need_jpeg = (f.suffix.lower() in (".png", ".jfif")) and not keep_png
         need_rename = (nfc != f.stem)
 
         # 이미 JPEG 이고 폭도 작지만 **품질만 과한** 경우 (2026-08-26 추가).

@@ -280,9 +280,34 @@ Playwright/Selenium 환경 미지원 → 알고리즘 기반 생성:
 ### 장소 사진
 
 - `assets/images/places/{name}.jpg` (data.js name 필드와 정확히 일치)
-- **git 제외** (용량 문제) — 배포 서버에만 존재
-- 원본 32장 + 유사 카테고리 재사용 127장 = 총 159장
+- 240px 썸네일은 `assets/images/thumbs/{name}.jpg` — 38·48·76px 슬롯이 쓴다
+- **git 제외** (용량 문제) — 배포 서버에만 존재. 커밋되는 것은 `js/photos.js` 뿐이다
+- 2026-08-27 기준 **PLACES 243곳(tourist 151·festival 50·heritage 42) 전건 보유**
 - onerror fallback: 주황 그라데이션 + 🏞️ 자동 표시
+
+#### 사진 반입은 반드시 `tools/import_photos.py` 로 한다 (2026-08-27 신설)
+
+```
+python3 tools/import_photos.py "<사진 폴더>" --check   # 대조만
+python3 tools/import_photos.py "<사진 폴더>"           # 반입
+python3 tools/optimize_images.py assets/images/places  # 크기·품질·형식
+python3 tools/optimize_images.py --thumbs              # 240px 썸네일
+python3 tools/build_photo_index.py                     # js/photos.js 재생성
+python3 tools/bump_version.py && bash tools/check.sh; echo $?
+```
+
+**손으로 `find`·`cp` 하지 마십시오.** 그렇게 하다 같은 날 두 번 사고가 났습니다.
+
+| 사고 | 무엇이 문제였나 |
+|------|----------------|
+| **확장자를 빠뜨렸다** | `find -iname "*.jpg" -o "*.png" …` 목록에 `.jfif` 가 없어 올라온 33장 중 **28장을 통째로 못 봤다.** `.jfif` 는 JPEG File Interchange Format 이다 — 내용은 그냥 JPEG 이고 윈도우 크롬에서 이미지를 저장하면 흔히 붙는다. 도구는 `.jpg .jpeg .jfif .jpe .png .webp .gif .bmp .avif` 를 전부 읽고, 내용이 JPEG 인 것(`.jfif .jpe .jpeg`)은 `.jpg` 로 통일해 반입한다 |
+| **이름을 손으로 고쳤다** | `금당 엄나무 마을`(공백 있음) vs data.js 의 `금당 엄나무마을`. 위 규칙대로 정확히 일치해야 뜨므로 그대로 넣으면 **조용히 안 뜬다.** 도구가 공백·대소문자만 다른 것은 **정확명으로 자동 교정**하고, 그 외에는 반입하지 않고 목록으로 보고한다(임의 추측 금지) |
+
+> 두 사고 모두 '사람이 목록을 관리하는' 방식이라 반드시 또 틀립니다.
+> 새 확장자를 만나면 파일을 옮기지 말고 `tools/import_photos.py` 의 `IMG_EXTS` 에 추가하십시오.
+
+사진을 새로 받으면 `tools/check_data.py` 의 `CEILING["photo_missing_tourist"]` 를
+**내리십시오. 올리지는 마십시오.** 현재 값은 `0` 입니다 — 한 장이라도 사라지면 즉시 FAIL 입니다.
 
 ---
 

@@ -39,7 +39,9 @@ DATA_JS = os.path.join(ROOT, "js", "data.js")
 CONV_JS = os.path.join(ROOT, "js", "convenience.js")
 OUT_JS = os.path.join(ROOT, "js", "photos.js")
 
-EXTS = ("jpg", "jpeg", "png", "webp")
+# .jfif 포함 — JPEG 인데 확장자만 다르다(윈도우 크롬 저장 시 흔하다).
+# 2026-08-27 에 이걸 빠뜨려 사용자가 올린 사진 28장을 놓쳤다.
+EXTS = ("jpg", "jpeg", "jfif", "png", "webp")
 # 첫 '_' 앞까지가 지역명. '동탄1동_37_…' 처럼 지역명에 숫자가 있어도 정확히 분해된다.
 NEW_RE = re.compile(r"^(?P<region>[^_]+)_(?P<id>\d+)(?:_(?P<memo>.*))?\.(?P<ext>%s)$"
                     % "|".join(EXTS), re.I)
