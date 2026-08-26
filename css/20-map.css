@@ -416,3 +416,17 @@
     }
     /* 음식점 겹침 배지 — .lc-count-badge 와 모양은 같고 색만 음식점 계열이다 */
     .rs-count-badge { background: #D97706; }
+
+    /* 즐겨찾기 '+N개 더 보기' — 2026-08-26.
+     * 예전에는 누를 수 없는 글자라 7번째부터 접근이 막혔다. 버튼으로 바꾸면서
+     * 터치 타깃 36px 을 채운다(WORKFLOW.md §3 최소 기준). */
+    .fav-more {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 36px; margin-top: 2px;
+      font-size: 12.5px; font-weight: 700; color: var(--primary);
+      cursor: pointer; border-radius: 10px;
+      transition: background 0.12s;
+    }
+    .fav-more:hover  { background: var(--bg); }
+    .fav-more:active { background: #E5E7EB; }
+

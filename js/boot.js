@@ -137,6 +137,14 @@ window.addEventListener('DOMContentLoaded', () => {
      * getFavs() 는 localStorage 만 읽어 비용이 없고, 즐겨찾기가 없으면
      * renderFavSection 이 스스로 숨으므로 헛일도 아니다. */
     if (typeof renderFavSection === 'function') renderFavSection();
+      /* ⚠ '최근 본 곳' 도 같은 이유로 다시 그린다 (2026-08-26).
+       * _recentItems(js/home.js)가 주차장 기록을 parkingData.find 로 되살리는데,
+       * 부팅 시점엔 그 배열이 비어 있어 전부 걸러진다. 최근 본 것이 주차장뿐이면
+       * '지도에서 관광지나 주차장을 눌러 보세요' 빈 안내가 뜬 채 굳었다 —
+       * 데이터가 131건 다 들어와도 다시 그리지 않으니 영영 그대로였다(실측).
+       * 즐겨찾기 배지와 완전히 같은 사고이고, 그때 이 줄을 함께 넣지 않았다. */
+      if (typeof renderRecentSection === 'function') renderRecentSection();
+      if (typeof renderMenuRecent    === 'function') renderMenuRecent();
   }).catch(function() {});
   /* localcurrency-static.json(4.2MB)은 탭 클릭 시 지연 로드 */
 

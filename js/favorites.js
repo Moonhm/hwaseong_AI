@@ -171,6 +171,11 @@ function _favParkBadge(f) {
          '</div>';
 }
 
+/* 홈 즐겨찾기 펼침 상태. 탭을 벗어나도 유지한다 — 지우려고 펼친 사람이
+ * 한 번 지울 때마다 다시 접히면 나머지를 못 지운다. */
+var _favShowAll = false;
+function toggleFavShowAll() { _favShowAll = !_favShowAll; renderFavSection(); }
+
 function renderFavSection() {
   var sec = document.getElementById('home-favs-section');
   if (!sec) return;
@@ -183,7 +188,7 @@ function renderFavSection() {
       '<button style="font-size:12px;color:var(--text-muted);background:none;border:none;cursor:pointer" onclick="clearFavs()">전체 삭제</button>' +
     '</div>' +
     '<div class="fav-section">' +
-    favs.slice(0, 6).map(function(f) {
+    favs.slice(0, _favShowAll ? favs.length : 6).map(function(f) {
       var cfg = _favCfg(f);
       var sid = f.id.replace(/'/g, '');
       return '<div class="fav-item" onclick="navToFav(\'' + sid + '\')">' +
@@ -196,7 +201,16 @@ function renderFavSection() {
         '<button class="fav-del" onclick="event.stopPropagation();removeFav(\'' + sid + '\')">×</button>' +
       '</div>';
     }).join('') +
-    (favs.length > 6 ? '<div style="text-align:center;font-size:12px;color:var(--primary);padding:4px 0">+' + (favs.length - 6) + '개 더</div>' : '') +
+    /* ⚠ 예전에는 그냥 '+N개 더' 라고 적어 두기만 했다. 누를 수 없는 글자라
+     * 7번째부터는 **어디서도 볼 수도 지울 수도 없었다** — 메뉴는 5개까지만
+     * 보여 주면서 '홈에서 확인' 이라고 안내했는데 홈도 6개에서 끊겼다.
+     * 남은 길은 '전체 삭제' 뿐이었다(실측: 9개 저장 시 3개가 접근 불가).
+     * 눌러서 펼치게 바꿨다 — 앱의 다른 목록이 쓰는 '더보기' 와 같은 방식이다. */
+    (favs.length > 6
+      ? '<div class="fav-more" role="button" tabindex="0" onclick="toggleFavShowAll()">' +
+          (_favShowAll ? '접기' : '+' + (favs.length - 6) + '개 더 보기') +
+        '</div>'
+      : '') +
     '</div>';
 }
 
@@ -223,6 +237,6 @@ function renderMenuFavs() {
           'onclick="event.stopPropagation();removeFav(\'' + sid + '\')">×</button>' +
       '</div>';
     }).join('') +
-    (favs.length > 5 ? '<div style="text-align:center;font-size:12px;color:var(--primary);padding:4px 0 8px">+' + (favs.length - 5) + '개 더 (홈에서 확인)</div>' : '');
+    (favs.length > 5 ? '<div style="text-align:center;font-size:12px;color:var(--primary);padding:4px 0 8px">+' + (favs.length - 5) + '개 더 — 홈에서 전부 볼 수 있어요</div>' : '');
 }
 
