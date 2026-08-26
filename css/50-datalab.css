@@ -103,7 +103,7 @@
     }
     .dl-tour-row::-webkit-scrollbar { display: none; }
     /* 2026-08-26 사용자 지시로 카드를 전체적으로 키웠다 (148→196px, 히어로 58→116px).
-     * 코스마다 전용 사진(assets/images/courses/{코스명}.png)이 있는데 58px 히어로에서는
+     * 코스마다 전용 사진(assets/images/courses/{코스명}.jpg)이 있는데 58px 히어로에서는
      * 사진이 띠처럼 잘려 무엇인지 알아볼 수 없었다. 히어로를 2배로 키워 사진이
      * 제 구실을 하게 했다. 폭도 함께 키우지 않으면 카드가 세로로만 길어져 어색하다. */
     .dl-tour-card {

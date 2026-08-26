@@ -342,9 +342,12 @@ function _renderDatalabView(kind) {
 function dlShowCourse(no) { showDatalab('course:' + no); }
 
 function _dlCourseHeroSrc(c) {
-  /* 코스 전용 이미지가 있으면 우선 사용 (assets/images/courses/<코스명>.png) */
+  /* 코스 전용 이미지가 있으면 우선 사용 (assets/images/courses/<코스명>.jpg).
+   * 2026-08-26: .png → .jpg. 원본이 전부 PNG 라 11장에 15.5MB 였다(최대 3.9MB/장).
+   * 폭 1200 상한 + JPEG q82 로 1.1MB(93% 절감). 사진에 PNG 를 쓰면 이렇게 된다.
+   * ⚠ 확장자를 다시 바꾸면 이 줄도 함께 고칠 것 — 경로를 만드는 곳은 여기 하나뿐이다. */
   if (c.name) {
-    return 'assets/images/courses/' + encodeURIComponent(c.name) + '.png';
+    return 'assets/images/courses/' + encodeURIComponent(c.name) + '.jpg';
   }
   /* 없으면 첫 장소 사진으로 대체 */
   var s = (c.spots || []).filter(function (x) { return x.id != null; });
