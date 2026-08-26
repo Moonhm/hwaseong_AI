@@ -78,7 +78,9 @@ function _favCfg(f) {
     heritage:    { emoji:'🏛️', bg:'#EDE9FE', label:'문화재'    },
     mobeom:      { emoji:'🍽️', bg:'#FEF3C7', label:'모범음식점' },
     touristrest: { emoji:'🥢', bg:'#FEE2E2', label:'관광식당'  },
-    lc:          { emoji:'💳', bg:'#D1FAE5', label:'가맹점'    },
+    /* 로고로 통일 — 같은 가맹점이 화면마다 ₩ · 로고 · 💳 세 가지였다(2026-08-26). */
+    lc:          { emoji:(typeof LC_ICON_HTML !== 'undefined' ? LC_ICON_HTML : '💳'),
+                   bg:'#D1FAE5', label:'가맹점'    },
     parking:     { emoji:'🅿️', bg:'#DBEAFE', label:'주차장'    }
   };
   var key = f.type === 'lc' || f.type === 'parking' ? f.type : (f.cat || 'tourist');

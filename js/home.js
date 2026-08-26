@@ -153,6 +153,7 @@ function renderNearbyResult(myLat, myLng, gen) {
     + '<div class="nearby-photo-overlay"></div>'
     + '<div class="nearby-dist-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11" fill="#fff" style="vertical-align:middle;margin-right:3px"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>' + _distLabel(minTDist) + '</div>'
     + '<div class="nearby-photo-info">'
+    /* ⚠ ★ 는 지도 핀 전용 기호다. 여기는 목록이라 🎡 다(WORKFLOW.md §3). */
     + '<div class="nearby-photo-cat">🎡 가장 가까운 관광지</div>'
     + '<div class="nearby-photo-name">' + tName + '</div>'
     + '</div>'
@@ -283,11 +284,22 @@ function _fetchAirKorea() {
     .catch(function() {});
 }
 
-function initWeatherBar() {
+/* 같은 좌표를 10분 안에 다시 받지 않는다 (2026-08-26 감사).
+ * renderHomePage() 가 initWeatherBar() 를 부르고, 하단 내비의 '홈' 을 다시 누르면
+ * resetHomePage() → renderHomePage() 로 이어져 누를 때마다 Open-Meteo 에
+ * 날씨·대기질 2건이 새로 나갔다. 10번 누르면 20건이고, 값은 그대로라 화면 변화도 없다.
+ * GPS 로 좌표가 바뀌면 key 가 달라져 자동으로 다시 받는다. */
+var _wbKey = null, _wbAt = 0;
+var WB_TTL = 10 * 60 * 1000;
+
+function initWeatherBar(force) {
+  var key = _hwLat + ',' + _hwLon;
+  if (!force && key === _wbKey && (Date.now() - _wbAt) < WB_TTL) return;
+  _wbKey = key; _wbAt = Date.now();
   fetch(_weatherUrl(_hwLat, _hwLon))
     .then(function(r) { return r.json(); })
     .then(_renderWeather)
-    .catch(function() {});
+    .catch(function() { _wbKey = null; });   /* 실패는 캐시하지 않는다 */
   _fetchAirKorea();
 }
 
@@ -360,6 +372,15 @@ var _REGIONS = [
   { name: '화성행궁', lat: 37.2844, lng: 127.0130, level: 5 },
 ];
 
+/* 경기지역화폐 로고 마크업 — 한 곳에서만 만든다 (2026-08-26 감사).
+ * 같은 가맹점이 홈 검색결과 '₩' · 목록/지도 로고 · 즐겨찾기 '💳' 로 세 가지였다.
+ *
+ * ⚠ 이 파일에 둔다. 처음에 js/ui.js 에 뒀다가 home.js 가 통째로 죽었다 —
+ *   index.html 의 <script> 순서가 home(4번째) → ui(8번째) 라, 아래 _CAT_STYLE
+ *   초기화(로드 시점 평가)에서 ReferenceError 가 났다.
+ *   js/favorites.js 는 _favCfg() 안(런타임)에서 읽으므로 순서와 무관하다. */
+var LC_ICON_HTML = '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:18px;height:18px;object-fit:contain;vertical-align:middle">';
+
 var _CAT_STYLE = {
   tourist:      { bg: '#EEF2FF', em: '🎡' },
   heritage:     { bg: '#F5F3FF', em: '🏛️' },   /* data.js CATEGORY_CONFIG.heritage 와 색·이모지 동일 */
@@ -368,7 +389,7 @@ var _CAT_STYLE = {
   mobeom:       { bg: '#FEF3C7', em: '🍽️' },
   touristrest:  { bg: '#FEE2E2', em: '🥢' },
   parking:      { bg: '#EFF6FF', em: '🅿️' },
-  localcurrency:{ bg: '#F0FDF4', em: '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:18px;height:18px;object-fit:contain">'  },
+  localcurrency:{ bg: '#F0FDF4', em: LC_ICON_HTML },
   hotel:        { bg: '#EDE9FE', em: '🏨' },
   camping:      { bg: '#DCFCE7', em: '⛺' },
 };
@@ -487,7 +508,9 @@ function doHomeSearch(q, where) {
       var p = lcData[i];
       if ((p.n || '').toLowerCase().includes(ql) || (p.c || '').toLowerCase().includes(ql)) {
         var addr = (p.a || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        results.push({ type: 'lc', name: p.n, sub: (p.c || '') + (addr ? ' · ' + addr : ''), em: '₩', bg: '#F0FDF4', lat: p.lat, lng: p.lng, _raw: p });
+          /* ⚠ 여기만 '₩' 였다 — 같은 가맹점이 검색결과 ₩ · 목록/지도 로고 ·
+           * 즐겨찾기 💳 로 세 가지였다(2026-08-26 감사). 로고 하나로 모은다. */
+        results.push({ type: 'lc', name: p.n, sub: (p.c || '') + (addr ? ' · ' + addr : ''), em: LC_ICON_HTML, bg: '#F0FDF4', lat: p.lat, lng: p.lng, _raw: p });
         lcHits++;
       }
     }
@@ -849,7 +872,7 @@ function renderHomeLiving() {
     </div>
     <div style="margin-top:14px">
       <div class="category-icons">
-        <div class="cat-icon-item" onclick="goLivingCat('restaurant')"><div class="cat-icon-circle ci-food">🍴</div><span class="cat-icon-label">모범음식점</span></div>
+        <div class="cat-icon-item" onclick="goLivingCat('restaurant')"><div class="cat-icon-circle ci-food">🍽️</div><span class="cat-icon-label">모범음식점</span></div>
         <div class="cat-icon-item" onclick="goLivingCat('touristrest')"><div class="cat-icon-circle ci-cafe">🥢</div><span class="cat-icon-label">관광식당</span></div>
         <div class="cat-icon-item" onclick="goLivingCat('currency')"><div class="cat-icon-circle ci-mart" style="background:#EFF6FF"><img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:55%;height:55%;object-fit:contain"></div><span class="cat-icon-label">지역화폐</span></div>
         <div class="cat-icon-item" onclick="goLivingCat('parking')"><div class="cat-icon-circle" style="background:#DBEAFE;color:#2563EB;font-size:16px;font-weight:800">P</div><span class="cat-icon-label">공영주차장</span></div>
