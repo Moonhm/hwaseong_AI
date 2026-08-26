@@ -379,7 +379,7 @@
 
     .recent-name {
       font-size: 11.5px; font-weight: 600; color: var(--text-sub);
-      line-height: 1.3; word-break: keep-all;
+      line-height: 1.3; word-break: break-all;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
       overflow: hidden;
     }
