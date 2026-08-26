@@ -689,7 +689,13 @@ function _renderHomePopular() {
      * 추천 탭의 renderDlPopular() 와 같은 규칙이다 — 같은 '인기 있는 곳'이
      * 홈과 추천 두 군데에 각각 다른 렌더러로 있으니, 한쪽만 고치면 어긋난다. */
     el2.innerHTML = list.slice(0, 3).map(function(r, i) {
-      var src = (typeof placePhotoSrc === 'function') ? placePhotoSrc({name: r.name}) : '';
+      var src = '';
+      if (typeof placePhotoSrc === 'function') {
+        var _norm = function(s) { return (s || '').replace(/\s+/g, ''); };
+        var _nq = _norm(r.name);
+        var _hit = (typeof PLACES !== 'undefined') && PLACES.find(function(p) { return p.name === r.name || _norm(p.name) === _nq; });
+        src = placePhotoSrc(_hit || { name: r.name });
+      }
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="dlGoPlace(\'' + r.name.replace(/'/g, '') + '\')">' +
         /* DL_MEDALS 는 js/datalab.js 에 있다. index.html 의 <script> 순서상
          * home.js 가 먼저 오지만, 이 함수는 사용자가 홈을 열어야 도는 런타임
