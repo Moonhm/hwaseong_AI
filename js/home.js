@@ -265,15 +265,13 @@ function _renderWeather(d) {
 }
 
 function _fetchAirKorea() {
-  if (!AIRKOREA_KEY) return;
-  fetch('https://apis.data.go.kr/B552584/ArpltnInforInqireSvc' +
-        '/getMsrstnAcctoRltmMesureDnsty' +
-        '?stationName=%EB%8F%99%ED%83%84' +
-        '&dataTerm=daily&pageNo=1&numOfRows=1' +
-        '&returnType=json&serviceKey=' + encodeURIComponent(AIRKOREA_KEY) + '&ver=1.0')
+  /* Open-Meteo 대기질 API — 무료, CORS OK, API 키 불필요 */
+  fetch('https://air-quality-api.open-meteo.com/v1/air-quality' +
+        '?latitude=' + _hwLat + '&longitude=' + _hwLon +
+        '&current=pm2_5&timezone=Asia%2FSeoul')
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      var v = parseFloat(d.response.body.items[0].pm25Value);
+      var v = Math.round(d.current.pm2_5 * 10) / 10;
       if (isNaN(v)) return;
       var g  = _pm25Grade(v);
       var el = document.getElementById('hwb-grade');
@@ -318,6 +316,7 @@ function weatherBarGPS() {
             .then(function(r) { return r.json(); })
             .then(_renderWeather)
             .catch(function() { if (btn) btn.classList.remove('active'); });
+          _fetchAirKorea();
         });
     },
     function() { if (btn) btn.classList.remove('active'); }
