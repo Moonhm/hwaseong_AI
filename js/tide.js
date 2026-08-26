@@ -73,6 +73,8 @@ function _tideRange(seg) {
   return o + ' ~ ' + c;
 }
 
+var _tideLoading = false;
+
 function openTide() {
   if (typeof closeMenu === 'function') closeMenu();
   var p = document.getElementById('tide-panel');
@@ -82,10 +84,15 @@ function openTide() {
   if (d) d.classList.add('show');
   _renderTide();
   if (_tideData) return;
+  /* 로딩이 끝나기 전에 닫았다 다시 열면 그때마다 요청이 새로 나갔다 —
+   * n 번 열면 70KB × n 이고, 느린 회선에서는 그 요청들이 서로 밀려 첫 표시가
+   * 오히려 더 늦어졌다. js/ui.js _loadLcData 와 같은 잠금을 둔다. */
+  if (_tideLoading) return;
+  _tideLoading = true;
   fetch('js/' + TIDE_FILE + '?v=' + (typeof DL_VER !== 'undefined' ? DL_VER : '20260826'))
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(function (j) { _tideData = j; _renderTide(); })
-    .catch(function () { _tideData = false; _renderTide(); });
+    .then(function (j) { _tideLoading = false; _tideData = j; _renderTide(); })
+    .catch(function () { _tideLoading = false; _tideData = false; _renderTide(); });
 }
 
 function closeTide() {

@@ -85,6 +85,8 @@ var CONV_PLACES = {};   /* cat → [{id, name, category, address, lat, lng, tags
 var CONV_OVMAP  = {};   /* id  → kakao.maps.CustomOverlay */
 var CONV_ELMAP  = {};   /* id  → DOM el */
 var CONV_STATUS = {};   /* cat → 'idle'|'loading'|'done' */
+var CONV_RETRY  = {};   /* cat → 재시도 횟수. 타임아웃으로 빠진 핀을 다시 받아 본다 */
+var CONV_RETRY_MAX = 2;
 var _jebuOv     = null;
 
 var CONV_CACHE_VER = 'v7'; /* 좌표 데이터 변경 시 올려서 캐시 무효화
@@ -195,18 +197,44 @@ function _geocodeCat(cat) {
   function _finish(why) {
     if (_done) return;
     _done = true;
-    CONV_STATUS[cat] = 'done';
-    CONV_PLACES[cat] = results;
+    _unwatchUser();
+    var partial = results.length < total;
     /* ⚠ 부분 결과를 캐시하면 누락이 영구히 굳는다. 전건일 때만 저장한다.
      * 타임아웃(지연)도, SDK 미로드(좌표 가진 것만 채워진 상태)도 마찬가지다. */
-    if (results.length === total) _saveConvCache(cat, results);
+    if (!partial) _saveConvCache(cat, results);
+    /* 누락이 있으면 'done' 으로 잠그지 않는다. 예전에는 여기서 무조건 done 이라
+     * 타임아웃으로 빠진 14곳이 칩을 몇 번을 껐다 켜도 그 세션 내내 안 나왔다 —
+     * 새로고침해야만 복구됐다. 다음에 칩을 켜면 다시 받아 본다(횟수 제한). */
+    CONV_RETRY[cat] = (CONV_RETRY[cat] || 0) + (partial ? 1 : 0);
+    CONV_STATUS[cat] = (partial && CONV_RETRY[cat] <= CONV_RETRY_MAX) ? 'idle' : 'done';
+    CONV_PLACES[cat] = results;
     if (_isConvCatActive(cat)) {
       _buildOverlays(cat, results);
       showToast(cfg.label + ' ' + results.length + '/' + total + '곳 표시됨' +
                 (why === 'timeout' ? ' (타임아웃)' : why === 'nosdk' ? ' (위치 변환 불가)' : ''));
-      _fitConv(cat);
+      /* ⚠ 사용자가 그 사이 지도를 움직였으면 카메라를 건드리지 않는다.
+       * 지오코딩은 최대 10초가 걸리는데, 그동안 맞춰 둔 화면이 완료 순간
+       * 화성시 전역으로 툭 되돌아갔다 — 열어 둔 카드의 핀까지 화면 밖으로 나갔다. */
+      if (!_userMoved) _fitConv(cat);
     }
   }
+
+  /* 사용자가 직접 지도를 만졌는지만 본다. 카카오 이벤트(dragend·zoom_changed)는
+   * 프로그램이 옮겨도 뜨므로 구분이 안 된다 — 입력 장치 쪽에서 잡는다. */
+  var _userMoved = false;
+  var _watchEls  = [document.getElementById('kakao-map'), document.getElementById('zoom-track')];
+  var _onUserMove = function () { _userMoved = true; };
+  var _WATCH_EV = ['mousedown', 'touchstart', 'wheel', 'input'];
+  function _unwatchUser() {
+    _watchEls.forEach(function (el) {
+      if (!el) return;
+      _WATCH_EV.forEach(function (t) { el.removeEventListener(t, _onUserMove); });
+    });
+  }
+  _watchEls.forEach(function (el) {
+    if (!el) return;
+    _WATCH_EV.forEach(function (t) { el.addEventListener(t, _onUserMove, { passive: true }); });
+  });
 
   /* ── ① 이미 좌표가 있는 항목은 지오코딩하지 않는다 (2026-08-26 감사) ──────────
    * convenience.js 에 검증된 lat/lng 이 있는데도 주소 문자열을 매번 다시

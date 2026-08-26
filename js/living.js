@@ -10,9 +10,26 @@
 
 /* ── 생활 페이지 렌더 ── */
 /* ── 생활편의 카테고리 전환 ── */
+/* ── 소식 탭이 기억하는 것 (2026-08-27) ────────────────────────────────────
+ * 이전에는 아무것도 기억하지 않았다. 그래서 '행사 전체' 를 50건으로 펼치고
+ * 40번째 행사를 연 뒤 '← 소식' 을 누르면, renderLivingPage() 가 목록을 다시
+ * 5건으로 접은 **뒤에** _returnFromFestView 가 옛 scrollTop(약 3,000px)을 넣어
+ * 짧아진 문서의 최대 스크롤로 잘렸다 — 사용자는 페이지 맨 아래에 떨어지고
+ * 방금 누른 행사는 DOM 에 아예 없었다. 카테고리도 '모범음식점' 으로 되돌아갔다.
+ * 높이를 먼저 원상복구해야 스크롤 복원이 맞는다.
+ *
+ * ⚠ 초기화는 '탭 재클릭 = 새로고침' 규칙에 따라 resetLivingPage() 에서만 한다. */
+var _festAllExpanded  = false;
+var _livingCat        = 'restaurant';
+var _livingCatExpanded = false;
+
 function switchLivingCat(el, cat) {
   document.querySelectorAll('.cat-icon-item').forEach(function(c) { c.classList.remove('cat-active'); });
   if (el) el.classList.add('cat-active');
+  /* 카테고리를 직접 바꾼 것이므로 펼침은 푼다 — 94건짜리를 펼쳐 둔 채 주차장으로
+   * 넘어가면 131건이 통째로 쏟아진다. */
+  if (cat !== _livingCat) _livingCatExpanded = false;
+  _livingCat = cat;
   renderLivingCatList(cat);
 }
 /* 목록은 5개만 보여 주고 나머지는 더보기로 펼친다 (2026-08-26 사용자 지시).
@@ -75,8 +92,19 @@ function renderLivingCatList(cat, expanded) {
         /* 로딩이 수 초 걸려 그 사이 사용자가 다른 카테고리로 옮겼을 수 있다. */
         var act = document.querySelector('.cat-icon-item.cat-active');
         if (!act || act.id !== 'liv-cat-currency') return;
-        if (typeof lcData !== 'undefined' && lcData.length) renderLivingCatList('currency');
-        else if (countEl) countEl.textContent = '불러오기 실패';
+        if (typeof lcData !== 'undefined' && lcData.length) { renderLivingCatList('currency'); return; }
+        /* 실패. 예전에는 머리글만 '불러오기 실패' 로 바꾸고 본문은 '불러오는 중이에요...'
+         * 그대로 둬서, 한 화면에서 두 문장이 서로 반대되는 말을 하고 영원히 돌지 않는
+         * 로딩이 남았다. 본문도 함께 바꾸고 다시 시도할 길을 준다. */
+        if (countEl) countEl.textContent = '불러오기 실패';
+        if (list) {
+          list.innerHTML =
+            '<div style="padding:32px;text-align:center;color:var(--text-muted);font-size:13px">' +
+              '가맹점 정보를 불러오지 못했어요.<br>' +
+              '<span class="section-link" role="button" tabindex="0" style="display:inline-block;margin-top:10px"' +
+              ' onclick="renderLivingCatList(\'currency\')">다시 시도</span>' +
+            '</div>';
+        }
       });
     }
     var LC_SHOW = 80;
@@ -148,6 +176,7 @@ function renderLivingCatList(cat, expanded) {
     return;
   }
 
+  if (expanded === undefined) expanded = _livingCatExpanded;
   var more = rows.length > LIVING_PREVIEW && !expanded;
   list.innerHTML = (more ? rows.slice(0, LIVING_PREVIEW) : rows).join('') + (more ? '' : footer);
 
@@ -159,7 +188,7 @@ function renderLivingCatList(cat, expanded) {
     btn.className = 'tourism-more-btn';
     btn.innerHTML = '더보기 <span style="color:var(--primary);font-weight:700">+' +
                     (rows.length - LIVING_PREVIEW) + '</span>';
-    btn.onclick = function () { renderLivingCatList(cat, true); };
+    btn.onclick = function () { _livingCatExpanded = true; renderLivingCatList(cat, true); };
     list.appendChild(btn);
   }
 }
@@ -170,12 +199,18 @@ function renderLivingPage() {
 
   renderNewsSection();          /* 소식 섹션은 매 진입마다 다시 그린다 — 날짜가 바뀌면 D-N 도 바뀐다 */
   /* 축제 전체도 같은 이유로 매 진입마다 다시 그린다(진행 중/예정/종료가 날짜에 걸려 있다).
-   * expanded 를 넘기지 않으므로 탭에 다시 들어오면 항상 5개로 접힌 상태다. */
+   * 인자를 넘기지 않으므로 _festAllExpanded 가 그대로 반영된다 — 상세에서
+   * 돌아올 때 높이가 같아야 스크롤 복원이 맞는다. */
   renderFestivalAll();
 
-  // 기본 탭: 모범음식점
-  var firstCat = document.getElementById('liv-cat-restaurant');
-  switchLivingCat(firstCat, 'restaurant');
+  /* 마지막에 보던 카테고리를 되살린다(기본 모범음식점). 여기서 'restaurant' 를
+   * 강제하던 탓에, 주차장 목록을 보다가 행사 상세를 열고 나오면 목록이 통째로
+   * 바뀌어 있었다. */
+  var el = document.getElementById('liv-cat-' + _livingCat) ||
+           document.getElementById('liv-cat-restaurant');
+  document.querySelectorAll('.cat-icon-item').forEach(function (c) { c.classList.remove('cat-active'); });
+  if (el) el.classList.add('cat-active');
+  renderLivingCatList(_livingCat);
 }
 
 /* ══════════════════════════════════════════════════
@@ -187,6 +222,15 @@ function renderLivingPage() {
    이 함수는 4개 탭의 리셋 진입점을 같은 모양으로 유지하려고 남긴 자리표시자다.
 ══════════════════════════════════════════════════ */
 function resetLivingPage() {
+  /* '탭 재클릭 = 새로고침' — 기억해 둔 펼침·카테고리를 여기서만 되돌린다.
+   * go('living') 이 renderLivingPage() 를 이미 부른 뒤이므로 다시 그려 준다. */
+  if (_festAllExpanded || _livingCatExpanded || _livingCat !== 'restaurant') {
+    _festAllExpanded = false; _livingCatExpanded = false; _livingCat = 'restaurant';
+    renderFestivalAll();
+    var rc = document.getElementById('liv-cat-restaurant');
+    if (rc) switchLivingCat(rc, 'restaurant');
+  }
+
   /* 목록 재렌더로 높이가 바뀐 뒤 스크롤을 확정한다.
    * (go() 의 scrollTop=0 은 js/nav.js:21 로 renderLivingPage() 보다 '앞'이다 — 그 순서를 바꾸지 말 것) */
   var p = document.getElementById('page-living');
@@ -342,6 +386,7 @@ function renderFestivalAll(expanded) {
     return;
   }
 
+  if (expanded === undefined) expanded = _festAllExpanded;
   var more    = rows.length > FEST_ALL_PREVIEW && !expanded;
   var visible = more ? rows.slice(0, FEST_ALL_PREVIEW) : rows;
 
@@ -382,7 +427,7 @@ function renderFestivalAll(expanded) {
     btn.className = 'tourism-more-btn';
     btn.innerHTML = '더보기 <span style="color:var(--primary);font-weight:700">+' +
                     (rows.length - FEST_ALL_PREVIEW) + '</span>';
-    btn.onclick = function () { renderFestivalAll(true); };
+    btn.onclick = function () { _festAllExpanded = true; renderFestivalAll(true); };
     list.appendChild(btn);
   }
 }

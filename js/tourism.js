@@ -122,6 +122,13 @@ function renderHotels() {
           + '</div>';
       }).join('');
 
+  /* ⚠ 아래 innerHTML 대입은 #jebu-list-section 을 display:none 인 **새 노드**로
+   * 갈아 끼운다. 그런데 _jebuOpen 은 그대로 true 로 남아, 다음 클릭이 true→false
+   * 로 뒤집히며 이미 숨은 것을 또 숨기고 끝났다 — 사용자에게는 히어로 카드가
+   * 죽은 것으로 보였고 두 번 눌러야 펼쳐졌다(탭을 나갔다 오거나 서브탭을
+   * 왕복하면 재현). 상태와 DOM 을 만드는 자리를 같게 둔다. */
+  _jebuOpen = false;
+
   if (!CONVENIENCE.jebu || !CONVENIENCE.jebu.summary) {
     el.innerHTML = hotelHtml + '<div style="height:24px"></div>';
     return;
@@ -547,7 +554,7 @@ function showFestivalDetail(id) {
         <button class="fd-nearby-btn" onclick="goMapCat('parking')">
           <span class="nb-icon">🅿️</span>주차장
         </button>
-        <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})">
+        <button class="fd-nearby-btn" onclick="goMapNearbyLc(${place.lat},${place.lng})">
           <span class="nb-icon"><img src="img/gyeonggi_currency_logo.png" style="width:20px;height:20px;object-fit:contain" alt=""></span>가맹점
         </button>
       </div>
@@ -586,6 +593,11 @@ function hideFestivalDetail() {
    ══════════════════════════════════════════════════════════════════════════ */
 var _festViewFrom   = null;   /* 'page-living' | 'page-home' | 'page-map' | null(추천에서 열었다) */
 var _festViewScroll = 0;      /* 돌아갈 탭의 스크롤 위치 — go() 가 0 으로 밀어 버린다 */
+/* 데이터랩 전체 보기(#view-datalab)도 #page-tourism '안의' 뷰다. 거기서 축제를
+ * 누르면 위 _festViewFrom 은 null 이 되어 뒤로가기가 순위 화면이 아니라 추천 탭
+ * 목록으로 떨어졌다 — 다음 축제를 보려면 매번 '전체 보기' 부터 다시 해야 했다. */
+var _festViewDl     = null;   /* 'popular' | 'age' | 'report' | 'tour' | 'course:N' */
+var _DL_FEST_LABEL  = { popular:'← 인기', age:'← 세대별', report:'← 리포트', tour:'← 시티투어' };
 
 var _FEST_BACK = {
   'page-living': { label: '← 소식', page: 'living' },
@@ -595,7 +607,9 @@ var _FEST_BACK = {
 
 function _setFestBackLabel() {
   var info = _FEST_BACK[_festViewFrom];
-  var text = info ? info.label : '← 추천';   /* 하단 내비 이름이 '추천'이다. '관광'은 옛 이름 */
+  var text = info ? info.label
+           : _festViewDl ? (_DL_FEST_LABEL[_festViewDl] || '← 뒤로')
+           : '← 추천';                       /* 하단 내비 이름이 '추천'이다. '관광'은 옛 이름 */
   ['#view-calendar .back-btn', '#view-festival-detail .back-btn'].forEach(function (sel) {
     var b = document.querySelector(sel);
     if (b) b.textContent = text;
@@ -608,6 +622,7 @@ function openFestView(kind, id) {
   var from = cur ? cur.id : null;
   _festViewFrom   = (from && from !== 'page-tourism') ? from : null;
   _festViewScroll = (_festViewFrom && cur) ? cur.scrollTop : 0;
+  _festViewDl     = (!_festViewFrom && typeof _dlView !== 'undefined' && _dlView) ? _dlView : null;
 
   var open = function () {
     _setFestBackLabel();
@@ -632,6 +647,15 @@ function openFestView(kind, id) {
 
 /* 뒤로가기 버튼 전용. 온 곳이 다른 탭이면 그 탭으로, 아니면 추천 탭 목록으로. */
 function _returnFromFestView() {
+  /* 데이터랩에서 왔으면 그 순위 화면으로 되돌린다. hideFestivalDetail() 이 방금
+   * 목록을 켜 놓았지만 showDatalab() 이 동기로 다시 덮으므로 프레임이 새지 않는다. */
+  if (_festViewDl) {
+    var kind = _festViewDl;
+    _festViewDl = null;
+    _setFestBackLabel();
+    if (typeof showDatalab === 'function') showDatalab(kind);
+    return;
+  }
   var info = _FEST_BACK[_festViewFrom];
   if (!info) { _setFestBackLabel(); return; }
   var scroll = _festViewScroll;
@@ -691,6 +715,10 @@ function resetTourismPage() {
   if (_fd) _fd.style.display = 'none';
   if (_cv) _cv.style.display = 'none';
   if (_vl) _vl.style.display = 'block';
+
+  /* ①-b 데이터랩 필터(구·연령·순위탭·리포트탭)도 첫 화면 값으로.
+   *     미리보기 섹션은 아래 renderTourismList 흐름에서 다시 그려진다. */
+  if (typeof resetDatalabFilters === 'function') resetDatalabFilters();
 
   /* ② 축제 상세 본문 비우기. showFestivalDetail 은 display:block(:309) 을 innerHTML 대입(:325)
    *    보다 먼저 해서, 안 비우면 다음에 열 때 옛 축제가 한 프레임 비친다.

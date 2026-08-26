@@ -172,7 +172,12 @@ function goMapFocus(lat, lng, level, placeId) {
 function goMapPark(lat, lng, parkId) {
   go('map');
   setTimeout(function () {
-    if (!kakaoMap) return;
+    /* SDK 가 아직 안 뜬 상태. 조용히 끝내면 '눌렀는데 아무 일도 없는' 죽은 항목이 된다 —
+     * goMapFocus 는 이미 같은 자리에서 안내한다. 동작을 맞춘다. */
+    if (!kakaoMap) {
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+      return;
+    }
     if (typeof activateParking === 'function') activateParking();
     setTimeout(function () {
       kakaoMap.setLevel(4);
@@ -196,14 +201,34 @@ function goMapPark(lat, lng, parkId) {
 function goMapLc(lat, lng) {
   go('map');
   setTimeout(function () {
-    if (!kakaoMap) return;
-    /* 이미 활성화된 경우 toggle 방지 */
-    var _lcChip = document.querySelector('#map-chips .chip[data-cat="localcurrency"]');
-    if (!_lcChip || !_lcChip.classList.contains('active')) setFilter('localcurrency');
+    /* SDK 가 아직 안 뜬 상태. 조용히 끝내면 '눌렀는데 아무 일도 없는' 죽은 항목이 된다 —
+     * goMapFocus 는 이미 같은 자리에서 안내한다. 동작을 맞춘다. */
+    if (!kakaoMap) {
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+      return;
+    }
+    if (typeof activateLc === 'function') activateLc();
     setTimeout(function () {
       kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
       kakaoMap.setLevel(4);
     }, 150);
+  }, 350);
+}
+
+/* ── 지도로 이동한 뒤 반경 500m 가맹점 찾기 ─────────────────────────────
+ * 축제 상세의 '가맹점' 버튼이 findNearby 를 직접 불렀다. 옆의 '주변 맛집'·
+ * '주차장' 은 지도 탭으로 넘어가는데 이것만 추천 탭에 머문 채, 사용자 몰래
+ * 지도 칩만 지역화폐로 바꿔 놓았다. 나머지 둘과 동작을 맞춘다. */
+function goMapNearbyLc(lat, lng) {
+  go('map');
+  setTimeout(function () {
+    if (!kakaoMap) {
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+      return;
+    }
+    kakaoMap.setLevel(4);
+    kakaoMap.setCenter(new kakao.maps.LatLng(lat, lng));
+    if (typeof findNearby === 'function') findNearby(lat, lng);
   }, 350);
 }
 
@@ -216,7 +241,12 @@ function goMapLc(lat, lng) {
 function goMapConv(cat, lat, lng) {
   go('map');
   setTimeout(function () {
-    if (!kakaoMap) return;
+    /* SDK 가 아직 안 뜬 상태. 조용히 끝내면 '눌렀는데 아무 일도 없는' 죽은 항목이 된다 —
+     * goMapFocus 는 이미 같은 자리에서 안내한다. 동작을 맞춘다. */
+    if (!kakaoMap) {
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+      return;
+    }
     var chip = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
     if (!chip || !chip.classList.contains('active')) setFilter(cat);
     if (lat && lng) {

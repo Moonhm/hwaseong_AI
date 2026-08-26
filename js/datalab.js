@@ -20,7 +20,7 @@
  *   쓰는 방식(showCalendar/hideCalendar)과 동일하다.
  * ========================================================================== */
 
-var DL_VER   = '20260826137';
+var DL_VER   = '20260826138';
 var _dlCache = {};      /* 파일명 → 파싱된 JSON. 한 번 받으면 다시 안 받는다 */
 var _dlLoading = {};    /* 같은 파일을 동시에 두 번 요청하지 않게 하는 잠금 */
 
@@ -189,6 +189,17 @@ var DL_STATS = 'datalab_tourism_stats.json';
 var _dlGu    = '동탄구';
 var _dlAge   = '20대';
 
+/* 추천 탭 재클릭 리셋용. 서브탭·테마칩·제부도·캘린더는 전부 첫 화면으로
+ * 돌아가는데 데이터랩 필터만 '만세구 · 60대' 로 남아, 미리보기 문구까지
+ * 옛 구 기준으로 어긋나 있었다(js/tourism.js resetTourismPage 에서 부른다). */
+function resetDatalabFilters() {
+  _dlGu = '동탄구'; _dlAge = '20대';
+  if (typeof _dlPopTab  !== 'undefined') _dlPopTab  = 'interest_spots_domestic';
+  if (typeof _dlRepTab  !== 'undefined') _dlRepTab  = 'hot';
+  if (typeof _dlFoodWho !== 'undefined') _dlFoodWho = '외지인';
+  _dlFrom = null; _dlFromScroll = 0;
+}
+
 function _dlStatsPick(d, gu) {
   var src = d && d['인기관광지'];
   if (!src) return null;
@@ -202,7 +213,10 @@ function _dlAges(byAge) {
   });
 }
 
-function dlSetGu(gu)  { _dlGu  = gu;  renderDlAge(); }
+/* ⚠ '요즘 뜨는 곳'(renderDlReport)도 _dlGu 를 읽는다. 예전에는 renderDlAge 만
+ * 다시 그려서, 구 선택기는 '만세구' 인데 바로 아래 문구는 '동탄구 기준…' 이고
+ * 카드도 동탄구 데이터였다 — 한 화면에 두 구가 섞여 있었다. */
+function dlSetGu(gu)  { _dlGu  = gu;  renderDlAge(); renderDlReport(); }
 function dlSetAge(ag) { _dlAge = ag;  renderDlAge(); }
 
 function renderDlAge() {
@@ -296,6 +310,37 @@ function renderDlCityTour() {
    ══════════════════════════════════════════════════════════════════════════ */
 var _dlView = null;   /* 'popular' | 'age' | 'tour' */
 
+/* ── 어느 탭에서 열었는지 (2026-08-27) ────────────────────────────────────
+ * 뒤로가기가 '‹ 추천' 으로 고정이라, 홈의 '전체 순위 보기 ›' 로 들어오면
+ * 홈이 아니라 추천 탭 목록에 떨어졌다. 축제 상세·캘린더는 같은 문제를
+ * '온 곳을 기억한다' 로 이미 고쳤는데(js/tourism.js openFestView) 여기만 빠졌다.
+ * ⚠ showDatalab() 이 아니라 goDatalab() 에서만 기록한다 — 코스 상세의
+ *   '‹ 코스 전체 보기' 처럼 이미 데이터랩 안에서 부르는 곳이 있어서,
+ *   showDatalab 이 매번 덮으면 홈에서 왔다는 사실이 지워진다. */
+var _dlFrom = null;        /* 'page-home' | 'page-living' | 'page-map' | null(추천) */
+var _dlFromScroll = 0;
+var _DL_BACK = {
+  'page-home':   { label: '‹ 홈',   page: 'home'   },
+  'page-living': { label: '‹ 소식', page: 'living' },
+  'page-map':    { label: '‹ 지도', page: 'map'    }
+};
+function _dlBackLabel() {
+  var i = _DL_BACK[_dlFrom];
+  return i ? i.label : '‹ 추천';
+}
+
+/* 데이터랩으로 가는 공용 진입점. openFestView 와 같은 구조다. */
+function goDatalab(kind) {
+  var cur  = document.querySelector('.page.active');
+  var from = cur ? cur.id : null;
+  _dlFrom       = (from && from !== 'page-tourism') ? from : null;
+  _dlFromScroll = (_dlFrom && cur) ? cur.scrollTop : 0;
+  /* ⚠ go() 뒤에 setTimeout 금지 — 추천 탭 목록이 한 프레임 번쩍인다.
+   * go() 는 뷰 교체와 목록 렌더까지 동기로 끝낸다(js/nav.js). */
+  if (_dlFrom) go('tourism');
+  showDatalab(kind);
+}
+
 function showDatalab(kind) {
   _dlView = kind;
   var list = document.getElementById('view-tourism-list');
@@ -318,11 +363,26 @@ function hideDatalab() {
   if (view) view.style.display = 'none';
   if (list) list.style.display = 'block';
   _dlView = null;
+
+  /* 전체 보기 안에서 바꾼 구·연령대를 미리보기에도 반영한다. 안 그러면
+   * '리포트 전체' 에서 효행구를 고르고 나왔을 때 미리보기만 동탄구로 남는다.
+   * 자료는 _dlCache 에 이미 있어 다시 받지 않는다. */
+  if (typeof renderDlAge    === 'function') renderDlAge();
+  if (typeof renderDlReport === 'function') renderDlReport();
+
+  var info = _DL_BACK[_dlFrom];
+  if (!info) return;                      /* 추천 탭에서 열었다 — 목록이 곧 제자리다 */
+  var scroll = _dlFromScroll;
+  _dlFrom = null; _dlFromScroll = 0;
+  go(info.page);
+  /* go() 가 scrollTop 을 0 으로 민 뒤이므로 여기서 되돌린다(js/tourism.js 와 같다). */
+  var pg = document.getElementById('page-' + info.page);
+  if (pg) pg.scrollTop = scroll;
 }
 
 function _dlHead(title, sub) {
   return '<div class="page-header">' +
-           '<div class="back-btn" onclick="hideDatalab()">‹ 추천</div>' +
+           '<div class="back-btn" onclick="hideDatalab()">' + _dlBackLabel() + '</div>' +
            '<div class="page-header-title" style="font-size:15px">' + title + '</div>' +
            '<span style="width:44px"></span>' +
          '</div>' +

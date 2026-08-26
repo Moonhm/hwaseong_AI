@@ -73,9 +73,18 @@ function scrollLcFilter(dir) {
 (function () {
   var el = document.getElementById('map-chips');
   var down = false, startX = 0, scrollLeft = 0;
+  /* 드래그 스크롤은 잡은 요소가 커서를 따라오므로 mousedown/mouseup 대상이 같은
+   * 칩이 되고, 브라우저가 click 을 쏜다 — 스크롤만 하려던 사람의 필터가 켜지거나
+   * (이미 켜져 있었다면) 꺼져서 지도가 통째로 비었다.
+   * 캡처 단계에서 막아야 칩의 인라인 onclick 까지 도달하지 않는다. */
+  var moved = 0;
+  el.addEventListener('click', function (e) {
+    if (moved <= 5) return;
+    e.stopPropagation(); e.preventDefault();
+  }, true);
   el.addEventListener('scroll', updateChipArrows, { passive: true });
   el.addEventListener('mousedown', function (e) {
-    down = true; el.classList.add('dragging');
+    down = true; moved = 0; el.classList.add('dragging');
     startX = e.pageX - el.getBoundingClientRect().left;
     scrollLeft = el.scrollLeft;
   });
@@ -83,6 +92,8 @@ function scrollLcFilter(dir) {
     if (!down) return;
     down = false; el.classList.remove('dragging');
     updateChipArrows();
+    /* click 은 mouseup 다음 프레임에 온다 — 그 뒤에 초기화해야 위 가드가 본다 */
+    setTimeout(function () { moved = 0; }, 0);
   });
   document.addEventListener('mouseleave', function () { down = false; el.classList.remove('dragging'); });
   el.addEventListener('mousemove', function (e) {
@@ -90,6 +101,7 @@ function scrollLcFilter(dir) {
     e.preventDefault();
     var x    = e.pageX - el.getBoundingClientRect().left;
     var dist = (x - startX) * 1.4;
+    moved = Math.max(moved, Math.abs(x - startX));
     el.scrollLeft = scrollLeft - dist;
   });
 })();

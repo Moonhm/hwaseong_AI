@@ -105,8 +105,9 @@ function go(page) {
   if (typeof closeTide     === 'function') closeTide();
   if (typeof closeToday    === 'function') closeToday();
   if (typeof closeSettings === 'function') closeSettings();
-  /* 맵 탭을 벗어날 때 NP 모드 버튼만 정리 (상태는 유지) */
-  if (page !== 'map' && typeof exitNpModeOnly === 'function') exitNpModeOnly();
+  /* 맵 탭을 벗어날 때 NP 모드를 접고, NP 가 꺼 버린 칩을 원래대로 되돌린다.
+   * 되돌리지 않으면 지도로 돌아왔을 때 칩도 핀도 없는 '확대된 빈 지도' 가 된다. */
+  if (page !== 'map' && typeof exitNpModeLeavingMap === 'function') exitNpModeLeavingMap();
   var newPage = document.getElementById('page-' + page);
   var oldPage = document.querySelector('.page.active');
   _playPageTransition(oldPage, newPage, page);

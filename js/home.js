@@ -586,7 +586,8 @@ function _srClick(idx) {
   if (r.type === 'gu') {
     go('map');
     setTimeout(function () {
-      if (typeof setGuView === 'function') setGuView(r.gu);
+      /* 토글이 아니라 '항상 그 구로' — 두 번째 클릭이 해제로 먹히면 안 된다 */
+      if (typeof setGuView === 'function') setGuView(r.gu, true);
     }, 420);
     return;
   }
@@ -626,6 +627,12 @@ function _srClick(idx) {
 }
 
 function closeHomeSearch(where) {
+  /* ⚠ 예약된 디바운스부터 죽인다. 이게 없어서 ✕ 를 누르거나 바깥을 눌러 닫아도
+   * 220ms 뒤 doHomeSearch(옛 검색어) 가 터져 결과 목록이 혼자 되살아났다.
+   * 그때 입력창은 비어 있고 ✕ 는 숨어 있어 다시 지울 방법도 없었다.
+   * resetHomePage 는 이미 같은 처리를 하고 있었다 — 나머지 경로에도 맞춘다. */
+  clearTimeout(_srTimer);
+  _srTimer = null;
   where = where || _srWhere || 'home';
   var el  = _srEl(where, 'results');
   var bar = _srEl(where, 'bar');
@@ -788,7 +795,7 @@ function _renderHomePopular() {
       /* ⚠ go() 뒤에 setTimeout 을 두지 말 것. 300ms 동안 추천 탭 '목록'이 완성된 채
        * 보였다가 데이터랩으로 갈아끼워졌다 — js/tourism.js openFestView 와 같은 증상이다.
        * go() 가 뷰 교체와 목록 렌더까지 동기로 끝내므로 바로 뒤에서 덮으면 프레임이 안 샌다. */
-      '<button class="section-link" onclick="go(\'tourism\');showDatalab(\'popular\')">전체 순위 보기 ›</button>' +
+      '<button class="section-link" onclick="goDatalab(\'popular\')">전체 순위 보기 ›</button>' +
     '</div>';
   });
 }

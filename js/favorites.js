@@ -54,6 +54,20 @@ function clearFavs() {
 function _refreshFavUi() {
   renderFavSection();
   renderMenuFavs();
+  _syncFavBtns();
+}
+
+/* 지도 슬라이드 카드는 열린 채로 남아 있다. 홈·메뉴에서 그 항목을 지우면
+ * 카드 버튼만 '♥ 저장됨' 으로 굳어, 누르면 해제가 아니라 재저장이 됐다 —
+ * 글자도 그대로라 '눌러도 반응 없는 버튼' 으로 보였다. 화면에 떠 있는
+ * 저장 버튼을 저장소 기준으로 다시 맞춘다. */
+function _syncFavBtns() {
+  document.querySelectorAll('[data-fid]').forEach(function (b) {
+    var saved = isFav(b.dataset.fid);
+    if (b.classList.contains('saved') === saved) return;
+    b.textContent = saved ? '♥ 저장됨' : '♡ 저장';
+    b.classList.toggle('saved', saved);
+  });
 }
 
 /* 카테고리별 시각 정보 (CATEGORY_CONFIG 미로드 환경 대비 인라인)
@@ -125,7 +139,7 @@ function navToFav(id) {
       if (!kakaoMap || typeof kakao === 'undefined') return;
       kakaoMap.setLevel(4);
       kakaoMap.setCenter(new kakao.maps.LatLng(f.lat, f.lng));
-      if (typeof setFilter === 'function') setFilter('localcurrency');
+      if (typeof activateLc === 'function') activateLc();
       setTimeout(function() {
         if (typeof showLcSlide === 'function') {
           showLcSlide({ id: f.placeId || 0, n: f.name, c: f.lcCat, a: f.lcAddr, lat: f.lat, lng: f.lng });

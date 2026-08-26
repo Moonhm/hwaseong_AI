@@ -619,6 +619,22 @@ function toggleTouristDesc() {
    ══════════════════════════════════════════ */
 var _npMode = null; /* { onBack, touristOv, parkOv, backBtn } */
 
+/* NP 진입 직전에 켜져 있던 카테고리 칩. NP 모드는 모든 레이어를 끄고 칩을 전부
+ * 비우는데, 그 상태로 다른 탭에 나갔다 지도로 돌아오면 아무도 되살려 주지 않아
+ * '확대된 빈 지도' 가 됐다 — 칩을 직접 다시 눌러야만 복구됐다. */
+var _npPrevCats = [];
+
+function _npRestoreCats() {
+  var cats = _npPrevCats;
+  _npPrevCats = [];
+  if (!cats.length) return;
+  /* 주차장을 먼저 — setFilter 는 주차장 칩만은 건드리지 않고 보존한다. */
+  if (cats.indexOf('parking') >= 0 && typeof activateParking === 'function') activateParking();
+  cats.forEach(function (c) {
+    if (c !== 'parking' && typeof setFilter === 'function') setFilter(c);
+  });
+}
+
 /* ── 공통 핵심 로직 ── */
 function _goNPCore(placeLat, placeLng, label, icon, onBack) {
   if (typeof parkingData === 'undefined' || !parkingData.length) {
@@ -639,7 +655,14 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
     return;
   }
 
-  /* 이전 NP 모드 정리 */
+  /* 이전 NP 모드 정리. 이미 NP 중이면 그때 기록해 둔 칩을 그대로 들고 간다 —
+   * 여기서 다시 읽으면 (칩이 이미 비어 있으므로) 빈 배열로 덮어쓴다. */
+  if (!_npMode) {
+    _npPrevCats = Array.prototype.map.call(
+      document.querySelectorAll('#map-chips .chip.active'),
+      function (c) { return c.dataset.cat || null; }
+    ).filter(Boolean);
+  }
   _exitNpMode(false);
   closePlaceSlide();
 
@@ -848,11 +871,22 @@ function exitNearestParkMode() {
   if (!_npMode) return;
   var cb = _npMode.onBack;
   _exitNpMode(false);
+  _npRestoreCats();
   if (cb) setTimeout(cb, 120);
 }
 
-/* NP 모드 오버레이·버튼만 정리 */
+/* NP 모드 오버레이·버튼만 정리.
+ * ⚠ 여기서 칩을 되살리면 안 된다 — setFilter()·resetMapPage() 가 '새 필터를 켜기
+ *   직전' 과 '전부 끄는 중' 에 부르는 자리다. 옛 칩이 되살아나면 서로 싸운다. */
 function exitNpModeOnly() { _exitNpMode(false); }
+
+/* 지도 탭을 벗어날 때(js/nav.js go). 나가면서 칩을 원래대로 돌려놔야
+ * 돌아왔을 때 빈 지도가 아니다. */
+function exitNpModeLeavingMap() {
+  if (!_npMode) return;
+  _exitNpMode(false);
+  _npRestoreCats();
+}
 
 function _exitNpMode(restoreLayer) {
   if (!_npMode) return;
@@ -905,6 +939,20 @@ function toggleParking() {
 function activateParking() {
   var chip = document.querySelector('.chip[data-cat="parking"]');
   if (chip && !chip.classList.contains('active')) toggleParking();
+}
+
+/* ── 지역화폐 강제 활성화 ────────────────────────────────────────────────
+ * setFilter 는 토글이다. '이 가맹점을 지도에서 보여줘' 라는 요청(즐겨찾기·
+ * 소식 목록·축제 상세)에 그걸 그대로 부르면, 칩이 이미 켜져 있을 때 오히려
+ * 레이어를 **꺼서** 핀 하나 없는 빈 지도를 보여준다.
+ * 업종 필터도 함께 푼다 — '카페'가 걸린 채로 편의점을 열면 그 자리로 확대만
+ * 되고 핀은 안 그려져, 목록에서 고른 곳이 왜 없는지 알 방법이 없다. */
+function activateLc() {
+  var chip = document.querySelector('#map-chips .chip[data-cat="localcurrency"]');
+  if (!chip || !chip.classList.contains('active')) { setFilter('localcurrency'); return; }
+  if (typeof lcFilter !== 'undefined' && lcFilter !== 'all' && typeof setLcFilter === 'function') {
+    setLcFilter('all');
+  }
 }
 
 /* ── 카테고리 필터 (같은 칩 재클릭 시 토글 해제, 주차장 칩은 독립 유지) ── */
@@ -1005,8 +1053,17 @@ function setFilter(cat) {
 }
 
 /* ── 반경 500m 지역화폐 가맹점 ── */
-function findNearby(lat, lng) {
-  /* lcData: localcurrency.js에서 로드한 배열 */
+function findNearby(lat, lng, _retried) {
+  /* lcData 는 4.2MB 라 지역화폐 칩을 켠 적이 있어야 채워진다.
+   * 그전에는 여기가 빈 배열을 훑고 '반경 500m 안에는 없어요' 라고 단정했다 —
+   * 동탄 한복판에서도 그랬고, 나중에 소식 탭에서 가맹점을 한 번 열고 오면
+   * 같은 버튼이 같은 자리에서 'N곳을 찾았어요' 로 말을 바꿨다.
+   * 없다고 말하기 전에 받아 온다. _retried 는 로드 실패 시 무한 재귀 방지용. */
+  if ((typeof lcData === 'undefined' || !lcData.length) && !_retried
+      && typeof _loadLcData === 'function') {
+    _loadLcData(function () { findNearby(lat, lng, true); });
+    return;
+  }
   var pool = (typeof lcData !== 'undefined' && lcData.length)
     ? lcData
     : PLACES.filter(function (p) { return p.category === 'localcurrency'; });
@@ -1020,9 +1077,7 @@ function findNearby(lat, lng) {
     showToast('반경 500m 안에는 지역화폐 가맹점이 없어요.');
     return;
   }
-  /* 이미 활성화된 경우 toggle 방지 */
-  var lcChip = document.querySelector('#map-chips .chip[data-cat="localcurrency"]');
-  if (!lcChip || !lcChip.classList.contains('active')) setFilter('localcurrency');
+  activateLc();
   showToast('반경 500m 내 가맹점 ' + nearby.length + '곳을 찾았어요');
 }
 
@@ -1175,6 +1230,7 @@ function resetMapPage() {
    *    position:fixed z-index:190(css/40-quiz.css:105-119) 이라 페이지 클래스로는 안 사라진다.
    *    go() 의 정리(js/nav.js:16)는 page!=='map' 일 때만 돌아서 재클릭은 지금 전혀 커버되지 않는다. */
   if (typeof exitNpModeOnly === 'function') exitNpModeOnly();
+  _npPrevCats = [];                     /* 전부 끄는 자리다 — 되살릴 것도 없다 */
 
   /* ② 슬라이드 카드 + 딤 + 선택 핀 강조 + selectedId=null (js/map.js:774-784) */
   if (typeof closePlaceSlide === 'function') closePlaceSlide();
@@ -1203,6 +1259,14 @@ function resetMapPage() {
    *    (clearFilter()(js/map.js:787-799)는 :793 에서 칩 제거(:796)보다 먼저 불러 배지가 남는다. 복붙 금지.) */
   document.querySelectorAll('#map-chips .chip').forEach(function (c) { c.classList.remove('active'); });
   if (typeof updateParkingCount === 'function') updateParkingCount();
+  /* 구 칩과 짝인 _guActive 도 함께. 안 되돌리면 칩은 꺼졌는데 상태가 남아
+   * 다음 '○○구 전체 보기' 가 '해제'로 먹힌다 — js/district.js resetGuView 주석이
+   * 선언한 계약인데 실제로는 여기서 부르지 않고 있었다. */
+  if (typeof resetGuView === 'function') resetGuView();
+
+  /* ④-b 지도 검색창. 홈은 resetHomePage 가 검색어까지 지우는데 지도만 빠져 있어,
+   *     '초기화했다'는 신호와 달리 옛 검색어와 ✕ 가 남고 다음 타이핑이 뒤에 붙었다. */
+  if (typeof clearHomeSearch === 'function') clearHomeSearch('map');
 
   /* ⑤ 지역화폐 업종 필터 바. CSS 기본은 display:none(css/20-map.css:62-65)인데
    *    setFilter 가 인라인 block 을 박는다(js/map.js:896-897) → 인라인이 CSS 를 이긴다.

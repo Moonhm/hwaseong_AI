@@ -40,6 +40,13 @@ function _applyRealtime(data) {
   _pinColorCache = {}; /* 색상 캐시 무효화 */
   if (parkingVisible) updateParkingDisplay();
   updateParkingCount();
+  /* 카드를 열어 둔 채 두면 60초 자동 갱신에서도 핀만 바뀌고 카드는 굳었다.
+   * 열려 있을 때만 다시 그린다 — 닫혀 있으면 건드릴 이유가 없다. */
+  var _open = _openParkingCardId();
+  if (_open != null) {
+    var _cur = parkingData.find(function (x) { return x.id === _open; });
+    if (_cur) showParkingSlide(_cur);
+  }
 }
 
 /* ── 정적 + 실시간 데이터 로드 ── */
@@ -373,6 +380,35 @@ function feeSection(p) {
     + '</div><div style="font-size:12px">' + rows + '</div></div>';
 }
 
+/* 지금 열려 있는 카드가 '주차장 카드인지' 를 DOM 으로 판정한다.
+ * 전역 플래그로 두면 주차장 카드를 봤다가 관광지 핀을 눌렀을 때 플래그가 남아,
+ * 60초 자동 갱신이 관광지 카드를 주차장 카드로 갈아치운다. */
+function _openParkingCardId() {
+  var sl = document.getElementById('place-slide');
+  if (!sl || !sl.classList.contains('open')) return null;
+  var el = document.querySelector('#slide-inner [data-pkid]');
+  return el ? +el.dataset.pkid : null;
+}
+
+/* 카드 안의 '🔄 새로고침' 전용.
+ * 예전에는 onclick="refreshParking();showToast('새로고침 완료')" 였다.
+ * ① 응답을 기다리지 않아 서버가 죽어 있어도 늘 '완료' 라고 말했고,
+ * ② refreshParking() 은 핀만 다시 그려서 열려 있는 카드의 '현재 여유'·진행 막대·
+ *    숫자 색은 옛 값 그대로 남았다 — 뒤의 핀과 앞의 카드가 서로 다른 값을 보였다. */
+function refreshParkingSlide() {
+  fetch('/api/parking/realtime')
+    .then(function (r) { return r.json(); })
+    .then(function (res) {
+      if (!res || !res.ok || !Array.isArray(res.data)) throw new Error('bad');
+      _applyRealtime(res);
+      var id = _openParkingCardId();
+      var p  = id != null ? parkingData.find(function (x) { return x.id === id; }) : null;
+      if (p) showParkingSlide(p);            /* 카드도 새 값으로 다시 그린다 */
+      showToast('새로고침 완료');
+    })
+    .catch(function () { showToast('지금은 실시간 정보를 받지 못했어요'); });
+}
+
 function showParkingSlide(p) {
   /* '최근 본' 기록 지점 (js/home.js pushRecent). 관광지는 js/map.js showPlaceSlide 가 건다.
    * 주차장 id 는 관광지 id 와 60개가 겹치므로 종류를 반드시 함께 넘긴다. */
@@ -390,7 +426,7 @@ function showParkingSlide(p) {
     : '<span style="background:#F3F4F6;color:#9CA3AF;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">미운영</span>';
 
   document.getElementById('slide-inner').innerHTML =
-    '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
+    '<div data-pkid="' + p.id + '" style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
     + '<span style="background:#DBEAFE;color:#2563EB;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">🅿️ 주차장</span>'
     + freeTag + openTag + '</div>'
     + '<div style="font-size:18px;font-weight:900;color:var(--text);margin-bottom:6px">' + p.name + '</div>'
@@ -408,7 +444,7 @@ function showParkingSlide(p) {
     + feeSection(p)
     + '<div class="sl-actions">'
     + '<button class="sl-btn primary" onclick="openRoute(' + p.lat + ',' + p.lng + ',\'' + (p.name || '').replace(/'/g, '') + '\')">🗺️ 길찾기</button>'
-    + '<button class="sl-btn" onclick="refreshParking();showToast(\'새로고침 완료\')">🔄 새로고침</button>'
+    + '<button class="sl-btn" onclick="refreshParkingSlide()">🔄 새로고침</button>'
     + (function() {
         var fid = 'park-' + p.id;
         var saved = typeof isFav !== 'undefined' && isFav(fid);

@@ -87,10 +87,15 @@ function guFromBox(lat, lng) {
 /* ── 지도: 그 구로 카메라 이동 ─────────────────────────────────────────── */
 var _guActive = null;
 
-function setGuView(gu) {
+/* force=true 면 토글이 아니라 '항상 설정' 이다.
+ * 홈 검색의 '○○구 전체 보기' 는 결과 문구가 '지도에서 이 동네만 봐요' 라 늘
+ * 그 구로 가야 한다. 그런데 _guActive 를 되돌리는 곳이 없어서, 같은 제안을
+ * 두 번 누르면 두 번째는 '해제'로 먹혀 화성시 전체(레벨 9)로 확 축소됐다 —
+ * 구 칩은 index.html 에서 주석 처리돼 있어 토글 상태를 볼 단서조차 없다. */
+function setGuView(gu, force) {
   var g = GU_LIST.filter(function (x) { return x.k === gu; })[0];
   /* 같은 칩 재클릭 = 해제. 화성시 전체로 돌아간다. */
-  if (!g || _guActive === gu) {
+  if (!g || (!force && _guActive === gu)) {
     _guActive = null;
     _guSyncChips();
     if (typeof kakaoMap !== 'undefined' && kakaoMap && typeof kakao !== 'undefined') {
