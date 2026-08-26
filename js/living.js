@@ -141,6 +141,9 @@ function renderLivingPage() {
   if (spEl) spEl.textContent = pCount ? pCount.toLocaleString() : '-';
 
   renderNewsSection();          /* 소식 섹션은 매 진입마다 다시 그린다 — 날짜가 바뀌면 D-N 도 바뀐다 */
+  /* 축제 전체도 같은 이유로 매 진입마다 다시 그린다(진행 중/예정/종료가 날짜에 걸려 있다).
+   * expanded 를 넘기지 않으므로 탭에 다시 들어오면 항상 5개로 접힌 상태다. */
+  renderFestivalAll();
 
   // 기본 탭: 모범음식점
   var firstCat = document.getElementById('liv-cat-restaurant');
@@ -212,9 +215,10 @@ function renderNewsSection() {
   el.innerHTML =
     '<div class="section-header" style="margin-bottom:10px">' +
       '<div class="section-title">이번 주 소식</div>' +
-      '<button class="section-link" onclick="go(\'tourism\');setTimeout(function(){' +
-        'var c=document.querySelector(\'.tourism-subnav .chip[data-sub=&quot;festival&quot;]\');' +
-        'if(c)switchTourismSub(c,\'festival\');},260)">전체 보기</button>' +
+      /* 예전에는 추천 탭의 '축제' 서브탭으로 건너뛰었다. 2026-08-26 에 축제가
+       * 소식 탭으로 내려오면서 그 칩이 없어졌고, 같은 화면 아래의 '축제 전체'를
+       * 펼치는 쪽이 탭을 옮기는 것보다 짧다. */
+      '<button class="section-link" onclick="showAllFestivals()">전체 보기</button>' +
     '</div>' +
     items.slice(0, 3).map(function (it, i) {
       var d = it.days;
@@ -237,4 +241,123 @@ function renderNewsSection() {
                '<div class="news-arrow">›</div>' +
              '</div>';
     }).join('');
+}
+
+/* ══════════════════════════════════════════════════
+   축제 전체 (2026-08-26)
+   추천 탭 서브탭('축제' → renderTourismList('festival-only'))에서 소식 탭으로 옮겼다.
+   사용자 지시: "추천 탭에서 축제 부분 선택하는거 거기서 빼고 소식으로 가져와 …
+   이번달 축제 밑에 놓고 한 4 5개만 띄워놓고 밑에 더보기 버튼 만들어도 되고."
+
+   ⚠ 정렬을 PLACES 원래 순서로 두면 안 된다. 5개만 접어 보여 주므로 맨 위 5개가
+     곧 이 섹션의 전부처럼 읽힌다. 이미 끝난 축제가 먼저 오면 쓸모가 없다.
+     진행 중 → 예정(가까운 순) → 날짜 미상 → 종료(최근 순) 로 세운다.
+
+   ⚠ p.status 를 읽지 마라 — 50건이 전부 'upcoming' 으로 굳어 있다.
+     js/calendar.js 의 festStatus() 가 date 를 파싱해 실제 상태를 낸다.
+
+   ⚠ onclick 에서 showFestivalDetail() 만 부르면 아무 일도 안 일어난다.
+     그 함수는 #page-tourism '안의' 뷰 display 만 뒤집는데 사용자는 소식 탭에 있다.
+     renderNewsSection() 과 같은 이유로 go('tourism') 을 먼저 태운다.
+══════════════════════════════════════════════════ */
+var FEST_ALL_PREVIEW = 5;
+
+function _festAllSorted() {
+  if (typeof PLACES === 'undefined') return [];
+  var now = new Date(); now.setHours(0, 0, 0, 0);
+  /* 상태별 정렬 가중치. 같은 상태 안에서는 날짜로 다시 세운다. */
+  var RANK = { ongoing: 0, upcoming: 1, unknown: 2, ended: 3 };
+
+  return PLACES.filter(function (p) { return p.category === 'festival'; })
+    .map(function (p) {
+      var st = (typeof festStatus === 'function') ? festStatus(p, now) : 'unknown';
+      var dm = (typeof _parseFestDateMeta === 'function')
+        ? _parseFestDateMeta(String(p.date || '').split('~')[0].trim()) : null;
+      var t = dm ? new Date(dm.ymd[0], dm.ymd[1] - 1, dm.ymd[2]).getTime() : null;
+      return { p: p, st: st, t: t };
+    })
+    .sort(function (a, b) {
+      var ra = RANK[a.st] !== undefined ? RANK[a.st] : 2;
+      var rb = RANK[b.st] !== undefined ? RANK[b.st] : 2;
+      if (ra !== rb) return ra - rb;
+      if (a.t === null) return b.t === null ? 0 : 1;   /* 날짜 미상은 뒤로 */
+      if (b.t === null) return -1;
+      /* 종료된 것은 '최근에 끝난 것' 이 위로, 나머지는 '곧 오는 것' 이 위로 */
+      return a.st === 'ended' ? b.t - a.t : a.t - b.t;
+    });
+}
+
+function renderFestivalAll(expanded) {
+  var list = document.getElementById('festival-all-list');
+  if (!list) return;
+  var rows = _festAllSorted();
+
+  var cnt = document.getElementById('festival-all-count');
+  if (cnt) cnt.textContent = rows.length ? rows.length + '건' : '';
+
+  if (!rows.length) {
+    list.innerHTML = '<div style="padding:28px;text-align:center;color:var(--text-muted);font-size:13px">등록된 축제가 없어요</div>';
+    return;
+  }
+
+  var more    = rows.length > FEST_ALL_PREVIEW && !expanded;
+  var visible = more ? rows.slice(0, FEST_ALL_PREVIEW) : rows;
+
+  list.innerHTML = visible.map(function (r, i) {
+    var p = r.p;
+    var badge = (typeof festBadge === 'function') ? festBadge(p) : null;
+    var thumb = (typeof photoThumb === 'function') ? photoThumb(p, 56, '🎉') : '';
+    if (!thumb) thumb = '<div class="pi pi-festival">🎉</div>';
+    /* 날짜 표기: ISO(2026-09-02)는 '09.02', 미확정('2026년 8월 중')은 연도만 떼어
+     * '8월 중'. 연도를 남기면 오른쪽 칸이 두 줄로 접힌다 —
+     * 「이번 주 소식」의 approxLabel 과 같은 규칙이다(js/living.js renderNewsSection). */
+    var raw  = String(p.date || '').split('~')[0].trim();
+    var when = /^\d{4}-\d{1,2}-\d{1,2}/.test(raw)
+      ? raw.replace(/^\d{4}-/, '').replace(/-/g, '.')
+      : raw.replace(/^\d{4}\s*년?\s*/, '');
+    return '<div class="place-item" style="animation-delay:' + (Math.min(i, 12) * 0.045) + 's"' +
+           ' onclick="go(\'tourism\');setTimeout(function(){showFestivalDetail(' + p.id + ')},260)">' +
+             thumb +
+             '<div class="pi-content">' +
+               '<div class="pi-name">' + (p.name || '') + '</div>' +
+               '<div class="pi-meta">' +
+                 (badge ? '<span class="badge ' + badge.cls + '" style="font-size:10px;margin-right:5px">' + badge.text + '</span>' : '') +
+                 (p.address || '').split(' ').slice(1, 3).join(' ') +
+               '</div>' +
+             '</div>' +
+             '<div class="pi-right" style="display:flex;align-items:center;gap:4px">' +
+               (when ? '<span style="font-size:11px;color:var(--text-muted)">' + when + '</span>' : '') +
+               '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>' +
+             '</div>' +
+           '</div>';
+  }).join('');
+
+  if (more) {
+    /* 추천 탭 목록과 같은 .tourism-more-btn 을 쓴다(css/00-base.css:294).
+     * onclick 속성이 아니라 프로퍼티로 다는 이유는 renderTourismList 와 같다 —
+     * 문자열 onclick 은 전역 함수만 부를 수 있고, 여기서는 재렌더 한 줄이면 된다. */
+    var btn = document.createElement('div');
+    btn.className = 'tourism-more-btn';
+    btn.innerHTML = '더보기 <span style="color:var(--primary);font-weight:700">+' +
+                    (rows.length - FEST_ALL_PREVIEW) + '</span>';
+    btn.onclick = function () { renderFestivalAll(true); };
+    list.appendChild(btn);
+  }
+}
+
+/* 「이번 주 소식」의 '전체 보기' 와 햄버거 메뉴의 '축제 전체' 가 함께 쓴다.
+ * 펼친 뒤 스크롤한다 — 순서가 반대면 접힌 높이 기준으로 스크롤해 어중간한 데서 멈춘다. */
+function showAllFestivals() {
+  renderFestivalAll(true);
+  var sec = document.getElementById('festival-all-section');
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* 햄버거 메뉴 → 소식 탭으로 이동한 뒤 축제 전체를 펼친다.
+ * go('living') 이 renderLivingPage() 를 부르며 목록을 '접힌 상태'로 다시 그리므로,
+ * 펼치기는 반드시 그 뒤여야 한다. menuGoLiving() 과 같은 250ms 지연을 쓴다. */
+function menuGoFestivals() {
+  if (typeof closeMenu === 'function') closeMenu();
+  go('living');
+  setTimeout(showAllFestivals, 260);
 }

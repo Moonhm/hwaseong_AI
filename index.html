@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082690">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082691">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082690">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082690">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082690">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082690">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082690">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082692">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082692">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082692">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082692">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082692">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082692">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082692">
 </head>
 <body>
 
@@ -280,7 +280,6 @@
          하드코딩해야 하는데, 그 값이 어긋나면 칩이 헤더 아래로 파고든다. -->
     <div class="tourism-subnav">
       <div class="chip active" data-sub="all" onclick="switchTourismSub(this,'all')">인기</div>
-      <div class="chip" data-sub="festival" onclick="switchTourismSub(this,'festival')">축제</div>
       <div class="chip" data-sub="spot" onclick="switchTourismSub(this,'spot')">관광지</div>
       <div class="chip" data-sub="heritage" onclick="switchTourismSub(this,'heritage')">문화재</div>
       <div class="chip" data-sub="stay" onclick="switchTourismSub(this,'stay')">숙박</div>
@@ -419,6 +418,21 @@
     <div class="festival-scroll" id="festival-scroll-list"></div>
     <button class="fsc-arr fsc-arr-right" id="fsc-arr-right" onclick="scrollFestArr(1)" aria-label="다음">›</button>
   </div>
+
+      <!-- 축제 전체 — 2026-08-26 추천 탭 서브탭('축제')에서 여기로 옮겼다 (사용자 지시).
+           위 '이번 달 축제' 는 이번 달만 가로로 훑는 것이고, 여기는 전체를
+           진행 중 → 예정 → 종료 순으로 세로로 쌓는다. 기본 5개만 보이고 '더보기' 로 펼친다.
+           「이번 주 소식」의 '전체 보기' 도 이 섹션을 펼치며 여기로 스크롤한다
+           (js/living.js showAllFestivals) — 두 입구가 같은 목록으로 모인다. -->
+      <div class="section" id="festival-all-section" style="padding-top:4px">
+        <div class="section-header">
+          <div>
+            <div class="section-title">축제 전체</div>
+            <div class="section-sub" style="margin-top:2px" id="festival-all-count"></div>
+          </div>
+        </div>
+        <div class="place-list" id="festival-all-list"></div>
+      </div>
 
   <!-- 아래는 기존 생활 정보 그대로다. 지우지 않고 제목만 붙였다. -->
   <div class="section-header" style="padding:18px var(--px) 0;margin-bottom:0">
@@ -759,13 +773,15 @@
         <div class="menu-item-sub">준비 중이에요</div>
       </div>
     </div>
-    <div class="menu-item" onclick="menuGoTourism('festival')">
-      <div class="menu-item-icon" style="background:#FEF2F2;">🎉</div>
-      <div class="menu-item-text">
-        <div class="menu-item-label">이번달 축제</div>
-        <div class="menu-item-sub">현재 진행 중인 화성 축제</div>
+      <!-- 2026-08-26 — 축제가 추천 탭 서브탭에서 소식 탭으로 옮겨가면서 목적지도 바꿨다.
+           예전 menuGoTourism('festival') 은 이제 없는 칩을 찾아 아무 일도 안 한다. -->
+      <div class="menu-item" onclick="menuGoFestivals()">
+        <div class="menu-item-icon" style="background:#FEF2F2;">🎉</div>
+        <div class="menu-item-text">
+          <div class="menu-item-label">축제 전체</div>
+          <div class="menu-item-sub">진행 중인 축제부터 순서대로</div>
+        </div>
       </div>
-    </div>
     <div class="menu-item" onclick="closeMenu();goMapCat('localcurrency')">
       <div class="menu-item-icon" style="background:#F0FDF4;display:flex;align-items:center;justify-content:center;"><img src="img/gyeonggi_currency_logo.png" alt="" style="width:22px;height:22px;object-fit:contain"></div>
       <div class="menu-item-text">
@@ -850,34 +866,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082690"></script>
-<script src="js/quiz.js?v=2026082690"></script>
-<script src="js/mapnav.js?v=2026082690"></script>
-<script src="js/home.js?v=2026082690"></script>
-<script src="js/tourism.js?v=2026082690"></script>
-<script src="js/living.js?v=2026082690"></script>
-<script src="js/favorites.js?v=2026082690"></script>
-<script src="js/ui.js?v=2026082690"></script>
-<script src="js/calendar.js?v=2026082690"></script>
-<script src="js/boot.js?v=2026082690"></script>
+<script src="js/nav.js?v=2026082692"></script>
+<script src="js/quiz.js?v=2026082692"></script>
+<script src="js/mapnav.js?v=2026082692"></script>
+<script src="js/home.js?v=2026082692"></script>
+<script src="js/tourism.js?v=2026082692"></script>
+<script src="js/living.js?v=2026082692"></script>
+<script src="js/favorites.js?v=2026082692"></script>
+<script src="js/ui.js?v=2026082692"></script>
+<script src="js/calendar.js?v=2026082692"></script>
+<script src="js/boot.js?v=2026082692"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082690"></script>
-<script src="js/convenience.js?v=2026082690"></script>
-<script src="js/data.js?v=2026082690"></script>
-<script src="js/map.js?v=2026082690"></script>
-<script src="js/conv_map.js?v=2026082690"></script>
-<script src="js/parking.js?v=2026082690"></script>
-<script src="js/localcurrency.js?v=2026082690"></script>
+<script src="js/photos.js?v=2026082692"></script>
+<script src="js/convenience.js?v=2026082692"></script>
+<script src="js/data.js?v=2026082692"></script>
+<script src="js/map.js?v=2026082692"></script>
+<script src="js/conv_map.js?v=2026082692"></script>
+<script src="js/parking.js?v=2026082692"></script>
+<script src="js/localcurrency.js?v=2026082692"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082690"></script>
-<script src="js/tide.js?v=2026082690"></script>
-<script src="js/weather.js?v=2026082690"></script>
-<script src="js/today.js?v=2026082690"></script>
-<script src="js/district.js?v=2026082690"></script>
+<script src="js/datalab.js?v=2026082692"></script>
+<script src="js/tide.js?v=2026082692"></script>
+<script src="js/weather.js?v=2026082692"></script>
+<script src="js/today.js?v=2026082692"></script>
+<script src="js/district.js?v=2026082692"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=2026082690"></script>
+<script src="js/hscroll.js?v=2026082692"></script>
 </body>
 </html>

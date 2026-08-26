@@ -21,6 +21,9 @@ function switchTourismSub(el, tab) {
     if (el2) el2.style.display = 'none';
   });
 
+  /* 'festival' 은 2026-08-26 에 소식 탭으로 옮겨져 이 서브내비에 칩이 없다
+   * (js/living.js renderFestivalAll). 옛 링크가 tab='festival' 을 넘길 수 있으니
+   * 분기는 남겨 두되, 새로 여기에 연결하지 말 것 — 축제의 집은 이제 소식 탭이다. */
   if (tab === 'all' || tab === 'festival' || tab === 'spot' || tab === 'heritage') {
     _resetThemeChips();
     var def = document.getElementById('tourism-default');
