@@ -111,8 +111,14 @@ def main():
         (hit_exact if target == stem else hit_near).append((f.name, out.name))
         if a.check:
             continue
-        if out.exists():
-            skipped.append(out.name)
+        # ⚠ 확장자만 다른 같은 장소 파일이 이미 있으면 복사하지 않는다.
+        #   out.exists() 만 보면 '새싹동산 청려수련원.jpg' 가 있는데도
+        #   원본이 .png 라 out 이 '….png' 가 되어 그냥 복사된다. 그 뒤
+        #   optimize_images 는 대상(.jpg)이 이미 있어 변환을 건너뛰므로
+        #   **두 벌이 나란히 남고** 인덱스에도 2장으로 잡힌다(실제로 그랬다).
+        existing = list(DST.glob(target + ".*"))
+        if existing:
+            skipped.append(existing[0].name)
             continue
         shutil.copy2(f, out)
 
