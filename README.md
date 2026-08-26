@@ -21,7 +21,7 @@
 
 **Hwaseong-itda (화성잇다)** means *"Connecting Hwaseong"* — linking tourists to everything Hwaseong Special City (화성특례시) has to offer.
 
-Built on official city data, the app brings together 159 tourist spots (관광지), 48 festivals and events (축제·행사), 131 public parking lots (공영주차장) with real-time availability, and 27,374 local currency merchants (지역화폐 가맹점) onto a single interactive map. An AI-powered recommendation quiz helps users discover destinations that match their travel style.
+Built on official city data, the app brings together 151 tourist spots (관광지), 50 festivals and events (축제·행사), 42 designated cultural heritage sites (지정문화재), 131 public parking lots (공영주차장) with real-time availability, and 27,374 local currency merchants (지역화폐 가맹점) onto a single interactive map. An AI-powered recommendation quiz helps users discover destinations that match their travel style.
 
 ---
 
@@ -42,13 +42,22 @@ Hwaseong covers a wide range of landscapes across these districts — the wester
 
 ## Features
 
+The app has five bottom tabs — Home (홈) · News (소식) · Recommend (추천) · Map (지도) · Menu (메뉴).
+
 | Screen | Description |
 |--------|-------------|
-| **🏠 Home (홈)** | GPS-based nearest tourist spot recommendation · Real-time nearby parking availability · Place search bar · App URL sharing |
-| **🗺 Map (지도)** | Kakao Maps with category chip filters — tourist clusters/pins · Real-time parking lots (🟢🟡🔴) · Local currency merchants · Convenience info |
-| **🎉 Tourism (관광)** | Full list of 159 tourist spots with theme filters · 2026 Festival calendar (축제 달력) · Monthly event browsing |
-| **🧭 AI Recommendation (AI 추천)** | 5-question travel personality quiz → AI recommends Top 3 destinations · Photo cards + direct map focus |
-| **⭐ Star Ratings (별점)** | Ratings (3.2–4.9) and review counts for all 159 tourist spots · Shown in list, home cards, and detail panel |
+| **🏠 Home (홈)** | Live weather and air quality (날씨·미세먼지) · Recently viewed places · Favorites (즐겨찾기) · Search across every dataset · Tourism / Living toggle |
+| **📰 News (소식)** | This week's events (이번 주 소식) · This month's festival carousel (이번 달 축제) · Full event list with 진행중 / 예정 / 종료 status · Living info by category |
+| **🧭 Recommend (추천)** | Nearest spot by GPS · 5-question travel personality quiz → Top 3 picks · Popular places by navigation data · Age-group trends · City Tour courses (시티투어) |
+| **🗺 Map (지도)** | Kakao Maps with 11 category chips — tourist spots · cultural heritage · real-time parking (🟢🟡🔴) · local currency merchants · restaurants · hotels · campsites · cinemas · Jebu Island stays |
+| **☰ Menu (메뉴)** | Official Hwaseong City links · Jebu Island tide timetable (제부도 바닷길) · Today's weather panel · Shortcuts · Settings |
+
+### Also inside
+
+- **District view (구별 보기)** — search a district name to zoom the map to that area
+- **Festival calendar (축제 달력)** — month grid with 진행중 / 예정 / 종료 badges
+- **Jebu Island sea road (제부도 바닷길)** — 2026 tide timetable, tells you when the road opens
+- **Accessibility** — pinch-zoom enabled, WCAG AA text contrast, full keyboard operation
 
 ### Convenience Info (편의정보) — Map Chip Filter
 
@@ -56,8 +65,10 @@ Hwaseong covers a wide range of landscapes across these districts — the wester
 |----------|------:|---------|
 | Model Restaurants (모범음식점) | 94 | City-certified quality restaurants |
 | Tourist Restaurants (관광식당업) | 35 | Registered tourist dining establishments |
-| Tourist Hotels (관광호텔) | 14 | Grade and room count displayed |
-| Campsites (캠핑장) | 11 | Number of pitches and facilities |
+| Cinemas (영화상영관) | 13 | Screens and seat counts |
+| Campsites (캠핑장) | 17 | Number of pitches and facilities |
+| Tourist Hotels (관광호텔) | 10 | Grade and room count displayed |
+| Tourist Facilities (관광편의시설) | 10 | Registered tourism-convenience businesses |
 | Temple Stay (템플스테이) | 1 | Yongjusa (용주사) program guide |
 | Jebu Island Accommodations (제부도 숙박) | 115 | Pensions, guesthouses, motels, condos |
 
@@ -69,12 +80,22 @@ Hwaseong covers a wide range of landscapes across these districts — the wester
 |------|--------|------|
 | Tourist spots — natural & historic (자연·역사) · 41 | Hwaseong City Tourism (`tour.hscity.go.kr`) | Official API |
 | Tourist spots — experience villages (체험마을) · 51 | Hwaseong City Tourism (`tour.hscity.go.kr/2exp`) | |
-| Tourist spots — additional (쇼핑·골프·호텔·공원 등) · 67 | Korea Tourism Data Lab (`datalab.visitkorea.or.kr`) | |
-| Festivals & events (축제·행사) · 48 | Hwaseong City Reservation System (`yeyak.hscity.go.kr`) | 2026 |
+| Tourist spots — additional (쇼핑·골프·공원 등) · 59 | Korea Tourism Data Lab (`datalab.visitkorea.or.kr`) | 8 cinemas moved to Convenience Info |
+| Festivals & events (축제·행사) · 50 | Hwaseong City Reservation System (`yeyak.hscity.go.kr`) | 2026 |
+| Designated cultural heritage (지정문화재) · 42 | Public Data Portal (`data.go.kr`) | National · provincial · city designations |
 | Public parking lots (공영주차장) · 131 | Hwaseong Smart Parking API (`smartparking.hscity.go.kr`) | Real-time via Flask proxy |
 | Local currency merchants (지역화폐 가맹점) · 27,374 | Hwaseong Love Card (화성사랑카드) public data | 4.2 MB lazy-loaded |
-| Convenience facilities (편의정보) · 157 | Hwaseong City official data (`tour.hscity.go.kr`) | Restaurants, hotels, campsites |
+| Convenience facilities (편의정보) · 179 | Hwaseong City official data · Public Data Portal | Restaurants, hotels, campsites, cinemas |
+| Weather & air quality (날씨·미세먼지) | Open-Meteo | No API key required |
+| Jebu Island tide times (제부도 물때) · 2026 | Hwaseong City (`hscity.go.kr/jebudo`) | Full-year timetable |
+| City Tour courses (시티투어) | Hwaseong City Tourism (`tour.hscity.go.kr/citytour`) | Course details + reservation link |
 | Jebu Island accommodations (제부도 숙박) · 115 | Hwaseong City Tourism website | Pensions, guesthouses, motels |
+
+> **On accuracy.** Coordinates are geocoded from the source addresses; where an address
+> is incomplete the pin can be off by a few hundred meters. Parking availability is
+> refreshed about every 60 seconds while the map is open. The star ratings shown on
+> tourist spots are **placeholder values for layout, not real user reviews** — the app
+> states this in its own data notice. The full notice is at the bottom of the Home tab.
 
 ---
 
@@ -82,11 +103,11 @@ Hwaseong covers a wide range of landscapes across these districts — the wester
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | Vanilla HTML · CSS · JavaScript (single-file SPA, no framework) |
+| Frontend | Vanilla HTML · CSS · JavaScript — no framework, no build step (23 JS + 7 CSS modules) |
 | Map | Kakao Maps JavaScript SDK v2 |
 | Proxy Server | Flask (Python) — CORS relay for parking API (주차장 API) |
 | Deployment | Cloudflare Quick Tunnel |
-| AI | Claude Sonnet 4.6 (Anthropic) |
+| AI | Claude (Anthropic) — two instances, one for the app and one for the data pipeline |
 
 ---
 
