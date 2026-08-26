@@ -19,7 +19,7 @@
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
   <link rel="stylesheet" href="css/00-base.css?v=2026082616">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082616">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082629">
   <link rel="stylesheet" href="css/20-map.css?v=2026082616">
   <link rel="stylesheet" href="css/30-panel.css?v=2026082616">
   <link rel="stylesheet" href="css/40-quiz.css?v=2026082616">
@@ -76,13 +76,14 @@
     <div class="hwb-current">
       <span id="hwb-icon" class="hwb-cur-icon">🌡️</span>
       <div class="hwb-cur-info">
-        <div class="hwb-cur-top">
-          <div id="hwb-temp" class="hwb-cur-temp">—°C</div>
-          <span id="hwb-grade" class="hwb-grade" style="display:none">—</span>
-          <span id="hwb-pm25-val" class="hwb-pm25-val"></span>
-        </div>
+        <div id="hwb-temp" class="hwb-cur-temp">—°C</div>
         <div id="hwb-desc" class="hwb-cur-desc">—</div>
         <div id="hwb-range" class="hwb-cur-range"></div>
+      </div>
+      <div id="hwb-air-box" class="hwb-air-box" style="display:none">
+        <span class="hwb-air-title">미세먼지</span>
+        <span id="hwb-grade" class="hwb-grade">—</span>
+        <span id="hwb-pm25-val" class="hwb-pm25-val"></span>
       </div>
     </div>
     <!-- 시간별 예보 -->
@@ -592,7 +593,7 @@
 <script src="js/nav.js?v=2026082616"></script>
 <script src="js/quiz.js?v=2026082616"></script>
 <script src="js/mapnav.js?v=2026082616"></script>
-<script src="js/home.js?v=2026082628"></script>
+<script src="js/home.js?v=2026082629"></script>
 <script src="js/tourism.js?v=2026082616"></script>
 <script src="js/living.js?v=2026082616"></script>
 <script src="js/favorites.js?v=2026082616"></script>

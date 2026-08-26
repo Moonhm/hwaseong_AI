@@ -275,10 +275,10 @@ function _fetchAirKorea() {
       if (isNaN(v)) return;
       var g  = _pm25Grade(v);
       var el = document.getElementById('hwb-grade');
-      el.textContent   = g[0];
-      el.className     = 'hwb-grade ' + g[1];
-      el.style.display = '';
+      el.textContent = g[0];
+      el.className   = 'hwb-grade ' + g[1];
       document.getElementById('hwb-pm25-val').textContent = v + ' ㎍/㎥';
+      document.getElementById('hwb-air-box').style.display = 'flex';
     })
     .catch(function() {});
 }
