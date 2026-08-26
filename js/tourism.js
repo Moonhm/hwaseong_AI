@@ -393,7 +393,9 @@ function showFestivalDetail(id) {
   const festIdx = festivals.findIndex(f => f.id === id);
   const imgClass = IMG_CLASSES_FD[Math.max(0, festIdx) % IMG_CLASSES_FD.length];
 
-  const { status, date } = getFestivalMeta(place);
+  /* status 는 안 쓴다 — place.status 는 50건이 전부 'upcoming' 인 죽은 필드고,
+   * 배지는 아래 festBadge() 가 date 로 계산한다. date 만 받는다. */
+  const { date } = getFestivalMeta(place);
   /* 배지는 festBadge() 한 곳에서만 판정한다 — 여기서 ongoing 2분기로 따로 계산하던
    * 탓에 이미 끝난 축제가 상세 히어로에서 '📅 예정' 으로 떴다 (2026-08-26 감사). */
   const _hb = (typeof festBadge === 'function')
@@ -405,6 +407,60 @@ function showFestivalDetail(id) {
   const shortAddr  = (place.address || '').replace('경기도 화성시 ', '');
   const YEYAK_URL  = 'https://yeyak.hscity.go.kr/1012/3008/cultureAllList.do';
 
+  /* ── D-day (2026-08-26) ─────────────────────────────────────────────────
+   * 이 화면은 원래 히어로와 정보 카드가 같은 날짜를 두 번 말하고 있었다.
+   * 축제 데이터에는 설명문도 기간도 없어서(desc 는 '2026년 8월 | 8. 29.(토)' 뿐)
+   * 화면이 비어 보였다 — 없는 정보를 지어낼 수는 없으니, 가진 날짜에서
+   * '계산할 수 있는 것' 을 꺼내 채운다.
+   * ⚠ '2026년 8월 중' 같은 근사 일정은 1일로 파싱된 값이라 D-day 를 찍으면 안 된다.
+   *   실제로 없는 확정 일정처럼 보인다(2026-08-26 감사에서 'D-36' 오표시 확인). */
+  let ddayHtml = '';
+  const _dm = (typeof _parseFestDateMeta === 'function')
+    ? _parseFestDateMeta(String(place.date || '').split('~')[0].trim()) : null;
+  if (_dm && !_dm.approx) {
+    const _t0 = new Date(); _t0.setHours(0, 0, 0, 0);
+    const _when = new Date(_dm.ymd[0], _dm.ymd[1] - 1, _dm.ymd[2]);
+    const _d = Math.round((_when - _t0) / 86400000);
+    const _txt = _d === 0 ? '오늘' : _d === 1 ? '내일'
+               : _d > 0 ? 'D-' + _d : _d === -1 ? '어제' : (-_d) + '일 지남';
+    ddayHtml = '<span class="fd-dday' + (_d >= 0 && _d <= 7 ? ' soon' : '') + '">' + _txt + '</span>';
+  }
+
+  /* 같은 달의 다른 행사 — 아래 빈 자리를 채우는 동시에 실제로 쓸모가 있다.
+   * _getFestsInMonth 는 캘린더가 쓰는 것과 같은 기준이라 결과가 어긋나지 않는다. */
+  let alsoHtml = '';
+  if (_dm && typeof _getFestsInMonth === 'function') {
+    const _same = _getFestsInMonth(_dm.ymd[0], _dm.ymd[1] - 1)
+      .filter(f => f.id !== place.id).slice(0, 3);
+    if (_same.length) {
+      alsoHtml =
+        '<div class="fd-also">' +
+          /* ymd[1] 은 '08' 처럼 0 이 붙은 문자열이라 그대로 쓰면 '08월' 이 된다 */
+          '<div class="fd-also-head">' + parseInt(_dm.ymd[1], 10) + '월의 다른 행사</div>' +
+          _same.map(f => {
+            const b = (typeof festBadge === 'function') ? festBadge(f) : { cls: 'badge-upcoming', text: '예정' };
+            const raw = String(f.date || '').split('~')[0].trim();
+            const when = /^\d{4}-\d{1,2}-\d{1,2}/.test(raw)
+              ? raw.replace(/^\d{4}-/, '').replace(/-/g, '.')
+              : raw.replace(/^\d{4}\s*년?\s*/, '');
+            return '<div class="fd-also-item" onclick="showFestivalDetail(' + f.id + ')">' +
+                     ((typeof photoThumb === 'function') ? photoThumb(f, 44, '🎉', 'ph-sm') : '') +
+                     '<div class="fd-also-body">' +
+                       '<div class="fd-also-name">' + f.name + '</div>' +
+                       '<div class="fd-also-meta">' +
+                         '<span class="badge ' + b.cls + '" style="font-size:10px">' + b.text + '</span> ' + when +
+                       '</div>' +
+                     '</div>' +
+                     '<span class="fd-also-arrow">›</span>' +
+                   '</div>';
+          }).join('') +
+        '</div>';
+    }
+  }
+
+  /* 끝난 행사에 '예약하기' 는 말이 안 된다. 행사 안내로 보낸다. */
+  const _ended = _hb.text === '종료';
+
   document.getElementById('fd-content').innerHTML = `
     <div class="fd-hero ${imgClass}">
       ${hasPhoto(place) ? `<img class="fd-hero-img" src="${placePhotoSrc(place)}" alt=""
@@ -412,48 +468,43 @@ function showFestivalDetail(id) {
       <div class="fd-hero-body">
         <div class="fd-hero-badge">${_hbIcon} ${_hb.text}</div>
         <div class="fd-hero-title">${place.name}</div>
-        ${detailDate ? `<div class="fd-hero-date">📅 ${detailDate}</div>` : ''}
+        <div class="fd-hero-date">${detailDate ? '📅 ' + detailDate : ''}${ddayHtml}</div>
       </div>
     </div>
     <div class="fd-body">
       <div class="fd-info-card">
         <div class="fd-info-row">
           <div class="fd-info-icon">📍</div>
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="fd-info-label">장소</div>
             <div class="fd-info-val">${shortAddr}</div>
-          </div>
-        </div>
-        ${date ? `
-        <div class="fd-info-row">
-          <div class="fd-info-icon">🗓️</div>
-          <div>
-            <div class="fd-info-label">일정</div>
-            <div class="fd-info-val">${date}</div>
-          </div>
-        </div>` : ''}
-        <div class="fd-info-row">
-          <div class="fd-info-icon">🔗</div>
-          <div>
-            <div class="fd-info-label">예약 · 상세 정보</div>
-            <a class="fd-info-link" href="${YEYAK_URL}" target="_blank" rel="noopener">화성시 문화생활 예약 →</a>
+            <button class="fd-map-btn" onclick="goMapFocus(${place.lat},${place.lng},4,${place.id})">
+              지도에서 위치 보기 →
+            </button>
           </div>
         </div>
       </div>
-    </div>
-    <div class="fd-nearby">
-      <button class="fd-nearby-btn" onclick="goMapCat('mobeom')">
-        <span class="nb-icon">🍽️</span>주변 맛집
-      </button>
-      <button class="fd-nearby-btn" onclick="goMapCat('parking')">
-        <span class="nb-icon">🅿️</span>주차장
-      </button>
-      <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})">
-        <span class="nb-icon"><img src="img/gyeonggi_currency_logo.png" style="width:20px;height:20px;object-fit:contain" alt=""></span>가맹점
-      </button>
-    </div>
-    <div class="fd-cta">
-      <a class="fd-cta-btn" href="${YEYAK_URL}" target="_blank" rel="noopener">🎪 예약하기</a>
+
+      <div class="fd-act-head">이 근처에서 찾기</div>
+      <div class="fd-nearby">
+        <button class="fd-nearby-btn" onclick="goMapCat('mobeom')">
+          <span class="nb-icon">🍽️</span>주변 맛집
+        </button>
+        <button class="fd-nearby-btn" onclick="goMapCat('parking')">
+          <span class="nb-icon">🅿️</span>주차장
+        </button>
+        <button class="fd-nearby-btn" onclick="findNearby(${place.lat},${place.lng})">
+          <span class="nb-icon"><img src="img/gyeonggi_currency_logo.png" style="width:20px;height:20px;object-fit:contain" alt=""></span>가맹점
+        </button>
+      </div>
+
+      <a class="fd-cta-btn${_ended ? ' ended' : ''}" href="${YEYAK_URL}" target="_blank" rel="noopener">
+        ${_ended ? '🗓️ 다른 행사 보기' : '🎪 예약 · 상세 정보'}
+      </a>
+      <div class="fd-cta-sub">화성시 통합예약(yeyak.hscity.go.kr)으로 이동해요</div>
+
+      ${alsoHtml}
+      <div class="fd-tail"></div>
     </div>`;
 
   document.getElementById('page-tourism').scrollTop = 0;

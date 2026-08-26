@@ -120,7 +120,9 @@
     .fd-info-link:active { opacity: 0.7; }
 
     /* 주변 바로가기 */
-    .fd-nearby { display: flex; gap: 8px; padding: 0 18px 16px; background: var(--white); }
+    /* 2026-08-26 — .fd-body 안으로 옮겼다. 예전에는 밖에 있어 자기 패딩(18px)이
+     * 필요했지만 이제 부모가 준다. 그대로 두면 좌우가 36px 이 된다. */
+    .fd-nearby { display: flex; gap: 8px; padding: 0 0 16px; background: var(--white); }
     .fd-nearby-btn {
       flex: 1; padding: 12px 4px; border-radius: 14px; text-align: center;
       font-size: 11px; font-weight: 600; color: var(--text-sub);
@@ -130,16 +132,12 @@
     .fd-nearby-btn:active { background: var(--bg); transform: scale(0.96); }
     .fd-nearby-btn .nb-icon { font-size: 20px; display: block; margin-bottom: 5px; }
 
-    /* CTA */
-    .fd-cta {
-      /* .page 가 이미 bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)) 이라
-       * 여기서 다시 더하면 아이폰에서 34px 빈 띠가 생긴다. */
-      margin: 0; padding: 14px 18px;
-      background: var(--white); border-top: 1px solid var(--border);
-      position: sticky; bottom: 0; display: flex; gap: 10px;
-    }
+    /* CTA — 2026-08-26 에 sticky .fd-cta 래퍼를 걷어냈다.
+     * 화면 아래에 고정돼 있던 탓에 그 아래가 통째로 빈 띠로 남았다(실측 150px).
+     * 축제 데이터에 설명문이 없어 본문이 짧은데, 짧은 본문에 sticky 를 붙이면
+     * 남는 공간이 그대로 드러난다. 흐름 안에 두고 아래를 다른 내용으로 채운다. */
     .fd-cta-btn {
-      flex: 1; padding: 14px; border-radius: 14px; text-align: center;
+      width: 100%; padding: 15px; border-radius: 14px; text-align: center;
       font-size: 14px; font-weight: 700; cursor: pointer;
       background: var(--primary); color: var(--white);
       text-decoration: none; display: block;
@@ -492,3 +490,65 @@
     }
     /* 소식·캘린더처럼 줄 높이가 낮은 곳은 살짝 둥글게만 */
     .ph-thumb.ph-sm { border-radius: 8px; }
+
+    /* ── 축제 상세 개편 (2026-08-26) ────────────────────────────────────────
+     * 화면이 비어 보이던 이유는 디자인이 아니라 데이터였다 — 축제 50건에
+     * 설명문도 기간도 없고 태그는 전부 ["축제","행사"] 로 같다.
+     * 없는 정보를 지어내는 대신 (1) 중복을 걷어내고 (2) 날짜에서 계산할 수 있는
+     * 것을 꺼내고 (3) 그 달의 다른 행사로 아래를 채웠다. */
+
+    /* 히어로 날짜줄 — D-day 를 같은 줄에 얹는다 */
+    .fd-hero-date { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .fd-dday {
+      display: inline-block; padding: 2px 9px; border-radius: 20px;
+      font-size: 11px; font-weight: 800; letter-spacing: 0.2px;
+      background: rgba(255,255,255,0.22); color: #fff;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    /* 일주일 안이면 눈에 띄게 — 흰 바탕에 주황이라 히어로 사진 위에서도 읽힌다 */
+    .fd-dday.soon { background: #fff; color: #C2410C; }
+
+    /* 장소 카드 안의 '지도에서 보기' — 이 화면에 정작 지도로 가는 길이 없었다 */
+    .fd-map-btn {
+      margin-top: 8px; padding: 8px 14px; border-radius: 10px;
+      font-size: 12.5px; font-weight: 700; color: var(--primary);
+      background: #EFF6FF; border: 1px solid #BFDBFE; cursor: pointer;
+      transition: background 0.12s, transform 0.12s;
+    }
+    .fd-map-btn:active { background: #DBEAFE; transform: scale(0.97); }
+
+    .fd-act-head {
+      font-size: 12px; font-weight: 700; color: var(--text-muted);
+      margin: 2px 0 8px; letter-spacing: 0.2px;
+    }
+    .fd-cta-btn.ended { background: #F1F5F9; color: var(--text-sub); border: 1.5px solid var(--border); }
+    .fd-cta-sub {
+      font-size: 11px; color: var(--text-muted); text-align: center;
+      margin-top: 7px; word-break: keep-all;
+    }
+
+    /* 같은 달의 다른 행사 */
+    .fd-also { margin-top: 22px; border-top: 1px solid var(--border); padding-top: 16px; }
+    .fd-also-head {
+      font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px;
+    }
+    .fd-also-item {
+      display: flex; align-items: center; gap: 11px;
+      padding: 9px 0; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.12s;
+    }
+    .fd-also-item:last-of-type { border-bottom: none; }
+    .fd-also-item:active { background: var(--bg); }
+    .fd-also-body { flex: 1; min-width: 0; }
+    .fd-also-name {
+      font-size: 13.5px; font-weight: 700; color: var(--text);
+      line-height: 1.35; word-break: keep-all;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .fd-also-meta { font-size: 11.5px; color: var(--text-muted); margin-top: 3px; }
+    .fd-also-arrow { color: var(--text-muted); font-size: 18px; flex-shrink: 0; }
+
+    /* 본문이 짧아도 하단 내비에 붙지 않게 */
+    .fd-tail { height: 20px; }
+
