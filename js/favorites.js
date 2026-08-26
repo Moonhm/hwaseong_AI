@@ -136,7 +136,10 @@ function navToFav(id) {
   if (f.type === 'lc' && f.lat && f.lng) {
     go('map');
     setTimeout(function() {
-      if (!kakaoMap || typeof kakao === 'undefined') return;
+      if (!kakaoMap || typeof kakao === 'undefined') {
+        if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+        return;
+      }
       kakaoMap.setLevel(4);
       kakaoMap.setCenter(new kakao.maps.LatLng(f.lat, f.lng));
       if (typeof activateLc === 'function') activateLc();

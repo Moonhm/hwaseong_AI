@@ -601,10 +601,17 @@ function _srClick(idx) {
   } else if (r.type === 'lc' && r.lat) {
     go('map');
     setTimeout(function() {
-      if (!kakaoMap) return;
+      if (!kakaoMap) {
+        if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+        return;
+      }
       kakaoMap.setCenter(new kakao.maps.LatLng(r.lat, r.lng));
       kakaoMap.setLevel(4);
-      if (typeof setFilter === 'function') setFilter('localcurrency');
+      /* ⚠ setFilter 는 토글이다. 2026-08-26 에 activateLc() 로 바꾼 것이
+       * 즐겨찾기·goMapLc·findNearby 셋뿐이라 **검색 경로만 남아 있었다**
+       * (2026-08-27 배포 Claude 지적). 지역화폐 칩을 켜 둔 채 가맹점을 검색해
+       * 고르면 요청과 정반대로 레이어가 꺼져 핀이 전부 사라졌다. */
+      if (typeof activateLc === 'function') activateLc();
       if (r._raw && typeof showLcSlide === 'function') showLcSlide(r._raw);
     }, 400);
   } else if (r.type === 'conv') {
@@ -619,7 +626,10 @@ function _srClick(idx) {
   } else if (r.lat) {
     go('map');
     setTimeout(function() {
-      if (!kakaoMap) return;
+      if (!kakaoMap) {
+        if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+        return;
+      }
       kakaoMap.setCenter(new kakao.maps.LatLng(r.lat, r.lng));
       kakaoMap.setLevel(r.level || 6);
     }, 350);

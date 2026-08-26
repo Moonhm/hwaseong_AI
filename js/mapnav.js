@@ -39,9 +39,18 @@ function _ensureFilter(cat) {
 function goMapCat(cat) {
   go('map');
   setTimeout(function () {
+    /* ⚠ 여기만 가드가 없었다(2026-08-27 배포 Claude 지적). SDK 가 아직이면
+     * _ensureFilter → setFilter 가 **칩만 active 로 만들고 핀은 0개**가 된다.
+     * 그리고 setFilter 는 토글이라, 사용자가 그 칩을 다시 눌러도 첫 탭은
+     * '해제'로 먹혀 두 번 눌러야 핀이 나온다 — 안내도 없어 데이터가 없는 줄 안다.
+     * 지연도 혼자 200ms 로 짧아 미로드 창에 걸릴 확률이 제일 높았다. 350ms 로 통일한다. */
+    if (!kakaoMap) {
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+      return;
+    }
     if (cat === 'parking') { if (typeof activateParking === 'function') activateParking(); }
     else _ensureFilter(cat);
-  }, 200);
+  }, 350);
 }
 
 /* ── 생활탭 항목 클릭 → 지도에서 해당 위치 줌인 + 슬라이드 카드 표시 ── */
@@ -55,7 +64,10 @@ function goConvItem(convCat, idx) {
   go('map');
 
   setTimeout(function () {
-    if (!kakaoMap || typeof kakao === 'undefined') return;
+    if (!kakaoMap || typeof kakao === 'undefined') {
+      if (typeof showToast === 'function') showToast('지도를 불러오는 중이에요. 잠시 후 다시 눌러주세요.');
+      return;
+    }
 
     /* 필터 활성화 (캐시 있으면 즉시, 없으면 geocoding 시작) */
     _ensureFilter(convCat);

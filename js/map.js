@@ -703,7 +703,16 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
   backBtn.setAttribute('aria-label', '이전으로');
   backBtn.innerHTML = '&#8592;';
   backBtn.onclick = exitNearestParkMode;
-  document.body.appendChild(backBtn);
+  /* ⚠ document.body 에 붙이면 안 된다. .place-slide 의 z-index 200 은
+   * #page-map(.page.active{z-index:2}) 이 만든 스태킹 컨텍스트 '안' 값이라,
+   * body 직속인 이 버튼은 190 vs 200 이 아니라 **190 vs 2** 로 겨뤄
+   * 카드를 포함한 지도 화면 전부 위에 떴다 — 주차장 카드 위 46px 이
+   * '길찾기' 왼쪽을 덮어 탭이 NP 종료로 먹혔다.
+   * 같은 컨텍스트에 넣어야 css/40-quiz.css 의 '슬라이드에 가리도록' 주석이
+   * 비로소 사실이 된다. (2026-08-27 배포 Claude 지적)
+   * 페이지 전환 애니메이션(transform)과는 무관하다 — 지도 탭을 벗어날 때
+   * exitNpModeLeavingMap 이 전환 '전에' 이 버튼을 제거한다(js/nav.js go). */
+  (document.getElementById('page-map') || document.body).appendChild(backBtn);
 
   _npMode = { onBack: onBack || null, touristOv: touristOv, parkOv: parkOv, backBtn: backBtn };
 
@@ -1067,6 +1076,19 @@ function findNearby(lat, lng, _retried) {
   var pool = (typeof lcData !== 'undefined' && lcData.length)
     ? lcData
     : PLACES.filter(function (p) { return p.category === 'localcurrency'; });
+
+  /* ⚠ 여기가 비었다는 것은 '가맹점이 없다'가 아니라 '못 불러왔다'는 뜻이다.
+   * _loadLcData(js/ui.js)의 catch 가 성공과 똑같이 콜백을 부르기 때문에,
+   * 4.2MB fetch 가 실패하면 위 지연로드가 _retried=true 로 되돌아와 빈 배열을
+   * 훑고 '반경 500m 안에는 없어요'라고 거짓 단정했다 — 동탄 한복판처럼 실제로는
+   * 수백 곳(실측 311곳)이 있는 자리에서도 똑같이 떴다.
+   * PLACES 의 localcurrency 폴백은 실측 0건이라 이 분기는 로드 실패와 같은 뜻이다.
+   * (2026-08-27 배포 Claude 지적 — 전날 내가 붙인 지연로드가 남긴 구멍이다) */
+  if (!pool.length) {
+    closePlaceSlide();
+    showToast('가맹점 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.');
+    return;
+  }
 
   var cosLat = Math.cos(lat * Math.PI / 180);
   var nearby = pool.filter(function (p) {
