@@ -149,13 +149,17 @@ function _getFestsInMonth(year, month) {
 }
 
 /* 캘린더 이벤트 목록 렌더 */
-function renderCalEventList(festivals, labelText) {
+/* emptyHtml: 목록이 비었을 때 보여 줄 것. 안 넘기면 기본 문구를 쓴다.
+ * 날짜를 고른 경우와 그 달 전체가 빈 경우는 할 말이 다르다 —
+ * 전자는 '다시 누르면 이 달 전체' 안내가 필요하고 후자는 아니다. */
+function renderCalEventList(festivals, labelText, emptyHtml) {
   var lbl = document.getElementById('cal-event-label');
   var el  = document.getElementById('calendar-event-list');
   if (lbl) lbl.textContent = labelText || '이번 달 축제';
   if (!el) return;
   if (!festivals.length) {
-    el.innerHTML = '<div style="padding:20px 0;text-align:center;color:var(--text-muted);font-size:13px">축제가 없어요</div>';
+    el.innerHTML = emptyHtml ||
+      '<div style="padding:20px 0;text-align:center;color:var(--text-muted);font-size:13px">축제가 없어요</div>';
     return;
   }
   el.innerHTML = festivals.map(function(p) {
@@ -198,7 +202,9 @@ function _renderCalendar() {
 
   for (var b = 0; b < firstDay; b++) {
     var blank = document.createElement('div');
-    blank.className = 'cal-day'; blank.style.color = 'transparent';
+    /* 1일 앞의 자리표시자. cal-blank 로 hover·커서를 끈다 —
+     * 눌러도 아무 일이 없는 칸이 눌릴 것처럼 보이면 안 된다. */
+    blank.className = 'cal-day cal-blank'; blank.style.color = 'transparent';
     frag.appendChild(blank);
   }
   for (var d = 1; d <= daysInMonth; d++) {
@@ -218,17 +224,27 @@ function _renderCalendar() {
         grid.querySelectorAll('.cal-day.cal-selected').forEach(function(c) {
           c.classList.remove('cal-selected');
         });
+
         /* 같은 날을 다시 누르면 선택 해제 — 그 달 전체 목록으로 돌아간다
-         * (달을 넘겼을 때와 같은 화면이다). 2026-08-26 사용자 요청.
-         * 축제가 없는 날을 눌러도 여기로 온다 — 빈 목록을 띄우는 것보다
-         * 그 달 전체를 보여 주는 편이 쓸모 있다. */
-        if (wasSelected || !fests || !fests.length) {
+         * (달을 넘겼을 때와 같은 화면이다). 2026-08-26 사용자 요청. */
+        if (wasSelected) {
           renderCalEventList(_getFestsInMonth(_calYear, _calMonth),
                              _calYear + '년 ' + MONTHS[_calMonth] + ' 축제');
           return;
         }
+
+        /* ⚠ 축제가 없는 날도 선택된다 (2026-08-26 사용자 지시).
+         * 예전에는 여기서 곧장 '그 달 전체'로 빠져 선택 표시가 아예 안 걸렸고,
+         * 그래서 "클릭이 안 된다"로 보였다. 어느 날을 짚었는지는 축제 유무와
+         * 상관없이 보여 줘야 한다 — 달력에서 날짜를 누르는 건 '고르는' 동작이다. */
         this.classList.add('cal-selected');
-        renderCalEventList(fests, _calYear + '년 ' + MONTHS[_calMonth] + ' ' + day + '일 축제');
+        var list  = (fests && fests.length) ? fests : [];
+        var label = _calYear + '년 ' + MONTHS[_calMonth] + ' ' + day + '일 축제';
+        renderCalEventList(list, label,
+          '<div style="padding:20px 0;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.7">' +
+            '이 날은 예정된 축제가 없어요<br>' +
+            '<span style="font-size:12px;color:#b8c2cc">날짜를 한 번 더 누르면 이 달 전체를 볼 수 있어요</span>' +
+          '</div>');
         document.getElementById('calendar-event-list').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });
     })(d, festDays[d]);
