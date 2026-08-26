@@ -338,7 +338,7 @@ function renderRecBannerTop() {
       + p.lat + ',' + p.lng + ',4,' + p.id + ')">'
     + thumb
     + '<div class="menu-rec-top-info">'
-    +   '<div class="menu-rec-top-label">🥇 최근 내 1위' + (dong ? ' · ' + dong : '') + '</div>'
+    +   '<div class="menu-rec-top-label">최근 내 1위' + (dong ? ' · ' + dong : '') + '</div>'
     +   '<div class="menu-rec-top-name">' + p.name + '</div>'
     + '</div>'
     + '<div class="menu-rec-top-go">'
