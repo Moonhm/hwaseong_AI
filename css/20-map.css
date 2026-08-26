@@ -163,6 +163,22 @@
       touch-action: none;
     }
 
+    /* 지역화폐 핀은 네이티브 kakao.maps.Marker 라 .cm-pin.selected 를 쓸 수 없다
+     * (DOM 이 없다). 같은 '선택됨' 신호를 링으로 낸다 — 테두리 색·두께·그림자를
+     * .cm-pin.selected 와 맞춰 다른 핀과 같은 인상을 준다. */
+    .lc-sel-ring {
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 3px solid var(--primary);
+      background: rgba(37, 99, 235, 0.14);
+      box-shadow: 0 0 0 3px #fff, 0 4px 14px rgba(0, 0, 0, 0.28);
+      animation: lc-sel-pop 0.18s ease-out;
+    }
+    /* prefers-reduced-motion 은 css/90-misc.css 의 전역 * 규칙이 덮는다 */
+    @keyframes lc-sel-pop {
+      from { transform: scale(0.6); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
     /* ── 실시간 주차장 핀 ── */
     .pk-pin    { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
     .pk-circle {
@@ -178,6 +194,12 @@
     }
     .pk-count { font-size: 11px; font-weight: 700; color: #fff; }
     .pk-pin:hover .pk-circle { transform: scale(1.12); }
+    /* 선택 강조. 위 .cm-pin.selected 와 같은 값을 쓴다 — 관광지 핀에서 쓰던 효과를
+     * 모든 핀에 확대한 것이라(2026-08-26 사용자 요청), 종류마다 다르면 안 된다. */
+    .pk-pin.selected .pk-circle {
+      transform: scale(1.45);
+      box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--primary), 0 4px 14px rgba(0,0,0,0.28);
+    }
     .pk-tail {
       width: 0; height: 0; margin-top: -2px;
       border-left: 5px solid transparent; border-right: 5px solid transparent;

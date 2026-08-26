@@ -54,7 +54,9 @@ function setLcFilter(cat) {
 /* ── 표시/숨김 ── */
 function setLcVisible(visible) {
   lcVisible = visible;
-  if (!visible) { clearLcDisplay(); return; }
+  /* 레이어를 끄면 핀이 사라지므로 선택 링도 함께 지운다.
+   * (idle 마다 도는 clearLcDisplay 가 아니라 여기가 맞는 자리다 — 그 함수 주석 참고) */
+  if (!visible) { _lcSelClear(); clearLcDisplay(); return; }
   /* 데이터 미로드 시 지연 fetch 후 렌더 */
   if (!lcData.length) {
     if (typeof _loadLcData === 'function') {
@@ -66,6 +68,9 @@ function setLcVisible(visible) {
 }
 
 /* ── 현재 표시 중인 것 전부 제거 ── */
+/* ⚠ 여기서 _lcSelClear() 를 부르면 안 된다 — 이 함수는 updateLcDisplay() 첫 줄에서
+ * idle 마다 불린다. 선택 직후 _panPinAboveSlide 가 일으키는 pan 도 idle 이라
+ * 링이 뜨자마자 지워진다. 링 정리는 레이어를 끌 때(setLcVisible)만 한다. */
 function clearLcDisplay() {
   lcDisplayItems.forEach(function (item) {
     if (item._clickHandler) {
@@ -201,7 +206,39 @@ function showClusters(bounds, level) {
 }
 
 /* ── 가맹점 슬라이드 카드 ── */
+/* ── 선택 강조 ──────────────────────────────────────────────────────────────
+   지역화폐 핀만 네이티브 kakao.maps.Marker 다 — 한 화면에 최대 300개(LC_MAX_PINS)라
+   CustomOverlay 로 만들면 무겁기 때문이다. DOM 이 없으니 다른 핀들처럼
+   .selected 클래스를 붙일 수 없다. 그래서 같은 '선택됨' 신호를 링 오버레이로 낸다.
+   링은 좌표에 붙어 있어, 핀이 idle 마다 새로 만들어져도 그대로 남는다. */
+var _lcSelOv = null;
+
+function _lcSelect(p) {
+  _lcSelClear();
+  /* 핀이 안 보이는 상태(즐겨찾기·홈 검색으로 바로 진입)면 링만 떠서 이상하다. */
+  if (!lcVisible || !lcMap || typeof kakao === 'undefined') return;
+  if (!p || !p.lat || !p.lng) return;
+  var el = document.createElement('div');
+  el.className = 'lc-sel-ring';
+  _lcSelOv = new kakao.maps.CustomOverlay({
+    position: new kakao.maps.LatLng(p.lat, p.lng),
+    content:  el,
+    yAnchor:  1.0,   /* 네이티브 마커의 기준점이 바닥 끝이라 링도 거기에 맞춘다 */
+    zIndex:   150,
+    map:      lcMap,
+  });
+}
+
+function _lcSelClear() {
+  if (_lcSelOv) { _lcSelOv.setMap(null); _lcSelOv = null; }
+}
+
 function showLcSlide(p) {
+  /* 관광지 핀에만 있던 선택 강조를 여기에도 적용한다 (2026-08-26 사용자 요청). */
+  if (typeof clearSelectedPin === 'function') clearSelectedPin();
+  _lcSelect(p);
+  if (typeof registerSelectedPin === 'function') registerSelectedPin(_lcSelClear);
+
   if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(p.lat, p.lng, 50, 240);
   document.getElementById('slide-inner').innerHTML =
     '<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'

@@ -160,7 +160,9 @@ function showPkViewport(bounds) {
       position: new kakao.maps.LatLng(p.lat, p.lng),
       content:  pinHtml(p),
       yAnchor:  1.5,
-      zIndex:   2,
+      /* 선택된 핀은 다시 그려질 때도 맨 앞이어야 한다 — 커진 원이 옆 핀에 가리면
+       * '내가 이걸 고르고 있다'가 안 보인다. pinHtml 의 selected 클래스와 짝이다. */
+      zIndex:   p.id === pkSelectedId ? 200 : 2,
       map:      parkingMap,
     });
     overlay._pkId = p.id;
@@ -239,7 +241,11 @@ function showPkClusters(bounds, level) {
 function pinHtml(p) {
   var color  = pinColorCached(p);
   var status = statusText(p);
-  return '<div class="pk-pin" id="pkpin-' + p.id + '"'
+  /* 핀은 idle 마다 통째로 새로 그려진다(위 showPkPins). 선택 상태를 DOM 에만
+   * 두면 _panPinAboveSlide 의 panBy 가 곧바로 쏘는 idle 에서 강조가 사라진다.
+   * 그래서 pkSelectedId 를 보고 생성 시점에 다시 붙인다 — 관광지 핀도 같은 방식이다
+   * (js/map.js 의 `p.id === selectedId` 참고). */
+  return '<div class="pk-pin' + (p.id === pkSelectedId ? ' selected' : '') + '" id="pkpin-' + p.id + '"'
     + ' onclick="onParkingClick(' + p.id + ')"'
     + ' onmouseover="pkHoverIn(' + p.id + ')"'
     + ' onmouseout="pkHoverOut(' + p.id + ')">'
@@ -252,11 +258,40 @@ function pinHtml(p) {
 }
 
 /* ── 핀 클릭 ── */
+/* 선택된 주차장 id. 핀 DOM 은 idle 마다 갈리므로 '무엇이 선택됐나'는 여기 남긴다. */
+var pkSelectedId = null;
+
 function onParkingClick(id) {
   var p = parkingData.find(function (x) { return x.id === id; });
   if (!p) return;
+
   if (typeof _panPinAboveSlide === 'function') _panPinAboveSlide(p.lat, p.lng, 50, 300);
-  showParkingSlide(p);
+  showParkingSlide(p);   /* 선택 강조는 그 안에서 한다 */
+}
+
+/* 관광지 핀에만 있던 '선택하면 커지고 맨 앞으로'를 주차장에도 적용한다
+ * (2026-08-26 사용자 요청). 중앙 이동은 원래 있었고 강조가 없었다.
+ * 핀 클릭 말고도 홈의 '최근 본 주차장'(goMapPark)·NP 모드가 슬라이드를 직접 여는
+ * 경로라, onParkingClick 이 아니라 showParkingSlide 쪽에 건다. */
+function _pkSelect(id) {
+  if (typeof clearSelectedPin === 'function') clearSelectedPin();
+  pkSelectedId = id;
+  _pkApplySelected(id, true);
+  if (typeof registerSelectedPin === 'function') registerSelectedPin(_deselectParkingPin);
+}
+
+/* DOM 을 붙잡아 두지 않고 그때그때 id 로 찾는다 — 위 pinHtml 주석 참고. */
+function _pkApplySelected(id, on) {
+  var el = document.getElementById('pkpin-' + id);
+  if (el) el.classList.toggle('selected', !!on);
+  var ov = pkOverlayMap[id];
+  if (ov) ov.setZIndex(on ? 200 : 2);   /* 2 = 핀 기본값 (pkHoverOut 과 같은 값) */
+}
+
+function _deselectParkingPin() {
+  if (pkSelectedId === null) return;
+  _pkApplySelected(pkSelectedId, false);
+  pkSelectedId = null;
 }
 
 /* ── 호버 z-index ── */
@@ -300,6 +335,7 @@ function showParkingSlide(p) {
   /* '최근 본' 기록 지점 (js/home.js pushRecent). 관광지는 js/map.js showPlaceSlide 가 건다.
    * 주차장 id 는 관광지 id 와 60개가 겹치므로 종류를 반드시 함께 넘긴다. */
   if (typeof pushRecent === 'function') pushRecent(p, 'parking');
+  if (p && p.id != null) _pkSelect(p.id);   /* 선택 핀 강조 — 위 _pkSelect 주석 참고 */
 
   var color   = pinColorCached(p);
   var avail   = p.open ? p.avail : '-';

@@ -276,7 +276,7 @@ function _buildOverlays(cat, places) {
     (function (place) {
       wrap.addEventListener('click', function (e) {
         e.stopPropagation();
-        _showConvSlide(place);
+        _showConvSlide(place);   /* 선택 강조·중앙이동은 그 안에서 한다 */
       });
       wrap.addEventListener('mouseover', function () {
         CONV_OVMAP[place.id] && CONV_OVMAP[place.id].setZIndex(100);
@@ -366,7 +366,35 @@ function _showJebuMarker() {
 }
 
 /* ── 슬라이드 카드: 편의정보 장소 ── */
+/* 관광지 핀에만 있던 '선택하면 커지고 맨 앞으로'를 편의시설 핀에도 적용한다
+ * (2026-08-26 사용자 요청). 마크업이 관광지와 같은 .cm-pin 이라
+ * css/20-map.css 의 .cm-pin.selected 규칙이 그대로 먹는다.
+ * 핀 DOM 은 CustomOverlay 의 content 로 살아 있으므로 getContent() 로 되찾는다 —
+ * 핀 클릭 말고도 지도 검색·NP 모드에서 이 함수로 바로 들어오는 경로가 있어서,
+ * 클릭 핸들러의 클로저에 기대지 않고 여기서 다시 찾는 편이 안전하다. */
+function _convSelectPin(place) {
+  if (typeof clearSelectedPin === 'function') clearSelectedPin();
+  var ov = CONV_OVMAP[place && place.id];
+  if (!ov) return;
+  var el = ov.getContent();
+  if (el && el.classList) el.classList.add('selected');
+  ov.setZIndex(200);
+  if (typeof registerSelectedPin === 'function') {
+    registerSelectedPin(function () {
+      if (el && el.classList) el.classList.remove('selected');
+      ov.setZIndex(1);   /* 생성값. hover 핸들러가 넣어 둔 100 도 여기서 정리된다 */
+    });
+  }
+}
+
 function _showConvSlide(place) {
+  _convSelectPin(place);
+  /* 선택한 핀을 슬라이드 카드 위 가시영역 중앙으로 옮긴다.
+   * 관광지(map.js)·주차장(parking.js)·지역화폐(localcurrency.js)는 전부 하고 있었는데
+   * 편의시설만 빠져서, 핀이 화면 아래쪽에 있으면 카드에 가려 안 보였다. */
+  if (typeof _panPinAboveSlide === 'function' && place.lat && place.lng) {
+    _panPinAboveSlide(place.lat, place.lng, 50, 300);
+  }
   var cfg      = CONV_CAT_CFG[place.category];
   var ex       = place.extra || {};
   var safeName = (place.name || '').replace(/['"\\]/g, '');

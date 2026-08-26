@@ -327,27 +327,53 @@ function showTkClusters(bounds, level) {
   });
 }
 
+/* ── 지도 전체에서 '선택된 핀'은 하나뿐이다 ──────────────────────────────────
+   핀 시스템이 네 개다 — 관광지·축제·문화재(cm-pin, 이 파일) / 편의시설·제부도
+   (cm-pin, conv_map.js) / 주차장(pk-pin, parking.js) / 지역화폐(네이티브 Marker,
+   localcurrency.js). 각자 자기 강조만 지우면 주차장을 고른 뒤 관광지를 고를 때
+   주차장 강조가 그대로 남아 '두 개가 선택된' 화면이 된다.
+
+   그래서 선택하는 쪽이 '나를 어떻게 지우는가'를 함께 맡기고,
+   다음 선택은 clearSelectedPin() 으로 그것부터 실행한다.
+   js/map.js 가 스크립트 순서상 이 넷 중 가장 앞이라(index.html) 여기에 둔다. */
+var _pinSelClear = null;
+
+function clearSelectedPin() {
+  if (!_pinSelClear) return;
+  var f = _pinSelClear;
+  _pinSelClear = null;   /* 먼저 비운다 — f() 안에서 또 불려도 무한 재귀가 안 되게 */
+  try { f(); } catch (e) {}
+}
+
+function registerSelectedPin(fn) {
+  _pinSelClear = (typeof fn === 'function') ? fn : null;
+}
+
 /* ── 핀 클릭 ── */
 function onPinClick(id) {
   var place = PLACES.find(function (p) { return p.id === id; });
   if (!place) return;
 
-  /* 이전 선택 해제 */
-  if (selectedId !== null) {
-    if (overlayEls[selectedId])       overlayEls[selectedId].classList.remove('selected');
-    if (overlayMap[selectedId])       overlayMap[selectedId].setZIndex(1);
-    var prevTk = touristOverlayMap[selectedId];
-    if (prevTk) { prevTk.el.classList.remove('selected'); prevTk.overlay.setZIndex(1); }
-  }
+  clearSelectedPin();            /* 어느 시스템의 선택이든 여기서 해제된다 */
   selectedId = id;
   if (overlayEls[id]) overlayEls[id].classList.add('selected');
   if (overlayMap[id]) overlayMap[id].setZIndex(200);
   var curTk = touristOverlayMap[id];
   if (curTk) { curTk.el.classList.add('selected'); curTk.overlay.setZIndex(200); }
+  registerSelectedPin(_deselectPlacePin);
 
   /* 슬라이드 카드 표시 */
   showPlaceSlide(place);
   _panPinAboveSlide(place.lat, place.lng, 50);
+}
+
+function _deselectPlacePin() {
+  if (selectedId === null) return;
+  if (overlayEls[selectedId]) overlayEls[selectedId].classList.remove('selected');
+  if (overlayMap[selectedId]) overlayMap[selectedId].setZIndex(1);
+  var tk = touristOverlayMap[selectedId];
+  if (tk) { tk.el.classList.remove('selected'); tk.overlay.setZIndex(1); }
+  selectedId = null;
 }
 
 /* 핀을 슬라이드 카드 위 가시 영역 중앙으로 이동
@@ -780,13 +806,10 @@ function _exitNpMode(restoreLayer) {
 function closePlaceSlide() {
   document.getElementById('place-slide').classList.remove('open');
   document.getElementById('map-dim').classList.remove('show');
-  if (selectedId !== null) {
-    if (overlayEls[selectedId]) overlayEls[selectedId].classList.remove('selected');
-    if (overlayMap[selectedId]) overlayMap[selectedId].setZIndex(1);
-    var tk = touristOverlayMap[selectedId];
-    if (tk) { tk.el.classList.remove('selected'); tk.overlay.setZIndex(1); }
-    selectedId = null;
-  }
+  /* 관광지·주차장·편의시설·지역화폐 중 무엇이 선택돼 있든 전부 해제된다.
+   * 예전에는 여기서 관광지 강조만 지워서, 주차장 핀을 고르고 카드를 닫으면
+   * 주차장 핀이 커진 채로 남았다. */
+  clearSelectedPin();
 }
 
 /* ── 모든 핀 숨김 (필터 없음 상태) ── */
