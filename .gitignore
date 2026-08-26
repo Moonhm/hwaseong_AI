@@ -7,6 +7,11 @@ node_modules/
 assets/
 js/localcurrency-source.csv
 
+# 실행 산출물 — Cloudflare Tunnel 로그 등 (2026-08-26).
+# tun.log 가 추적되지 않은 채 떠 있었다. 배포 Claude 가 git add -A 를 자주 쓰므로
+# 언제든 딸려 들어갈 수 있다. 터널을 재시작할 때마다 내용이 바뀌어 diff 만 더럽힌다.
+*.log
+
 # 반입 원본 — 용량으로 갈린다 (2026-08-25 사용자 결정)
 #   data/raw/        3MB 미만. git 에 올린다. 전처리 방식을 바꿔 다시 돌릴 때 필요하다.
 #   data/raw-large/  3MB 이상. 이 서버에만 둔다.
