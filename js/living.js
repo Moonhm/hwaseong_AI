@@ -398,10 +398,9 @@ function renderFestivalAll(expanded) {
     /* 날짜 표기: ISO(2026-09-02)는 '09.02', 미확정('2026년 8월 중')은 연도만 떼어
      * '8월 중'. 연도를 남기면 오른쪽 칸이 두 줄로 접힌다 —
      * 「이번 주 소식」의 approxLabel 과 같은 규칙이다(js/living.js renderNewsSection). */
-    var raw  = String(p.date || '').split('~')[0].trim();
-    var when = /^\d{4}-\d{1,2}-\d{1,2}/.test(raw)
-      ? raw.replace(/^\d{4}-/, '').replace(/-/g, '.')
-      : raw.replace(/^\d{4}\s*년?\s*/, '');
+    var when = (typeof festDateLabel === 'function')
+      ? festDateLabel(p.date, true)
+      : String(p.date || '').split('~')[0].trim().replace(/^\d{4}-/, '').replace(/-/g, '.');
     return '<div class="place-item" style="animation-delay:' + (Math.min(i, 12) * 0.045) + 's"' +
            ' onclick="openFestView(\'detail\',' + p.id + ')">' +
              thumb +

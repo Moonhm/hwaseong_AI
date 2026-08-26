@@ -330,7 +330,7 @@ function renderTourismList(theme, expanded) {
           ${p.rating ? `<div style="display:flex;align-items:center;gap:3px;margin-top:2px"><span class="pi-stars">${ratingStars(p.rating)}</span><span class="pi-rating">${p.rating}</span><span style="font-size:10px;color:var(--text-muted)">(${(p.reviewCount||0).toLocaleString()})</span></div>` : ''}
         </div>
         <div class="pi-right" style="display:flex;align-items:center;gap:4px">
-          ${p.date ? '<span style="font-size:11px;color:var(--text-muted)">' + p.date.split('~')[0].trim().replace(/^\d{4}-/,'').replace(/-/g,'.') + '</span>' : ''}
+          ${p.date ? '<span style="font-size:11px;color:var(--text-muted)">' + festDateLabel(p.date, true) + '</span>' : ''}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
         </div>
       </div>`;
@@ -459,10 +459,7 @@ function showFestivalDetail(id) {
           '<div class="fd-also-head">' + parseInt(_dm.ymd[1], 10) + '월의 다른 행사</div>' +
           _same.map(f => {
             const b = (typeof festBadge === 'function') ? festBadge(f) : { cls: 'badge-upcoming', text: '예정' };
-            const raw = String(f.date || '').split('~')[0].trim();
-            const when = /^\d{4}-\d{1,2}-\d{1,2}/.test(raw)
-              ? raw.replace(/^\d{4}-/, '').replace(/-/g, '.')
-              : raw.replace(/^\d{4}\s*년?\s*/, '');
+            const when = festDateLabel(f.date, true);
             return '<div class="fd-also-item" onclick="showFestivalDetail(' + f.id + ')">' +
                      ((typeof photoThumb === 'function') ? photoThumb(f, 44, '🎉', 'ph-sm') : '') +
                      '<div class="fd-also-body">' +

@@ -689,7 +689,7 @@ function renderHomeTourism() {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
             <span class="badge ${festBadge(festivals[0]).cls}">${festBadge(festivals[0]).text}</span>
-            <span style="font-size:11px;color:var(--text-muted);">${festivals[0].date ? String(festivals[0].date).split('~').map(s=>s.trim().replace(/^\d{4}-/,'').replace(/-/g,'.')).join(' ~ ') : ''}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${festDateLabel(festivals[0].date)}</span>
           </div>
           <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${festivals[0].name}</div>
           <div style="font-size:12px;color:var(--text-muted);">${(festivals[0].address || '').split(' ').slice(0,3).join(' ')}</div>
@@ -970,9 +970,8 @@ function renderFestivalScroll() {
     /* status 필드는 죽었다(50건 전부 upcoming) — 날짜로 계산한다. js/calendar.js festBadge 참고 */
     const _fb = festBadge(p);
     const badge = '<span class="badge ' + _fb.cls + ' fsc-badge">' + _fb.text + '</span>';
-    const dateStr = p.date ? (p.date.includes('~')
-      ? p.date.split('~')[0].trim().replace(/^\d{4}-/,'').replace(/-/g,'.') + ' ~'
-      : p.date.trim().replace(/^\d{4}-/,'').replace(/-/g,'.')) : '';
+    /* 예전에는 범위면 "09.05 ~" 로 끝을 잘라 놨다 — 끝나는 날을 알 수 없었다. */
+    const dateStr = festDateLabel(p.date, true);
     /* 이 캐러셀은 2026-08-26 에 소식 탭으로 옮겨졌다 — go('tourism') 이 없으면 먹통이다.
      * 위 js/living.js 의 news-item 과 같은 이유다. */
     return `<div class="festival-scroll-card" onclick="openFestView('detail',${p.id})">

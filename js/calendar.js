@@ -159,6 +159,40 @@ function _getFestsInMonth(year, month) {
 /* emptyHtml: 목록이 비었을 때 보여 줄 것. 안 넘기면 기본 문구를 쓴다.
  * 날짜를 고른 경우와 그 달 전체가 빈 경우는 할 말이 다르다 —
  * 전자는 '다시 누르면 이 달 전체' 안내가 필요하고 후자는 아니다. */
+/* ── 축제 날짜 한 줄 표기 (2026-08-27) ────────────────────────────────────
+ * 배포 Claude 가 축제 10건의 date 를 "2026-09-05 ~ 2026-09-06" 범위로 채우면서
+ * 표기 코드가 화면마다 갈렸다. 달력·홈 대표 카드는 범위를 다 보여 주는데
+ * 목록 셋은 split('~')[0] 이라 **같은 축제가 화면마다 다른 날짜로** 보였다
+ * (달력 "09.12 ~ 09.13" / 소식 목록 "09.12").
+ * 깨진 것은 아니지만 갈리는 것 자체가 다음 사고의 씨앗이라 한 함수로 모은다.
+ *
+ *   full    : "09.12 ~ 09.13"  — 달력·홈 대표 카드처럼 폭이 넉넉한 자리
+ *   compact : "09.12~13"       — 목록 오른쪽 칸(실측 45px)
+ *
+ * ⚠ 연도는 뗀다. 남기면 오른쪽 칸이 두 줄로 접힌다(기존 주석의 실측).
+ *   조각마다 떼야 한다 — 통째로 replace 하면 앞 연도만 지워져
+ *   "09.05 ~ 2026.09.06" 이 된다(배포 Claude 가 4a1ba00 에서 겪은 그 버그).
+ * ⚠ compact 의 월 생략은 **같은 달일 때만** 한다. 달이 다르면 "10.31~11.01" 로
+ *   그대로 둔다 — 지금 10건은 전부 같은 달이지만 데이터는 바뀐다.
+ * ⚠ 근사 일정("2026년 8월 중")은 연도만 떼고 그대로 둔다. */
+function festDateLabel(raw, compact) {
+  var s = String(raw == null ? '' : raw).trim();
+  if (!s) return '';
+  var fmt = function (t) {
+    return /^\d{4}-\d{1,2}-\d{1,2}/.test(t)
+      ? t.replace(/^\d{4}-/, '').replace(/-/g, '.')
+      : t.replace(/^\d{4}\s*년?\s*/, '');
+  };
+  var seg = s.split('~').map(function (t) { return t.trim(); });
+  var a = fmt(seg[0]);
+  if (seg.length < 2 || !seg[1]) return a;
+  var b = fmt(seg[1]);
+  if (!compact) return a + ' ~ ' + b;
+  var am = a.split('.')[0], ad = a.split('.')[1];
+  var bm = b.split('.')[0], bd = b.split('.')[1];
+  return (ad && bd && am === bm) ? a + '~' + bd : a + '~' + b;
+}
+
 function renderCalEventList(festivals, labelText, emptyHtml) {
   var lbl = document.getElementById('cal-event-label');
   var el  = document.getElementById('calendar-event-list');
@@ -179,9 +213,7 @@ function renderCalEventList(festivals, labelText, emptyHtml) {
     /* ⚠ 범위("2026-09-05 ~ 2026-09-06")는 조각마다 연도를 떼야 한다.
      * 통째로 replace 하면 앞 연도만 지워져 "09.05 ~ 2026.09.06" 이 된다.
      * 끝의 .replace(' ~ ',' ~ ') 는 자기 자신으로 치환하는 무의미한 코드였다. */
-    var dateStr = String(p.date || '').split('~')
-      .map(function (s) { return s.trim().replace(/^\d{4}-/, '').replace(/-/g, '.'); })
-      .join(' ~ ');
+    var dateStr = festDateLabel(p.date);
     /* 사진이 있으면 점(dot) 대신 썸네일. 없으면 기존 점 그대로다. */
     var thumb = (typeof photoThumb === 'function') ? photoThumb(p, 38, '🎉', 'ph-sm') : '';
     return '<div class="cal-event-item" onclick="hideCalendar();showFestivalDetail(' + p.id + ')">'
