@@ -689,7 +689,7 @@ function renderHomeTourism() {
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px;">
             <span class="badge ${festBadge(festivals[0]).cls}">${festBadge(festivals[0]).text}</span>
-            <span style="font-size:11px;color:var(--text-muted);">${festivals[0].date ? festivals[0].date.replace(/^\d{4}-/,'').replace(/-/g,'.') : ''}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${festivals[0].date ? String(festivals[0].date).split('~').map(s=>s.trim().replace(/^\d{4}-/,'').replace(/-/g,'.')).join(' ~ ') : ''}</span>
           </div>
           <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${festivals[0].name}</div>
           <div style="font-size:12px;color:var(--text-muted);">${(festivals[0].address || '').split(' ').slice(0,3).join(' ')}</div>

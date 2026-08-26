@@ -176,7 +176,12 @@ function renderCalEventList(festivals, labelText, emptyHtml) {
      * 상태 판정은 festBadge() 한 곳만 쓴다 — 3분기(진행중·종료·예정)를 다 안다. */
     var _b = (typeof festBadge === 'function')
       ? festBadge(p) : { cls: 'badge-upcoming', text: '예정' };
-    var dateStr = (p.date || '').replace(/^\d{4}-/,'').replace(/-/g,'.').replace(' ~ ',' ~ ');
+    /* ⚠ 범위("2026-09-05 ~ 2026-09-06")는 조각마다 연도를 떼야 한다.
+     * 통째로 replace 하면 앞 연도만 지워져 "09.05 ~ 2026.09.06" 이 된다.
+     * 끝의 .replace(' ~ ',' ~ ') 는 자기 자신으로 치환하는 무의미한 코드였다. */
+    var dateStr = String(p.date || '').split('~')
+      .map(function (s) { return s.trim().replace(/^\d{4}-/, '').replace(/-/g, '.'); })
+      .join(' ~ ');
     /* 사진이 있으면 점(dot) 대신 썸네일. 없으면 기존 점 그대로다. */
     var thumb = (typeof photoThumb === 'function') ? photoThumb(p, 38, '🎉', 'ph-sm') : '';
     return '<div class="cal-event-item" onclick="hideCalendar();showFestivalDetail(' + p.id + ')">'
