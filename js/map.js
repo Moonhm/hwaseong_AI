@@ -80,6 +80,7 @@ function initMap() {
   setupZoomSlider();
   if (typeof initParking       === 'function') initParking(kakaoMap);
   if (typeof initLocalCurrency === 'function') initLocalCurrency(kakaoMap);
+  if (typeof initRestaurants   === 'function') initRestaurants(kakaoMap);   /* 2026-08-26 */
   mapReady = true;
   /* 최초 진입 시 아무것도 표시하지 않음 */
   kakao.maps.event.addListener(kakaoMap, 'click', closePlaceSlide);
@@ -883,6 +884,7 @@ function setFilter(cat) {
     _hideOverlays();
     setTouristVisible(false);
     if (typeof setLcVisible  === 'function') setLcVisible(false);
+    if (typeof setRsVisible  === 'function') setRsVisible(false);
     if (typeof hideAllConv   === 'function') hideAllConv();
     if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive);
     if (typeof updateParkingCount === 'function') updateParkingCount();
@@ -901,6 +903,7 @@ function setFilter(cat) {
     _hideOverlays();
     setTouristVisible(false);
     if (typeof setLcVisible === 'function') setLcVisible(false);
+    if (typeof setRsVisible === 'function') setRsVisible(false);
     if (typeof showConvCat  === 'function') showConvCat(cat);
     if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive);
     if (typeof updateParkingCount === 'function') updateParkingCount();
@@ -918,6 +921,8 @@ function setFilter(cat) {
   /* '전체'에 가맹점을 포함하면 칩 한 번에 4.2MB 다운로드가 시작된다.
    * 27,374건은 전용 칩으로 명시 선택했을 때만 로드한다. */
   if (typeof setLcVisible === 'function') setLcVisible(cat === 'localcurrency');
+  /* 음식점 3,754건(649KB)도 같은 이유로 '전체'에 넣지 않는다 — 전용 칩으로만 로드한다. */
+  if (typeof setRsVisible === 'function') setRsVisible(cat === 'restaurant');
   if (typeof setParkingVisible  === 'function') setParkingVisible(parkActive);
   if (typeof updateParkingCount === 'function') updateParkingCount();
 
@@ -929,6 +934,9 @@ function setFilter(cat) {
     }, 50);
   }
 
+  /* 음식점은 PLACES 소속이 아니라 rsData 다. 여기서 fitPlaces 를 부르면 0건이라
+   * 카메라가 엉뚱하게 튄다 — 현재 화면을 그대로 두고 뷰포트 렌더에 맡긴다. */
+  if (cat === 'restaurant') return;
   var targets = cat === 'all' ? PLACES : PLACES.filter(function (p) { return p.category === cat; });
   fitPlaces(targets);
 }

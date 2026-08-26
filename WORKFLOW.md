@@ -865,3 +865,5 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 ## 27-D. 추천 탭 재배치 · 이번 달 축제 소식 탭 이동 · 놀고있는 데이터 감사 → [`docs/log/2026-08-26-dev-tourism-layout-festival-move.md`](docs/log/2026-08-26-dev-tourism-layout-festival-move.md)
 
 ## 27-E. 추천 탭 큐레이션 3종 + 제부도 바닷길 시간표 → [`docs/log/2026-08-26-dev-datalab-tide.md`](docs/log/2026-08-26-dev-datalab-tide.md)
+
+## 27-F. 음식점 3,754곳 · 관광 리포트 3화면 · 메뉴 확장 → [`docs/log/2026-08-26-dev-restaurants-report-menu.md`](docs/log/2026-08-26-dev-restaurants-report-menu.md)

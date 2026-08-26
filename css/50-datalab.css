@@ -266,3 +266,159 @@
       font-size: 11px; color: var(--text-muted); line-height: 1.55;
       margin-top: 10px; word-break: keep-all;
     }
+
+    /* ══════════════ ④ 관광 리포트 (2026-08-26) ══════════════ */
+    .dl-report-note {
+      padding: 0 var(--px) 8px; font-size: 11.5px; color: var(--text-muted);
+      word-break: keep-all;
+    }
+    /* 성장률·증감률. 오르면 빨강, 내리면 파랑 — 증권 관례를 따른다.
+     * 초록/빨강으로 하면 색각 이상에서 구분이 어렵고, 앱의 초록은 이미 지역화폐다. */
+    .dl-trend {
+      font-size: 12px; font-weight: 800; color: var(--text-muted);
+      flex-shrink: 0; margin-bottom: 8px;
+    }
+    .dl-list-item .dl-trend { margin-bottom: 0; }
+    .dl-trend.up   { color: #DC2626; }
+    .dl-trend.down { color: #2563EB; }
+
+    .dl-kpi-row { display: flex; gap: 8px; padding: 12px var(--px) 4px; }
+    .dl-kpi {
+      flex: 1; min-width: 0; padding: 14px 10px; text-align: center;
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--r-md);
+    }
+    .dl-kpi-lbl { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; word-break: keep-all; }
+    .dl-kpi-val { font-size: 19px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
+    .dl-kpi-val.up   { color: #DC2626; }
+    .dl-kpi-val.down { color: #2563EB; }
+    .dl-kpi-sub { font-size: 10.5px; color: var(--text-muted); margin-top: 4px; }
+    .dl-rel-title {
+      padding: 18px var(--px) 8px; font-size: 13.5px; font-weight: 800; color: var(--text);
+    }
+
+    /* ══════════════ 오늘의 화성 · 설정 패널 (2026-08-26) ══════════════ */
+    /* 조수 패널(#tide-panel)과 같은 구조·같은 z-index 대다. 셋이 동시에 열리지 않는다 —
+     * 전부 메뉴에서 열리고, 열 때 closeMenu() 를 먼저 부른다. */
+    #today-dim {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+      opacity: 0; pointer-events: none; transition: opacity 0.22s; z-index: 300;
+    }
+    #today-dim.show { opacity: 1; pointer-events: auto; }
+    #today-panel, #settings-panel {
+      position: fixed; left: 50%; bottom: 0;
+      width: 100%; max-width: 480px; transform: translate(-50%, 100%);
+      background: var(--white); z-index: 310;
+      border-radius: 20px 20px 0 0;
+      max-height: 86vh; display: flex; flex-direction: column;
+      transition: transform 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+      box-shadow: 0 -6px 28px rgba(0,0,0,0.18);
+    }
+    #today-panel.open, #settings-panel.open { transform: translate(-50%, 0); }
+    #today-body, #settings-body {
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .td-date  { padding: 14px var(--px) 0; font-size: 12.5px; color: var(--text-muted); font-weight: 600; }
+    .td-sect  { padding: 16px var(--px) 8px; font-size: 13.5px; font-weight: 800; color: var(--text); }
+    .td-card  { margin: 0 var(--px); padding: 14px 16px; border-radius: var(--r-md);
+                background: var(--bg); border: 1px solid var(--border); }
+    .td-empty { color: var(--text-muted); font-size: 12.5px; line-height: 1.5; word-break: keep-all; }
+
+    .td-w-main { display: flex; align-items: center; gap: 12px; }
+    .td-w-icon { font-size: 30px; }
+    .td-w-temp { font-size: 22px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
+    .td-w-desc { font-size: 12.5px; color: var(--text-sub); margin-top: 2px; }
+    .td-w-air  { display: flex; justify-content: space-between; align-items: center;
+                 margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .td-w-air-lbl { font-size: 12px; color: var(--text-muted); }
+    .td-w-air-val { font-size: 13px; font-weight: 800; color: var(--text); }
+
+    .td-tide { cursor: pointer; }
+    .td-tide.is-open   { background: linear-gradient(135deg,#ECFDF5,#D1FAE5); border-color: #6EE7B7; }
+    .td-tide.is-closed { background: linear-gradient(135deg,#FEF2F2,#FEE2E2); border-color: #FCA5A5; }
+    .td-tide-badge { font-size: 14.5px; font-weight: 900; margin-bottom: 8px; word-break: keep-all; }
+    .td-tide.is-open   .td-tide-badge { color: #047857; }
+    .td-tide.is-closed .td-tide-badge { color: #B91C1C; }
+    .td-tide-times { display: flex; flex-wrap: wrap; gap: 6px; }
+    .td-tide-seg {
+      font-size: 12px; font-weight: 700; color: var(--text-sub);
+      background: rgba(255,255,255,0.72); border-radius: 8px; padding: 5px 9px;
+    }
+    .td-more { font-size: 11.5px; color: var(--text-muted); margin-top: 9px; font-weight: 600; }
+
+    .td-row {
+      display: flex; align-items: center; gap: 12px;
+      margin: 0 var(--px) 8px; padding: 12px 14px;
+      background: var(--white); border: 1px solid var(--border); border-radius: var(--r-md);
+      cursor: pointer;
+    }
+    .td-row:active { background: var(--bg); }
+    .td-row-icon {
+      width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: #F1F5F9; font-size: 17px;
+    }
+    .td-row-badge { font-size: 11.5px; font-weight: 900; color: var(--primary); background: #EEF2FF; }
+    .td-row-main { flex: 1; min-width: 0; }
+    .td-row-name {
+      font-size: 14px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .td-row-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 2px;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .td-mini {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 20px;
+      border: 1.5px solid var(--border); background: var(--white);
+      font-size: 11.5px; font-weight: 700; color: var(--text-sub); cursor: pointer;
+    }
+    .td-mini:active { transform: scale(0.95); }
+    .td-note {
+      padding: 4px var(--px) 0; font-size: 11.5px; color: var(--text-muted);
+      line-height: 1.55; word-break: keep-all;
+    }
+    .td-foot { padding: 18px var(--px) 0; }
+    .td-btn {
+      width: 100%; padding: 13px; border-radius: var(--r-md);
+      background: var(--primary); color: #fff; border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .td-btn:active { opacity: 0.86; transform: scale(0.98); }
+
+    /* ══════════════ 인기 순위 사진 카드 (2026-08-26) ══════════════ */
+    .dl-photo-row {
+      display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain;
+      padding: 2px var(--px) 4px; scrollbar-width: none;
+    }
+    .dl-photo-row::-webkit-scrollbar { display: none; }
+    .dl-photo-card { flex-shrink: 0; width: 132px; cursor: pointer; }
+    .dl-photo-card:active { transform: scale(0.97); }
+    .dl-photo-card { transition: transform 0.12s; }
+    /* 사진이 없을 때(assets/ 는 배포 서버에만 있다) onerror 로 img 가 숨고
+     * 이 배경 + ::before 이모지가 그대로 보인다. 빈 사각형이 남지 않는다. */
+    .dl-photo-thumb {
+      position: relative; width: 132px; height: 94px;
+      border-radius: var(--r-md); overflow: hidden; margin-bottom: 7px;
+      background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dl-photo-thumb::before { content: '🏞️'; font-size: 26px; position: absolute; }
+    .dl-photo-thumb img {
+      width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1;
+    }
+    /* 순위 배지는 사진 위에 떠야 하므로 img(z-index:1)보다 위 */
+    .dl-photo-no {
+      position: absolute; top: 6px; left: 6px; z-index: 2;
+      min-width: 22px; height: 22px; padding: 0 6px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 900;
+      background: rgba(17,24,39,0.72); color: #fff;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    .dl-photo-no.top { background: var(--primary); }
+    .dl-photo-name {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      line-height: 1.3; word-break: keep-all;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden;
+    }

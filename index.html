@@ -18,13 +18,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=2026082636">
-  <link rel="stylesheet" href="css/10-content.css?v=2026082636">
-  <link rel="stylesheet" href="css/20-map.css?v=2026082636">
-  <link rel="stylesheet" href="css/30-panel.css?v=2026082636">
-  <link rel="stylesheet" href="css/40-quiz.css?v=2026082636">
-  <link rel="stylesheet" href="css/50-datalab.css?v=2026082636">
-  <link rel="stylesheet" href="css/90-misc.css?v=2026082636">
+  <link rel="stylesheet" href="css/00-base.css?v=2026082641">
+  <link rel="stylesheet" href="css/10-content.css?v=2026082641">
+  <link rel="stylesheet" href="css/20-map.css?v=2026082641">
+  <link rel="stylesheet" href="css/30-panel.css?v=2026082641">
+  <link rel="stylesheet" href="css/40-quiz.css?v=2026082641">
+  <link rel="stylesheet" href="css/50-datalab.css?v=2026082641">
+  <link rel="stylesheet" href="css/90-misc.css?v=2026082641">
 </head>
 <body>
 
@@ -197,6 +197,18 @@
       <img src="img/logo-name.png" alt="화성잇다" style="height:22px;object-fit:contain;">
     </div>
 
+    <!-- 🔥 인기 순위 — 2026-08-26 사용자 지시로 추천 탭 맨 위로 올렸다.
+         #dl-sections 안에 있을 때는 '전체' 서브탭에서만 보였는데, 여기로 나오면서
+         서브탭과 무관하게 늘 보인다. 이 탭에서 가장 먼저 보여 줄 것이라는 판단이다.
+         사진은 같은 지시로 붙였다 — js/datalab.js renderDlPopular() 참고. -->
+    <div class="section" style="padding-top:12px">
+      <div class="section-header">
+        <div class="section-title">🔥 화성에서 인기 있는 곳</div>
+        <button class="section-link" onclick="showDatalab('popular')">전체 보기</button>
+      </div>
+    </div>
+    <div id="dl-popular-body"></div>
+
     <!-- AI 추천 퀴즈 진입 (2026-08-26 추가)
          탭 이름이 '추천' 이 되면서 자리가 맞아 올렸다. 그전까지 이 기능의 진입점은
          사이드 메뉴 배너 단 1곳뿐이라 사실상 아무도 찾지 못했다 —
@@ -255,14 +267,6 @@
            보인다(js/tourism.js switchTourismSub) — 목적이 뚜렷한 다른 서브탭에
            큐레이션이 끼면 방해가 된다. -->
       <div id="dl-sections">
-        <div class="section" style="padding-top:14px">
-          <div class="section-header">
-            <div class="section-title">🔥 화성에서 인기 있는 곳</div>
-            <button class="section-link" onclick="showDatalab('popular')">전체 보기</button>
-          </div>
-        </div>
-        <div id="dl-popular-body"></div>
-
         <div class="section" style="padding-top:18px">
           <div class="section-header">
             <div class="section-title">👥 세대별로 많이 찾는 곳</div>
@@ -278,6 +282,14 @@
           </div>
         </div>
         <div id="dl-tour-body"></div>
+
+        <div class="section" style="padding-top:18px">
+          <div class="section-header">
+            <div class="section-title">📈 요즘 뜨는 곳</div>
+            <button class="section-link" onclick="showDatalab('report')">리포트 전체</button>
+          </div>
+        </div>
+        <div id="dl-report-body"></div>
       </div>
 
       <div id="tourism-theme-header" style="padding:var(--px) var(--px) 0">
@@ -440,6 +452,7 @@
     <div class="chip" data-cat="tourist"       onclick="setFilter('tourist')">★ 관광지</div>
     <div class="chip" data-cat="festival"      onclick="setFilter('festival')">🎉 축제</div>
     <div class="chip" data-cat="heritage" onclick="setFilter('heritage')">🏛️ 문화재</div>
+    <div class="chip" data-cat="restaurant"    onclick="setFilter('restaurant')">🍜 음식점 3,754</div>
     <div class="chip" data-cat="mobeom"        onclick="setFilter('mobeom')">🍽️ 모범음식점</div>
     <div class="chip" data-cat="touristrest"   onclick="setFilter('touristrest')">🥢 관광식당업</div>
     <div class="chip" data-cat="hotel"         onclick="setFilter('hotel')">🏨 관광호텔</div>
@@ -472,6 +485,21 @@
       <button class="lc-fchip"        data-lcat="health" onclick="setLcFilter('health')">💊 의료</button>
       <button class="lc-fchip"        data-lcat="car"    onclick="setLcFilter('car')">🚗 자동차</button>
       <button class="lc-fchip"        data-lcat="edu"    onclick="setLcFilter('edu')">📚 학원</button>
+    </div>
+    <!-- 음식점 업종 필터 (2026-08-26) — 원본 업종 18종을 8개 묶음으로 접었다.
+         칩이 18개면 가로 스크롤만 길어지고 아무도 안 쓴다. 원본 분류는 슬라이드 카드에 그대로 보인다.
+         구조·CSS 는 위 지역화폐 필터 바를 그대로 쓴다. -->
+    <div id="rs-filter-bar">
+      <div id="rs-filter-scroll">
+        <button class="rs-fchip active" data-rcat="all"    onclick="setRsFilter('all')">전체</button>
+        <button class="rs-fchip"        data-rcat="korean" onclick="setRsFilter('korean')">한식</button>
+        <button class="rs-fchip"        data-rcat="cafe"   onclick="setRsFilter('cafe')">카페·간식</button>
+        <button class="rs-fchip"        data-rcat="meat"   onclick="setRsFilter('meat')">고기·구이</button>
+        <button class="rs-fchip"        data-rcat="world"  onclick="setRsFilter('world')">양·중·일</button>
+        <button class="rs-fchip"        data-rcat="sea"    onclick="setRsFilter('sea')">해산물</button>
+        <button class="rs-fchip"        data-rcat="fast"   onclick="setRsFilter('fast')">치킨·패스트푸드</button>
+        <button class="rs-fchip"        data-rcat="etc"    onclick="setRsFilter('etc')">기타</button>
+      </div>
     </div>
     <button id="lc-arr-right" class="lc-arr" onclick="scrollLcFilter(1)" aria-label="다음">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
@@ -568,6 +596,30 @@
   <div id="tide-body"></div>
 </div>
 
+<!-- 오늘의 화성 · 설정 (2026-08-26) — 조수 패널과 같은 '딤 + 하단 슬라이드' 구조.
+     딤은 한 장을 둘이 공유하고 closeTodayDim() 이 열려 있는 쪽을 닫는다. -->
+<div id="today-dim" onclick="closeTodayDim()"></div>
+<div id="today-panel">
+  <div class="tide-head">
+    <div>
+      <div class="tide-title">☀️ 오늘의 화성</div>
+      <div class="tide-sub">나가기 전에 한 번</div>
+    </div>
+    <button class="menu-close" onclick="closeToday()">✕</button>
+  </div>
+  <div id="today-body"></div>
+</div>
+<div id="settings-panel">
+  <div class="tide-head">
+    <div>
+      <div class="tide-title">⚙️ 설정</div>
+      <div class="tide-sub">저장된 정보와 위치 권한</div>
+    </div>
+    <button class="menu-close" onclick="closeSettings()">✕</button>
+  </div>
+  <div id="settings-body"></div>
+</div>
+
 <div id="menu-dim" onclick="closeMenu()"></div>
 <div id="quiz-dim" onclick="closeQuiz()"></div>
 <div id="menu-drawer">
@@ -595,6 +647,28 @@
 
     <!-- 바로가기 -->
     <div class="menu-section-title">바로가기</div>
+    <!-- 2026-08-26 추가: 하루 단위로 쓰는 것 셋을 맨 위에 모았다. -->
+    <div class="menu-item" onclick="openToday()">
+      <div class="menu-item-icon" style="background:#FEF9C3;">☀️</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">오늘의 화성</div>
+        <div class="menu-item-sub">날씨·미세먼지·물때·오늘 축제 한눈에</div>
+      </div>
+    </div>
+    <div class="menu-item" onclick="closeMenu();go('tourism');requestNearbyRec()">
+      <div class="menu-item-icon" style="background:#EFF6FF;">📍</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">내 주변 추천</div>
+        <div class="menu-item-sub">가장 가까운 관광지·공영주차장</div>
+      </div>
+    </div>
+    <div class="menu-item" onclick="closeMenu();goMapCat('restaurant')">
+      <div class="menu-item-icon" style="background:#FEF3C7;">🍜</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">음식점 전체</div>
+        <div class="menu-item-sub">화성시 음식점 3,754곳</div>
+      </div>
+    </div>
     <div class="menu-item" onclick="menuGoTourism('festival')">
       <div class="menu-item-icon" style="background:#FEF2F2;">🎉</div>
       <div class="menu-item-text">
@@ -649,6 +723,15 @@
     </div>
 
     <!-- 공유 -->
+    <div class="menu-section-title">설정</div>
+    <div class="menu-item" onclick="openSettings()">
+      <div class="menu-item-icon" style="background:#F1F5F9;">⚙️</div>
+      <div class="menu-item-text">
+        <div class="menu-item-label">설정</div>
+        <div class="menu-item-sub">저장된 정보·캐시·위치 권한</div>
+      </div>
+    </div>
+
     <div class="menu-section-title">공유</div>
     <div class="menu-item" onclick="closeMenu();shareApp()">
       <div class="menu-item-icon" style="background:#FFF7ED;">🔗</div>
@@ -676,29 +759,31 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=2026082636"></script>
-<script src="js/quiz.js?v=2026082636"></script>
-<script src="js/mapnav.js?v=2026082636"></script>
-<script src="js/home.js?v=2026082636"></script>
-<script src="js/tourism.js?v=2026082636"></script>
-<script src="js/living.js?v=2026082636"></script>
-<script src="js/favorites.js?v=2026082636"></script>
-<script src="js/ui.js?v=2026082636"></script>
-<script src="js/calendar.js?v=2026082636"></script>
-<script src="js/boot.js?v=2026082636"></script>
+<script src="js/nav.js?v=2026082641"></script>
+<script src="js/quiz.js?v=2026082641"></script>
+<script src="js/mapnav.js?v=2026082641"></script>
+<script src="js/home.js?v=2026082641"></script>
+<script src="js/tourism.js?v=2026082641"></script>
+<script src="js/living.js?v=2026082641"></script>
+<script src="js/favorites.js?v=2026082641"></script>
+<script src="js/ui.js?v=2026082641"></script>
+<script src="js/calendar.js?v=2026082641"></script>
+<script src="js/boot.js?v=2026082641"></script>
 
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=2026082636"></script>
-<script src="js/convenience.js?v=2026082636"></script>
-<script src="js/data.js?v=2026082636"></script>
-<script src="js/map.js?v=2026082636"></script>
-<script src="js/conv_map.js?v=2026082636"></script>
-<script src="js/parking.js?v=2026082636"></script>
-<script src="js/localcurrency.js?v=2026082636"></script>
+<script src="js/photos.js?v=2026082641"></script>
+<script src="js/convenience.js?v=2026082641"></script>
+<script src="js/data.js?v=2026082641"></script>
+<script src="js/map.js?v=2026082641"></script>
+<script src="js/conv_map.js?v=2026082641"></script>
+<script src="js/parking.js?v=2026082641"></script>
+<script src="js/localcurrency.js?v=2026082641"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=2026082636"></script>
-<script src="js/tide.js?v=2026082636"></script>
+<script src="js/datalab.js?v=2026082641"></script>
+<script src="js/tide.js?v=2026082641"></script>
+<script src="js/restaurants.js?v=2026082641"></script>
+<script src="js/today.js?v=2026082641"></script>
 </body>
 </html>

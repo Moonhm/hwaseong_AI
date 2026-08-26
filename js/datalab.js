@@ -20,7 +20,7 @@
  *   쓰는 방식(showCalendar/hideCalendar)과 동일하다.
  * ========================================================================== */
 
-var DL_VER   = '2026082636';
+var DL_VER   = '2026082641';
 var _dlCache = {};      /* 파일명 → 파싱된 JSON. 한 번 받으면 다시 안 받는다 */
 var _dlLoading = {};    /* 같은 파일을 동시에 두 번 요청하지 않게 하는 잠금 */
 
@@ -96,14 +96,24 @@ function renderDlPopular() {
     var list = _dlDedupe(d && d.interest_spots_domestic);
     if (!list.length) { el2.innerHTML = _dlEmpty('순위 정보를 불러오지 못했어요'); return; }
     el2.innerHTML =
-      '<div class="dl-rank-row">' +
-      list.slice(0, 8).map(function (r, i) {
+      '<div class="dl-photo-row">' +
+      list.slice(0, 10).map(function (r, i) {
         /* 접고 난 뒤 자리로 다시 매긴다. 원본 rank 를 그대로 쓰면 중복이 빠진 만큼
          * '1, 3, 5…' 로 건너뛰어 고장으로 보인다. 접힌 항목은 같은 장소를 다른
          * 분류로 한 번 더 센 것이라, 합친 뒤 순번을 다시 매기는 쪽이 사실에 가깝다. */
-        return '<div class="dl-rank-card" onclick="dlGoPlace(\'' + _dlAttr(r.name) + '\')">' +
-                 '<div class="dl-rank-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
-                 '<div class="dl-rank-name">' + r.name + '</div>' +
+        /* 사진은 이름으로 찾는다(2026-08-26 사용자 요청). placePhotoSrc 는 PLACES 항목이
+         * 아니어도 이름만으로 경로를 만든다. 없으면 onerror 로 img 를 숨겨
+         * 아래 그라데이션 배경과 🏞️ 가 그대로 보인다 — 빈 사각형이 남지 않는다. */
+        var src = (typeof placePhotoSrc === 'function')
+          ? placePhotoSrc({ name: r.name })
+          : 'assets/images/places/' + encodeURIComponent(r.name + '.jpg');
+        return '<div class="dl-photo-card" onclick="dlGoPlace(\'' + _dlAttr(r.name) + '\')">' +
+                 '<div class="dl-photo-thumb">' +
+                   '<img src="' + src + '" alt="" loading="lazy" decoding="async" ' +
+                        'onerror="this.style.display=\'none\'">' +
+                   '<div class="dl-photo-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
+                 '</div>' +
+                 '<div class="dl-photo-name">' + r.name + '</div>' +
                  '<div class="dl-rank-cat">' + (r.category || '') + '</div>' +
                '</div>';
       }).join('') +
@@ -262,6 +272,7 @@ function _renderDatalabView(kind) {
   if (kind === 'popular') return _dlViewPopular(el);
   if (kind === 'age')     return _dlViewAge(el);
   if (kind === 'tour')    return _dlViewTour(el);
+  if (kind === 'report')  return _dlViewReport(el);
 }
 
 /* ── 전체: 인기 순위 ── */
@@ -389,7 +400,211 @@ function _dlViewTour(el) {
    '전체' 서브탭에서만 보인다(js/tourism.js switchTourismSub). 다른 서브탭은
    목적이 뚜렷한 목록이라 큐레이션이 끼면 오히려 방해가 된다. */
 function renderDatalabSections() {
-  renderDlPopular();
+  /* renderDlPopular() 는 여기 없다 — 2026-08-26 에 인기 섹션이 #dl-sections 밖
+   * (추천 탭 맨 위)으로 나가면서 서브탭과 무관하게 늘 보이게 됐다.
+   * 그래서 호출도 이 묶음이 아니라 탭 진입·서브탭 전환 양쪽에서 따로 한다. */
   renderDlAge();
   renderDlCityTour();
+  renderDlReport();
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ④ 화성 관광 리포트 (2026-08-26 추가)
+   datalab_tourism_stats.json 은 이미 ②에서 받아 캐시돼 있다. 같은 파일에
+   '인기관광지' 말고도 세 덩어리가 더 들어 있는데 화면이 없어 놀고 있었다 —
+   추가 다운로드 0바이트로 세 화면이 더 나온다.
+     · 핫플레이스  구·연령대별 '성장률'. 인기 순위와 성격이 다르다(요즘 뜨는 곳)
+     · 맛집        외지인 / 현지인 / 전체 세 갈래. 여행앱에서 잘 먹히는 대비다
+     · AI분석      방문자·숙박·체류시간 증감률과 연관 지역 유입/유출
+   추천 탭이 더 길어지지 않게 미리보기는 한 덩이만 두고, 셋은 전체 보기 안의 탭으로 나눈다.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+function _dlStatsGroup(d, group, prefix) {
+  var src = d && d[group];
+  if (!src) return null;
+  var key = Object.keys(src).filter(function (k) { return k.indexOf(prefix) === 0; })[0];
+  return key ? src[key] : null;
+}
+/* 성장률·증감률은 문자열이고 음수가 섞여 있다. 색과 부호를 함께 정한다. */
+function _dlPct(v) {
+  var n = parseFloat(v);
+  if (!isFinite(n)) return { n: 0, s: '—', up: null };
+  return { n: n, s: (n > 0 ? '+' : '') + n.toFixed(1) + '%', up: n > 0 ? true : (n < 0 ? false : null) };
+}
+function _dlPctCls(up) { return up === true ? ' up' : (up === false ? ' down' : ''); }
+
+/* ── 미리보기: 요즘 뜨는 곳 (핫플레이스) ── */
+function renderDlReport() {
+  var el = document.getElementById('dl-report-body');
+  if (!el) return;
+  el.innerHTML = _dlSkeleton(3);
+  dlLoad(DL_STATS, function (d) {
+    var el2 = document.getElementById('dl-report-body');
+    if (!el2) return;
+    var byAge = _dlStatsGroup(d, '핫플레이스', _dlGu);
+    if (!byAge) { el2.innerHTML = _dlEmpty('리포트를 불러오지 못했어요'); return; }
+    var ages = _dlAges(byAge);
+    /* ⚠ 연령대를 ②와 같은 _dlAge(기본 20대)로 잡으면 안 된다. 전체 209건 중 144건이
+     * 음수라, 동탄구 20대는 10건이 '전부 하락' 이다. 그대로 그리면 '요즘 뜨는 곳'
+     * 이라는 제목 밑에 ▼ 만 늘어선다.
+     * 미리보기는 '전체' 연령을 기본으로 쓰고 오른 것만 보여 준다 —
+     * 전체 순위는 아래 '리포트 전체' 에서 ▲▼ 그대로 볼 수 있다. */
+    var age = ages.indexOf('전체') >= 0 ? '전체' : ages[ages.length - 1];
+    /* 성장률이 높은 순으로 — 원본 '순위' 는 방문량 기준이라 '뜨는 곳' 과 다르다 */
+    var rows = (byAge[age] || []).slice().sort(function (a, b) {
+      return parseFloat(b['성장율']) - parseFloat(a['성장율']);
+    }).filter(function (r) { return parseFloat(r['성장율']) > 0; }).slice(0, 6);
+    if (!rows.length) {
+      el2.innerHTML = _dlEmpty(_dlGu + '에서 지난달보다 늘어난 곳이 없어요 — 리포트 전체에서 자세히 볼 수 있어요');
+      return;
+    }
+
+    el2.innerHTML =
+      '<div class="dl-report-note">' + _dlGu + ' 기준, 지난달 대비 방문이 늘어난 곳</div>' +
+      '<div class="dl-rank-row">' +
+      rows.map(function (r) {
+        var p = _dlPct(r['성장율']);
+        return '<div class="dl-rank-card" onclick="dlGoPlace(\'' + _dlAttr(r['관심지점명']) + '\')">' +
+                 '<div class="dl-trend' + _dlPctCls(p.up) + '">' + (p.up === false ? '▼' : '▲') + ' ' + p.s.replace('-', '') + '</div>' +
+                 '<div class="dl-rank-name">' + r['관심지점명'] + '</div>' +
+                 '<div class="dl-rank-cat">' + (r['구분'] || '') + '</div>' +
+               '</div>';
+      }).join('') +
+      '</div>';
+  });
+}
+
+/* ── 전체 보기: 탭 3개 ── */
+var _dlRepTab = 'hot';
+var _dlFoodWho = '외지인';
+function dlRepTab(k)  { _dlRepTab = k;   _dlViewReport(document.getElementById('view-datalab')); }
+function dlFoodWho(w) { _dlFoodWho = w;  _dlViewReport(document.getElementById('view-datalab')); }
+function dlRepGu(g)   { _dlGu = g;       _dlViewReport(document.getElementById('view-datalab')); }
+function dlRepAge(a)  { _dlAge = a;      _dlViewReport(document.getElementById('view-datalab')); }
+
+function _dlGuChips(fn) {
+  return '<div class="dl-chip-row dl-chip-row--pad">' +
+    ['동탄구','병점구','만세구','효행구'].map(function (g) {
+      return '<button class="dl-chip' + (g === _dlGu ? ' active' : '') +
+             '" onclick="' + fn + '(\'' + g + '\')">' + g + '</button>';
+    }).join('') + '</div>';
+}
+
+function _dlViewReport(el) {
+  if (!el) return;
+  el.innerHTML = _dlHead('화성 관광 리포트') + _dlSkeleton(5);
+  dlLoad(DL_STATS, function (d) {
+    if (_dlView !== 'report') return;
+    var tabs = [
+      { k: 'hot',  label: '요즘 뜨는 곳' },
+      { k: 'food', label: '맛집 순위' },
+      { k: 'ai',   label: '방문 분석' },
+    ];
+    var body = '';
+
+    if (_dlRepTab === 'hot') {
+      var byAge = _dlStatsGroup(d, '핫플레이스', _dlGu);
+      var ages  = _dlAges(byAge);
+      if (ages.indexOf(_dlAge) < 0) _dlAge = ages[0];
+      var rows = ((byAge && byAge[_dlAge]) || []).slice().sort(function (a, b) {
+        return parseFloat(b['성장율']) - parseFloat(a['성장율']);
+      });
+      body = _dlGuChips('dlRepGu') +
+        '<div class="dl-chip-row dl-chip-row--pad dl-chip-row--age">' +
+          ages.map(function (a) {
+            return '<button class="dl-chip sm' + (a === _dlAge ? ' active' : '') +
+                   '" onclick="dlRepAge(\'' + a + '\')">' + a + '</button>';
+          }).join('') +
+        '</div>' +
+        (rows.length
+          ? '<div class="dl-list">' + rows.map(function (r, i) {
+              var p = _dlPct(r['성장율']);
+              return '<div class="dl-list-item" onclick="dlGoPlace(\'' + _dlAttr(r['관심지점명']) + '\')">' +
+                       '<div class="dl-list-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
+                       '<div class="dl-list-main">' +
+                         '<div class="dl-list-name">' + r['관심지점명'] + '</div>' +
+                         '<div class="dl-list-sub">' + (r['구분'] || '') + '</div>' +
+                       '</div>' +
+                       '<div class="dl-trend' + _dlPctCls(p.up) + '">' + (p.up === false ? '▼' : '▲') + ' ' + p.s.replace('-', '') + '</div>' +
+                     '</div>';
+            }).join('') + '</div>'
+          : _dlEmpty('이 조건에는 자료가 없어요'));
+
+    } else if (_dlRepTab === 'food') {
+      var byWho = _dlStatsGroup(d, '맛집', '화성시전체');
+      var rows2 = (byWho && byWho[_dlFoodWho]) || [];
+      body =
+        '<div class="dl-chip-row dl-chip-row--pad">' +
+          ['외지인','현지인','전체'].map(function (w) {
+            return '<button class="dl-chip' + (w === _dlFoodWho ? ' active' : '') +
+                   '" onclick="dlFoodWho(\'' + w + '\')">' + w + '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="dl-view-sub" style="padding-top:0">' +
+          (_dlFoodWho === '외지인' ? '화성 밖에서 찾아온 사람들이 많이 간 곳이에요'
+           : _dlFoodWho === '현지인' ? '화성에 사는 사람들이 많이 가는 곳이에요'
+           : '외지인·현지인을 합친 순위예요') +
+        '</div>' +
+        (rows2.length
+          ? '<div class="dl-list">' + rows2.map(function (r, i) {
+              return '<div class="dl-list-item" onclick="dlGoPlace(\'' + _dlAttr(r['업소명']) + '\')">' +
+                       '<div class="dl-list-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
+                       '<div class="dl-list-main">' +
+                         '<div class="dl-list-name">' + r['업소명'] + '</div>' +
+                         '<div class="dl-list-sub">' + (r['분류'] || '') + '</div>' +
+                       '</div>' +
+                     '</div>';
+            }).join('') + '</div>'
+          : _dlEmpty('자료가 없어요'));
+
+    } else {
+      var ai = _dlStatsGroup(d, 'AI분석', '화성시전체') || {};
+      var v  = (ai['방문자'] || [])[0] || {};
+      var st = (ai['숙박_체류시간'] || [])[0] || {};
+      var rel = (ai['연관지역'] || []);
+      var inn = rel.filter(function (r) { return String(r['유입/유출 구분 코드 (1:유입 / 2:유출)']) === '1'; }).slice(0, 8);
+      var out = rel.filter(function (r) { return String(r['유입/유출 구분 코드 (1:유입 / 2:유출)']) === '2'; }).slice(0, 8);
+
+      function card(label, val, sub) {
+        var p = _dlPct(val);
+        return '<div class="dl-kpi">' +
+                 '<div class="dl-kpi-lbl">' + label + '</div>' +
+                 '<div class="dl-kpi-val' + _dlPctCls(p.up) + '">' + p.s + '</div>' +
+                 (sub ? '<div class="dl-kpi-sub">' + sub + '</div>' : '') +
+               '</div>';
+      }
+      function relList(title, arr, dir) {
+        if (!arr.length) return '';
+        return '<div class="dl-rel-title">' + title + '</div>' +
+               '<div class="dl-list">' + arr.map(function (r) {
+                 var name = dir === 'in' ? r['유입지역명'] : r['유출지역명'];
+                 return '<div class="dl-list-item" style="cursor:default">' +
+                          '<div class="dl-list-main"><div class="dl-list-name">' + name + '</div></div>' +
+                          '<div class="dl-list-right">' + r['유입유출 비율'] + '%</div>' +
+                        '</div>';
+               }).join('') + '</div>';
+      }
+
+      body =
+        '<div class="dl-view-sub">한국관광 데이터랩 · ' +
+          (d && d['AI분석'] ? Object.keys(d['AI분석'])[0].split('_')[1] || '' : '') + ' 기준</div>' +
+        '<div class="dl-kpi-row">' +
+          card('화성시 방문자', v['기초지자체 증감률'], '경기도 ' + _dlPct(v['광역지자체 증감률']).s) +
+          card('숙박 방문자', st['숙박방문자 증감률']) +
+          card('체류시간', st['체류시간 증감률']) +
+        '</div>' +
+        relList('화성으로 들어오는 지역', inn, 'in') +
+        relList('화성에서 나가는 지역', out, 'out');
+    }
+
+    el.innerHTML =
+      _dlHead('화성 관광 리포트', '한국관광 데이터랩 공개 데이터 기반') +
+      '<div class="dl-chip-row dl-chip-row--pad">' +
+        tabs.map(function (t) {
+          return '<button class="dl-chip' + (t.k === _dlRepTab ? ' active' : '') +
+                 '" onclick="dlRepTab(\'' + t.k + '\')">' + t.label + '</button>';
+        }).join('') +
+      '</div>' + body + '<div style="height:28px"></div>';
+  });
 }

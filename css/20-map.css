@@ -81,6 +81,46 @@
       -webkit-tap-highlight-color: transparent;
     }
     .lc-fchip.active { background: #DCFCE7; color: #15803D; border-color: #86EFAC; box-shadow: 0 1px 4px rgba(21,128,61,0.15); }
+
+    /* 음식점 업종 필터 바 (2026-08-26) — 위 지역화폐 바와 같은 구조·같은 자리다.
+     * 둘이 동시에 뜨는 일은 없다: setFilter 가 칩 하나만 활성화하고
+     * 나머지 레이어는 전부 끄기 때문이다.
+     * 좌우 화살표는 두지 않았다 — 칩이 8개뿐이라 스크롤이 거의 없어서
+     * 화살표가 오히려 칩을 가린다(지역화폐는 12개라 필요했다). */
+    #rs-filter-bar {
+      display: none; position: absolute; top: 56px; left: 0; right: 0; z-index: 9;
+      padding: 7px 0 6px;
+    }
+    #rs-filter-scroll {
+      display: flex; gap: 7px; padding: 0 12px;
+      overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+      -webkit-overflow-scrolling: touch; white-space: nowrap; touch-action: pan-x;
+    }
+    #rs-filter-scroll::-webkit-scrollbar { display: none; }
+    /* 로딩 중(649KB 내려받는 동안)에는 눌러도 소용없다는 걸 보이게 한다 */
+    #rs-filter-scroll[data-loading] { opacity: 0.5; pointer-events: none; }
+    .rs-fchip {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 6px 14px; border-radius: 20px; border: 1.5px solid rgba(0,0,0,0.13);
+      background: rgba(255,255,255,0.92); color: var(--text-sub);
+      font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.10); transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .rs-fchip.active { background: #FEF3C7; color: #B45309; border-color: #FCD34D; box-shadow: 0 1px 4px rgba(180,83,9,0.15); }
+    .rs-fchip:active { transform: scale(0.96); }
+
+    /* 음식점 클러스터 원 — 지역화폐(.lc-cluster)와 같은 모양, 색만 다르다 */
+    .rs-cluster {
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%; cursor: pointer;
+      background: rgba(217,119,6,0.92); color: #fff;
+      font-size: 13px; font-weight: 800;
+      border: 2.5px solid rgba(255,255,255,0.9);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.24);
+    }
+    .rs-cluster:active { transform: scale(0.94); }
     .lc-arr {
       position: absolute; top: 0; bottom: 0; width: 44px; z-index: 1;
       display: flex; align-items: center; justify-content: center;

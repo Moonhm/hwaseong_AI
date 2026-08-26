@@ -149,6 +149,8 @@ function go(page) {
     /* 큐레이션 3종(#dl-sections)은 '전체' 서브탭에서만 보인다. switchTourismSub 을
      * 거치지 않는 이 경로에서도 채워 줘야 첫 진입에 빈칸이 남지 않는다.
      * 데이터는 js/datalab.js 가 캐시하므로 두 번 받지 않는다. */
+    /* 인기 순위는 서브탭과 무관하게 늘 보인다(추천 탭 맨 위). */
+    if (typeof renderDlPopular === 'function') renderDlPopular();
     var _dls = document.getElementById('dl-sections');
     if (_dls) {
       var _showDl = (sub === 'all');

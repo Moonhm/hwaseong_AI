@@ -35,6 +35,7 @@ function switchTourismSub(el, tab) {
     /* 큐레이션 3종(#dl-sections)은 '전체' 에서만 보인다 — 축제·관광지·문화재는
      * 목적이 뚜렷한 목록이라 그 위에 큐레이션이 끼면 방해가 된다.
      * 데이터는 보일 때 처음 한 번만 받는다(js/datalab.js 가 캐시한다). */
+    if (typeof renderDlPopular === 'function') renderDlPopular();
     var dls = document.getElementById('dl-sections');
     if (dls) {
       var showDl = (tab === 'all');
