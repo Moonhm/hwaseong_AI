@@ -234,7 +234,12 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 900;
     }
-    .pk-count { font-size: 11px; font-weight: 700; color: #fff; }
+    /* 글자는 전부 흰색이다(js/parking.js 의 핀 글자색 주석 참고). 핀 배경이
+     * 빨강→초록 그라데이션이라 노랑 구간에서 흰 글씨 대비가 2.11:1 까지 떨어진다.
+     * 색을 되돌리는 대신 그림자로 읽히게 한다 — 사용자 지시(2026-08-27).
+     * 값은 '약간'이다. 0.45 보다 진하면 작은 11px 글자가 뭉개져 보인다. */
+    .pk-count { font-size: 11px; font-weight: 700; color: #fff;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
     .pk-pin:hover .pk-circle { transform: scale(1.12); }
     /* 선택 강조. 위 .cm-pin.selected 와 같은 값을 쓴다 — 관광지 핀에서 쓰던 효과를
      * 모든 핀에 확대한 것이라(2026-08-26 사용자 요청), 종류마다 다르면 안 된다. */

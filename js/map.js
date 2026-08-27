@@ -857,6 +857,7 @@ function _makeNpParkPin(pkData, onClickFn) {
   badge.textContent = '🅿️';
 
   var countSpan = document.createElement('span');
+  countSpan.className = 'np-count';   /* 그림자는 css/40-quiz.css 가 준다 — .pk-count 와 같은 값 */
   countSpan.style.cssText = 'font-size:12px;font-weight:900';
   countSpan.textContent = countTxt;
 
