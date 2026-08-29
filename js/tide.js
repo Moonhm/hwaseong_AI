@@ -35,18 +35,61 @@ function _tideMin(s) {
   return m ? (+m[1]) * 60 + (+m[2]) : null;
 }
 
-/* 한 구간이 지금 열려 있나. open/close 가 '계속통행' 이면 그 끝은 제한이 없다. */
+/* ── 한 구간이 지금 열려 있나 ──────────────────────────────────────────────
+ * ⚠ 자정을 넘기는 구간(예: 18:58 ~ 04:07)은 o > c 다. 그리고 그 04:07 은
+ *   **다음 날** 04:07 이다. 하루치 데이터 한 줄이 이틀에 걸쳐 있다.
+ *
+ * 2026-08-26 감사는 이걸 `nowMin >= o || nowMin <= c` 로 고쳤는데, 그러면
+ * **오늘 새벽이 오늘 구간의 꼬리로 잘못 계산된다.** 실제 그 시간의 주인은
+ * '어제' 구간이고 어제의 close 는 오늘과 다르다.
+ *   예) 08-30 04:07~04:39 — 코드는 08-30 의 close(04:39)까지 열렸다고 했지만
+ *       실제로는 08-29 의 창이 04:07 에 이미 닫혔다. 32분간 거짓 '통행 가능'.
+ * 전수 실측(2026년 364일): 어긋나는 날 133일, 거짓 '건널 수 있어요' 6,394분.
+ * **틀리는 방향이 위험한 쪽이다** — 못 건너는데 건널 수 있다고 말한다.
+ *
+ * 그래서 하루를 두 조각으로 나눠 본다.
+ *   _tideOpenNow(seg, m)   오늘 시작하는 부분만  (o > c 면 m >= o)
+ *   _tideTailNow(seg, m)   어제 시작해 오늘 새벽까지 이어진 꼬리 (m <= c)
+ * 지금 열려 있는지는 '오늘 두 구간' + '어제 두 구간의 꼬리' 를 합쳐 본다. */
 function _tideOpenNow(seg, nowMin) {
   if (!seg) return false;
   var o = _tideMin(seg.open), c = _tideMin(seg.close);
   if (o === null && c === null) return true;          /* 양쪽 다 계속통행 */
   if (o === null) return nowMin <= c;                 /* 새벽부터 c 까지 */
   if (c === null) return nowMin >= o;                 /* o 부터 자정까지 */
-  /* ⚠ 자정을 넘기는 구간(예: 17:13 ~ 03:12)은 o > c 다. 이걸 빠뜨리면
-   * nowMin >= o && nowMin <= c 가 영원히 거짓이 되어 통행 가능한 시간이
-   * 통째로 '잠김' 으로 뒤집힌다 — 365일 중 131일이 그랬다(2026-08-26 감사). */
-  if (c < o) return nowMin >= o || nowMin <= c;
+  if (c < o) return nowMin >= o;                      /* 자정 넘김 — 오늘 몫은 여기까지 */
   return nowMin >= o && nowMin <= c;
+}
+
+/* 어제 시작해 자정을 넘어 오늘 새벽까지 이어진 꼬리. 자정을 안 넘기면 없다. */
+function _tideTailNow(seg, nowMin) {
+  if (!seg) return false;
+  var o = _tideMin(seg.open), c = _tideMin(seg.close);
+  if (o === null || c === null) return false;
+  return c < o && nowMin <= c;
+}
+
+/* 'YYYY-MM-DD' 하루 전. */
+function _tidePrevKey(d) {
+  var p = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1);
+  return _tideYmd(p);
+}
+
+/* 지금 건널 수 있나 — 오늘 두 구간 + 어제 두 구간의 꼬리.
+ * 어느 구간 덕에 열려 있는지도 함께 돌려준다(화면이 그 줄을 표시한다). */
+function _tideStatusNow(sch, now, nowMin) {
+  var today = sch[_tideYmd(now)];
+  var yest  = sch[_tidePrevKey(now)];
+  var r = { open: false, todayHit: null, tail: null };
+  if (today) {
+    if (_tideOpenNow(today.cross1, nowMin)) { r.open = true; r.todayHit = 'cross1'; }
+    else if (_tideOpenNow(today.cross2, nowMin)) { r.open = true; r.todayHit = 'cross2'; }
+  }
+  if (!r.open && yest) {
+    if (_tideTailNow(yest.cross2, nowMin)) { r.open = true; r.tail = { k: '어제 2차', s: yest.cross2 }; }
+    else if (_tideTailNow(yest.cross1, nowMin)) { r.open = true; r.tail = { k: '어제 1차', s: yest.cross1 }; }
+  }
+  return r;
 }
 /* 두 구간을 그날 시각 순으로 돌려준다.
  * 데이터는 늘 cross1 → cross2 순인데, 그게 그날의 시간 순서와 어긋나는 날이 있다.
@@ -132,16 +175,36 @@ function _renderTide() {
              '<div class="tide-now-sub">' + todayK + ' — 이 표는 2026년 기준이에요</div>' +
            '</div>';
   } else {
-    var open = _tideOpenNow(today.cross1, nowMin) || _tideOpenNow(today.cross2, nowMin);
+    var st   = _tideStatusNow(sch, now, nowMin);
+    var open = st.open;
+
+    /* 구간마다 지금 해당되는지를 글로도 적는다 (2026-08-29 사용자 지시 —
+     * "여기부분 빨간색으로 표시하고 못건난다고해").
+     * 예전에는 해당 구간에 테두리만 둘렀다. 테두리 하나로는 '지금 이 시간대가
+     * 아니다' 라는 뜻이 안 읽혀서, 위 배지가 '건널 수 있어요' 면 두 줄 다
+     * 건널 수 있는 것처럼 보였다. */
+    var segRow = function (k, seg, isNow) {
+      return '<div class="tide-now-seg' + (isNow ? ' hit' : ' miss') + '">' +
+               '<span class="tide-seg-k">' + k + '</span>' +
+               '<span class="tide-seg-t">' + _tideRange(seg) + '</span>' +
+               '<span class="tide-seg-st">' + (isNow ? '지금 통행' : '못 건넘') + '</span>' +
+             '</div>';
+    };
+
+    var rowsHtml = '';
+    /* 어제 창이 자정을 넘어 이어지는 중이면 그 줄을 맨 위에 세운다 —
+     * 그게 없으면 '건널 수 있어요' 인데 아래 두 줄이 모두 '못 건넘' 이 되어
+     * 사용자가 무엇 덕에 열려 있는지 알 수 없다. */
+    if (st.tail) rowsHtml += segRow(st.tail.k, st.tail.s, true);
+    rowsHtml += _tideSegs(today).map(function (g) {
+      var isNow = (g.s === today.cross1 && st.todayHit === 'cross1') ||
+                  (g.s === today.cross2 && st.todayHit === 'cross2');
+      return segRow(g.k, g.s, isNow);
+    }).join('');
+
     head = '<div class="tide-now' + (open ? ' is-open' : ' is-closed') + '">' +
              '<div class="tide-now-badge">' + (open ? '지금 건널 수 있어요' : '지금은 물에 잠겨 있어요') + '</div>' +
-             '<div class="tide-now-times">' +
-               _tideSegs(today).map(function (g) {
-                 return '<div class="tide-now-seg' + (_tideOpenNow(g.s, nowMin) ? ' hit' : '') + '">' +
-                          '<span class="tide-seg-k">' + g.k + '</span>' + _tideRange(g.s) +
-                        '</div>';
-               }).join('') +
-             '</div>' +
+             '<div class="tide-now-times">' + rowsHtml + '</div>' +
            '</div>';
   }
 

@@ -270,8 +270,18 @@
       background: rgba(255,255,255,0.72); border-radius: 9px; padding: 8px 11px;
       display: flex; align-items: center; gap: 8px;
     }
-    /* 지금 해당되는 구간을 굵게 — 두 구간 중 어느 쪽인지 바로 보이게 */
-    .tide-now-seg.hit { color: var(--text); box-shadow: inset 0 0 0 1.5px currentColor; }
+    /* 지금 해당되는 구간과 아닌 구간을 색으로 가른다 (2026-08-29 사용자 지시).
+     * 예전에는 hit 에 테두리만 둘러서, 위 배지가 '건널 수 있어요' 면 두 줄 다
+     * 건널 수 있는 것처럼 보였다. */
+    .tide-now-seg .tide-seg-t  { flex: 1; }
+    .tide-now-seg .tide-seg-st { flex-shrink: 0; font-size: 11.5px; font-weight: 800; }
+    .tide-now-seg.hit  { color: #065F46; background: #D1FAE5;
+                         box-shadow: inset 0 0 0 1.5px #34D399; }
+    .tide-now-seg.hit  .tide-seg-st { color: #047857; }
+    .tide-now-seg.miss { color: #991B1B; background: #FEE2E2;
+                         box-shadow: inset 0 0 0 1.5px #FCA5A5; }
+    .tide-now-seg.miss .tide-seg-k  { background: #DC2626; }
+    .tide-now-seg.miss .tide-seg-st { color: #B91C1C; }
     .tide-seg-k {
       flex-shrink: 0; font-size: 10.5px; font-weight: 800; letter-spacing: 0.3px;
       background: var(--primary); color: #fff; padding: 2px 7px; border-radius: 20px;
