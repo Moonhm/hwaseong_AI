@@ -559,6 +559,14 @@ function renderHomeSearchResults(results, q) {
   if (!el) return;
 
   if (!results.length) {
+    /* ⚠ 여기서도 반드시 비운다. 예전에는 그냥 return 해서 **직전 검색 결과 배열이
+     * 그대로 남았다** — 화면은 '검색 결과가 없어요' 인데 window._srResults 에는
+     * 옛 항목이 살아 있었다.
+     * 지금은 .sr-empty 에 onclick 이 없어 잘못 눌릴 일은 없지만, 이 배열은
+     * 지역화폐 27,374건의 원소를 참조하고 있어 GC 를 막는다 — resetHomePage 가
+     * 굳이 null 을 넣는 이유가 그것이다(js/home.js resetHomePage ①).
+     * 결과가 없을 때만 그 정리가 건너뛰어지고 있었다. */
+    window._srResults = null;
     el.innerHTML = '<div class="sr-empty">검색 결과가 없어요</div>';
     el.classList.add('open');
     if (bar) bar.style.borderRadius = 'var(--r-pill) var(--r-pill) 0 0';
