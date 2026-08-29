@@ -416,7 +416,160 @@ function homeSearchInput(val, where) {
   var clearBtn = _srEl(where, 'clear');
   if (clearBtn) clearBtn.style.display = val ? 'flex' : 'none';
   if (!val.trim()) { closeHomeSearch(where); return; }
+  /* 시티투어 코스 10건(12KB)을 한 번 받아 둔다 — dlLoad 가 캐시·중복요청을 막는다.
+   * 도착 전에는 ⑥ 섹션이 안 나오고, 도착하면 다음 타이핑부터 걸린다. */
+  if (typeof _uniLoadCourses === 'function') _uniLoadCourses();
   _srTimer = setTimeout(function() { doHomeSearch(val, where); }, 220);
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   통합검색 보조표 (2026-08-29)
+
+   ⚠ 이 표들은 반드시 **js/home.js 안**에 둔다. home.js 는 로드 4번째라
+     뒤 파일(ui.js 8번째 등)에 두면 load 시점에 못 읽는다 — LC_ICON_HTML 을
+     ui.js 에 뒀다가 home.js 가 통째로 죽은 전례가 이 파일 위쪽 주석에 있다.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* 장소 별칭 — 사람들이 부르는 이름과 데이터의 이름이 다른 것만. */
+var _PLACE_ALIAS = {
+  24: '융건릉 융릉과건릉 융릉 건릉',
+  8:  '공룡알 공룡알화석지 공룡',
+  7:  '케이블카 제부도케이블카 해상케이블카',
+  1:  '제부도해변 제부도',
+  2:  '궁평리해변 궁평항'
+};
+
+/* 종류 동의어 — 화면에는 안 보이고 검색에만 쓴다.
+ * ⚠ 지역화폐에는 절대 심지 않는다. '가맹점' 을 심으면 27,374건이 전부 걸린다. */
+var _CAT_SYN = {
+  tourist:  '관광지 명소 볼거리 여행지',
+  heritage: '문화재 유적 역사 향교 사찰',
+  festival: '축제 행사 이벤트 공연',
+  parking:  '주차장 주차 공영주차장',
+  mobeom:      '맛집 음식점 식당 밥집 모범음식점',
+  touristrest: '관광식당 관광식당업 식당',
+  hotel:       '숙박 호텔 관광호텔 잘곳',
+  camping:     '캠핑 캠핑장 야영장 글램핑',
+  temple:      '템플스테이 절 사찰',
+  touristfacility: '관광편의시설 편의시설',
+  cinema:      '영화 영화관 상영관 시네마',
+  jebu:        '제부도숙박 펜션 민박 제부도'
+};
+
+/* ⑤ 먹고 자고 놀기 — CONVENIENCE 8종.
+ * go 는 결과를 눌렀을 때 어느 경로로 보낼지다.
+ *   'conv'  → goConvItem(cat, idx)  (목록 인덱스로 가는 것)
+ *   'conv2' → goMapConv(cat, lat, lng)  (좌표를 가진 것) */
+function _CONV_SETS() {
+  if (typeof CONVENIENCE === 'undefined') return [];
+  var C = CONVENIENCE;
+  var temple = C.templeStay ? [C.templeStay] : [];
+  var jebu = [];
+  if (C.jebu) {
+    ['pension_outside', 'inside', 'nearby', 'minbak_inside', 'minbak_nearby'].forEach(function (k) {
+      if (Array.isArray(C.jebu[k])) jebu = jebu.concat(C.jebu[k]);
+    });
+  }
+  return [
+    { arr: C.restaurants,        cat: 'mobeom',      go: 'conv',  label: '모범음식점',   em: '🍽️', bg: '#FFF7ED' },
+    { arr: C.touristRestaurants, cat: 'touristrest', go: 'conv',  label: '관광식당',     em: '🥢', bg: '#FEE2E2' },
+    { arr: C.hotels,             cat: 'hotel',       go: 'conv',  label: '관광호텔',     em: '🏨', bg: '#EEF2FF' },
+    { arr: C.camping,            cat: 'camping',     go: 'conv',  label: '캠핑장',       em: '🏕️', bg: '#ECFDF5' },
+    { arr: temple,               cat: 'temple',      go: 'conv',  label: '템플스테이',   em: '🛕', bg: '#FEF3C7' },
+    { arr: C.touristFacilities,  cat: 'touristfacility', go: 'conv2', label: '관광편의시설', em: '🎫', bg: '#F1F5F9' },
+    { arr: C.cinemas,            cat: 'cinema',      go: 'conv2', label: '영화상영관',   em: '🎬', bg: '#FCE7F3' },
+    { arr: jebu,                 cat: 'jebu',        go: 'conv2', label: '제부도 숙박',  em: '⛱️', bg: '#E0F2FE' }
+  ];
+}
+
+/* ① 바로가기 — 화면·기능 자체를 검색 결과로 낸다.
+ * 사용자가 콕 집어 말한 것이 '제부도 물길' 과 '오늘의 화성 날씨' 다.
+ * ⚠ 행을 만들기 전에 진입 함수가 실제로 있는지 본다. 없으면 그 행을 안 만든다 —
+ *   눌러도 아무 일 없는 결과가 제일 나쁘다. */
+function _uniActions() {
+  var fn = function (n) { return typeof window[n] === 'function'; };
+  var chip = function (sub) { return document.querySelector('.tourism-subnav .chip[data-sub="' + sub + '"]'); };
+  /* 테마 칩에는 data-* 가 없다. onclick 에 값이 들어 있으므로 그걸로 잡는다 —
+   * 인덱스로 잡으면 칩 순서가 바뀌는 날 조용히 엉뚱한 테마로 간다. */
+  var theme = function (v) {
+    return document.querySelector('#tourism-theme-chips .chip[onclick*="\u0027' + v + '\u0027"]');
+  };
+  var L = [];
+  var add = function (key, name, alias, sub, em, bg) { L.push({ key: key, name: name, alias: alias, sub: sub, em: em, bg: bg }); };
+
+  if (fn('openTide'))  add('tide',    '제부도 바닷길 통행 시간', '물때 물길 바닷길 간조 밀물 썰물 통행 시간표 모세의기적 바다갈라짐 제부도', '지금 건널 수 있는지 확인', '🌊', '#CFFAFE');
+  if (fn('openToday')) add('today',   '오늘의 화성 날씨', '날씨 오늘날씨 기온 온도 미세먼지 초미세먼지 대기질 예보 주간예보 비 우산 습도', '오늘 기온·미세먼지·주간예보', '☀️', '#FEF9C3');
+  if (fn('goLivingCat')) {
+    add('lc-all',   '지역화폐 가맹점 전체', '지역화폐 경기지역화폐 화성사랑카드 가맹점 카드', '27,374곳 목록', typeof LC_ICON_HTML !== 'undefined' ? LC_ICON_HTML : '💳', '#F0FDF4');
+    add('park-all', '공영주차장 전체', '주차 주차장 공영주차장 무료주차', '131곳 · 실시간 여유', '🅿️', '#DBEAFE');
+    add('rest-all', '모범음식점 전체', '모범음식점 맛집 음식점 식당 밥집', '94곳', '🍽️', '#FFF7ED');
+    add('trest-all','관광식당 전체', '관광식당 관광식당업', '35곳', '🥢', '#FEE2E2');
+  }
+  if (fn('goFestivalAll')) add('fest-all', '행사·축제 전체', '행사 축제 이벤트 공연', '진행 중인 것부터', '🎉', '#FEF2F2');
+  if (fn('openFestView'))  add('cal',      '행사 캘린더', '캘린더 달력 일정 축제일정', '날짜로 골라 보기', '🗓️', '#EDE9FE');
+  if (fn('openQuiz'))      add('quiz',     '여행 취향 퀴즈', '퀴즈 취향 추천받기 여행성향', '5문항으로 추천받기', '🎯', '#FEF3C7');
+  if (fn('requestNearbyRec')) add('near',  '내 주변 추천', '내주변 근처 가까운 주변', '위치 권한이 필요해요', '📍', '#EFF6FF');
+  if (fn('goDatalab')) {
+    add('dl-popular', '인기 순위',   '인기 순위 랭킹 많이찾는곳', '한국관광 데이터랩', '🔥', '#FEF2F2');
+    add('dl-age',     '세대별 인기', '세대 연령 20대 30대 40대 나이', '연령대로 보기', '👥', '#EEF2FF');
+    add('dl-report',  '뜨는 곳 리포트', '트렌드 데이터랩 리포트 요즘', '지난달 대비', '📈', '#ECFDF5');
+    add('dl-tour',    '화성 시티투어', '시티투어 투어 버스투어 코스', '코스 10개', '🚌', '#EDE9FE');
+  }
+  if (fn('switchTourismSub')) {
+    /* ⚠ switchTourismSub 은 첫 인자 null 가드가 없다. 칩이 없으면 행을 안 만든다. */
+    if (chip('spot'))     add('sub-spot',     '관광지 전체', '관광지 명소 볼거리', '151곳', '🎡', '#FEF3C7');
+    if (chip('heritage')) add('sub-heritage', '문화재 전체', '문화재 유적 향교 역사', '지정문화재 42곳', '🏛️', '#EDE9FE');
+    if (chip('stay'))     add('sub-stay',     '숙박 전체', '숙박 호텔 잘곳 펜션', '관광호텔·제부도 숙박', '🏨', '#EEF2FF');
+    if (chip('camp'))     add('sub-camp',     '캠핑장 전체', '캠핑 야영장 글램핑', '17곳', '🏕️', '#ECFDF5');
+    if (chip('temple'))   add('sub-temple',   '템플스테이', '템플스테이 절 사찰 용주사', '용주사', '🛕', '#FEF3C7');
+    if (chip('spot') && fn('pickTheme')) {
+      if (theme('sea'))     add('th-sea',     '바다 여행', '바다 해변 해수욕장 섬', '테마로 보기', '🌊', '#CFFAFE');
+      if (theme('nature'))  add('th-nature',  '자연 여행', '자연 숲 공원 산', '테마로 보기', '🌳', '#ECFDF5');
+      if (theme('history')) add('th-history', '역사 여행', '역사 유적지 문화재', '테마로 보기', '🏛️', '#EDE9FE');
+      if (theme('family'))  add('th-family',  '아이와 함께', '아이 가족 체험 어린이', '테마로 보기', '👨‍👩‍👧', '#FEF3C7');
+    }
+  }
+  if (fn('goMapCat')) {
+    add('cat-cinema', '영화상영관 전체', '영화 영화관 cgv 메가박스 롯데시네마 상영관', '13곳', '🎬', '#FCE7F3');
+    add('cat-jebu',   '제부도 숙박 전체', '제부도숙박 제부도펜션 민박 펜션', '115곳', '⛱️', '#E0F2FE');
+  }
+  /* 즐겨찾기는 저장한 게 있을 때만 — 0건이면 홈의 그 자리가 display:none 이다 */
+  if (typeof getFavs === 'function' && getFavs().length) {
+    add('favs', '즐겨찾기', '찜 하트 저장한곳 즐겨찾기 북마크', getFavs().length + '곳 저장됨', '❤️', '#FEE2E2');
+  }
+  add('recent', '최근 본 곳', '최근 방문기록 봤던곳', '홈에서 보기', '🕘', '#F1F5F9');
+  if (fn('shareApp'))    add('share',    '앱 공유', '공유 링크 친구', '화성잇다 링크 보내기', '🔗', '#FFF7ED');
+  if (fn('openSettings'))add('settings', '설정', '설정 캐시 권한 저장된정보', '저장된 정보·캐시·위치', '⚙️', '#F1F5F9');
+  add('map',  '지도 보기', '지도 맵', '지도 탭으로', '🗺️', '#EEF2FF');
+  if (fn('openMenu')) add('menu', '전체 메뉴', '메뉴 더보기 전체', '햄버거 메뉴 열기', '☰', '#F1F5F9');
+  return L;
+}
+
+/* 라틴 문자가 든 질의(cgv·CGV동탄 등)에만 쓰는 소문자 사본.
+ * 한글 질의에는 toLowerCase 가 필요 없어서 아예 만들지 않는다 —
+ * 매 검색 27,374번 toLowerCase 를 돌리는 것이 현행이 느리던 원인이다.
+ * 1회 빌드 비용을 그 사용자에게만 물린다. */
+var _lcLowerCache = null, _lcLowerN = -1;
+function _lcLowerIndex() {
+  if (typeof lcData === 'undefined' || !lcData.length) return null;
+  if (_lcLowerCache && _lcLowerN === lcData.length) return _lcLowerCache;
+  var out = new Array(lcData.length);
+  for (var i = 0; i < lcData.length; i++) {
+    var p = lcData[i];
+    out[i] = [(p.n || '').toLowerCase(), (p.c || '').toLowerCase(), (p.a || '').toLowerCase()];
+  }
+  _lcLowerCache = out; _lcLowerN = lcData.length;
+  return out;
+}
+
+/* 시티투어 코스 — 12KB 지연 로드. 도착하면 다음 검색부터 걸린다. */
+var _uniCourses = null;
+function _uniLoadCourses() {
+  if (_uniCourses || typeof dlLoad !== 'function' || typeof DL_TOUR === 'undefined') return;
+  dlLoad(DL_TOUR, function (d) {
+    var arr = (d && d.courses) || [];
+    _uniCourses = arr.map(function (c, i) { return Object.assign({ no: (c.no != null ? c.no : i) }, c); });
+  });
 }
 
 function doHomeSearch(q, where) {
@@ -441,115 +594,278 @@ function doHomeSearch(q, where) {
   }
   var results = [];
 
-  /* 지역 제안 — 2026-08-26 사용자 지시로 '칩' 대신 '검색 결과'로 낸다.
-   * 누르면 지도 탭으로 넘어가 그 동네 화면이 되므로, 검색에서 지도로 끊김 없이 이어진다.
-   *
-   * splitGuQuery 는 '동탄구'·'동탄' 같은 온전한 이름만 잡는다. 한 글자만 쳤거나
-   * 조합 중일 때도 제안이 떠야 쓸모가 있어서, 부분 일치로 한 번 더 훑는다. */
+  /* ══════════════════════════════════════════════════════════════════════
+     통합검색 — 섹션별로 모아 담는다 (2026-08-29 사용자 요청)
+     "모든 데이터를 다 검색할 수 있게. 지역화폐 가맹점·관광지·주차장 모든 곳들을,
+      그리고 제부도 물길이나 오늘의 화성 날씨도"
+
+     ⚠ 가맹점 27,374건이 다른 종류를 삼키지 못하게 **섹션마다 상한**을 둔다.
+       한 목록에 점수만으로 세우면 '카페' 한 번에 가맹점이 자리를 다 먹는다.
+     ⚠ 가맹점 섹션은 **항상 맨 끝**이다. 817KB(gzip)가 늦게 도착해 채워져도
+       위쪽 행이 1px 도 안 밀린다 — 누르려던 항목이 손가락 밑에서 움직이면 안 된다.
+     ⚠ window._srResults 는 **평면 배열**로 유지한다. 섹션은 그리는 구조일 뿐이고
+       onclick="_srClick(idx)" 의 idx 가 평면 인덱스여야 resetHomePage 의
+       GC 방지 null 대입까지 그대로 산다.
+     ══════════════════════════════════════════════════════════════════════ */
+  /* 코스 12KB 는 여기서도 한 번 청한다 — homeSearchInput 을 거치지 않고
+   * doHomeSearch 를 직접 부르는 경로(검사·다시그리기)에서도 ⑥ 이 나오게. */
+  if (typeof _uniLoadCourses === 'function') _uniLoadCourses();
+
+  var _rawToks = _qt.split(/\s+/).filter(function (t) { return t.length > 0; });
+  var toks     = _rawToks.map(function (t) { return t.toLowerCase(); });
+  /* 한글 질의에는 toLowerCase 가 필요 없다. 27,374건에 매번 소문자화를 돌리는
+   * 것이 현행이 드문 검색어에서 20ms 를 먹던 원인이라 원본 토큰을 따로 둔다. */
+  var _qtToks  = _rawToks;
+  var hasLatin = /[a-z]/i.test(_qt);
+
+  function push(sec, o) { o._sec = sec; results.push(o); }
+
+  /* 토큰 하나가 이름/별칭/보조필드에 얼마나 잘 맞나. 못 맞으면 -1. */
+  function _tokScore(tok, name, alias, aux, nospace) {
+    var n = String(name || '').toLowerCase();
+    if (n === tok) return 100;
+    if (n.indexOf(tok) === 0) return 60;
+    if (alias) {
+      var a = String(alias).toLowerCase();
+      if ((' ' + a + ' ').indexOf(' ' + tok + ' ') >= 0) return 55;
+    }
+    if (n.indexOf(tok) >= 0) return 40;
+    if (nospace && nospace.indexOf(tok.replace(/\s+/g, '')) >= 0) return 30;
+    if (alias && String(alias).toLowerCase().indexOf(tok) >= 0) return 25;
+    if (aux && String(aux).toLowerCase().indexOf(tok) >= 0) return 15;
+    return -1;
+  }
+  /* 모든 토큰이 맞아야 통과(AND). 통짜 includes 라서 '제부도 주차장'·'오늘 날씨'가
+   * 전부 0건이던 것이 이 한 가지 때문이다. */
+  function score(name, alias, aux, nospace) {
+    if (!toks.length) return 0;
+    var sum = 0;
+    for (var i = 0; i < toks.length; i++) {
+      var v = _tokScore(toks[i], name, alias, aux, nospace);
+      if (v < 0) return -1;
+      sum += v;
+    }
+    /* 이름이 한글·숫자로 시작하지 않으면 살짝 뒤로 — '#헤어'가 '미용실진'을 앞서지 않게 */
+    if (!/^[가-힣0-9]/.test(String(name || ''))) sum -= 5;
+    return sum;
+  }
+
+  /* ── ① 바로가기 — 화면·기능 자체를 검색한다 ─────────────────────────── */
+  if (!_guOnly) {
+    _uniActions().forEach(function (a) {
+      var sc = score(a.name, a.alias, '', a.name.replace(/\s+/g, '').toLowerCase());
+      if (sc < 0) return;
+      push(1, { type: 'action', name: a.name, sub: a.sub, em: a.em, bg: a.bg,
+                act: a.key, _sc: sc + 40 });   /* 기능은 같은 점수면 앞에 온다 */
+    });
+  }
+
+  /* ── ② 지역 ─────────────────────────────────────────────────────────── */
   if (_gu) {
-    results.push({ type: 'gu', name: _gu + ' 전체 보기', sub: '지도에서 이 동네만 봐요',
-                   em: '🗺️', bg: '#EEF2FF', gu: _gu });
+    push(2, { type: 'gu', name: _gu + ' 전체 보기', sub: '지도에서 이 동네만 봐요',
+              em: '🗺️', bg: '#EEF2FF', gu: _gu, _sc: 90 });
   } else if (typeof GU_NAMES !== 'undefined') {
     GU_NAMES.forEach(function (g) {
-      /* '동' 한 글자에도 동탄구가 뜨게 — 앞부분만 겹쳐도 제안한다 */
       if (g.indexOf(q) === 0 || g.slice(0, g.length - 1).indexOf(q) === 0) {
-        results.push({ type: 'gu', name: g + ' 전체 보기', sub: '지도에서 이 동네만 봐요',
-                       em: '🗺️', bg: '#EEF2FF', gu: g });
+        push(2, { type: 'gu', name: g + ' 전체 보기', sub: '지도에서 이 동네만 봐요',
+                  em: '🗺️', bg: '#EEF2FF', gu: g, _sc: 80 });
       }
     });
   }
+  if (!_guOnly) {
+    _REGIONS.forEach(function (r) {
+      var sc = score(r.name, '', '', r.name.replace(/\s+/g, ''));
+      if (sc < 0) return;
+      push(2, { type: 'region', name: r.name + ' 지역', sub: '지도에서 보기',
+                em: '📍', bg: '#F3F4F6', lat: r.lat, lng: r.lng, level: r.level, _sc: sc });
+    });
+  }
 
-  /* 1) 지역명 */
-  _REGIONS.forEach(function(r) {
-    if (r.name.includes(q) || q.includes(r.name)) {
-      results.push({ type: 'region', name: r.name + ' 지역', sub: '지도에서 보기', em: '📍', bg: '#F3F4F6', lat: r.lat, lng: r.lng, level: r.level });
-    }
-  });
-
-  /* 2) PLACES (관광지·축제·맛집·주차장 등) */
+  /* ── ③ 관광지·문화재·행사 ───────────────────────────────────────────── */
   if (typeof PLACES !== 'undefined') {
-    PLACES.forEach(function(p) {
-      /* 구를 지정했으면 축제는 뺀다 — 장소 미정 21건이 지도 중심 좌표에 몰려 있어
+    PLACES.forEach(function (p) {
+      /* 구를 지정했으면 축제는 뺀다 — 장소 미정 21건이 시청 좌표에 몰려 있어
        * 어느 구로 넣어도 거짓이 된다 (2026-08-26 사용자 지시). */
       if (_gu && p.category === 'festival') return;
-      if (_hit(p.name) || _hit(p.address)) {
-        if (!_inGu(p, 't')) return;
-        var s = _CAT_STYLE[p.category] || { bg: '#F3F4F6', em: '📌' };
-        var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        /* 주소에 이미 구가 들어 있으면 배지를 또 붙이지 않는다 —
-         * 안 그러면 '동탄구 · 동탄구 청계동' 이 된다. */
-        var _g = (typeof guOf === 'function') ? guOf(p, 't') : null;
-        var _pre = (_g && addr.indexOf(_g) < 0) ? _g + ' · ' : '';
-        results.push({ type: 'place', name: p.name, sub: _pre + addr, em: s.em, bg: s.bg, lat: p.lat, lng: p.lng, id: p.id, cat: p.category });
-      }
+      var alias = (_PLACE_ALIAS[p.id] || '') + ' ' + (_CAT_SYN[p.category] || '');
+      var aux   = (p.address || '') + ' ' + ((p.tags || []).join(' '));
+      var sc    = _guOnly ? 0 : score(p.name, alias, aux, p.name.replace(/\s+/g, '').toLowerCase());
+      if (sc < 0) return;
+      if (!_inGu(p, 't')) return;
+      var st   = _CAT_STYLE[p.category] || { bg: '#F3F4F6', em: '📌' };
+      var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+      var _g   = (typeof guOf === 'function') ? guOf(p, 't') : null;
+      var _pre = (_g && addr.indexOf(_g) < 0) ? _g + ' · ' : '';
+      push(3, { type: 'place', name: p.name, sub: _pre + addr, em: st.em, bg: st.bg,
+                lat: p.lat, lng: p.lng, id: p.id, cat: p.category, _sc: sc });
     });
   }
 
-  /* 3) 공영주차장 (parkingData) */
+  /* ── ④ 공영주차장 ───────────────────────────────────────────────────── */
   if (typeof parkingData !== 'undefined') {
-    parkingData.forEach(function(p) {
-      if (_hit(p.name)) {
-        if (!_inGu(p, 'p')) return;
-        var isFree = p.free || (p.tags && p.tags.includes('무료'));
-        var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-        var _g2 = (typeof guOf === 'function') ? guOf(p, 'p') : null;
-        var _pre2 = (_g2 && addr.indexOf(_g2) < 0) ? _g2 + ' · ' : '';
-        results.push({ type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + _pre2 + addr, em: '🅿️', bg: '#EFF6FF', lat: p.lat, lng: p.lng, id: p.id });
-      }
+    parkingData.forEach(function (p) {
+      var aux = (p.address || '') + ' ' + ((p.tags || []).join(' ')) + ' ' + (p.free ? '무료' : '유료');
+      var sc  = _guOnly ? 0 : score(p.name, _CAT_SYN.parking, aux, p.name.replace(/\s+/g, '').toLowerCase());
+      if (sc < 0) return;
+      if (!_inGu(p, 'p')) return;
+      var isFree = p.free || (p.tags && p.tags.includes('무료'));
+      var addr = (p.address || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+      var _g2  = (typeof guOf === 'function') ? guOf(p, 'p') : null;
+      var _pre2 = (_g2 && addr.indexOf(_g2) < 0) ? _g2 + ' · ' : '';
+      push(4, { type: 'parking', name: p.name, sub: (isFree ? '무료' : '유료') + ' · ' + _pre2 + addr,
+                em: '🅿️', bg: '#EFF6FF', lat: p.lat, lng: p.lng, id: p.id, _sc: sc });
     });
   }
 
-  /* 4) 지역화폐 가맹점 (최대 5개)
-   * 27,374건 전수 스캔이라 매치가 5건에 못 미치면 항상 최악 경로를 탄다.
-   * 한글 IME 조합 중 자모 1글자는 절대 매치되지 않으므로 2글자부터 검색한다. */
-  if (typeof lcData !== 'undefined' && ql.length >= 2) {
-    var lcHits = 0;
-    for (var i = 0; i < lcData.length && lcHits < 5; i++) {
-      var p = lcData[i];
-      if ((p.n || '').toLowerCase().includes(ql) || (p.c || '').toLowerCase().includes(ql)) {
-        var addr = (p.a || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
-          /* ⚠ 여기만 '₩' 였다 — 같은 가맹점이 검색결과 ₩ · 목록/지도 로고 ·
-           * 즐겨찾기 💳 로 세 가지였다(2026-08-26 감사). 로고 하나로 모은다. */
-        results.push({ type: 'lc', name: p.n, sub: (p.c || '') + (addr ? ' · ' + addr : ''), em: LC_ICON_HTML, bg: '#F0FDF4', lat: p.lat, lng: p.lng, _raw: p });
-        lcHits++;
+  /* ── ⑤ 먹고 자고 놀기 (CONVENIENCE 8종 295건) ──────────────────────────
+   * 예전에는 모범음식점·관광식당·영화관 셋뿐이었다. 숙박·캠핑·템플스테이·
+   * 관광편의시설·제부도숙박이 통째로 빠져 있었다.
+   * ⚠ _guOnly 일 때 여기를 그냥 통과시키면 안 된다 — 예전에는 ql 이 '' 이라
+   *   ''.includes('') 가 참이 되어 검색어와 무관한 앞 5건을 집어 왔다. */
+  if (typeof CONVENIENCE !== 'undefined' && !_guOnly) {
+    _CONV_SETS().forEach(function (cs) {
+      (cs.arr || []).forEach(function (p, i) {
+        var nm  = p.name || '';
+        var aux = (p.addr || '') + ' ' + (p.cuisine || '') + ' ' + (p.area || '');
+        var sc  = score(nm, _CAT_SYN[cs.cat] || '', aux, nm.replace(/\s+/g, '').toLowerCase());
+        if (sc < 0) return;
+        var o = { type: cs.go, name: nm, sub: cs.label + (p.addr ? ' · ' + p.addr : ''),
+                  em: cs.em, bg: cs.bg, convCat: cs.cat, idx: i, _sc: sc };
+        if (p.lat && p.lng) { o.lat = p.lat; o.lng = p.lng; }
+        push(5, o);
+      });
+    });
+  }
+
+  /* ── ⑥ 시티투어 코스 ────────────────────────────────────────────────── */
+  if (!_guOnly && _uniCourses) {
+    _uniCourses.forEach(function (c) {
+      var aux = (c.theme || '') + ' ' + (c.tagline || '') + ' ' + (c.desc || '') + ' ' +
+                ((c.spots || []).map(function (x) { return x.name; }).join(' '));
+      var sc = score(c.name, '시티투어 투어 코스', aux, String(c.name).replace(/\s+/g, ''));
+      if (sc < 0) return;
+      push(6, { type: 'course', name: c.name, sub: '시티투어 코스' + (c.theme ? ' · ' + c.theme : ''),
+                em: '🚌', bg: '#EDE9FE', no: c.no, _sc: sc });
+    });
+  }
+
+  /* ── ⑦ 지역화폐 가맹점 — 항상 맨 끝 ──────────────────────────────────
+   * ⚠ toLowerCase()·replace 를 27,374건에 돌리지 않는다. 한글 질의는 원본
+   *   indexOf 로 충분하고, 그게 현행이 드문 검색어에서 20ms 를 먹던 원인이다.
+   *   라틴 문자가 든 질의에만 소문자 사본을 한 번 만들어 쓴다.
+   * ⚠ '지역화폐'·'가맹점' 동의어를 심지 않는다 — 27,374건 전부가 걸린다.
+   *   그 요구는 ① 바로가기의 '지역화폐 가맹점 전체' 한 행이 맡는다. */
+  if (!_guOnly && _qt.length >= 2) {
+    if (typeof lcData !== 'undefined' && lcData.length) {
+      /* ⚠ 27,374건마다 문자열을 이어 붙이면(n + ' ' + c + ' ' + a) 그 자체로
+       * 2만 7천 번의 할당이다. 실측 cgv 36.2ms — 명세가 예상한 6~8ms 의 5배였다.
+       * 필드를 따로따로 indexOf 하고 하나만 맞으면 즉시 통과시킨다. */
+      var _lcLower = null;
+      if (hasLatin) _lcLower = _lcLowerIndex();   /* 라틴 질의일 때만, 1회 캐시 */
+      var lcBucket = [[], [], []];   /* 0 완전일치 · 1 앞일치 · 2 그 외 */
+      var CAP = 20, lcTotal = 0;
+      for (var li = 0; li < lcData.length; li++) {
+        var lp = lcData[li];
+        var fn0, fc0, fa0;
+        if (_lcLower) { var L = _lcLower[li]; fn0 = L[0]; fc0 = L[1]; fa0 = L[2]; }
+        else          { fn0 = lp.n || ''; fc0 = lp.c || ''; fa0 = lp.a || ''; }
+        var okAll = true;
+        for (var ti = 0; ti < toks.length; ti++) {
+          var tk = hasLatin ? toks[ti] : _qtToks[ti];
+          if (fn0.indexOf(tk) < 0 && fc0.indexOf(tk) < 0 && fa0.indexOf(tk) < 0) { okAll = false; break; }
+        }
+        if (!okAll) continue;
+        lcTotal++;
+        var t0  = hasLatin ? toks[0] : _qtToks[0];
+        var key = (fn0 === t0) ? 0 : (fn0.indexOf(t0) === 0 ? 1 : 2);
+        if (lcBucket[key].length < CAP) lcBucket[key].push(lp);
+        if (lcBucket[0].length >= CAP) break;   /* 완전일치가 가득 차면 더 볼 것 없다 */
       }
+      var lcSeen = 0;
+      [0, 1, 2].forEach(function (k) {
+        lcBucket[k].forEach(function (lp) {
+          var addr = (lp.a || '').replace('경기도 화성시 ', '').split(' ').slice(0, 3).join(' ');
+          push(7, { type: 'lc', name: lp.n, sub: (lp.c || '') + (addr ? ' · ' + addr : ''),
+                    em: LC_ICON_HTML, bg: '#F0FDF4', lat: lp.lat, lng: lp.lng, _raw: lp,
+                    _sc: 100 - k * 20 - (lcSeen++), _lcTotal: lcTotal });
+        });
+      });
+    } else {
+      /* 미로드 — 조용히 0건으로 두지 않는다. 그게 지금 가장 큰 거짓말이다. */
+      push(7, { type: 'lcload', name: '가맹점 27,374곳에서 \u0027' + _qt + '\u0027 찾기',
+                sub: '눌러서 불러오기 · 약 0.8MB', em: LC_ICON_HTML, bg: '#F0FDF4', _sc: 0 });
     }
   }
 
-  /* 5) 편의시설 — 모범음식점 · 관광식당 (최대 5개) */
-  if (typeof CONVENIENCE !== 'undefined') {
-    var convHits = 0;
-    var convSets = [
-      { arr: CONVENIENCE.restaurants,        cat: 'restaurant',  label: '모범음식점' },
-      { arr: CONVENIENCE.touristRestaurants, cat: 'touristrest', label: '관광식당'   },
-    ];
-    convSets.forEach(function(cs) {
-      if (convHits >= 5 || !cs.arr) return;
-      cs.arr.forEach(function(p) {
-        if (convHits >= 5) return;
-        if ((p.name || '').toLowerCase().includes(ql)) {
-          results.push({ type: 'conv', name: p.name, sub: cs.label + (p.addr ? ' · ' + p.addr : ''), em: '🍽️', bg: '#FFF7ED', convCat: cs.cat });
-          convHits++;
-        }
-      });
-    });
+  renderHomeSearchResults(_uniBudget(results), q);
+  _uniPrefetchLc(_qt);
+}
 
-    /* 영화관 (최대 3개) — 2026-08-26 에 PLACES 에서 CONVENIENCE.cinemas 로 옮기면서
-     * 검색에서 통째로 사라졌다. 그전에는 관광지라 위 PLACES 검색에 걸렸다.
-     * 위 convSets 에 끼우지 않은 이유: 저쪽은 목적지가 소식 탭 목록(type:'conv')인데
-     * 영화관은 소식 탭에 목록이 없어 지도로 보내야 한다 — 타입을 따로 둔다. */
-    var cinHits = 0;
-    (CONVENIENCE.cinemas || []).forEach(function(p) {
-      if (cinHits >= 3) return;
-      if ((p.name || '').toLowerCase().replace(/\s+/g, '').includes(ql.replace(/\s+/g, ''))) {
-        results.push({ type: 'cinema', name: p.name, sub: '영화상영관' + (p.addr ? ' · ' + p.addr : ''),
-                       em: '🎬', bg: '#FCE7F3', lat: p.lat, lng: p.lng });
-        cinHits++;
-      }
+/* 첫 검색이 끝난 뒤 한가할 때 가맹점 데이터를 한 번 미리 받는다.
+ * ⚠ focus 에 걸면 안 된다 — '날씨' 한 단어 치러 온 사용자에게 817KB(gzip) 와
+ *   모바일 200~400ms 파싱 프리즈를 물리게 된다. 검색을 실제로 한 뒤에만.
+ * ⚠ silent 로 부른다. 안 그러면 타이핑 도중에 '불러오는 중이에요' 토스트가 뜬다.
+ * ⚠ 데이터 절약 모드면 하지 않는다 — 사용자가 명시적으로 끈 것이다. */
+var _uniPrefetched = false;
+function _uniPrefetchLc(qt) {
+  if (_uniPrefetched) return;
+  if (!qt || qt.length < 2) return;
+  if (typeof lcData !== 'undefined' && lcData.length) { _uniPrefetched = true; return; }
+  if (typeof _loadLcData !== 'function') return;
+  var c = navigator.connection;
+  if (c && c.saveData) return;
+  _uniPrefetched = true;
+  var run = function () { _loadLcData(function () {}, true); };
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 1500 });
+  else setTimeout(run, 1200);
+}
+
+/* ── 섹션별 상한 → 전체 예산 12행 (아래 섹션부터 깎는다) ────────────────── */
+var _UNI_CAP  = { 1: 3, 2: 2, 3: 4, 4: 3, 5: 3, 6: 2, 7: 3 };
+var _UNI_TOTAL = 12;
+function _uniBudget(rows) {
+  var by = {};
+  rows.forEach(function (r) { (by[r._sec] = by[r._sec] || []).push(r); });
+  Object.keys(by).forEach(function (k) {
+    by[k].sort(function (a, b) {
+      if (b._sc !== a._sc) return b._sc - a._sc;
+      return String(a.name).length - String(b.name).length;
     });
+    by[k]._total = by[k].length;
+    by[k] = by[k].slice(0, _UNI_CAP[k] || 3);
+  });
+  var secs = Object.keys(by).map(Number).sort(function (a, b) { return a - b; });
+  var count = function () { return secs.reduce(function (n, k) { return n + by[k].length; }, 0); };
+  /* 넘치면 아래(가맹점) 쪽부터 한 행씩 깎는다. 비어 있지 않은 섹션은 최소 1행 보장 */
+  var guard = 0;
+  while (count() > _UNI_TOTAL && guard++ < 60) {
+    var cut = false;
+    for (var i = secs.length - 1; i >= 0; i--) {
+      if (by[secs[i]].length > 1) { by[secs[i]].pop(); cut = true; break; }
+    }
+    if (!cut) break;
   }
+  var out = [];
+  secs.forEach(function (k) {
+    by[k].forEach(function (r, i) { r._first = (i === 0); r._secTotal = by[k]._total; out.push(r); });
+  });
+  return out;
+}
 
-  renderHomeSearchResults(results.slice(0, 9), q);
+var _UNI_SEC_NAME = {
+  1: '바로가기', 2: '지역', 3: '관광·문화재·행사', 4: '공영주차장',
+  5: '먹고 자고 놀기', 6: '시티투어 코스', 7: '지역화폐 가맹점'
+};
+/* 섹션 머리글을 누르면 그 종류의 '전체 화면' 으로 간다. 새 화면은 만들지 않는다 —
+ * 전부 이미 있는 목록·지도로 보낸다. */
+function _srSecClick(sec) {
+  clearTimeout(_srTimer); _srTimer = null;
+  clearHomeSearch(_srWhere);
+  if (sec === 3 && typeof goMapCat === 'function') goMapCat('tourist');
+  else if (sec === 4 && typeof goLivingCat === 'function') goLivingCat('parking');
+  else if (sec === 5 && typeof goLivingCat === 'function') goLivingCat('restaurant');
+  else if (sec === 6 && typeof goDatalab === 'function') goDatalab('tour');
+  else if (sec === 7 && typeof goLivingCat === 'function') goLivingCat('currency');
 }
 
 function renderHomeSearchResults(results, q) {
@@ -573,8 +889,19 @@ function renderHomeSearchResults(results, q) {
     return;
   }
 
-  el.innerHTML = results.map(function(r, idx) {
-    return '<div class="sr-item" onclick="_srClick(' + idx + ')">'
+  /* 섹션 머리글을 끼워 그린다. 종류가 섞여 나와도 무엇을 보고 있는지 알 수 있고,
+   * 깎여 남은 것이 있으면 머리글 오른쪽에서 그 종류 전체 화면으로 갈 수 있다.
+   * ⚠ idx 는 계속 **평면 인덱스**다 — _srClick·resetHomePage 가 그걸 전제한다. */
+  el.innerHTML = results.map(function (r, idx) {
+    var head = '';
+    if (r._first) {
+      var more = (r._secTotal > _UNI_CAP[r._sec])
+        ? '<span class="sr-sec-more">' + r._secTotal + '건 모두 보기 ›</span>' : '';
+      head = '<div class="sr-sec" onclick="_srSecClick(' + r._sec + ')">'
+           + '<span>' + (_UNI_SEC_NAME[r._sec] || '') + '</span>' + more + '</div>';
+    }
+    return head
+      + '<div class="sr-item" onclick="_srClick(' + idx + ')">'
       + '<div class="sr-icon" style="background:' + r.bg + '">' + r.em + '</div>'
       + '<div style="flex:1;min-width:0"><div class="sr-name">' + r.name + '</div><div class="sr-sub">' + r.sub + '</div></div>'
       + '</div>';
@@ -585,10 +912,94 @@ function renderHomeSearchResults(results, q) {
   if (bar) bar.style.borderRadius = 'var(--r-pill) var(--r-pill) 0 0';
 }
 
+/* 바로가기 실행. 표(_uniActions)의 key 하나당 한 줄이다.
+ * ⚠ closeToday() 를 먼저 부르는 이유: openToday 와 openSettings 가 #today-dim
+ *   한 장을 dataset.for 로 나눠 쓴다. 검색 결과에서 둘을 잇달아 누를 수 있다. */
+function _srDoAction(key) {
+  var subGo = function (sub, theme) {
+    go('tourism');
+    var c = document.querySelector('.tourism-subnav .chip[data-sub="' + sub + '"]');
+    if (!c) return;                       /* switchTourismSub 은 null 가드가 없다 */
+    switchTourismSub(c, sub);
+    if (theme) {
+      var t = document.querySelector('#tourism-theme-chips .chip[onclick*="\u0027' + theme + '\u0027"]');
+      if (t && typeof pickTheme === 'function') pickTheme(t, theme);
+    }
+  };
+  var homeTo = function (id) {
+    go('home');
+    setTimeout(function () {
+      var el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  };
+  switch (key) {
+    case 'tide':      openTide(); return;
+    case 'today':     if (typeof closeToday === 'function') closeToday(); openToday(); return;
+    case 'lc-all':    goLivingCat('currency');   return;
+    case 'park-all':  goLivingCat('parking');    return;
+    case 'rest-all':  goLivingCat('restaurant'); return;
+    case 'trest-all': goLivingCat('touristrest');return;
+    case 'fest-all':  goFestivalAll(); return;
+    case 'cal':       openFestView('calendar');  return;
+    case 'quiz':      openQuiz(); return;
+    case 'near':      go('tourism'); if (typeof requestNearbyRec === 'function') requestNearbyRec(); return;
+    case 'dl-popular':goDatalab('popular'); return;
+    case 'dl-age':    goDatalab('age');     return;
+    case 'dl-report': goDatalab('report');  return;
+    case 'dl-tour':   goDatalab('tour');    return;
+    case 'sub-spot':     subGo('spot');     return;
+    case 'sub-heritage': subGo('heritage'); return;
+    case 'sub-stay':     subGo('stay');     return;
+    case 'sub-camp':     subGo('camp');     return;
+    case 'sub-temple':   subGo('temple');   return;
+    case 'th-sea':     subGo('spot', 'sea');     return;
+    case 'th-nature':  subGo('spot', 'nature');  return;
+    case 'th-history': subGo('spot', 'history'); return;
+    case 'th-family':  subGo('spot', 'family');  return;
+    case 'cat-cinema': goMapCat('cinema'); return;
+    case 'cat-jebu':   goMapCat('jebu');   return;
+    case 'favs':       homeTo('home-favs-section');   return;
+    case 'recent':     homeTo('home-recent-section'); return;
+    case 'share':      shareApp(); return;
+    case 'settings':   if (typeof closeToday === 'function') closeToday(); openSettings(); return;
+    case 'map':        go('map');  return;
+    case 'menu':       openMenu(); return;
+  }
+}
+
 function _srClick(idx) {
   var r = (window._srResults || [])[idx];
   if (!r) return;
+
+  /* 가맹점 미로드 안내행 — 여기서만 4.2MB 를 받는다(사용자가 눌렀을 때만).
+   * ⚠ clearHomeSearch 를 부르면 안 된다. 받은 뒤 같은 검색어로 다시 그려야 한다. */
+  if (r.type === 'lcload') {
+    var _q = _srEl(_srWhere, 'input');
+    var _qv = _q ? _q.value : '';
+    if (typeof _loadLcData === 'function') {
+      _loadLcData(function () { if (_qv) doHomeSearch(_qv, _srWhere); });
+    }
+    return;
+  }
+
   clearHomeSearch(_srWhere);
+
+  /* 바로가기 — 화면·기능으로 간다 */
+  if (r.type === 'action') { _srDoAction(r.act); return; }
+
+  /* 시티투어 코스 — ⚠ dlShowCourse 를 직접 부르면 안 된다. 그건 showDatalab 만
+   * 불러 탭을 안 옮긴다(홈에서 누르면 아무 일도 안 일어난 것처럼 보인다). */
+  if (r.type === 'course') {
+    if (typeof goDatalab === 'function') goDatalab('course:' + r.no);
+    return;
+  }
+
+  /* 좌표를 가진 편의정보 — 지도 칩을 켜고 그 자리로 */
+  if (r.type === 'conv2') {
+    if (typeof goMapConv === 'function') goMapConv(r.convCat, r.lat, r.lng);
+    return;
+  }
   /* 지역(구) 결과 — 지도 탭으로 가서 그 동네 화면으로 옮긴다.
    * go('map') 직후엔 카카오 SDK 가 아직 초기화 전일 수 있어(autoload=false) 한 박자 늦춘다. */
   if (r.type === 'gu') {
@@ -623,6 +1034,11 @@ function _srClick(idx) {
       if (r._raw && typeof showLcSlide === 'function') showLcSlide(r._raw);
     }, 400);
   } else if (r.type === 'conv') {
+    /* ⚠ 예전에는 소식 탭 카테고리 목록으로만 보냈다(모범음식점·관광식당 둘뿐이라
+     * 가능했다). 이제 숙박·캠핑·템플스테이까지 들어오는데 그것들은 소식 탭에
+     * 목록이 없다. goConvItem 이 CONV_CAT_CFG 로 8종을 모두 다루므로 그리로 보낸다
+     * (js/mapnav.js, 2026-08-29 에 getItems() 로 바꿔 뒀다). */
+    if (typeof goConvItem === 'function' && r.idx != null) { goConvItem(r.convCat, r.idx); return; }
     /* go('living') 은 renderLivingPage() 를 동기로 돌려 목록을 '모범음식점'으로 채워 놓는다
      * (js/living.js). 여기서 늦추면 검색해 고른 것과 다른 카테고리가 그동안 떠 있다가
      * 통째로 갈린다. 같은 태스크 안에서 덮어 페인트를 한 번만 낸다.

@@ -178,14 +178,18 @@ function _shareFallback(url) {
 /* ── localcurrency 지연 로드 헬퍼 (4.2MB — 사용 시점에만 fetch) ── */
 var _lcLoading = false;
 var _lcCallbacks = [];
-function _loadLcData(callback) {
+function _loadLcData(callback, silent) {
   if (typeof lcData !== 'undefined' && lcData.length) { if (callback) callback(); return; }
   if (callback) _lcCallbacks.push(callback);
   if (_lcLoading) return; /* 이미 fetch 중 — 중복 요청 방지 */
   _lcLoading = true;
   /* 4.2MB / 27,374건이라 저사양 기기에서 파싱 중 1초 가까이 메인스레드가 멈춘다.
    * 최소한 무반응 구간임을 알린다. */
-  if (typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중이에요...');
+  /* silent — 배경에서 미리 받을 때는 토스트를 띄우지 않는다. 사용자가 검색창에
+   * 글자를 치는 도중에 '불러오는 중이에요' 가 뜨면 자기가 누른 적 없는 안내다.
+   * 기존 호출부 4곳(home.js·living.js·localcurrency.js·map.js)은 인자를 안
+   * 넘기므로 동작이 그대로다. */
+  if (!silent && typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중이에요...');
   fetch('js/localcurrency-static.json?v=20260825').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     /* 소식 탭 통계 4칸(#stat-currency)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.

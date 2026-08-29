@@ -55,9 +55,15 @@ function goMapCat(cat) {
 
 /* ── 생활탭 항목 클릭 → 지도에서 해당 위치 줌인 + 슬라이드 카드 표시 ── */
 function goConvItem(convCat, idx) {
-  /* CONVENIENCE 원본 데이터 참조 */
-  var srcMap = { mobeom: 'restaurants', touristrest: 'touristRestaurants' };
-  var arr = CONVENIENCE[srcMap[convCat]];
+  /* CONVENIENCE 원본 데이터 참조.
+   * ⚠ 예전에는 srcMap = { mobeom:'restaurants', touristrest:'touristRestaurants' }
+   *   두 종류만 알았다. CONV_CAT_CFG[cat].getItems()(js/conv_map.js)가 이미 8종
+   *   전부를 배열로 돌려준다 — 객체인 templeStay 도, 5개 배열을 합치는 jebu 도
+   *   거기서 정규화된다. 표를 늘리는 대신 그걸 쓴다.
+   *   (통합검색이 숙박·캠핑·템플스테이·제부도숙박을 결과에 넣으려면 목적지가
+   *    있어야 한다 — 이 한 줄이 그 목적지를 만든다) */
+  var _cfg = (typeof CONV_CAT_CFG !== 'undefined') && CONV_CAT_CFG[convCat];
+  var arr  = (_cfg && _cfg.getItems) ? _cfg.getItems() : null;
   if (!arr || !arr[idx]) return;
   var rawItem = arr[idx];
 
