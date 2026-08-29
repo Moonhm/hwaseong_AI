@@ -317,10 +317,6 @@
       font-size: 14px; font-weight: 700; cursor: pointer;
     }
     .tide-map-btn:active { opacity: 0.86; transform: scale(0.98); }
-    .tide-note {
-      font-size: 11px; color: var(--text-muted); line-height: 1.55;
-      margin-top: 10px; word-break: keep-all;
-    }
 
     /* ══════════════ ④ 관광 리포트 (2026-08-26) ══════════════ */
     .dl-report-note {
@@ -399,18 +395,9 @@
     .td-w-air-lbl { font-size: 12px; color: var(--text-muted); }
     .td-w-air-val { font-size: 13px; font-weight: 800; color: var(--text); }
 
-    .td-tide { cursor: pointer; }
-    .td-tide.is-open   { background: linear-gradient(135deg,#ECFDF5,#D1FAE5); border-color: #6EE7B7; }
-    .td-tide.is-closed { background: linear-gradient(135deg,#FEF2F2,#FEE2E2); border-color: #FCA5A5; }
-    .td-tide-badge { font-size: 14.5px; font-weight: 900; margin-bottom: 8px; word-break: keep-all; }
-    .td-tide.is-open   .td-tide-badge { color: #047857; }
-    .td-tide.is-closed .td-tide-badge { color: #B91C1C; }
-    .td-tide-times { display: flex; flex-wrap: wrap; gap: 6px; }
-    .td-tide-seg {
-      font-size: 12px; font-weight: 700; color: var(--text-sub);
-      background: rgba(255,255,255,0.72); border-radius: 8px; padding: 5px 9px;
-    }
-    .td-more { font-size: 11.5px; color: var(--text-muted); margin-top: 9px; font-weight: 600; }
+    /* .td-tide* · .td-more 는 2026-08-29 에 지웠다 — 오늘의 화성 패널이 물때를
+     * 자체 카드로 그리던 시절의 규칙인데, js/ 어디에서도 이 클래스를 만들지
+     * 않는다(전수 grep 0건). 물때는 지금 openTide() 의 .tide-now 가 그린다. */
 
     .td-row {
       display: flex; align-items: center; gap: 12px;
