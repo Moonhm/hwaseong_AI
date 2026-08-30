@@ -14,6 +14,31 @@
 | **`WORKFLOW.md`** (이 파일) | 규칙 · 현재 상태 · 담당 분담 · 체크리스트 | **제자리에서 수정.** 낡은 내용은 고치고, 새 절은 잘 안 늘어난다 |
 | **`docs/log/`** | 작업 기록 (무엇을 왜 어떻게 했나) | **새 파일만 추가.** 기존 파일은 고치지 않는다 |
 
+#### ⚠ 끝난 판단은 반드시 이 파일로 올리십시오 (2026-08-30 신설)
+
+`docs/log/` 는 **시간순**이라 나중 결론이 앞 기록을 덮어 주지 않습니다.
+읽는 사람은 검색으로 걸린 것을 먼저 읽지, 날짜순으로 읽지 않습니다.
+
+실제로 이렇게 됐습니다.
+
+```
+08-24  감사가 "API 키 평문 노출 — 폐기·재발급 권고" 를 로그에 적었다
+08-25  사용자가 "만료일 걸어 뒀다. 조치 불필요" 로 종결 — 그런데 그 결론도 로그에만 적혔다
+08-30  다음 감사가 08-24 로그를 먼저 찾아 같은 건을 '심각' 으로 다시 올렸다
+```
+
+**사용자를 두 번 귀찮게 한 것이 비용입니다.** 로그는 "그때 무슨 일이 있었나" 이고,
+`WORKFLOW.md` 는 "지금 무엇이 참인가" 입니다. **종결·기각·보류 판단은 후자입니다.**
+
+#### ⚠ 이 파일은 아무도 안 고치면 조용히 썩습니다
+
+`docs/log/` 는 새 파일만 만드니 낡을 수가 없는데, 이 파일은 '제자리 수정' 이라
+**고치는 사람이 없으면 그냥 틀린 채로 남습니다.** 2026-08-30 전수 감사에서
+현황 기술 **11건이 코드와 어긋나** 있었고, 그중엔 `css/` 디렉토리가 있는데
+「별도 `css/` 디렉토리 없음」 이라고 적힌 것처럼 **같은 문서 안에서 모순**인 것도
+있었습니다. 구조를 바꾸는 작업(파일 분리·이동·이름 변경)을 했으면
+**그 커밋에서 이 파일의 해당 줄까지 고치십시오.**
+
 ### ⚠ 작업 기록은 이 파일에 쓰지 마십시오
 
 **새 작업을 끝냈으면 `docs/log/` 에 새 파일을 만드십시오.** 이 파일 끝에 절을 덧붙이지 마십시오.
@@ -202,9 +227,13 @@ push 가 같은 호출에 묶여 있어 **결과를 읽기 전에 이미 나갔�
 
 ### 소통 채널
 
-- **GitHub README.md `[Claude 간 메시지함]` 섹션**을 비동기 메시지 채널로 사용
+- **커밋 메시지와 `docs/log/`** 가 실제 채널입니다. 상대는 `git pull` 로 그것을 읽습니다
 - 사용자(문형민)가 두 Claude를 중계 (메시지를 양쪽에 전달)
-- 각 Claude는 README를 읽어 상대방의 최신 작업·요청 확인
+- 인계 건은 `WORKFLOW.md` 의 「인계」 표에 적습니다 (§17 좌표·데이터, §27-G·§27-H)
+
+> `README.md` 의 `[Claude 간 메시지함]` 은 **없어졌습니다.** §15 가 README 를
+> 서비스 소개 전용으로 못박으면서 사라졌는데 이 절만 그대로 남아 있었습니다
+> (2026-08-30 정정). README 에서 메시지함을 찾지 마십시오.
 
 ### 핵심 규칙 (충돌 방지)
 
@@ -223,7 +252,8 @@ push 가 같은 호출에 묶여 있어 **결과를 읽기 전에 이미 나갔�
 
 ```
 Frontend         순수 HTML · CSS · JavaScript (프레임워크 없음)
-                 단일 파일 SPA: index.html (~3,100줄)
+                 SPA: index.html(956줄) + js/ 23개 + css/ 7개
+                 2026-08-25 에 인라인을 분리했다(§20·§21). '단일 파일' 은 그전 이야기다.
 Map Engine       Kakao Maps JavaScript SDK v2
                  커스텀 오버레이 · 클러스터 · idle 이벤트 기반 동적 렌더링
 Proxy Server     Flask (Python) — 주차장 API CORS 우회
@@ -328,7 +358,10 @@ idle 이벤트 → 100ms 디바운스 → clearDisplay() → re-render
 
 ## 4. 데이터 파이프라인
 
-### 관광지 (tourist) — 159개
+### 관광지 (tourist) — 151개
+
+> 아래 표의 수집 이력은 **수집 당시** 기준이라 합이 159 다. 2026-08-26 에 영화관 8곳을
+> 편의정보로 옮겨(`id 40`·`159~165` 제거) **현재는 151개**다. 현황 수치는 §12 를 보라.
 
 | 수집 시기 | 방법 | ID 범위 | 수량 |
 |---------|------|---------|------|
@@ -338,12 +371,12 @@ idle 이벤트 → 100ms 디바운스 → clearDisplay() → re-render
 
 **2차 추가 포함 카테고리**: 쇼핑(백화점), 골프장, 숙박(호텔·리조트), 영화관, 테마파크, 공원, 시장, 마리나, 낚시터, 사찰, 체험장, 문화시설
 
-### 축제 (festival) — 48개
+### 축제 (festival) — 50개
 
 1. yeyak.hscity.go.kr에서 2026년 화성시 행사 전체 수집
 2. `gen_data.py` 스크립트로 좌표 자동 매핑 (VENUE_COORDS 딕셔너리)
 3. 과거 행사(8월 14일 이전) 전체 제거 → 미래 행사 48개만 유지
-4. ID 범위: 42–133 (festival 전용)
+4. ID 범위: 42–133 (festival 전용). 2026-08-26 에 `276`·`277`(연등음악축제·뱃놀이축제)을 더해 **50개**
 
 ### 주차장 — 131개
 
@@ -366,6 +399,9 @@ Playwright/Selenium 환경 미지원 → 알고리즘 기반 생성:
 - 240px 썸네일은 `assets/images/thumbs/{name}.jpg` — 38·48·76px 슬롯이 쓴다
 - **git 제외** (용량 문제) — 배포 서버에만 존재. 커밋되는 것은 `js/photos.js` 뿐이다
 - 2026-08-27 기준 **PLACES 243곳(tourist 151·festival 50·heritage 42) 전건 보유**
+  (2026-08-30 재확인 — `js/photos.js` 와 `js/data.js` 대조해 **누락 0곳**)
+- `js/photos.js` 인덱스 규모: `byName` 265곳 367장 · `byId` 9곳 9장.
+  PLACES 밖(편의정보 캠핑 9·호텔 8 등)까지 담기 때문에 곳 수가 243보다 많다
 - onerror fallback: 주황 그라데이션 + 🏞️ 자동 표시
 
 #### 사진 반입은 반드시 `tools/import_photos.py` 로 한다 (2026-08-27 신설)
@@ -408,25 +444,29 @@ python3 tools/bump_version.py && bash tools/check.sh; echo $?
 |------|------|---------|
 | 별점 데이터 | 알고리즘 생성 (Selenium 환경 없음) | Kakao Place API 실제 별점 연동 |
 | 장소 사진 | git 추적 제외 완료 — 로컬·배포 서버에만 보관 (섹션 11 참고) | CDN 적용 또는 Cloudflare Images |
-| Geocoder 캐싱 | 편의시설 칩 클릭마다 157건 API 호출 | localStorage 1회 캐싱 |
-| 달력 날짜 연동 | has-event 클래스 하드코딩 일부 | PLACES 배열의 date 필드 기반 동적 마킹 |
-| 맛집 지도 칩 | 실제 restaurant 데이터 없음 | 모범음식점(conv_map.js)으로 리다이렉트 |
+| ~~Geocoder 캐싱~~ | ✅ **해결** — `js/conv_map.js` 가 `CONV_CACHE_VER` 로 localStorage 캐싱 중 | — |
+| ~~달력 날짜 연동~~ | ✅ **해결** — `js/calendar.js:264` 가 `hasFest` 로 `has-event` 를 동적 마킹 | — |
+| 맛집 지도 칩 | 데이터는 `js/restaurants-static.json` 3,754건으로 있으나 **읽는 코드가 없다** | §13-R 사양대로 `js/restaurants.js` 구현 |
 
 ---
 
 ## 10. 파일별 역할 및 핵심 함수
 
-### index.html
+> ⚠ 아래 함수들은 **2026-08-25 의 JS 분리(§20) 전까지 `index.html` 안에** 있었습니다.
+> 지금은 전부 `js/` 로 나갔습니다. 2026-08-30 에 실제 위치로 고쳤습니다.
+> **파일을 찾을 때는 `grep -rn "function 이름" js/ index.html` 이 가장 확실합니다.**
 
-| 함수 | 역할 |
-|------|------|
-| `go(page)` | 탭 전환 (+ 퀴즈·메뉴 자동 닫기) |
-| `goMapFocus(lat, lng, level, id)` | 관광 탭 → 지도 이동 + 핀 포커스 |
-| `renderTourismList(theme, expanded)` | 관광 탭 목록 렌더링 (더보기 포함) |
-| `showFestivalDetail(id)` | 축제 상세 뷰 |
-| `openQuiz()` / `closeQuiz()` | 퀴즈 오버레이 제어 |
-| `copyAppUrl()` | 앱 URL 클립보드 복사 |
-| `ratingStars(r)` | 별점 → ★½☆ 문자열 변환 |
+### 화면·탐색 (분리 전 index.html 소속이던 것)
+
+| 함수 | 지금 있는 곳 | 역할 |
+|------|-------------|------|
+| `go(page)` | `js/nav.js` | 탭 전환 (+ 퀴즈·메뉴 자동 닫기) |
+| `goMapFocus(lat, lng, level, id)` | `js/mapnav.js` | 추천 탭 → 지도 이동 + 핀 포커스 |
+| `renderTourismList(theme, expanded)` | `js/tourism.js` | 추천 탭 목록 렌더링 (더보기 포함) |
+| `showFestivalDetail(id)` | `js/tourism.js` | 축제 상세 뷰 |
+| `ratingStars(r)` | `js/tourism.js` | 별점 → ★½☆ 문자열 변환 |
+| `openQuiz()` / `closeQuiz()` | `js/quiz.js` | 퀴즈 오버레이 제어 |
+| `copyAppUrl()` | `js/ui.js` | 앱 URL 클립보드 복사 |
 
 ### map.js
 
@@ -458,8 +498,12 @@ python3 tools/bump_version.py && bash tools/check.sh; echo $?
 
 ## 11. assets/ 이미지 관리 정책
 
-`assets/images/` (관광지 사진 159장 · 약 59MB)는 **git 추적 제외** — `.gitignore`에 등록됨.  
+`assets/images/` 는 **git 추적 제외** — `.gitignore:7` 에 등록됨.
 사진 파일은 **로컬 및 배포 서버에만 보관**하며, git push 대상이 아닙니다.
+
+> 장수는 여기 적지 않습니다. 배포 서버에만 있어 개발 워킹트리에서 셀 수 없고,
+> 적어 두면 반드시 낡습니다(실제로 '159장' 이 2026-08-30 까지 남아 있었습니다).
+> 현재 수치는 `js/photos.js` 인덱스(§4)와 `bash tools/check.sh` 의 asset-guard 로 봅니다.
 
 ```
 assets/images/places/{name}.jpg   — data.js의 name 필드와 정확히 일치해야 함
@@ -501,7 +545,7 @@ git pull
 | **`go()` 뒤 `setTimeout` 금지** | 화면을 바꾸는 코드는 `go()` **바로 뒤에서 동기로** 부를 것. `go()` 는 뷰 교체와 목록 렌더까지 전부 동기로 끝내므로(`js/nav.js`), 지연을 두면 그 사이 '엉뚱한 화면'이 완성돼 페인트된다. 2026-08-26 에 이 패턴 6곳을 걷어냈다(실측 최대 9프레임 노출). 예외는 **스크롤**뿐 — 전환 애니메이션(0.26s) 뒤에 움직이는 편이 낫다 |
 | **`check.sh` 는 종료 코드로 판정** | `bash tools/check.sh; echo $?` 로 볼 것. `grep "── FAIL"` 로 축별 합계만 보면 **실패를 놓친다** — 실제로 2026-08-26 에 데이터 축이 `FAIL 7` 인 채로 며칠 갔는데 다른 축의 `── FAIL 0` 두 개만 보고 통과로 보고했다. grep 은 '무엇이 실패했는지' 볼 때만 쓴다 |
 | **화면 숫자를 바꾸면 `PRINTED` 도** | 화면에 찍히는 건수 문구를 고치거나 없애면 `tools/check_data.py` 의 `PRINTED` 정규식이 대상을 잃어 검사가 통째로 빨간불이 된다. 없앤 문구는 '되살릴 때 함께 되살리라' 는 주석과 함께 남길 것(선례: 음식점 칩·통계 4칸) |
-| **로드 시점 전역은 순서에 묶인다** | `index.html` `<script>` 순서는 nav→quiz→mapnav→home→tourism→living→favorites→ui→calendar→boot 다. 다른 파일의 전역을 **초기화식에서** 참조하면 순서가 앞서야 한다 — 2026-08-26 에 `LC_ICON_HTML` 을 `js/ui.js`(8번째)에 두고 `js/home.js`(4번째)의 `_CAT_STYLE` 초기화에서 읽어 home.js 가 통째로 죽었다. 함수 **안**에서 읽으면(런타임) 순서와 무관하다 |
+| **로드 시점 전역은 순서에 묶인다** | `index.html` `<script>` 는 **23개**이고 순서는 nav→quiz→mapnav→home→tourism→living→favorites→ui→calendar→boot→photos→convenience→**data**→**map**→conv_map→parking→localcurrency→datalab→tide→weather→today→district→hscroll 다. **`js/data.js` 가 13번째라는 점에 주의** — 그 앞 12개는 초기화식에서 `PLACES` 를 볼 수 없다. 순서는 `grep -oP '<script src="js/\K[a-z_]+' index.html` 로 확인한다. 다른 파일의 전역을 **초기화식에서** 참조하면 순서가 앞서야 한다 — 2026-08-26 에 `LC_ICON_HTML` 을 `js/ui.js`(8번째)에 두고 `js/home.js`(4번째)의 `_CAT_STYLE` 초기화에서 읽어 home.js 가 통째로 죽었다. 함수 **안**에서 읽으면(런타임) 순서와 무관하다 |
 | **테마 축과 카테고리 축은 곱한다** | 추천 탭 목록은 서브탭(카테고리)과 테마 칩 두 축이 겹친다. 한쪽만 보고 필터하면 다른 축이 통째로 풀린다 — 2026-08-26 에 '관광지' 서브탭에서 테마를 누르면 문화재 42건이 섞여 나왔다. 테마 '전체' 는 **'테마 조건 없음'** 이지 '모든 카테고리' 가 아니다 |
 | **추천 탭 네 뷰는 배타** | `#view-tourism-list` · `#view-calendar` · `#view-festival-detail` · `#view-datalab` 중 하나만 보여야 한다. 새 뷰를 켜는 함수는 **나머지 셋을 전부 `display:none`** 으로 내릴 것. `#view-datalab` 은 `_dlView` 도 함께 `null` 로 내린다 — display 만 내리면 `dlLoad` 의 늦은 콜백이 숨긴 뷰를 다시 그린다 |
 
@@ -509,7 +553,7 @@ git pull
 
 | 항목 | 값 |
 |------|----|
-| CONV_CACHE_VER | `v6` (2026-08-26 좌표 이식으로 올림) |
+| CONV_CACHE_VER | `v7` (`js/conv_map.js:92`) |
 | 관광지 | 151개 — 2026-08-26 영화관 8곳을 편의정보로 옮겼다(id 40·159~165 제거) |
 | 문화재 | 42개 (id: 234–275, 2026-08-26 추가) |
 | 축제 | 50개 (id: 42–133, 276–277, 2026-08-26 연등음악축제·뱃놀이축제 추가) |
@@ -522,8 +566,26 @@ git pull
 
 | 종류 | 키 |
 |------|-----|
-| JS 앱 키 (지도 표시용) | HTML `<script>` appkey 파라미터 확인 |
+| JS 앱 키 (지도 표시용) | `index.html` `<script>` 의 `appkey` 파라미터 — **원래 공개용**이다(도메인 제한) |
 | REST API 키 (지오코딩용) | `1bd845da5756d1c78955463b800731ef` |
+
+#### ⚠ 키 평문 노출은 **이미 결론 난 사안입니다 — 다시 꺼내지 마십시오**
+
+| | |
+|---|---|
+| 어디에 | `WORKFLOW.md`(이 표) · `tools/` 5개(`preprocess.py` `ingest.py` `geocode_jebu.py` `fix_coords.py` `fix_all_coords.py`) · `js/home.js` 의 `AIRKOREA_KEY` |
+| 판정 | **조치 불필요** (사용자 판단, 2026-08-25 · 2026-08-30 재확인) |
+| 근거 | 해커톤 시연용 데모이고, 데이터가 전부 공공데이터이며, **사용자가 키에 만료일을 걸어 두었다** |
+
+전문은 [`docs/log/2026-08-25-dev-server-scope.md`](docs/log/2026-08-25-dev-server-scope.md) 머리에 있습니다.
+
+> **왜 여기 적어 두는가** — 2026-08-24 감사가 "폐기·재발급 권고"로 올렸고
+> (`docs/log/2026-08-24-both-session5.md:82`), 그 뒤 사용자가 종결했는데 **결론이
+> 로그에만 남아** 2026-08-30 감사가 같은 건을 다시 심각 항목으로 올렸습니다.
+> 로그는 시간순이라 나중 결론이 앞 기록을 덮어 주지 않습니다. **끝난 판단은
+> `WORKFLOW.md` 로 올려야** 다음 사람이 같은 왕복을 반복하지 않습니다.
+>
+> 뒤집을 조건은 하나 — **운영 서비스 전환, 또는 만료일 없는 키·개인정보가 들어올 때.**
 
 ### 개발 환경 실행
 
@@ -544,11 +606,13 @@ python tools/server.py --port 8080
 |------|------|
 | 비ISO 날짜 축제 캘린더 | "2026년 N월 중" 형식은 해당 월 1일로 처리됨 (Session 4에서 수정 완료) |
 | 미정 장소 placeholder 좌표 | `lat:37.199, lng:126.831` — 미정 축제 23개. 데이터 자체 문제, 코드 수정 불가 |
-| 작은섬1·2, 양지팬션·리조텔 | convenience.js에서 동일 좌표 중복 — 마커 겹침, 데이터 보정 필요 |
-| ~~id:41 화성예술의전당~~ | ✅ 2026-08-26 해결 — 주소 동탄구 노작로 11-1로 수정 |
-| ~~id:102 송산포도축제~~ | ✅ 2026-08-26 해결 — 날짜 9.5-6, 장소 궁평항, 좌표 수정 |
-| ~~convenience.js 대부분 lat/lng 없음~~ | ✅ 2026-08-26 해결 — 모범음식점 88/94 좌표 이식, 관광편의시설·영화상영관 신규 섹션 추가 |
+| 작은섬1·2, 양지팬션·리조텔 | **수정 금지.** 같은 부지라 좌표·주소가 원래 같다 — §17 인계표 참조 |
 | 음식점 3754건 미표시 | `js/restaurants-static.json` 준비 완료. **개발 Claude의 `js/restaurants.js` 모듈 구현 필요** (§13-R 참조) |
+| 배포 URL 죽음 | `https://culture-reed-dee-rug.trycloudflare.com` 이 2026-08-30 현재 응답 없음. README 배지·§1·`check.sh` `LIVE_URL` 셋 다 이 주소다. **배포 Claude 담당** — 터널을 다시 띄우고 새 호스트명으로 세 곳을 갱신해야 한다 |
+
+> 해결된 항목은 §14 규칙대로 **지웁니다.** 2026-08-30 에 취소선으로 남아 있던 3건
+> (`id:41` 주소 · `id:102` 송산포도축제 · `convenience.js` 좌표)을 지웠습니다.
+> 무엇을 어떻게 고쳤는지는 `docs/log/2026-08-26-deploy-data-quality-fix.md` 에 있습니다.
 
 ---
 
@@ -674,8 +738,6 @@ Claude는 컨텍스트 윈도우 한계로 인해 대화가 길어지면 새 세
 
 ---
 
-*최종 업데이트: 2026년 8월 24일*
-
 ---
 
 ## 16. Session 5 — 전체 코드 전수 검토·인수인계 체계 → [`docs/log/2026-08-24-both-session5.md`](docs/log/2026-08-24-both-session5.md)
@@ -697,7 +759,11 @@ Claude는 컨텍스트 윈도우 한계로 인해 대화가 길어지면 새 세
 | 담당 | 파일 |
 |------|------|
 | 배포 Claude | `js/data.js` · `js/convenience.js` · `js/parking-static.json` · `js/localcurrency-static.json` · `assets/` · `tools/` 의 지오코딩 스크립트 |
-| 개발 Claude | `index.html` (CSS·JS 전부 인라인 — 별도 `css/` 디렉토리 없음) · `js/map.js` · `js/conv_map.js` · `js/parking.js` · `js/localcurrency.js` · `tools/server.py` |
+| 개발 Claude | `index.html`(956줄, 마크업만) · **`js/` 23개** · **`css/` 7개** · `tools/server.py` · `tools/check*.{sh,py,js}` |
+
+> ⚠ 이 표는 2026-08-30 까지 "`index.html` — CSS·JS 전부 인라인, 별도 `css/` 디렉토리
+> 없음" 이라고 적혀 있었습니다. **2026-08-25 의 §20·§21 분리 이후로 거짓**입니다
+> (같은 문서 안에서 서로 모순이었습니다). 지금 구조는 `ls js/ css/` 로 봅니다.
 
 ### 디자인·취향은 사용자가 정합니다 (2026-08-26)
 
@@ -739,16 +805,25 @@ Claude는 컨텍스트 윈도우 한계로 인해 대화가 길어지면 새 세
 ### 개발 Claude가 데이터를 건드릴 때의 제약 (중요)
 
 관광지 사진은 `assets/images/places/{name}.jpg` 파일명이 `data.js`의 `name` 필드와 **정확히 일치**해야 뜹니다.
-경로를 조립하는 곳은 아래 4곳이며, 전부 가공 없이 문자열을 그대로 이어붙입니다.
+
+**경로 조립은 `js/ui.js` 의 `placePhotoSrc()` 한 곳으로 모여 있습니다.** `js/photos.js`
+인덱스를 `byId` → `byName` 순으로 조회하고, 없으면 `{name}.jpg` 를 그대로 씁니다.
+사진 표시를 고칠 일이 있으면 **여기부터** 보십시오.
 
 | 파일 | 함수 | 용도 |
 |------|------|------|
+| **`js/ui.js`** | **`placePhotoSrc()`** | **관문. 아래가 전부 이걸 부른다** |
 | `js/map.js` | `placePhotoHtml()` | 지도 슬라이드 카드 사진 |
-| `index.html` | `_renderQuizResult()` | AI 추천 결과 카드 |
-| `index.html` | `renderNearbyResult()` | 홈 '내 주변' 카드 |
-| `index.html` | `itemHtml()` (`renderTourismList` 내부) | 관광 탭 목록 썸네일 |
+| `js/quiz.js` | `_renderQuizResult()` | AI 추천 결과 카드 |
+| `js/home.js` | `renderNearbyResult()` | 홈 '내 주변' 카드 |
+| `js/tourism.js` | `itemHtml()` (`renderTourismList` 내부) | 추천 탭 목록 썸네일 |
+| `js/datalab.js` · `js/conv_map.js` | — | 리포트 카드 · 편의정보 핀 |
 
-> 행번호는 코드 수정 때마다 밀리므로 함수명으로 찾으십시오. `grep -n "assets/images/places" index.html js/*.js` 로 한 번에 확인됩니다.
+> 2026-08-30 정정 — 이 표는 위 넷을 전부 `index.html` 소속으로 적고 있었습니다.
+> §20 의 JS 분리 때 파일이 갈렸는데 표가 안 따라왔습니다. 함수명은 그때도 맞았습니다.
+>
+> 행번호는 코드 수정 때마다 밀리므로 함수명으로 찾으십시오.
+> `grep -rn "assets/images/places\|placePhotoSrc" index.html js/*.js` 로 한 번에 확인됩니다.
 
 따라서 개발 Claude가 `name`을 **추가하거나 수정하면 그 사진은 개발 쪽에서 넣을 수 없습니다.**
 이 경우 커밋 메시지에 **필요한 정확한 파일명**을 남겨 배포 Claude가 바로 처리할 수 있게 합니다.
@@ -939,7 +1014,7 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
    `{읍면동}_{id}_{메모}` 로 바꾸는 것은 **데이터를 다 넣은 뒤** 한 번에 합니다.
    (지금 이름도 PLACES 와 정확히 맞아 동작에는 문제가 없습니다. 다만 장소명이 바뀌면 깨지는 취약성은 그대로 남습니다)
 
-*최종 업데이트: 2026년 8월 25일 (섹션 18 — 도구·전달방식·NFD·사진 정책 갱신)*
+*§18 마지막 갱신: 2026년 8월 25일 (도구·전달방식·NFD·사진 정책)*
 
 ---
 
@@ -1008,6 +1083,44 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 개발 Claude 인계: 캠핑장 17장·호텔 6장은 `js/convenience.js` 소속이라 인덱서가 못 읽고,
 축제 사진 44장은 축제 카드가 CSS 배너를 써서 화면에 안 나온다.
 
+> ✅ **둘 다 처리됨** (2026-08-30 확인).
+> `tools/build_photo_index.py:39,59-80` 이 `js/convenience.js` 를 읽어 인덱스에 넣습니다
+> (지금 `byName` 에 캠핑 9·호텔 8). 축제 상세는 `js/tourism.js` 의 `fd-hero--photo` 로
+> 실사진을 띄웁니다 — 축제 50건 중 **47건이 사진 보유**이고, 없을 때만 CSS 그라데이션
+> (`IMG_CLASSES_FD`)으로 떨어집니다.
+
+## 27-H. PLACES 주소 32건 보정 · 개발 Claude 인계 3건 판별 (배포) → [`docs/log/2026-08-26-deploy-photo-dedup-weather.md#7`](docs/log/2026-08-26-deploy-photo-dedup-weather.md)
+
+`address:"경기도 화성시"` 로 시(市) 단위에서 끊긴 관광지 31건 + 구 누락 1건을 읍면동까지 채웠다.
+`address:""` 는 애초에 0건이었다 — 앞선 배포 보고가 틀렸다.
+`js/home.js:101` 이 '경기도 화성시' 접두어를 정규식으로 떼면서 문자열이 통째로 비어
+빈 값처럼 보였을 뿐이다.  **시 단위에서 끊긴 주소 32 → 0건**
+
+**개발 Claude가 '데이터 쪽'이라며 넘긴 3건은 실측 결과 셋 다 코드 쪽이다:**
+
+| 항목 | 판정 |
+|------|------|
+| 지역화폐 좌표 74.8% 중복 | **정상 데이터.** 20,489건 중 19,379건이 같은 좌표+같은 주소(같은 건물). 241건 최다점은 카림에비뉴 한 건물이다. 좌표는 맞고, 마커가 겹치는 렌더링 문제다 |
+| 축제 `status` 50건 `upcoming` | **죽은 필드.** `'ongoing'` 을 읽는 분기가 둘 있으나 데이터에 `'ongoing'` 이 0건이라 안 탄다. 수집 시점 값을 굳히는 구조가 문제라 `date` 로 런타임 계산해야 한다 |
+| 미확정 날짜 11건 '1일' 고정 | **파서 버그.** `js/calendar.js:17-24` `_parseFestDate()` 가 `"2026년 10월 중"` 을 `2026-10-01` 로 바꾸고 근사임을 안 알려, `js/today.js:141` 이 없는 `D-36` 을 찍는다 |
+
+> ✅ **셋 다 처리됨** (2026-08-30 확인).
+> ① 지역화폐 마커 겹침 → `fd71dd4` 로 해소 (`docs/log/2026-08-26-dev-lc-marker-cluster.md`).
+> ② 축제 `status` → `js/calendar.js:45` `festStatus(place, now)` 가 `date` 로 런타임 계산한다.
+>   `data.js` 의 `status:"upcoming"` 50건은 이제 **아무도 안 읽는 죽은 필드**다(데이터 쪽 정리 건).
+>   여러 날 축제 `date` 에 범위(`~`)가 든 것이 10건 들어와 있다.
+> ③ `_parseFestDate()` → `js/calendar.js:21-22` 가 `_parseFestDateMeta()` 로 **근사 여부를 따로 알린다.**
+
+별점(`rating`·`reviewCount` 201건이 15종 값에 몰림)은 §4·§9 에 이미 적힌 알려진 한계다.
+정렬·추천에는 안 쓰이고 표시만 3곳(`tourism.js` · `home.js` · `map.js`)이다.
+`js/ratings.json` 은 `tools/check.sh` 의 **`live_drift()`** 가 배포본과 sha256 대조 중이라
+**한 바이트도 건드리면 안 된다.** (`--live` 를 줬을 때만 돈다)
+
+> 2026-08-30 정정 — 원래 `tools/check.sh:187` 이라고 적혀 있었습니다. `9fae4be` 시점에는
+> 맞았지만 그 뒤 검사가 늘면서 밀렸습니다. **검사 스크립트는 줄번호로 가리키지 말고
+> 함수명으로 가리키십시오** — `docs/log` 의 `index.html:3891` 류가 같은 이유로 죽었습니다.
+
+
 ## 27-I. 행정구역(4개 구)별 지도 보기 · 검색 → [`docs/log/2026-08-26-dev-district.md`](docs/log/2026-08-26-dev-district.md)
 
 ## §28 사진·대용량 파일 push 금지 — 현황과 결정 (2026-08-26)
@@ -1059,21 +1172,8 @@ origin/main 에서 도달 가능  : 104개 / 35.4 MB   ← GitHub 에서 지금�
 > ⚠️ 배포 Claude 주의: "추적 0건"만 보고 "규칙 지켜짐"이라고 보고하지 마라.
 > 히스토리는 별도다. 이 세션에서 실제로 그렇게 잘못 보고했다.
 
-## 27-H. PLACES 주소 32건 보정 · 개발 Claude 인계 3건 판별 (배포) → [`docs/log/2026-08-26-deploy-photo-dedup-weather.md#7`](docs/log/2026-08-26-deploy-photo-dedup-weather.md)
+---
 
-`address:"경기도 화성시"` 로 시(市) 단위에서 끊긴 관광지 31건 + 구 누락 1건을 읍면동까지 채웠다.
-`address:""` 는 애초에 0건이었다 — 앞선 배포 보고가 틀렸다.
-`js/home.js:101` 이 '경기도 화성시' 접두어를 정규식으로 떼면서 문자열이 통째로 비어
-빈 값처럼 보였을 뿐이다.  **시 단위에서 끊긴 주소 32 → 0건**
-
-**개발 Claude가 '데이터 쪽'이라며 넘긴 3건은 실측 결과 셋 다 코드 쪽이다:**
-
-| 항목 | 판정 |
-|------|------|
-| 지역화폐 좌표 74.8% 중복 | **정상 데이터.** 20,489건 중 19,379건이 같은 좌표+같은 주소(같은 건물). 241건 최다점은 카림에비뉴 한 건물이다. 좌표는 맞고, 마커가 겹치는 렌더링 문제다 |
-| 축제 `status` 50건 `upcoming` | **죽은 필드.** `'ongoing'` 을 읽는 분기가 둘 있으나 데이터에 `'ongoing'` 이 0건이라 안 탄다. 수집 시점 값을 굳히는 구조가 문제라 `date` 로 런타임 계산해야 한다 |
-| 미확정 날짜 11건 '1일' 고정 | **파서 버그.** `js/calendar.js:17-24` `_parseFestDate()` 가 `"2026년 10월 중"` 을 `2026-10-01` 로 바꾸고 근사임을 안 알려, `js/today.js:141` 이 없는 `D-36` 을 찍는다 |
-
-별점(`rating`·`reviewCount` 201건이 15종 값에 몰림)은 §4·§9 에 이미 적힌 알려진 한계다.
-정렬·추천에는 안 쓰이고 표시만 3곳(`tourism.js:272` · `home.js:164` · `map.js:511`)이다.
-`js/ratings.json` 은 `tools/check.sh:187` 이 배포본과 sha256 대조 중이라 **한 바이트도 건드리면 안 된다.**
+*최종 업데이트: 2026년 8월 30일 — 문서 전수 감사. 코드와 어긋난 현황 11건 정정,
+끝난 인계 7건 종결 표시, 「끝난 판단은 WORKFLOW.md 로」 규칙 신설.
+자세한 것은 [`docs/log/2026-08-30-dev-workflow-drift-audit.md`](docs/log/2026-08-30-dev-workflow-drift-audit.md)*
