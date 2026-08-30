@@ -116,7 +116,7 @@
       color:#fff; font-size:22px;
       display:flex; align-items:center; justify-content:center;
       cursor:pointer; z-index:190;
-      /* .place-slide(css/20-map.css:275)가 200 이라 그보다 낮다.
+      /* .place-slide(css/20-map.css 의 .place-slide)가 200 이라 그보다 낮다.
        * ⚠ 단 그 비교는 **같은 스태킹 컨텍스트 안에서만** 성립한다. 이 버튼을
        *   document.body 에 붙이던 동안에는 #page-map(.page.active{z-index:2})의
        *   바깥이라 190 vs 2 로 겨뤄 카드 위에 떴다. js/map.js 가 #page-map 안에

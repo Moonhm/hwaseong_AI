@@ -1429,24 +1429,25 @@ function switchHomeTab(el, tab) {
    홈 탭 재클릭 리셋 (2026-08-25)
    되돌리는 것 = 화면 상태뿐. 절대 건드리지 않는 것:
      · localStorage 'hsida_favs' (사용자 데이터) — clearFavs() 를 부르면 안 된다
-     · lcData / _lcLoading / _lcCallbacks (4.2MB 캐시, js/ui.js:73-95)
-     · parkingData / parkingTimer (js/parking.js:3-5)
+     · lcData / _lcLoading / _lcCallbacks (4.2MB 캐시, js/ui.js 의 _loadLcData 블록)
+     · parkingData / parkingTimer (js/parking.js 머리의 전역 선언)
    GPS 도 다시 요청하지 않는다 — 내 위치 섹션은 원본 CTA 마크업으로 되돌리기만 한다.
 ══════════════════════════════════════════════════ */
 
-/* index.html:66-74 의 원본 CTA 스냅샷. boot.js 가 첫 페인트 전에 채운다.
+/* index.html 의 #nearby-section > .nearby-cta 원본 스냅샷. boot.js 가 첫 페인트 전에 채운다.
  * JS 문자열로 하드코딩하지 않는 이유: 그 CTA 는 100자짜리 인라인 SVG path 를 포함한 8줄
- * 마크업이고, js/home.js:26-30 에 이미 비슷하지만 다른(오류용 빨간) 복제본이 있어 드리프트 전례가 있다. */
+ * 마크업이고, 이 파일 위쪽 requestNearbyRec() 에 이미 비슷하지만 다른(오류용 빨간
+ * .nearby-cta-text) 복제본이 있어 드리프트 전례가 있다. */
 var _homeNearbyInitHtml = null;
 
 /* 진행 중인 위치 요청 무효화용 세대 토큰.
  * geolocation 은 취소 API 가 없어서, '위치 확인 중' 상태로 리셋해도 최대 8초 뒤
- * 성공 콜백이 결과 카드를 다시 그린다(js/home.js:23-33). 세대가 다르면 무시한다. */
+ * 성공 콜백이 결과 카드를 다시 그린다(requestNearbyRec 의 getCurrentPosition). 세대가 다르면 무시한다. */
 var _nearbyGen = 0;
 
 function resetHomePage() {
   /* ① 검색 — 예약된 디바운스부터 죽인다.
-   *    타이핑 직후 220ms 안에 홈을 재클릭하면, 리셋이 끝난 뒤 js/home.js:222 의 타이머가 터져
+   *    타이핑 직후 220ms 안에 홈을 재클릭하면, 리셋이 끝난 뒤 _srTimer(220ms 디바운스)가 터져
    *    doHomeSearch(옛 검색어) 가 실행되고 결과 패널이 되살아난다.
    *    clearHomeSearch()/closeHomeSearch() 어디에도 clearTimeout 이 없다. */
   clearTimeout(_srTimer);
@@ -1454,22 +1455,22 @@ function resetHomePage() {
   clearHomeSearch();          /* value='' + ✕ 숨김 + 결과 innerHTML='' + .open 제거 + 검색바 borderRadius 복원 */
   var _si = document.getElementById('home-search-input');
   if (_si) _si.blur();        /* 첫 진입은 포커스 없음 = 모바일 키보드 닫힘. clearHomeSearch 는 blur 를 안 한다. */
-  window._srResults = null;   /* 27,374건 배열 원소 참조를 붙들고 있어 GC 를 막는다(js/home.js:316) */
+  window._srResults = null;   /* 27,374건 배열 원소 참조를 붙들고 있어 GC 를 막는다(doHomeSearch 가 채운다) */
 
   /* ② 최근 둘러본 관광지 다시 그리기 (내 위치 추천은 2026-08-26 추천 탭으로 갔다 —
    *    복원 책임도 resetTourismPage() 로 함께 옮겼다). */
   if (typeof renderRecentSection === 'function') renderRecentSection();
 
-  /* ③ 관광/생활 토글 → 항상 '관광'(index.html:58 에 active 하드코딩).
-   *    반드시 'tourism' 으로만 부를 것 — js/home.js:588-591 의 'living' 분기는
+  /* ③ 관광/생활 토글 → 항상 '관광'(index.html 의 .ttab[data-tab="tourism"] 에 active 하드코딩).
+   *    반드시 'tourism' 으로만 부를 것 — switchHomeTab() 의 'living' 분기는
    *    _loadLcData() 를 태워 4.2MB 재요청 + 로딩 토스트를 띄운다. */
   var _tt = document.querySelector('#page-home .ttab[data-tab="tourism"]');
   if (_tt) switchHomeTab(_tt, 'tourism');   /* 클래스 + 두 블록 display 를 한 번에 맞춘다 */
 
   /* ④ 콘텐츠 재렌더. 세 함수 모두 이미 로드된 PLACES/CONVENIENCE/parkingData/lcData 를
    *    '읽기만' 한다 — fetch 하는 것은 switchHomeTab 안의 _loadLcData 뿐이고 위에서 피했다.
-   *    renderFavSection() 은 getFavs() 로 localStorage 를 읽기만 한다(js/favorites.js:109). */
-  renderHomePage();           /* = renderHomeTourism + renderHomeLiving + renderFavSection (js/home.js:171-175) */
+   *    renderFavSection() 은 getFavs() 로 localStorage 를 읽기만 한다(js/favorites.js). */
+  renderHomePage();           /* = renderHomeTourism + renderHomeLiving + renderFavSection */
 }
 
 /* ══════════════════════════════════════════════════

@@ -1226,18 +1226,19 @@ function setupZoomSlider() {
 
 /* ══════════════════════════════════════════════════
    지도 탭 재클릭 리셋 (2026-08-25)
-   첫 진입 화면의 정의 = 중심 HWASEONG(js/map.js:22) / 레벨 9(js/map.js:73) /
-   핀·칩·슬라이드·배지 전부 없음 (js/map.js:83 "최초 진입 시 아무것도 표시하지 않음").
+   첫 진입 화면의 정의 = 중심 HWASEONG(이 파일의 const HWASEONG) / 레벨 9(initMap 의 level: 9) /
+   핀·칩·슬라이드·배지 전부 없음 (initMap 의 "최초 진입 시 아무것도 표시하지 않음" 주석).
 
    절대 하지 않는 것:
      · mapReady=false 로 되돌려 initMap() 재실행  → 지도 인스턴스 이중 생성, 오버레이 누수,
-       리스너(resize/zoom_changed/idle/mylocation) 전량 중복 등록 (js/map.js:71-103, parking.js:23, localcurrency.js:35)
-     · setFilter() 호출  → 토글이라 이미 켜진 칩에 부르면 '해제'가 되고(js/map.js:852-861),
-       setFilter('all') 은 첫 진입에 없는 '전체' 칩을 켜고 fitPlaces 로 카메라까지 옮긴다(:864,:903-904)
-     · exitNearestParkMode()  → 120ms 뒤 onBack 콜백이 방금 지운 칩·레이어를 되살린다(js/map.js:753-758, 612-617)
+       리스너(resize/zoom_changed/idle/mylocation) 전량 중복 등록
+       (initMap 의 addListener 들 · js/parking.js 와 js/localcurrency.js 의 'idle' 등록)
+     · setFilter() 호출  → 토글이라 이미 켜진 칩에 부르면 '해제'가 되고,
+       setFilter('all') 은 첫 진입에 없는 '전체' 칩을 켜고 fitPlaces 로 카메라까지 옮긴다 (setFilter 본문)
+     · exitNearestParkMode()  → 120ms 뒤 onBack 콜백이 방금 지운 칩·레이어를 되살린다(_npMode 의 onBack, _goNPCore 참조)
      · localStorage 삭제  → 'hsida_favs'(사용자 데이터) / 'hwaseong_conv_*'(지오코딩 캐시, 재실행 시 수십 초)
      · lcData=[] / CONV_STATUS='idle'  → 4.2MB 재다운로드, 수백 건 Geocoder 재요청
-     · #map-loader 되살리기  → initMap 첫 실행에서 영구 remove 됐다(js/map.js:63-64).
+     · #map-loader 되살리기  → initMap 첫 실행에서 영구 remove 됐다.
        '초기화'는 로딩 화면 재현이 아니다.
 ══════════════════════════════════════════════════ */
 var _mapResetGen = 0;
@@ -1249,18 +1250,18 @@ function resetMapPage() {
    * 지도 객체가 필요한 작업(오버레이 setMap·카메라)만 아래에서 개별로 가드한다. */
   var hasMap = !!(mapReady && kakaoMap);
 
-  /* ① NP 모드. #np-back-btn 은 document.body 에 append 되어(js/map.js:589) #page-map 밖에 살고
-   *    position:fixed z-index:190(css/40-quiz.css:105-119) 이라 페이지 클래스로는 안 사라진다.
-   *    go() 의 정리(js/nav.js:16)는 page!=='map' 일 때만 돌아서 재클릭은 지금 전혀 커버되지 않는다. */
+  /* ① NP 모드. #np-back-btn 은 _goNPCore 가 document.body 에 append 해서 #page-map 밖에 살고
+   *    position:fixed z-index:190(css/40-quiz.css 의 #np-back-btn) 이라 페이지 클래스로는 안 사라진다.
+   *    go() 의 정리(js/nav.js)는 page!=='map' 일 때만 돌아서 재클릭은 지금 전혀 커버되지 않는다. */
   if (typeof exitNpModeOnly === 'function') exitNpModeOnly();
   _npPrevCats = [];                     /* 전부 끄는 자리다 — 되살릴 것도 없다 */
 
-  /* ② 슬라이드 카드 + 딤 + 선택 핀 강조 + selectedId=null (js/map.js:774-784) */
+  /* ② 슬라이드 카드 + 딤 + 선택 핀 강조 + selectedId=null (closePlaceSlide 본문) */
   if (typeof closePlaceSlide === 'function') closePlaceSlide();
 
   /* ③ 레이어 전부 끄기 — 반드시 카메라(⑨)보다 '먼저'.
    *    setCenter/setLevel 은 idle 을 쏘고, 거기 붙은 3개 핸들러
-   *    (js/map.js:85-87 / js/parking.js:23-28 / js/localcurrency.js:38-43)는
+   *    (initMap 의 idle · js/parking.js 의 idle · js/localcurrency.js 의 onLcMapIdle)는
    *    visible 플래그로만 가드된다 — 순서를 뒤집으면 옛 레이어가 다시 그려진다.
    *    객체(핀 인스턴스)는 유지하고 '표시'만 끈다. buildOverlays() 를 다시 부르면 핀이 이중 생성된다. */
   if (hasMap) {
@@ -1275,11 +1276,11 @@ function resetMapPage() {
     if (typeof hideAllConv       === 'function') hideAllConv();        /* setMap(null) 만 — 캐시 보존 */
   }
   /* 지오코딩이 'loading' 중이어도 취소할 필요 없다 — 완료 콜백이 _isConvCatActive(cat)
-   * 로 칩 상태를 다시 확인하므로(js/conv_map.js:232), ④에서 칩을 끄면 화면에 튀어나오지 않는다. */
+   * 로 칩 상태를 다시 확인하므로(js/conv_map.js 의 _isConvCatActive), ④에서 칩을 끄면 화면에 튀어나오지 않는다. */
 
-  /* ④ 칩 전부 비활성. 첫 진입 마크업엔 active 칩이 하나도 없다(index.html:308-318).
-   *    updateParkingCount() 는 반드시 이 '뒤'에 — 칩 active 를 보고 배지 display 를 정한다(js/parking.js:351-352).
-   *    (clearFilter()(js/map.js:787-799)는 :793 에서 칩 제거(:796)보다 먼저 불러 배지가 남는다. 복붙 금지.) */
+  /* ④ 칩 전부 비활성. 첫 진입 마크업엔 active 칩이 하나도 없다(index.html 의 #map-chips).
+   *    updateParkingCount() 는 반드시 이 '뒤'에 — 칩 active 를 보고 배지 display 를 정한다(js/parking.js 의 updateParkingCount).
+   *    (clearFilter() 는 그 호출을 칩 제거보다 '먼저' 해서 배지가 남는다. 복붙 금지.) */
   document.querySelectorAll('#map-chips .chip').forEach(function (c) { c.classList.remove('active'); });
   if (typeof updateParkingCount === 'function') updateParkingCount();
   /* 구 칩과 짝인 _guActive 도 함께. 안 되돌리면 칩은 꺼졌는데 상태가 남아
@@ -1291,9 +1292,9 @@ function resetMapPage() {
    *     '초기화했다'는 신호와 달리 옛 검색어와 ✕ 가 남고 다음 타이핑이 뒤에 붙었다. */
   if (typeof clearHomeSearch === 'function') clearHomeSearch('map');
 
-  /* ⑤ 지역화폐 업종 필터 바. CSS 기본은 display:none(css/20-map.css:62-65)인데
-   *    setFilter 가 인라인 block 을 박는다(js/map.js:896-897) → 인라인이 CSS 를 이긴다.
-   *    js/map.js:828-833 의 초기화 블록과 동일하게 처리한다. */
+  /* ⑤ 지역화폐 업종 필터 바. CSS 기본은 display:none(css/20-map.css 의 #lc-filter-bar)인데
+   *    setFilter 가 인라인 block 을 박는다 → 인라인이 CSS 를 이긴다.
+   *    setFilter 의 초기화 블록과 동일하게 처리한다. */
   var _lcBar = document.getElementById('lc-filter-bar');
   if (_lcBar) _lcBar.style.display = 'none';
   if (typeof lcFilter !== 'undefined') lcFilter = 'all';
@@ -1337,8 +1338,9 @@ function _applyMapHomeView() {
   if (!kakaoMap || typeof kakao === 'undefined') return;
   kakaoMap.setCenter(new kakao.maps.LatLng(HWASEONG.lat, HWASEONG.lng));
   kakaoMap.setLevel(9);
-  /* 슬라이더 동기화. setLevel 이 zoom_changed 를 쏘면 js/map.js:1043-1046 이 알아서 맞추지만,
-   * 이미 레벨 9 였으면 이벤트가 안 뜬다. 명시 대입이 확실하다. levelToSlider = 15 - level (:1026). */
+  /* 슬라이더 동기화. setLevel 이 zoom_changed 를 쏘면 setupZoomSlider 의 zoom_changed 리스너가 알아서 맞추지만,
+   * 이미 레벨 9 였으면 이벤트가 안 뜬다. 명시 대입이 확실하다.
+   * 식은 setupZoomSlider 의 levelToSlider() 와 같다 — 15 - level. */
   var z = document.getElementById('zoom-track');
   if (z) z.value = 15 - kakaoMap.getLevel();
 }

@@ -588,7 +588,8 @@ function hideFestivalDetail() {
    두 벌이 되어 한쪽만 고치는 사고가 난다.
 
    ⚠ hideCalendar()/hideFestivalDetail() 자체는 건드리지 않는다. 그 둘은
-     js/calendar.js:170 에서 '캘린더를 닫고 상세를 연다'는 뜻으로도 쓰인다.
+     js/calendar.js 의 .cal-event-item onclick(hideCalendar();showFestivalDetail(…))
+     에서 '캘린더를 닫고 상세를 연다'는 뜻으로도 쓰인다.
      거기서 탭까지 옮겨 버리면 상세가 열리기 전에 소식으로 튕긴다.
      탭 복귀는 뒤로가기 버튼 전용 backFrom*() 에만 넣는다.
    ══════════════════════════════════════════════════════════════════════════ */
@@ -692,7 +693,7 @@ function hideCalendar() {
 /* ══════════════════════════════════════════════════
    관광 탭 재클릭 리셋 (2026-08-25)
    핵심은 switchTourismSub(allChip,'all') 재사용이다 — 칩·4개 섹션 display·헤더/스크롤/테마칩
-   display·_resetThemeChips()·renderTourismList('all') 을 한 번에 일치시킨다(js/tourism.js:13-61).
+   display·_resetThemeChips()·renderTourismList('all') 을 한 번에 일치시킨다(switchTourismSub 본문).
    renderTourismList('all') 만 단독 호출하면 BUG-7 이 그대로 재발한다(칩은 '숙박'인데 목록은 전체).
    BUG-7 의 본질은 '서브탭을 유지해야 한다'가 아니라 '칩과 내용이 일치해야 한다' 였다.
 
@@ -709,7 +710,7 @@ function resetTourismPage() {
     _nb.innerHTML = _homeNearbyInitHtml;
   }
 
-  /* ① 뷰 → 목록. go() 도 하지만(js/nav.js:32-34) 이 함수만 봐도 완결되도록 멱등하게 둔다. */
+  /* ① 뷰 → 목록. go() 도 하지만(js/nav.js 의 go() 안 tourism 분기) 이 함수만 봐도 완결되도록 멱등하게 둔다. */
   var _fd = document.getElementById('view-festival-detail');
   var _cv = document.getElementById('view-calendar');
   var _vl = document.getElementById('view-tourism-list');
@@ -721,14 +722,14 @@ function resetTourismPage() {
    *     미리보기 섹션은 아래 renderTourismList 흐름에서 다시 그려진다. */
   if (typeof resetDatalabFilters === 'function') resetDatalabFilters();
 
-  /* ② 축제 상세 본문 비우기. showFestivalDetail 은 display:block(:309) 을 innerHTML 대입(:325)
-   *    보다 먼저 해서, 안 비우면 다음에 열 때 옛 축제가 한 프레임 비친다.
-   *    첫 진입 시엔 비어 있다(index.html:217). 항상 재생성되므로 비워도 부작용 없다. */
+  /* ② 축제 상세 본문 비우기. showFestivalDetail 은 #view-festival-detail 의 display:block 을
+   *    #fd-content 의 innerHTML 대입보다 먼저 해서, 안 비우면 다음에 열 때 옛 축제가 한 프레임 비친다.
+   *    첫 진입 시엔 비어 있다(index.html 의 <div id="fd-content"></div>). 항상 재생성되므로 비워도 부작용 없다. */
   var _fdc = document.getElementById('fd-content');
   if (_fdc) _fdc.innerHTML = '';
 
-  /* ③ 제부도 목록 접기. renderHotels(js/tourism.js:102)는 DOM 을 display:none 으로 재생성하면서
-   *    전역 _jebuOpen 은 true 로 남긴다 → toggleJebuList(:114)가 false 로 뒤집고 :117 이 이미
+  /* ③ 제부도 목록 접기. renderHotels() 는 DOM 을 display:none 으로 재생성하면서
+   *    전역 _jebuOpen 은 true 로 남긴다 → toggleJebuList() 가 false 로 뒤집고, 이미
    *    숨겨진 것을 또 숨겨 '첫 클릭 먹통'이 된다. 전역을 반드시 함께 되돌린다. */
   _jebuOpen = false;
   var _jb = document.getElementById('jebu-list-section');
@@ -740,14 +741,14 @@ function resetTourismPage() {
   _festViewFrom = null; _festViewScroll = 0;
   if (typeof _setFestBackLabel === 'function') _setFestBackLabel();
 
-  /* ④ 서브탭 → '전체' (index.html:164 가 첫 진입의 active). 이 한 줄이 리셋의 몸통이다. */
+  /* ④ 서브탭 → '전체' (index.html 의 .chip.active[data-sub="all"] 이 첫 진입의 active). 이 한 줄이 리셋의 몸통이다. */
   var _allChip = document.querySelector('.tourism-subnav .chip[data-sub="all"]');
   if (_allChip) {
     switchTourismSub(_allChip, 'all');
   } else {                       /* 마크업이 바뀐 비상 경로 */
     _tourismSub = 'all';
     _resetThemeChips();
-    renderTourismList('all');    /* expanded 미전달 = 5개 미리보기 + '더보기 +N' (js/tourism.js:225-227,266-272) */
+    renderTourismList('all');    /* expanded 미전달 = 5개 미리보기 + '더보기 +N' (renderTourismList 의 expanded 분기) */
   }
 
   /* ⑤ 가로 스크롤 — 첫 진입은 왼쪽 끝.
@@ -759,7 +760,7 @@ function resetTourismPage() {
   if (_tc) _tc.scrollLeft = 0;
 
   /* ⑥ 캘린더 → 오늘 달.
-   *    _calYear/_calMonth 만 되돌리면 안 된다. showCalendar(js/tourism.js:391)는
+   *    _calYear/_calMonth 만 되돌리면 안 된다. showCalendar() 는
    *    if(!_calInitDone) 이라 이미 true 면 재렌더를 건너뛰고, 변수는 8월인데 화면은
    *    사용자가 넘겨둔 12월 그대로인 불일치가 생긴다(그 상태에서 › 를 누르면 9월로 점프).
    *    셋을 항상 세트로 되돌린다. 지금 _renderCalendar() 를 부를 필요는 없다 —
@@ -771,7 +772,7 @@ function resetTourismPage() {
     _calMonth    = _t.getMonth();
     _calInitDone = false;
   }
-  /* #calendar-grid 는 절대 innerHTML='' 로 비우지 마라 — index.html:231 의 .cal-day-hd
-   * 요일 7칸까지 날아가고 _renderCalendar(js/calendar.js:134-165)는 그걸 다시 만들지 않는다.
-   * js/calendar.js:126 이 .cal-day 만 지우므로 위 _calInitDone=false 로 충분하다. */
+  /* #calendar-grid 는 절대 innerHTML='' 로 비우지 마라 — index.html 의 .cal-day-hd
+   * 요일 7칸까지 날아가고 _renderCalendar()(js/calendar.js)는 그걸 다시 만들지 않는다.
+   * _renderCalendar() 가 .cal-day 만 removeChild 하므로 위 _calInitDone=false 로 충분하다. */
 }

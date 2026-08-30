@@ -181,7 +181,7 @@ function renderLivingCatList(cat, expanded) {
   list.innerHTML = (more ? rows.slice(0, LIVING_PREVIEW) : rows).join('') + (more ? '' : footer);
 
   if (more) {
-    /* 추천 탭 목록·축제 전체와 같은 .tourism-more-btn (css/00-base.css:294).
+    /* 추천 탭 목록·축제 전체와 같은 .tourism-more-btn (css/00-base.css 의 .tourism-more-btn).
      * onclick 속성이 아니라 프로퍼티로 단다 — 재렌더 한 줄이면 되고,
      * 문자열 onclick 은 cat/expanded 를 문자열로 엮어야 해서 따옴표 사고가 난다. */
     var btn = document.createElement('div');
@@ -215,10 +215,10 @@ function renderLivingPage() {
 
 /* ══════════════════════════════════════════════════
    생활 탭 재클릭 리셋 (2026-08-25)
-   생활 탭은 이미 go('living') 이 renderLivingPage()(js/nav.js:24)를 무조건 불러
+   생활 탭은 이미 go('living') 이 renderLivingPage()(js/nav.js 의 go() 안 living 분기)를 무조건 불러
    통계·카테고리·제목·건수·목록 DOM 을 전부 기본값으로 되돌린다. 새 리셋 로직이 필요 없다.
    여기서 renderLivingPage() 를 또 부르면 94건 innerHTML 을 두 번 그리고
-   .place-item 등장 애니메이션(css/20-map.css:274)이 두 번 재생돼 깜빡인다.
+   .place-item 등장 애니메이션(css/20-map.css 의 .place-item)이 두 번 재생돼 깜빡인다.
    이 함수는 4개 탭의 리셋 진입점을 같은 모양으로 유지하려고 남긴 자리표시자다.
 ══════════════════════════════════════════════════ */
 function resetLivingPage() {
@@ -232,7 +232,7 @@ function resetLivingPage() {
   }
 
   /* 목록 재렌더로 높이가 바뀐 뒤 스크롤을 확정한다.
-   * (go() 의 scrollTop=0 은 js/nav.js:21 로 renderLivingPage() 보다 '앞'이다 — 그 순서를 바꾸지 말 것) */
+   * (go() 의 newPage.scrollTop=0 은 js/nav.js 에서 renderLivingPage() 보다 '앞'이다 — 그 순서를 바꾸지 말 것) */
   var p = document.getElementById('page-living');
   if (p) p.scrollTop = 0;
 
@@ -426,7 +426,7 @@ function renderFestivalAll(expanded) {
   }).join('');
 
   if (more) {
-    /* 추천 탭 목록과 같은 .tourism-more-btn 을 쓴다(css/00-base.css:294).
+    /* 추천 탭 목록과 같은 .tourism-more-btn 을 쓴다(css/00-base.css 의 .tourism-more-btn).
      * onclick 속성이 아니라 프로퍼티로 다는 이유는 renderTourismList 와 같다 —
      * 문자열 onclick 은 전역 함수만 부를 수 있고, 여기서는 재렌더 한 줄이면 된다. */
     var btn = document.createElement('div');

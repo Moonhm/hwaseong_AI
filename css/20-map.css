@@ -325,7 +325,8 @@
      * 3등분하므로(480px 기준 칸당 약 138px) 긴 라벨은 반드시 접히는데,
      * 그때 어절 경계에서만 접히게 한다.
      * '가장 가까운 공영주차장 찾기' 는 그래도 애매해서 라벨 자체에 <br> 을 박았다
-     * (js/map.js:463 · js/conv_map.js:379 · js/localcurrency.js:218). */
+     * (goNearestParking · goNearestParkingConv · js/localcurrency.js 의 같은 버튼 —
+     * 셋 다 '🅿️ 가장 가까운<br>공영주차장 찾기' 문자열을 갖는다). */
     .sl-btn {
       flex: 1; padding: 11px 6px; border-radius: 10px; text-align: center;
       font-size: 13px; font-weight: 600; cursor: pointer;

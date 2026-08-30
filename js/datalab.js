@@ -20,7 +20,7 @@
  *   쓰는 방식(showCalendar/hideCalendar)과 동일하다.
  * ========================================================================== */
 
-var DL_VER   = '20260826155';
+var DL_VER   = '20260826156';
 var _dlCache = {};      /* 파일명 → 파싱된 JSON. 한 번 받으면 다시 안 받는다 */
 var _dlLoading = {};    /* 같은 파일을 동시에 두 번 요청하지 않게 하는 잠금 */
 
@@ -641,7 +641,7 @@ function _dlViewTour(el) {
 function renderDatalabSections() {
   /* renderDlPopular() 는 여기 없다. 인기 섹션은 2026-08-26 에 #dl-sections 안
    * 첫 자리로 돌아왔지만, 호출은 switchTourismSub 이 이 함수와 나란히 한다
-   * (js/tourism.js:50-51). 여기로 옮겨도 되나 그러면 '인기 있는 곳'만 따로
+   * (js/tourism.js 의 switchTourismSub). 여기로 옮겨도 되나 그러면 '인기 있는 곳'만 따로
    * 다시 그리고 싶을 때 방법이 없어진다 — 부르는 쪽에서 고르게 둔다. */
   renderDlAge();
   /* renderDlCityTour() 는 2026-08-26 에 여기서 빠졌다. 시티투어가 '인기' 큐레이션에서

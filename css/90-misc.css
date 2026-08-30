@@ -60,7 +60,7 @@
        * .tourism-subnav(20px)와 16px 씩 어긋나고, 그 32px 손실이 확장 구간
        * '최근 내 1위' 의 이름 칸을 그대로 깎았다.
        * 드로어의 AI 추천 배너는 추천 탭과 중복이라 제거됐고, 이 클래스를 쓰는 곳은
-       * index.html:259 한 곳뿐이다(개발 Claude 확인 + 재확인함). 래퍼가 좌우를 잡게 둔다. */
+       * index.html 의 #rec-banner 한 곳뿐이다(개발 Claude 확인 + 재확인함). 래퍼가 좌우를 잡게 둔다. */
       margin: 0;
       background: linear-gradient(135deg, #F97316, #EA580C);
       border-radius: 16px; padding: 18px 20px;
@@ -124,7 +124,7 @@
      * 없으면 아래 .menu-rec-top-fb. 둘을 같은 모습으로 맞춰 둔다.
      * .ph-thumb 는 radius 10px 에 배경이 var(--bg)(차가운 회색)이고
      * .ph-thumb-fb 는 font-size:60%(상속 기준 약 9px)라, 사진이 404 로 숨는 순간
-     * 살구색 위에 회색 사각형과 좁쌀만 한 이모지가 남는다(css/10-content.css:480). */
+     * 살구색 위에 회색 사각형과 좁쌀만 한 이모지가 남는다(css/10-content.css 의 .ph-thumb). */
     .ph-thumb.menu-rec-top-ph {
       border-radius: 11px; background: rgba(255,255,255,0.72);
       box-shadow: inset 0 0 0 1px rgba(194,65,12,0.12);
@@ -236,7 +236,7 @@
      * 그 순간 :active 가 없던 아래 요소들은 눌러도 아무 반응이 없어진다.
      * 하이라이트를 지우는 것과 짝을 채우는 것은 반드시 같이 해야 한다.
      *
-     * 크기 차등은 기존 규칙(20-map.css:277-290)을 따랐다 —
+     * 크기 차등은 기존 규칙(20-map.css 의 :active scale 값들 — .sl-close 0.88 ~ .sl-btn 0.96)을 따랐다 —
      * 작은 조작 요소일수록 많이 눌리고, 큰 면일수록 조금 눌린다. */
     .lc-fchip:active,
     .chip-arrow:active,
@@ -276,7 +276,7 @@
      * 우리 애니메이션 5개:
      *   spin(20-map:29, infinite) · item-enter(20-map:274, both)
      *   quiz-enter(40-quiz:66, both) · fade-down(40-quiz:144, both)
-     *   my-loc-pulse(js/map.js:979, infinite — <style> 로 head 에 주입)
+     *   my-loc-pulse(js/map.js 의 @keyframes my-loc-pulse, infinite — <style> 로 head 에 주입)
      * 이 중 both 세 개는 fill-mode 덕에 0.01ms 로 줄여도 최종 상태(보임)에
      * 정상 도달한다. 요소가 사라지는 사고는 없다.
      *

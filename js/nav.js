@@ -13,11 +13,11 @@
  *
  * go() 에 직접 넣지 않은 이유: go() 는 menuGoTourism/goMapFocus/goLivingCat/_srClick/navToFav 등
  * 15곳에서 프로그램적으로도 불리고, 그 중 다수가 '이미 그 탭'인 상태에서 불린 뒤
- * 200~400ms 지연 콜백으로 원하는 상태를 세팅한다(js/mapnav.js:14,22,37,112,146,170).
+ * 200~400ms 지연 콜백으로 원하는 상태를 세팅한다(js/mapnav.js 의 setTimeout 콜백들).
  * go() 안에서 리셋하면 그 콜백들이 방금 지운 상태를 다시 세팅해 깜빡임이 생긴다.
  * 리셋 트리거는 '사람이 하단 버튼을 누른 순간' 하나뿐이어야 한다.
  *
- * .page.active 가 현재 화면의 유일한 진실 소스다(css/00-base.css:52-60, 조작은 아래 go() 뿐).
+ * .page.active 가 현재 화면의 유일한 진실 소스다(css/00-base.css 의 .page.active, 조작은 아래 go() 뿐).
  * 별도 전역 변수를 두면 둘이 어긋날 수 있어 DOM 클래스를 그대로 읽는다.
  * 반드시 go() '전에' 읽어야 한다 — go() 는 매번 전부 remove 후 add 한다. */
 function navTap(page) {
@@ -35,7 +35,7 @@ function resetPage(page) {
   else if (page === 'living'  && typeof resetLivingPage  === 'function') resetLivingPage();
   else if (page === 'map'     && typeof resetMapPage     === 'function') resetMapPage();
 
-  /* go() 의 scrollTop=0(아래 :21 근처)은 리셋 렌더 '전'에 실행된다.
+  /* go() 의 newPage.scrollTop=0 은 리셋 렌더 '전'에 실행된다.
    * 목록이 길어지는 방향이라 보통 유지되지만, 재렌더로 높이가 바뀌는 경우까지
    * 확실히 하려고 마지막에 한 번 더 확정한다. 4개 탭 공통 규칙. */
   var p = document.getElementById('page-' + page);
@@ -85,7 +85,7 @@ function _playPageTransition(oldPage, newPage, name) {
     _pgCleanup();
     /* transform 은 레이아웃 크기를 바꾸지 않으므로 애니메이션 중에도 지도 컨테이너
      * 크기는 정확하다. 그래도 전환이 끝난 뒤 한 번 더 확정한다 — initMap 은
-     * mapReady 가드(js/map.js:51-56) 덕에 재호출해도 relayout 만 한다. */
+     * mapReady 가드(js/map.js 의 let mapReady) 덕에 재호출해도 relayout 만 한다. */
     if (name === 'map' && typeof initMap === 'function') initMap();
   };
   newPage.addEventListener('animationend', done);

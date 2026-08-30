@@ -26,13 +26,13 @@
        ?v= 는 캐시 버스팅용. css/ 나 js/ 를 고치면 이 값도 함께 올릴 것(검사가 잡는다).
        같은 날 두 번 이상 고칠 때는 날짜만으로 구분이 안 되므로 뒤에 두 자리 일련번호를 붙인다.
        예: 20260825 → 2026082502 → 2026082503. 숫자만 써야 tools/check.sh 의 날짜 비교가 동작한다. -->
-  <link rel="stylesheet" href="css/00-base.css?v=20260826155">
-  <link rel="stylesheet" href="css/10-content.css?v=20260826155">
-  <link rel="stylesheet" href="css/20-map.css?v=20260826155">
-  <link rel="stylesheet" href="css/30-panel.css?v=20260826155">
-  <link rel="stylesheet" href="css/40-quiz.css?v=20260826155">
-  <link rel="stylesheet" href="css/50-datalab.css?v=20260826155">
-  <link rel="stylesheet" href="css/90-misc.css?v=20260826155">
+  <link rel="stylesheet" href="css/00-base.css?v=20260826156">
+  <link rel="stylesheet" href="css/10-content.css?v=20260826156">
+  <link rel="stylesheet" href="css/20-map.css?v=20260826156">
+  <link rel="stylesheet" href="css/30-panel.css?v=20260826156">
+  <link rel="stylesheet" href="css/40-quiz.css?v=20260826156">
+  <link rel="stylesheet" href="css/50-datalab.css?v=20260826156">
+  <link rel="stylesheet" href="css/90-misc.css?v=20260826156">
 </head>
 <body>
 
@@ -555,17 +555,17 @@
            JS·CSS 는 한 줄도 건드리지 않았으므로 그대로 동작한다.
              · js/district.js  setGuView / resetGuView / _guSyncChips  (그대로)
              · css            .chip--gu · .chip-sep                    (그대로)
-             · js/map.js:927  setFilter 의 :not([data-gu]) 제외 규칙     (그대로)
+             · js/map.js     setFilter 의 :not([data-gu]) 제외 규칙     (그대로)
 
          ▶ 지금 상태에서도 죽지 않은 것:
            구 보기는 홈 검색으로 계속 들어간다 — "동탄구" 를 치면 검색 결과에서
-           js/home.js:552 가 setGuView(구) 를 부른다. 칩만 없앤 것이지 기능은 살아 있다.
+           js/home.js 의 _srClick() 이 setGuView(구) 를 부른다. 칩만 없앤 것이지 기능은 살아 있다.
            _guSyncChips() 는 칩이 없으면 빈 NodeList 를 돌아 조용히 지나간다.
 
          ▶ 전체 칩이 없어도 필터는 풀린다:
-           setFilter 는 토글이라 켜져 있는 칩을 다시 누르면 해제된다(js/map.js:938-950).
+           setFilter 는 토글이라 켜져 있는 칩을 다시 누르면 해제된다(js/map.js 의 setFilter).
            resetMapPage() 는 애초에 setFilter 를 부르지 않고 클래스를 직접 지우므로
-           (js/map.js:1149 주석) 이 칩이 없어도 탭 재클릭 초기화는 그대로다.
+           (js/map.js 의 resetMapPage 주석) 이 칩이 없어도 탭 재클릭 초기화는 그대로다.
 
          원문 그대로 보관 — 지역(구) 칩은 카테고리 칩과 축이 다르다: 지역은 카메라를
          옮기고 카테고리는 무엇을 그릴지 정한다. 둘은 곱해서 쓴다("동탄구" + "음식점").
@@ -595,7 +595,7 @@
            셋 다 손대지 않았으므로 이 한 줄만 되살리면 다시 동작한다.
            ⚠ 설정만 지우고 CONV_CATS 에 이름을 남기는 식으로 반쯤 지우지 말 것 —
              그러면 setFilter 가 일반 PLACES 경로로 흘려보내 지도가 통째로 빈다
-             (js/map.js:40-46 주석 참고). -->
+             (js/map.js 의 CONV_CATS 주석 참고). -->
     <div class="chip" data-cat="cinema"        onclick="setFilter('cinema')">🎬 영화상영관</div>
     <div class="chip" data-cat="jebu"          onclick="setFilter('jebu')">⛱️ 제부도 숙박</div>
   </div>
@@ -694,7 +694,7 @@
     <span>지도</span>
   </button>
   <!-- 메뉴는 화면(page)이 아니라 드로어를 여는 동작이다. data-page 를 일부러 붙이지 않았다 —
-       js/nav.js:22 의 go() 가 .nav-item[data-page] 만 골라 active 를 옮기므로,
+       js/nav.js 의 go() 가 .nav-item[data-page] 만 골라 active 를 옮기므로,
        이 버튼은 어떤 탭에 있든 활성색으로 잘못 칠해지지 않는다. -->
   <button class="nav-item" onclick="openMenu()" aria-label="메뉴 열기">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v2H3V4zm0 7h18v2H3v-2zm0 7h18v2H3v-2z"/></svg>
@@ -768,7 +768,7 @@
              적었는데, '그쪽' 은 드로어가 아니라 **추천 탭** 이라는 뜻이었다.
              읽으면 정반대로 보여 실제로 오해를 샀다(배포 Claude 인계 문서 2번 항목).
              사실은 이렇다 — .menu-rec-banner 를 쓰는 마크업은 추천 탭의
-             #rec-banner(index.html:259) **하나뿐**이고 이 드로어는 더 이상 쓰지 않는다.
+             #rec-banner **하나뿐**이고 이 드로어는 더 이상 쓰지 않는다.
              따라서 css/90-misc.css 의 .menu-rec-banner 를 고쳐도 드로어에 영향이 없다. -->
 
     <!-- 즐겨찾기 -->
@@ -823,9 +823,9 @@
          목적지는 지도다 — 주차장의 쓸모는 '어디에 자리가 남았나'라서 목록보다
          지도가 맞고, 바로 아래 '지역화폐 가맹점'도 같은 goMapCat 경로다.
          goMapCat('parking') 은 필터 칩이 아니라 activateParking() 을 탄다
-         (js/mapnav.js:38) — 실시간 여유 대수를 받아 핀 색을 칠하는 전용 경로다.
+         (js/mapnav.js 의 goMapCat) — 실시간 여유 대수를 받아 핀 색을 칠하는 전용 경로다.
          부제에 '실시간'을 쓰지 않았다: 실시간 응답을 못 받은 주차장은 여유 대수가
-         총 주차면수로 표시된다(js/parking.js:90). 홈 데이터 고지와 같은 이유다. -->
+         총 주차면수로 표시된다(js/parking.js 의 mergeParkingData). 홈 데이터 고지와 같은 이유다. -->
     <div class="menu-item" onclick="closeMenu();goMapCat('parking')">
       <div class="menu-item-icon" style="background:#DBEAFE;">🅿️</div>
       <div class="menu-item-text">
@@ -926,34 +926,34 @@
      나열 순서 = 분리 전 인라인 코드의 실행 순서 그대로다. 동작이 바뀌지 않도록 원래 자리를 지켰다.
      boot.js 만 즉시 실행 코드(리스너·IIFE·DOMContentLoaded)를 담으므로 반드시 마지막이어야 한다.
      ?v= 는 캐시 버스팅용 — js/ 를 고치면 이 날짜도 함께 올릴 것. -->
-<script src="js/nav.js?v=20260826155"></script>
-<script src="js/quiz.js?v=20260826155"></script>
-<script src="js/mapnav.js?v=20260826155"></script>
-<script src="js/home.js?v=20260826155"></script>
-<script src="js/tourism.js?v=20260826155"></script>
-<script src="js/living.js?v=20260826155"></script>
-<script src="js/favorites.js?v=20260826155"></script>
-<script src="js/ui.js?v=20260826155"></script>
-<script src="js/calendar.js?v=20260826155"></script>
-<script src="js/boot.js?v=20260826155"></script>
+<script src="js/nav.js?v=20260826156"></script>
+<script src="js/quiz.js?v=20260826156"></script>
+<script src="js/mapnav.js?v=20260826156"></script>
+<script src="js/home.js?v=20260826156"></script>
+<script src="js/tourism.js?v=20260826156"></script>
+<script src="js/living.js?v=20260826156"></script>
+<script src="js/favorites.js?v=20260826156"></script>
+<script src="js/ui.js?v=20260826156"></script>
+<script src="js/calendar.js?v=20260826156"></script>
+<script src="js/boot.js?v=20260826156"></script>
 <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=909c4598151114e0ccce7cd8f71ff87b&libraries=services&autoload=false"></script>
 <!-- ?v= 는 캐시 버스팅용. js/ 파일을 수정하면 반드시 이 날짜를 함께 올릴 것 -->
-<script src="js/photos.js?v=20260826155"></script>
-<script src="js/convenience.js?v=20260826155"></script>
-<script src="js/data.js?v=20260826155"></script>
-<script src="js/map.js?v=20260826155"></script>
-<script src="js/conv_map.js?v=20260826155"></script>
-<script src="js/parking.js?v=20260826155"></script>
-<script src="js/localcurrency.js?v=20260826155"></script>
+<script src="js/photos.js?v=20260826156"></script>
+<script src="js/convenience.js?v=20260826156"></script>
+<script src="js/data.js?v=20260826156"></script>
+<script src="js/map.js?v=20260826156"></script>
+<script src="js/conv_map.js?v=20260826156"></script>
+<script src="js/parking.js?v=20260826156"></script>
+<script src="js/localcurrency.js?v=20260826156"></script>
 <!-- 추천 탭 큐레이션 3종 + 제부도 조수 (2026-08-26). 둘 다 데이터를 지연 로드하므로
      로드 순서에 민감하지 않다. dlGoPlace 가 PLACES 를 쓰는데 그건 호출 시점에만 필요하다. -->
-<script src="js/datalab.js?v=20260826155"></script>
-<script src="js/tide.js?v=20260826155"></script>
-<script src="js/weather.js?v=20260826155"></script>
-<script src="js/today.js?v=20260826155"></script>
-<script src="js/district.js?v=20260826155"></script>
+<script src="js/datalab.js?v=20260826156"></script>
+<script src="js/tide.js?v=20260826156"></script>
+<script src="js/weather.js?v=20260826156"></script>
+<script src="js/today.js?v=20260826156"></script>
+<script src="js/district.js?v=20260826156"></script>
 <!-- 가로 스크롤 화살표 — 목록 렌더보다 뒤에 둔다. MutationObserver 로 다시 붙지만
      첫 스캔이 렌더 뒤에 오는 편이 깜빡임이 없다. -->
-<script src="js/hscroll.js?v=20260826155"></script>
+<script src="js/hscroll.js?v=20260826156"></script>
 </body>
 </html>

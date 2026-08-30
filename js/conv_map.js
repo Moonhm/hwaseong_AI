@@ -270,7 +270,7 @@ function _geocodeCat(cat) {
   });
 
   /* 전건이 좌표를 갖고 있으면 API 를 한 번도 안 부른다.
-   * 여기서 동기로 끝내도 된다 — setFilter(js/map.js:949)가 칩을 active 로 만든
+   * 여기서 동기로 끝내도 된다 — js/map.js 의 setFilter() 가 칩을 active 로 만든
    * '뒤' 에 showConvCat → _geocodeCat 이 오므로 _isConvCatActive 가 참이다. */
   if (!needGeo.length) { _finish(''); return; }
 

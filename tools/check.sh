@@ -257,10 +257,45 @@ line_ref_guard() {
       done
     done < <(awk '/^ *```/ {fence = !fence; next} !fence && /`/ {print NR": "$0}' "$f" | sed 's/: /:/')
   done
-  [ $bad = 0 ] && echo '  i     문서가 줄번호로 가리키는 곳 0건 — 전부 식별자 참조다 (``` 코드블록은 제외)'
+
+  # ── 코드 주석도 본다 (2026-08-31 확대) ────────────────────────────────
+  # 문서만 막아 놓고 코드 주석은 74건이 밀린 채 방치돼 있었다. 그쪽이 오히려
+  # 더 자주 읽히는데도. 코드에는 백틱 관습이 없으므로 '주석 줄'로 범위를 좁혀
+  # 맨몸 파일:줄 을 잡는다. 문자열·URL 오탐을 피하려고 주석 밖은 안 본다.
+  local code
+  for code in js/*.js css/*.css index.html; do
+    [ -f "$code" ] || continue
+    while IFS=: read -r ln body; do
+      for ref in $(printf '%s' "$body" \
+            | grep -oE '[A-Za-z0-9_/-]+\.(js|css|html|py|sh|json|md):[0-9]+'); do
+        path=${ref%%:*}; num=${ref##*:}
+        seen=$((seen + 1))
+        echo "  FAIL $code:$ln  $path:$num — 코드 주석이 줄번호로 가리켰다"
+        if [ -f "$path" ]; then
+          echo "         지금 $path:$num 에 있는 것: $(sed -n "${num}p" "$path" | sed 's/^[[:space:]]*//' | cut -c1-56)"
+        else
+          echo "         그런 파일이 없다 — 이동했거나 이름이 바뀌었다"
+        fi
+        echo "         함수명·변수명·셀렉터로 바꿔라 (§0 「줄번호로 가리키지 마십시오」)"
+        bad=1
+      done
+      # 파일명 없는 맨 콜론 참조(:114 · :309-325)도 같은 함정이다. 같은 파일을
+      # 가리키는 것이라 오히려 더 조용히 밀린다.
+      case "$body" in
+        *'/*'*|*' * '*|*'//'*|*'<!--'*)
+          for ref in $(printf '%s' "$body" | grep -oE '\(:[0-9]+(-[0-9]+)?\)|[ (]:[0-9]{2,}\b'); do
+            echo "  FAIL $code:$ln  '$ref' — 같은 파일을 줄번호로 가리켰다"
+            echo "         '위 함수명' 처럼 이름으로 쓰거나 위치 표현을 지워라"
+            bad=1
+          done ;;
+      esac
+    done < <(grep -nE '/\*|^\s*\*|//|<!--' "$code" | sed 's/^\([0-9]*\):/\1:/')
+  done
+
+  [ $bad = 0 ] && echo '  i     문서·코드 주석이 줄번호로 가리키는 곳 0건 — 전부 식별자 참조다 (``` 코드블록·docs/log 제외)'
   return $bad
 }
-run "문서의 줄번호 참조 (line-ref)" line_ref_guard
+run "문서·주석의 줄번호 참조 (line-ref)" line_ref_guard
 
 if [ $HAVE_GIT = 1 ]; then
   run "캐시 버스팅 이력 (version-guard)" version_guard
