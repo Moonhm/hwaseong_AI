@@ -4,7 +4,7 @@
 
 ### All-in-One Tourism Web App for Hwaseong Special City (화성특례시)
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Try%20Now-orange?style=for-the-badge&logo=cloudflare)](https://endless-cocktail-manufacturing-validity.trycloudflare.com)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Try%20Now-orange?style=for-the-badge&logo=cloudflare)](https://news-appliances-tap-cab.trycloudflare.com)
 [![Kakao Maps](https://img.shields.io/badge/Kakao%20Maps-JS%20API-FFCD00?style=for-the-badge&logo=kakao)](https://apis.map.kakao.com/)
 [![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-F7DF1E?style=for-the-badge&logo=javascript)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![AI Powered](https://img.shields.io/badge/AI%20Powered-Claude-5A67D8?style=for-the-badge)](https://claude.ai)
@@ -147,6 +147,6 @@ python tools/server.py --port 8080
 
 *Made with ♥ for Hwaseong (화성), Korea · 2026 Hwaseong City AI Hackathon*
 
-**[Try the live app →](https://endless-cocktail-manufacturing-validity.trycloudflare.com)**
+**[Try the live app →](https://news-appliances-tap-cab.trycloudflare.com)**
 
 </div>

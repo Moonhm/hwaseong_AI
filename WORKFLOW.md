@@ -339,7 +339,7 @@ push 가 같은 호출에 묶여 있어 **결과를 읽기 전에 이미 나갔�
 - **앱 이름**: 화성잇다 (Hwaseong-itda)
 - **목표**: 경기도 화성특례시 통합 관광 정보 모바일 웹앱
 - **저장소**: https://github.com/Moonhm/hwaseong_AI
-- **배포 URL**: https://endless-cocktail-manufacturing-validity.trycloudflare.com
+- **배포 URL**: https://news-appliances-tap-cab.trycloudflare.com
 - **팀**: 문형민, 서교연 + Claude Sonnet 4.6 (AI 개발 에이전트 2인 체계)
 - **기간**: 2026년 8월 18~19일 (해커톤 당일 집중 개발)
 
@@ -825,10 +825,35 @@ Flask 만 껐다 켜면 몇 초 502 뒤 정상으로 돌아오고 **주소는 �
 `cloudflared` 를 끄면 그 주소는 **영구히 사라지고** 새 랜덤 주소가 발급됩니다 —
 README 배지 · §1 배포 URL · `tools/check.sh` 의 `LIVE_URL` 세 곳이 한꺼번에 죽습니다.
 
+기동은 **주최 측 공식 매뉴얼**(「AI화성 챌린지」 · cloudflared 외부 공개)을 따릅니다.
+매뉴얼 3.1 이 **tmux 를 권장**합니다 — 콘솔을 다시 볼 수 있어야 URL 을 잃지 않습니다.
+
 ```bash
-pkill -f "tools/server.py"            # Flask 만 종료 — cloudflared 는 그대로 둔다
-python3 tools/server.py --port 8080 &
+mkdir -p ~/work/logs
+tmux new -d -s app    "python3 -u tools/server.py --port 8080 2>&1 | tee ~/work/logs/app.log"
+# 매뉴얼 7장 — 터널 전에 컨테이너 안에서 먼저 확인한다. 이걸 건너뛰면 502 를 터널 탓으로 오진한다
+curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8080/
+tmux new -d -s tunnel "cloudflared tunnel --url http://localhost:8080 2>&1 | tee ~/work/logs/tunnel.log"
+sleep 8 && grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ~/work/logs/tunnel.log | head -1
 ```
+
+| 하고 싶은 것 | 명령 |
+|---|---|
+| URL 을 다시 확인 | `grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ~/work/logs/tunnel.log \| head -1` |
+| 콘솔 들여다보기 | `tmux attach -t tunnel` → 나올 때 `Ctrl+B` 그다음 `D` |
+| **서버만** 재시작 (주소 유지) | `tmux kill-session -t app` 뒤 위 `app` 줄 다시 실행 |
+| 전부 종료 | `tmux kill-session -t tunnel` · `tmux kill-session -t app` |
+
+> **`sudo cloudflared service install` 을 시도하지 마십시오** (매뉴얼 3.4). 이 계정에는
+> sudo 가 없고 컨테이너에 systemd 자체가 없습니다. **컨테이너가 곧 영속 단위**라
+> tmux 세션이면 충분합니다.
+>
+> **컨테이너를 Stop 하면 URL 도 영구히 사라집니다** (매뉴얼 7장). 재부팅과 같은 결과입니다.
+>
+> **⚠ Quick Tunnel URL 은 인증 없이 누구나 접근합니다** (매뉴얼 8장). 그래서 이 서버는
+> `_PUBLIC_DIRS` **허용목록**으로 `js/`·`css/`·`img/`·`assets/`·`index.html` 만 내보냅니다 —
+> `WORKFLOW.md`·`README.md`·`tools/`·`.git/` 는 전부 404 입니다(터널 너머에서 확인).
+> 매뉴얼이 **발표가 끝나면 즉시 터널을 종료하라**고 정해 두었습니다. 방치하지 마십시오.
 
 > **한 번은 이미 잃었습니다.** 2026-08-30 재부팅이 `cloudflared` 프로세스까지 죽여
 > 옛 주소(`culture-reed-dee-rug`)는 회수하지 못했습니다. 2026-08-31 에 터널을 다시
