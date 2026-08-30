@@ -200,7 +200,7 @@ def check_counts():
     for k in ("pension_outside", "inside", "nearby", "minbak_inside", "minbak_nearby"):
         got["CONVENIENCE.jebu." + k] = array_len(
             src_c, k, "js/convenience.js",
-            "js/conv_map.js:45-52 의 `(j.%s || [])` 가 조용히 빈 배열을 쓴다" % k)
+            "js/conv_map.js 의 jebu 블록 `(j.%s || [])` 가 조용히 빈 배열을 쓴다" % k)
     # templeStay 는 객체 1건 — 있는지만 본다
     if not re.search(r"(?m)^\s*templeStay\s*:\s*\{", src_c):
         fail("js/convenience.js  templeStay(용주사, 1건) 가 사라졌다")
@@ -223,7 +223,7 @@ def check_counts():
 
 # ─── 2. 필드·좌표 모양 ───────────────────────────────────────────────────────
 # 건수가 그대로여도 lat/lng 가 falsy 면 지도에서만 조용히 사라진다.
-#   js/localcurrency.js:102,150 / js/parking.js:155,182,183 의 `!p.lat || !p.lng` 가
+#   js/localcurrency.js · js/parking.js 의 `!p.lat || !p.lng` 가
 #   버리는 건수를 아무도 세지 않기 때문이다. 여기서 대신 센다.
 def check_shape():
     def rows(fn):
@@ -373,7 +373,7 @@ def check_printed(got):
         if occ < 1:
             fail("index.html+js/  카드 라벨「%s」의 건수 표기를 못 찾았다 — 마크업이 바뀌었다" % label)
 
-    # js/convenience.js:196 의 summary — 화면 숫자(js/conv_map.js 슬라이드)의 실제 출처
+    # js/convenience.js 의 jebu.summary — 화면 숫자(js/conv_map.js 슬라이드)의 실제 출처
     src = open(os.path.join(ROOT, "js/convenience.js"), encoding="utf-8").read()
     m = re.search(r"summary\s*:\s*\{([^}]*)\}", src)
     if not m:
@@ -388,7 +388,7 @@ def check_printed(got):
 
 # ─── 4. 정규식 패치 도구의 사정거리 ──────────────────────────────────────────
 # tools/*.py 는 검증·백업 없이 open(...,'w') 로 데이터 파일을 통째로 덮어쓴다
-#   (tools/regeocode.py:163, tools/fix_all_coords.py:122, tools/fix_coords.py:69, tools/geocode_jebu.py:91).
+#   (tools/regeocode.py · fix_all_coords.py · fix_coords.py · geocode_jebu.py).
 # 그 정규식이 몇 건을 잡는지 미리 재두면, 포맷 변경으로 0건/부분 매치가 되어
 # "✅ N개 수정 완료" 라고 성공을 보고하면서 나머지를 빠뜨리는 사고를 막는다.
 # ※ 정규식을 tools/*.py 에서 읽어오는 게 아니라 여기 복사해 뒀다.
@@ -442,17 +442,17 @@ def check_tool_regex():
 
 # ─── 5. 사진 ↔ 이름 연결 ─────────────────────────────────────────────────────
 # assets/images/places/{name}.jpg 는 data.js 의 name 과 글자 단위로 일치해야 뜬다
-#   (js/map.js:401 및 index.html 의 필터 칩). 중간 매핑 테이블이 없다.
+#   (js/map.js 및 index.html 의 필터 칩). 중간 매핑 테이블이 없다.
 # 이름을 다듬는 순간 사진이 영영 안 보이는데, onerror 가 404 를 삼켜 아무 표시도 안 난다
-#   (js/map.js:409).
-# assets/ 는 .gitignore:7 에 걸려 있어 개발 워킹트리에는 없는 것이 정상이다.
+#   (js/map.js 의 clearSelectedPin()).
+# assets/ 는 .gitignore 의 assets/ 에 걸려 있어 개발 워킹트리에는 없는 것이 정상이다.
 # 없을 때 실패시키면 상시 빨간불이 되어 아무도 안 쓰게 된다 → 명시적으로 "건너뜀"을 찍는다.
 def check_photos():
     pdir = os.path.join(ROOT, "assets/images/places")
     names = [m.group(1) for m in re.finditer(r'name:"([^"]+)",\s*category:"tourist"',
                                              open(os.path.join(ROOT, "js/data.js"), encoding="utf-8").read())]
     if not os.path.isdir(pdir):
-        print("  SKIP  assets/images/places 없음 — 이 워킹트리는 사진을 갖고 있지 않다(.gitignore:7).")
+        print("  SKIP  assets/images/places 없음 — 이 워킹트리는 사진을 갖고 있지 않다(.gitignore 의 assets/).")
         print("        사진 163장은 배포 서버 디스크 한 곳에만 있고 버전관리도 백업도 없다.")
         print("        배포 서버에서 이 검사를 돌려라. 잃어버렸다면: git archive '6004a43^' assets | tar -x")
         return

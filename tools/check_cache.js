@@ -3,10 +3,10 @@
  * tools/check_cache.js — 편의정보 좌표 캐시 무효화 검사 (node + git 필요)
  *
  * 왜 이게 필요한가:
- *   js/conv_map.js:107,230 이 지오코딩 결과를 localStorage
+ *   js/conv_map.js 의 _saveConvCache/_loadConvCache 가 지오코딩 결과를 localStorage
  *   'hwaseong_conv_' + CONV_CACHE_VER + '_' + cat 에 영구 저장한다.
- *   js/conv_map.js:88-104 의 _loadConvCache 는 `!places.length` 만 보고 건수는 안 본다.
- *   즉 js/convenience.js 의 데이터를 고쳐도 CONV_CACHE_VER(js/conv_map.js:74)를 안 올리면
+ *   js/conv_map.js 의 _loadConvCache 는 `!places.length` 만 보고 건수는 안 본다.
+ *   즉 js/convenience.js 의 데이터를 고쳐도 CONV_CACHE_VER(js/conv_map.js)를 안 올리면
  *   재방문자에게는 옛 좌표·옛 목록이 계속 나간다. 서버·콘솔·네트워크 어디에도 흔적이 없다.
  *
  *   파일 소유가 갈려 있어서(WORKFLOW.md §17 convenience.js=배포 / :655 conv_map.js=개발)
@@ -25,7 +25,7 @@ const fs = require('fs'), vm = require('vm'), path = require('path');
 const R = process.env.HW_ROOT || path.resolve(__dirname, '..');
 const BASE = process.env.HW_BASE || 'HEAD';
 
-/* jebu 는 js/conv_map.js:115 에서 캐시를 안 타므로 대상에서 뺀다 */
+/* jebu 는 js/conv_map.js 의 jebu 블록에서 캐시를 안 타므로 대상에서 뺀다 */
 const CACHED = ['restaurants', 'touristRestaurants', 'hotels', 'camping', 'templeStay'];
 
 function evalConv(code) {
@@ -56,9 +56,9 @@ if (!changed.length) {
 }
 if (newVer === oldVer) {
   console.log(`  FAIL js/convenience.js  [${changed.join(', ')}] 가 바뀌었는데 `
-            + `js/conv_map.js:74 의 CONV_CACHE_VER 이 '${newVer}' 그대로다`);
+            + `js/conv_map.js 의 CONV_CACHE_VER 이 '${newVer}' 그대로다`);
   console.log(`       → 재방문 사용자는 localStorage 'hwaseong_conv_${newVer}_*' 의 옛 데이터를 계속 본다`);
-  console.log(`       → js/conv_map.js:74 의 버전을 올려라`);
+  console.log(`       → js/conv_map.js 의 CONV_CACHE_VER 를 올려라`);
   console.log('  ── FAIL 1');
   process.exit(1);
 }

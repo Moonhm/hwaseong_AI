@@ -5,7 +5,7 @@
  * 이 저장소에는 번들러가 없다. index.html 의 onclick 122곳과 js/ 6개는
  * "전역 함수 이름" 이라는 규약 하나로만 묶여 있다. 그 규약이 깨져도
  *   - 페이지는 정상 렌더되고
- *   - index.html:3879 의 `typeof mergeParkingData === 'function' &&` 같은 단축 평가가 크래시를 막고
+ *   - js/boot.js·js/home.js 의 `typeof mergeParkingData === 'function' &&` 같은 단축 평가가 크래시를 막고
  *   - 콘솔에 한 줄 뜰 뿐 화면에는 "버튼을 눌렀는데 아무 일도 안 일어남" 으로만 보인다.
  * 그래서 정규식이 아니라 브라우저와 같은 로드 순서로 실제 파싱·실행해서 확인한다.
  *
@@ -56,7 +56,7 @@ function inlineJs() {
   return out;
 }
 
-/* 브라우저 로드 순서: index.html 인라인이 먼저, 그다음 <script src> 순서 (index.html:3891-3897) */
+/* 브라우저 로드 순서: index.html 인라인이 먼저, 그다음 <script src> 순서 (index.html 의 <script src> 나열 순서) */
 const ORDER = [['index.html', inlineJs()]]
   .concat(JS.map(f => ['js/' + f, fs.readFileSync(path.join(R, 'js', f), 'utf8')]));
 
@@ -163,7 +163,7 @@ function checkHandlers(ctx) {
 }
 
 /* ── D. 전역 배열의 빈칸·null 원소 ────────────────────────────────────────
-   왜 필요한가: 2026-08-26 js/data.js:140 이 `},,` 로 끝나 PLACES 에 빈칸이
+   왜 필요한가: 2026-08-26 js/data.js 의 id:227 항목이 `},,` 로 끝나 PLACES 에 빈칸이
    하나 생겼다. 이건 문법 오류가 '아니라서' A 검사를 그냥 통과했고,
    filter()·forEach() 는 빈칸을 건너뛰므로 목록 화면도 멀쩡해 보였다.
    그런데 find() 는 빈칸을 undefined 로 '방문'한다 — 그래서

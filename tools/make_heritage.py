@@ -111,7 +111,7 @@ def make_rating(r):
 
 
 def make_desc(r):
-    """원본에 있는 사실만 쓴다. 40~80자 (quiz.js:200 이 80자에서 자른다).
+    """원본에 있는 사실만 쓴다. 40~80자 (js/quiz.js 가 80자에서 자른다).
     금지 문자: " { } | < & 줄바꿈"""
     kind, no = desig(r["extra"].get("지정번호", ""))
     gubun = r["extra"].get("구분", "")

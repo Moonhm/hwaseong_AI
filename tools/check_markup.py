@@ -95,7 +95,7 @@ if not dup: print("  i   정적 id %d개, 중복 0" % len(ids))
 # ── 4. getElementById 대상 존재 ─────────────────────────────────────────────
 # 대상이 없으면 null 참조로 그 핸들러만 죽는다.
 # ★ 정적 HTML 의 id 만 모으면 6건이 오탐난다 — js/*.js 가 문자열로 만들어내는 요소가 있다
-#   (js/map.js:999 'my-loc-style', js/map.js:513-515 'sl-desc-short/full/btn',
+#   (js/map.js 의 'my-loc-style' · 'sl-desc-short/full/btn',
 #    'liv-cat-'/'page-' 접두사 연결 등).
 #   그래서 js/*.js 안의 id="..." 문자열까지 함께 모아 대조한다. 실측 결과 오탐 0건.
 allids = set(ids)

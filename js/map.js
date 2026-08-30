@@ -1304,22 +1304,22 @@ function resetMapPage() {
   if (_lcScroll) _lcScroll.scrollLeft = 0;
   if (typeof updateLcArrows === 'function') updateLcArrows();
 
-  /* ⑥ 상단 칩 바 가로 스크롤. go() 는 updateChipArrows 만 부르고(js/nav.js:23)
+  /* ⑥ 상단 칩 바 가로 스크롤. js/nav.js 의 go() 는 updateChipArrows 만 부르고
    *    scrollLeft 는 안 되돌려서 '제부도 숙박'까지 밀어둔 상태가 남는다. */
   var _chips = document.getElementById('map-chips');
   if (_chips) _chips.scrollLeft = 0;
   if (typeof updateChipArrows === 'function') updateChipArrows();
 
-  /* ⑦ GPS 로 찍은 빨간 '내 위치' 점. 첫 진입은 null(js/map.js:938).
-   *    주입된 <style id="my-loc-style">(js/map.js:999-1008)은 보이지 않는 CSS 정의라 지우지 않는다. */
+  /* ⑦ GPS 로 찍은 빨간 '내 위치' 점. 첫 진입은 null.
+   *    주입된 <style id="my-loc-style">(_hideOverlays 위에서 주입)은 보이지 않는 CSS 정의라 지우지 않는다. */
   if (hasMap && myLocationOverlay) { myLocationOverlay.setMap(null); myLocationOverlay = null; }
 
-  /* ⑧ '가까운 300곳만 표시' 토스트 dedupe (js/localcurrency.js:11,116-117) */
+  /* ⑧ '가까운 300곳만 표시' 토스트 dedupe (js/localcurrency.js 의 _lcCapNotifiedLevel) */
   if (typeof _lcCapNotifiedLevel !== 'undefined') _lcCapNotifiedLevel = null;
 
   /* ⑨ 마지막에 카메라. 재클릭 직전 동작이 걸어둔 카메라 타이머가 뒤늦게 도착해 화면을 옮길 수 있다:
-   *    _panPinAboveSlide panBy 50ms(js/map.js:357-364) / fitPlaces setLevel 150ms(:114-116)
-   *    / 클러스터 panTo 180ms(:311-314) / NP setBounds 320ms + 중첩 200ms(:594).
+   *    _panPinAboveSlide 의 panBy 50ms / fitPlaces 의 setLevel 150ms
+   *    / showTkClusters 의 클러스터 panTo 180ms / _goNPCore 의 setBounds 320ms + 중첩 200ms.
    *    최대 ~520ms 이므로 550ms 뒤 한 번 더 확정한다. 그 사이 사용자가 조작했으면 건드리지 않는다. */
   if (!hasMap) return;                  /* 여기부터는 지도 객체가 있어야 의미가 있다 */
   var _gen = ++_mapResetGen;

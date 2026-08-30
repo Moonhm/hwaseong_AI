@@ -11,7 +11,7 @@
   2) JEBU_LAT/JEBU_LNG 가 제부도가 아니라 안산시 단원구 대부남동을 가리키고 있었다
      (coord2regioncode 확인). 반경 필터의 중심이 3.8km 어긋난 채 동작했다.
      → data.js id:1 제부도 좌표로 교정.
-     ※ js/conv_map.js:65 의 동일 상수는 '지도 중심(fitBounds 폴백)' 용도이므로 건드리지 말 것.
+     ※ js/conv_map.js 의 jebu 블록 중심 좌표는 '지도 중심(fitBounds 폴백)' 용도이므로 건드리지 말 것.
 """
 import re, time, sys, argparse, requests
 

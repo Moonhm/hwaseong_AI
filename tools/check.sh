@@ -7,7 +7,7 @@
 #     로컬 파일을 그대로 서빙하므로 push = 즉시 실서비스다.
 #   - 개발 Claude와 배포 Claude 둘이 같은 저장소를 동시에 쓴다.
 #   - 실패가 전부 조용하다. index.html 곳곳의 방어 가드와
-#     index.html 과 js/parking.js:73 의 빈 catch 가
+#     js/parking.js 의 빈 catch( .catch(function () {}) )가
 #     "데이터가 통째로 깨짐" 을 "목록이 비어 있음" 으로 번역한다.
 #     그래서 207개가 0개가 되든 10개가 사라지든 화면 상태가 구분되지 않는다.
 #
@@ -134,19 +134,20 @@ asset_guard() {
     fi
   done
 
-  # 동적으로 조립되는 사진 경로(js/map.js:401 'assets/images/places/' + place.name + '.jpg')는
+  # 동적으로 조립되는 사진 경로( js/ui.js 의 placePhotoSrc() 가
+  # 'assets/images/places/' + place.name + '.jpg' 로 잇는다 )는
   # 위 grep 으로 안 잡힌다. tools/check_data.py 의 사진-이름 대조가 그쪽을 본다.
   if [ -d assets ]; then
     n=$(find assets -type f | wc -l); t=$(git ls-files assets 2>/dev/null | wc -l)
     if git check-ignore -q assets 2>/dev/null; then
-      echo "  WARN assets/  디스크 ${n}개 / git 0개 (.gitignore:7) — 이 사본이 유일하다. 'git clean -xdf' 한 번이면 전멸한다"
+      echo "  WARN assets/  디스크 ${n}개 / git 0개 (.gitignore 의 assets/) — 이 사본이 유일하다. 'git clean -xdf' 한 번이면 전멸한다"
     elif [ "$t" -lt "$n" ]; then
       echo "  WARN assets/  디스크 ${n}개 / git 추적 ${t}개 — ${t}개만 복구 가능"
     else
       echo "  i     assets/ ${n}개 (git 추적)"
     fi
   else
-    echo "  SKIP  assets/ 없음 — 개발 워킹트리에서는 정상(.gitignore:7). 사진 163장은 배포 서버에만 있다"
+    echo "  SKIP  assets/ 없음 — 개발 워킹트리에서는 정상(.gitignore 의 assets/). 사진 163장은 배포 서버에만 있다"
   fi
   # -n 은 드라이런이다. 절대 -n 을 빼고 실행하지 마라 — assets/ 가 지워진다.
   echo "  i     git clean -xdf 를 지금 돌리면 $(git clean -xdn 2>/dev/null | wc -l)개가 삭제된다 (드라이런)"
@@ -335,7 +336,7 @@ live_drift() {
   gc=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$LIVE_URL/.git/config")
   if [ "$gc" = "200" ]; then
     echo "  FAIL /.git/config 이 HTTP 200 으로 공개돼 있다 — 저장소 전체 이력을 누구나 내려받을 수 있다"
-    echo "       tools/server.py:150 이 static_folder=ROOT 로 저장소 루트 전체를 서빙한다"
+    echo "       tools/server.py 의 Flask(static_folder=ROOT) 가 저장소 루트 전체를 서빙한다"
     bad=1
   else
     echo "  i     /.git 비공개 ($gc)"
