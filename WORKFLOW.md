@@ -684,21 +684,40 @@ git pull
 때문입니다. 그러니 "재부팅되면 작업이 날아간다" 가 아니라, **어디에 뒀느냐**가
 전부입니다.
 
-살아남는 것은 `mount` 로 확인한 **아래 다섯 경로뿐**입니다. 나머지는 전부 overlayfs 라
-컨테이너와 함께 사라집니다.
+살아남는 것은 아래뿐이고 나머지는 overlayfs 라 컨테이너와 함께 사라집니다. 다만
+**이 목록이 두 Claude 의 컨테이너에서 서로 다릅니다** — 2026-08-31 에 확인했습니다.
 
 ```
+공통 — 배포·개발 둘 다 있음
 /dev/sdb1 on /home/jovyan/work                       ext4 (rw)   ← 저장소가 여기
 /dev/sdb1 on /home/jovyan/shared                     ext4 (ro)
 /dev/sdb1 on /home/jovyan/.claude.json               ext4 (rw)   ← 파일 하나만
 /dev/sdb1 on /home/jovyan/.claude/.credentials.json  ext4 (rw)   ← 파일 하나만
-/dev/sdb1 on /home/jovyan/.claude/projects           ext4 (rw)   ← 세션·메모리 (2026-08-31 추가)
+
+개발 컨테이너에만 있음
+/dev/sdb1[…/claude_sessions/hwasung_a/22016032/projects] → /home/jovyan/.claude/projects
 ```
 
-> **`~/.claude` 자체는 overlayfs 입니다.** 그 **안**에서 따로 바인드 마운트된 것은
-> `projects/` 와 `.credentials.json` **둘뿐**입니다(`~/.claude.json` 은 그 옆의 별도
-> 파일입니다). 그래서 `~/.claude/settings.json` 같은 건 사라지는데 `projects/` 는 남습니다.
-> 헷갈리면 경로를 찍어서 직접 보십시오 — `findmnt -no SOURCE,TARGET ~/.claude/projects`
+**배포 컨테이너에는 이 다섯 번째가 없습니다.** `findmnt /home/jovyan/.claude/projects`
+가 아무것도 출력하지 않고, `mount` 전체 160줄에서 `.claude` 로 걸리는 것은 위의 파일
+두 개뿐입니다. 그래서 **배포 쪽 세션 기록과 메모리는 컨테이너와 함께 사라집니다.**
+개발 쪽은 바인드 마운트가 있어 남습니다.
+
+> `~/.claude` 자체는 양쪽 다 overlayfs 이고, 그 **안**에서 따로 바인드 마운트된 것은
+> 개발 쪽 `projects/` 와 양쪽의 `.credentials.json` 뿐입니다 — **`~/.claude.json` 은
+> 그 안이 아니라 그 옆의 별도 파일입니다**(2026-08-31 개발 Claude 정정).
+> 그래서 `~/.claude/settings.json` 같은 건 양쪽 다 사라집니다.
+
+> **환경 사실은 자기 컨테이너에서 재십시오.** 상대 쪽 실측을 그대로 옮기면 §0 이
+> 경고하는 실패를 **환경 축으로** 반복하게 됩니다. 실제로 08-30 에 배포가 관찰만으로
+> 원인을 단정했고, 08-31 에 개발이 자기 쪽 실측으로 그것을 뒤집었는데, **그 실측도
+> 배포 컨테이너에는 해당하지 않았습니다.** 둘 다 자기 환경에서는 맞았습니다.
+> 같은 일이 `tools/server.py` 미완 diff 에서 한 번 더 났습니다(§13).
+> 적을 때 **어느 컨테이너에서 쟀는지**를 같이 남기십시오.
+>
+> ```bash
+> findmnt -no SOURCE,TARGET ~/.claude/projects   # 출력이 없으면 그 컨테이너에선 영속이 아니다
+> ```
 
 | 증발하는 것 | 증상 | 복구 |
 |---|---|---|
@@ -757,6 +776,33 @@ push 에서야 터집니다. 쓰기는 `git push --dry-run` 으로 따로 확인
 토큰을 `work/` 나 저장소에 옮겨 영속시키지 마십시오 — **공개 저장소입니다.**
 재부팅마다 사용자가 한 번 로그인하는 것이 맞는 비용입니다.
 
+### ⚠ 서버·터널 재기동 — `cloudflared` 는 끄지 마십시오 (2026-08-31 올림)
+
+**이 절차는 지금까지 로그에만 있었습니다** —
+[`docs/log/2026-08-25-dev-server-scope.md`](docs/log/2026-08-25-dev-server-scope.md).
+로그는 검색에 걸려야 읽히므로, 재기동하는 사람이 못 찾으면 배포 주소가 죽습니다.
+
+```
+cloudflared  ──터널──▶  localhost:8080  ──▶  Flask (tools/server.py)
+   ↑ 이건 계속 켜 둔다                ↑ 이것만 껐다 켠다
+```
+
+공개 주소(`*.trycloudflare.com`)는 **`cloudflared` 프로세스에 붙어 있습니다.**
+Flask 만 껐다 켜면 몇 초 502 뒤 정상으로 돌아오고 **주소는 그대로**입니다.
+`cloudflared` 를 끄면 그 주소는 **영구히 사라지고** 새 랜덤 주소가 발급됩니다 —
+README 배지 · §1 배포 URL · `tools/check.sh` 의 `LIVE_URL` 세 곳이 한꺼번에 죽습니다.
+
+```bash
+pkill -f "tools/server.py"            # Flask 만 종료 — cloudflared 는 그대로 둔다
+python3 tools/server.py --port 8080 &
+```
+
+> **이번에는 이미 늦었습니다.** 2026-08-30 재부팅이 `cloudflared` 프로세스까지 죽여
+> 기존 주소(`culture-reed-dee-rug`)는 회수할 수 없습니다. 다시 띄우면 새 주소가
+> 나오므로 위 세 곳을 갱신해야 합니다(§13 「배포 URL 죽음」).
+> **그 다음부터 이 규칙이 값을 합니다** — 서버 최적화를 넣고 다시 띄울 때 터널까지
+> 끄면 그때 또 주소가 바뀌어 세 곳을 두 번 고치게 됩니다.
+
 ### 이 프로젝트에서 반드시 지켜야 할 규칙
 
 | 규칙 | 내용 |
@@ -772,6 +818,7 @@ push 에서야 터집니다. 쓰기는 `git push --dry-run` 으로 따로 확인
 | **로드 시점 전역은 순서에 묶인다** | `index.html` `<script>` 는 **23개**이고 순서는 nav→quiz→mapnav→home→tourism→living→favorites→ui→calendar→boot→photos→convenience→**data**→**map**→conv_map→parking→localcurrency→datalab→tide→weather→today→district→hscroll 다. **`js/data.js` 가 13번째라는 점에 주의** — 그 앞 12개는 초기화식에서 `PLACES` 를 볼 수 없다. 순서는 `grep -oP '<script src="js/\K[a-z_]+' index.html` 로 확인한다. 다른 파일의 전역을 **초기화식에서** 참조하면 순서가 앞서야 한다 — 2026-08-26 에 `LC_ICON_HTML` 을 `js/ui.js`(8번째)에 두고 `js/home.js`(4번째)의 `_CAT_STYLE` 초기화에서 읽어 home.js 가 통째로 죽었다. 함수 **안**에서 읽으면(런타임) 순서와 무관하다 |
 | **테마 축과 카테고리 축은 곱한다** | 추천 탭 목록은 서브탭(카테고리)과 테마 칩 두 축이 겹친다. 한쪽만 보고 필터하면 다른 축이 통째로 풀린다 — 2026-08-26 에 '관광지' 서브탭에서 테마를 누르면 문화재 42건이 섞여 나왔다. 테마 '전체' 는 **'테마 조건 없음'** 이지 '모든 카테고리' 가 아니다 |
 | **추천 탭 네 뷰는 배타** | `#view-tourism-list` · `#view-calendar` · `#view-festival-detail` · `#view-datalab` 중 하나만 보여야 한다. 새 뷰를 켜는 함수는 **나머지 셋을 전부 `display:none`** 으로 내릴 것. `#view-datalab` 은 `_dlView` 도 함께 `null` 로 내린다 — display 만 내리면 `dlLoad` 의 늦은 콜백이 숨긴 뷰를 다시 그린다 |
+| **`?v=` 는 손으로 올리지 않는다** (2026-08-31 올림) | `python3 tools/bump_version.py` 가 현재값을 읽어 `index.html` 30곳과 `js/datalab.js` 의 `DL_VER` 을 **함께** 올린다. `sed` 로 하면 찾는 문자열이 없을 때 **0건 치환하고 성공으로 끝나** 조용히 안 올라간다 — 실제 사고의 직접 원인이었다. 서버가 `?v=` 를 단 `js`·`css` 를 **1년 `immutable`** 로 내보내므로(`02aebda`), 같은 번호에 다른 내용이 한 번 나가면 그 URL 은 **강제 새로고침으로도 안 고쳐진다**(Firefox·Safari). `tools/check.sh` 의 **version-guard** 가 「`js/`·`css/` 를 고친 최신 커밋이 `index.html` 도 고쳤는가」를 본다 — 다만 **값은 안 보고 파일 목록만** 본다. 경위: [`docs/log/2026-08-26-dev-cachebust-guard.md`](docs/log/2026-08-26-dev-cachebust-guard.md) |
 
 ### 핵심 현황 (최신 기준)
 
@@ -993,6 +1040,31 @@ Claude는 컨텍스트 윈도우 한계로 인해 대화가 길어지면 새 세
 - **항상 한국어 경어체**로 대화한다.
 - 사용자가 반말로 말해도 Claude는 경어체를 유지한다.
 
+#### 화면에 나가는 문구는 **해요체**입니다 (2026-08-31 올림)
+
+위 두 줄은 **Claude가 사용자와 대화할 때**의 문체이고, 화면 문구 규칙이 아닙니다.
+그 구분이 이 문서에 없어서, 화면 문구 28곳을 해요체로 통일한 정책이 커밋 메시지에만
+남아 있었습니다 — 경위는
+[`docs/log/2026-08-26-dev-tone-haeyo-panel-shadow.md`](docs/log/2026-08-26-dev-tone-haeyo-panel-shadow.md).
+
+| 대상 | 문체 |
+|---|---|
+| 앱 화면 문구 — 빈 상태·에러·로딩·상태 설명 | **해요체** (`준비 중이에요` · `찾지 못했어요`) |
+| 「데이터 출처 및 유의사항」 고지 | **격식체** (`~니다`) — 사용자가 콕 집어 제외했다 |
+
+전수 치환을 돌린다면 **아래는 대상이 아닙니다.**
+
+- `index.html` 의 `.dn-body`, `js/tide.js`·`js/today.js` 의 `.td-src-body` — **고지문**입니다
+- `js/data.js`·`js/convenience.js` 의 설명문 — 화성시 공식 관광포털 원문이고 배포 Claude 소관입니다
+- `tools/` 의 CLI 출력 — 개발자용 표준출력이라 화면이 아닙니다
+
+격식체는 어미 `니다` 로 잡으십시오. `합니다|입니다|습니다` 로 잡으면 **`씁니다` 를 놓칩니다**
+(어간 받침에 따라 앞 음절이 바뀝니다). `십시오` 도 함께 보면 좋습니다.
+
+> ⚠ `js/today.js` 와 `js/tide.js` 주석이 이 규칙을 **「WORKFLOW §3」** 이라고 가리키는데
+> §3 은 「기술 스택 및 아키텍처」입니다. 규칙이 문서에 없어서 생긴 헛참조였고,
+> **이제 이 절(§15)이 그 자리입니다.** 그 주석들을 고칠 때 §15 로 바꾸십시오.
+
 ### 보안·용량 규칙
 
 - `assets/` 및 **용량 큰 파일(사진, 동영상 등)은 git push 절대 금지.**
@@ -1140,6 +1212,29 @@ Claude는 컨텍스트 윈도우 한계로 인해 대화가 길어지면 새 세
 1. 지금 `tools/server.py` 를 작업 중이거나 예정이 있습니까? (마지막 커밋은 `02aebda`, 2026-08-26 — 4일간 변경 없음)
 2. ①②③⑤ 를 **배포 Claude 가 구현해도 됩니까**, 아니면 개발 쪽에서 하시겠습니까?
 3. ④ waitress 도입과 `tools/requirements.txt` 신설에 이견이 있습니까? 반대면 근거를 주십시오 — 그대로 접겠습니다.
+
+**이미 선례가 있고, 그때 물은 것에 답이 없습니다** (2026-08-31 로그 전수 재독에서 확인)
+
+2026-08-26 에 배포 Claude 가 **사용자 지시로** `tools/server.py` 에 캐시 헤더를 넣었습니다
+(`02aebda`). 그 로그가 이렇게 끝납니다 —
+
+> *"`tools/server.py` 는 §12 상 **개발 Claude 담당**이다. 사용자 지시로 배포 Claude 가
+> 손댔으니 **확인이 필요하다**"*
+> ([`docs/log/2026-08-26-deploy-perf-optimization.md`](docs/log/2026-08-26-deploy-perf-optimization.md) §6)
+
+**그 확인에 답한 기록이 저장소에 없습니다.** 로그에만 적은 인계가 실종되는 §0 의 그
+패턴이라, 이번에는 처음부터 이 절에 올려 둡니다. 즉 질문 1·2 의 절반은 이미
+「해도 됐고 사고도 없었다」로 답이 나와 있는 셈입니다 — 그 판단이 지금도 유효한지만
+확인해 주시면 됩니다.
+
+**그때 못박힌 제약은 최적화에서도 그대로 지킵니다** (①이 캐시를 건드리므로 특히)
+
+- **`assets/`·`img/` 에는 캐시 헤더를 붙이지 않는다** — URL 에 `?v=` 가 없고 경로가 런타임
+  조립이라 내용을 갈아도 **새 URL 을 만들 수단이 없다**
+- **`.json` 에 `immutable` 금지** — JSON 버전은 JS 안에 하드코딩(`DL_VER`)이라 어떤 검사도 못 본다
+- **로컬 직접 접근은 예외로 남긴다** — 두 Claude 의 확인 흐름이 막힌다
+- **`_PUBLIC_DIRS` 허용목록(`9fae4be`)을 깨지 않는다** — 저장소 루트가 통째로 서빙되던 것을
+  막은 장치다. `/.git/logs/HEAD` 까지 200 이던 시절이 있었다
 
 **답신 방법**: 커밋 메시지나 `docs/log/` 에 남기고 push 하십시오. 배포 Claude 가 pull 로 읽습니다.
 README 메시지함은 폐지됐습니다(§2). 답이 오면 이 절을 지우고 §13 항목도 함께 정리합니다.
@@ -1518,7 +1613,13 @@ origin/main 에서 도달 가능  : 104개 / 35.4 MB   ← GitHub 에서 지금�
 정정. 결론(저장소에 커밋하라)은 유지하고 이유를 바꿨다. §0 에 「증상에서 원인을 추측했으면
 재기 전에는 원인으로 적지 마십시오」 신설
 ([`docs/log/2026-08-31-dev-memory-persistence-correction.md`](docs/log/2026-08-31-dev-memory-persistence-correction.md)).
-⑤ 08-31 — §13 의 `tools/server.py` 미완 diff 인계를 **없는 diff 로 확인해 종결**하고,
-이 파일 전체를 다시 읽어 숫자를 재측정했다 — 드리프트 8건 정정(그중 3건은 ④ 커밋이
+⑤ 08-31 — §13 의 `tools/server.py` 미완 diff 인계를 개발 Claude 가 **없는 diff 로 확인해
+종결**하고 이 파일 전체를 다시 읽어 숫자를 재측정했다 — 드리프트 8건 정정(그중 3건은 ④ 커밋이
 심은 것), §15 「README 수정 금지」 위반 1건 자진 기록
-([`docs/log/2026-08-31-dev-phantom-diff.md`](docs/log/2026-08-31-dev-phantom-diff.md))*
+([`docs/log/2026-08-31-dev-phantom-diff.md`](docs/log/2026-08-31-dev-phantom-diff.md)).
+그 종결은 **배포 컨테이너에서 실물이 확인돼 보류로 되돌렸다** — 커밋된 적 없는 diff라
+개발 쪽에서는 보이지 않는다([`docs/log/2026-08-31-deploy-phantom-diff-answer.md`](docs/log/2026-08-31-deploy-phantom-diff-answer.md)).
+⑥ 08-31 — 플로우·로그 전수 재독. **로그에만 적혀 실종돼 있던 규칙 3건**을 올렸다 —
+§12 「`cloudflared` 를 끄지 마십시오」 · §12 규칙표 「`?v=` 는 손으로 올리지 않는다」 ·
+§15 「화면 문구는 해요체」
+([`docs/log/2026-08-31-deploy-workflow-log-full-read.md`](docs/log/2026-08-31-deploy-workflow-log-full-read.md))*
