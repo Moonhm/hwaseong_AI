@@ -7,7 +7,16 @@
   원래 지시는 *"flask 최신 업데이트 및 설치하고 서버 최적화 할수있는 장치들 다 동원해
   … 클라우드 플레어 서버 서비스 다시 시작하자."*
 
-**새 배포 주소: `https://endless-cocktail-manufacturing-validity.trycloudflare.com`**
+~~**새 배포 주소: `https://endless-cocktail-manufacturing-validity.trycloudflare.com`**~~
+
+> ⚠ **이 주소는 폐기됐습니다.** 같은 날 사용자 지시로 터널을 통째로 내렸다가 주최 측
+> 매뉴얼대로 다시 올리면서 새 주소가 발급됐습니다 —
+> 경위는 [`2026-08-31-deploy-service-restart-manual.md`](2026-08-31-deploy-service-restart-manual.md).
+> **현재 주소는 언제나 `WORKFLOW.md` §1 이 갖습니다.** 로그의 주소는 그때 값입니다.
+>
+> (§0 은 로그를 고치지 말라고 정했지만, **가리키는 곳이 죽은 포인터를 살아 있는 것처럼
+> 두는 것**은 그 예외입니다 — 죽은 커밋 해시를 고치는 것과 같은 이유입니다.
+> 원문은 취소선으로 남겨 그때 무엇이었는지도 보존했습니다.)
 
 ---
 
