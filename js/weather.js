@@ -94,9 +94,16 @@ function _renderWeekly() {
   var n = Math.min(d.time.length, 7);
 
   /* 온도 막대를 주 전체 최저~최고로 정규화한다. 날마다 따로 재면
-     3도 차이나 15도 차이나 같은 길이로 보여 비교가 안 된다. */
-  var lo = Math.min.apply(null, d.temperature_2m_min.slice(0, n));
-  var hi = Math.max.apply(null, d.temperature_2m_max.slice(0, n));
+     3도 차이나 15도 차이나 같은 길이로 보여 비교가 안 된다.
+
+     ⚠ lo/hi 도 반올림한 뒤에 재야 한다. 아래 tmin/tmax 는 Math.round 를 거치는데
+     여기서 원본 소수를 쓰면 기준과 표시값이 어긋나, 반올림이 lo 아래나 hi 위로
+     넘어가는 날은 left 가 음수가 되고 width 가 100% 를 넘는다 (2026-08-26 실측:
+     lo=21.1·hi=29.9 인 주의 i=6 이 left -1.1% / width 102.3%).
+     .wk-bar 의 overflow:hidden 이 잘라 줘서 화면으로는 안 보이던 버그다.
+     Math.round 는 단조라 여기서 맞춰 두면 left>=0, left+width<=100 이 보장된다. */
+  var lo = Math.round(Math.min.apply(null, d.temperature_2m_min.slice(0, n)));
+  var hi = Math.round(Math.max.apply(null, d.temperature_2m_max.slice(0, n)));
   var span = Math.max(1, hi - lo);
 
   var nowH = new Date().getHours();
