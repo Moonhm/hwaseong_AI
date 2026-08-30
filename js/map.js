@@ -74,21 +74,30 @@ function initMap() {
   }
 
   if (typeof kakao === 'undefined' || !kakao.maps) {
-    showMapError('카카오맵을 불러오지 못했어요.<br>페이지를 새로고침 해주세요.');
+    /* ⚠ 여기서 '새로고침 해주세요' 라고 하면 안 된다 — 새로고침으로 안 고쳐지는
+     * 원인이 더 흔하다. JS 앱 키에 도메인 제한이 걸려 있어서, 배포 주소가 바뀌면
+     * SDK 가 401 domain mismatched! 를 내고 kakao 가 아예 정의되지 않는다.
+     * 2026-08-31 에 터널 주소를 바꾼 뒤 실제로 이 상태였는데, 화면은 새로고침을
+     * 권하고 check.sh --live 는 exit 0 이라 아무도 원인을 못 짚었다.
+     * 사람에게는 할 수 있는 것만 말하고, 진단은 콘솔로 넘긴다(§12 「Kakao API」). */
+    _warnMapKey('kakao 전역이 없다');
+    showMapError('지도를 불러오지 못했어요.<br>잠시 뒤 다시 열어 주세요.');
     return;
   }
 
   /* 본체가 아직 실행 전이면 여기서 로드하고 끝난 뒤 이어서 그린다. */
   if (!kakao.maps.Map) {
     if (typeof kakao.maps.load !== 'function') {
-      showMapError('카카오맵을 불러오지 못했어요.<br>페이지를 새로고침 해주세요.');
+      _warnMapKey('kakao.maps.load 가 없다 — SDK 가 반쯤 실렸다');
+      showMapError('지도를 불러오지 못했어요.<br>잠시 뒤 다시 열어 주세요.');
       return;
     }
     /* 안전망: load 콜백이 끝내 안 오면 빈 지도가 아니라 새로고침 버튼을 보여 준다.
      * autoload=false 는 2026-08-26 에 넣었는데 개발 환경에서 카카오 CDN 이 막혀
      * 실동작을 검증하지 못했다 — 조용히 실패하는 것만은 막아 둔다. */
     var _guard = setTimeout(function () {
-      if (!mapReady) showMapError('지도를 불러오지 못했어요.<br>네트워크를 확인하고 새로고침 해주세요.');
+      if (!mapReady) { _warnMapKey('kakao.maps.load 콜백이 8초 안에 안 왔다');
+        showMapError('지도를 불러오지 못했어요.<br>연결을 확인하고 잠시 뒤 다시 열어 주세요.'); }
     }, 8000);
     kakao.maps.load(function () {
       clearTimeout(_guard);
@@ -165,6 +174,22 @@ function fitPlaces(list) {
 }
 
 /* ── 에러 화면 ── */
+/* 지도가 안 뜨는 원인 중 '새로고침으로 안 고쳐지는 것' 을 콘솔에 남긴다.
+ * 화면 문구는 사용자가 할 수 있는 것만 말해야 하므로 진단을 여기로 뺐다.
+ * 도메인 제한은 개발자 콘솔에서 고치는 것이라 사용자·Claude 둘 다 코드로 못 고친다 —
+ * 그래서 '어디를 봐야 하는지' 를 정확히 찍어 주는 것이 이 함수의 전부다. */
+function _warnMapKey(why) {
+  if (typeof console === 'undefined' || !console.warn) return;
+  console.warn(
+    '[지도] 카카오 SDK 를 못 썼습니다 — ' + why + '\n' +
+    '  현재 주소: ' + location.origin + '\n' +
+    '  가장 흔한 원인은 JS 앱 키의 도메인 제한입니다. 배포 주소(Quick Tunnel)가 바뀌면\n' +
+    '  SDK 가 401 domain mismatched! 를 내고 kakao 전역이 아예 생기지 않습니다.\n' +
+    '  → Kakao Developers > 내 애플리케이션 > 플랫폼 > Web 에 위 주소를 등록하십시오.\n' +
+    '  → 이건 새로고침으로 안 고쳐집니다. WORKFLOW.md §12 「Kakao API」 참고.'
+  );
+}
+
 function showMapError(msg) {
   var container = document.getElementById('kakao-map');
   if (!container) return;
@@ -178,7 +203,7 @@ function showMapError(msg) {
     '<div style="color:#6b7280;font-size:14px;line-height:1.6">' + msg + '</div>' +
     '<button onclick="location.reload()" ' +
     'style="background:#6366f1;color:#fff;border:none;border-radius:20px;' +
-    'padding:10px 20px;font-size:13px;cursor:pointer">새로고침</button></div>';
+    'padding:10px 20px;font-size:13px;cursor:pointer">다시 시도</button></div>';
 }
 
 /* ── 핀 DOM 요소 생성 공통 헬퍼 (buildOverlays·showTkViewport 공유) ── */
