@@ -180,11 +180,56 @@ version_guard() {
   return 1
 }
 
+# ── 5-c. 로그 머리의 커밋 해시 (2026-08-30) ────────────────────────────────
+# WORKFLOW.md §0 이 로그 머리에 '- 커밋: `<해시>`' 를 요구하는 이유는 단 하나,
+#   "이 커밋에 로그가 있나" 를 기계로 확인하기 위해서다(20366e7).
+#   그런데 그 해시가 틀리면 확인이 조용히 거짓말을 한다. 규칙을 지켰는데도
+#   지키기 전과 똑같이 틀린 답이 나온다 — 규칙만 있고 검사가 없었기 때문이다.
+#
+# 실제로 2026-08-29 에 두 건이 그랬다. 절차가
+#   ① git commit  ② 나온 해시를 로그에 적음  ③ git commit --amend
+# 였는데 ③ 이 해시를 바꾼다. 로그에는 ① 의 해시가 남는다.
+#   103dcdc → 62d9fe9 (통합검색)   c1ec97a → fe4ec70 (제부도 바닷길)
+# 버려진 해시는 로컬 reflog 에만 있다. push 도 clone 도 그 객체를 안 나른다.
+# 즉 저장소를 받은 사람에게는 존재하지 않는 해시다. `git gc` 한 번이면 여기서도 사라진다.
+# 7자리 16진수는 사람 눈에 다 똑같이 생겨서 검토로는 안 걸린다. 그래서 기계가 본다.
+log_hash_guard() {
+  local bad=0 head=0 seen=0 f ln body h all
+  all=$(ls docs/log/*.md 2>/dev/null | wc -l)
+  while IFS=: read -r f ln body; do
+    head=$((head + 1))
+    for h in $(printf '%s' "$body" | grep -oE '`[0-9a-f]{7,40}`' | tr -d '`'); do
+      seen=$((seen + 1))
+      if ! git cat-file -e "${h}^{commit}" 2>/dev/null; then
+        echo "  FAIL $f:$ln  \`$h\` 은 이 저장소에 없는 커밋이다 — 오타이거나 다른 저장소의 해시다"
+        bad=1
+      elif ! git merge-base --is-ancestor "$h" HEAD 2>/dev/null; then
+        echo "  FAIL $f:$ln  \`$h\` 은 HEAD 에서 도달할 수 없다 — amend·rebase 가 버린 해시다"
+        echo "         그 커밋 제목: $(git log -1 --format=%s "$h" 2>/dev/null | cut -c1-46)"
+        echo "         살아 있는 쪽 찾기:  git log --oneline --all --grep=<제목 일부>"
+        echo "         지금은 reflog 덕에 보이지만 clone 한 사람에게는 없는 해시다."
+        bad=1
+      fi
+    done
+  done < <(grep -Hn '^- 커밋:' docs/log/*.md 2>/dev/null)
+  if [ $bad = 0 ]; then
+    echo "  i     로그 ${head}개가 적은 커밋 해시 ${seen}개 전부 살아 있다"
+  fi
+  # 머리줄이 없는 로그는 FAIL 이 아니다. 20366e7 이 '기존 60여 개에 소급 적용하지
+  # 않는다' 고 못박았다. 상시 빨간불은 곧 무시되는 검사가 된다(설계 원칙 3).
+  echo "  i     '- 커밋:' 머리줄 ${head}/${all}개 — 나머지는 규칙 이전 파일이라 소급 안 함(§0)"
+  return $bad
+}
+
 if [ $HAVE_GIT = 1 ]; then
   run "캐시 버스팅 이력 (version-guard)" version_guard
   run "자산·추적 상태 (asset-guard)" asset_guard
+  run "로그 커밋 해시 (log-hash)" log_hash_guard
 else
   skip "자산·추적 상태 (asset-guard)" "git 이 없다 — .gitignore 가 데이터 파일을 삼켰는지 못 본다"
+  skip "로그 커밋 해시 (log-hash)" \
+    "git 이 없다 — docs/log 머리의 '- 커밋:' 해시가 amend 로 버려진 것인지 못 본다. \
+로그는 있는데 가리키는 커밋이 없는 상태가 조용히 통과한다."
 fi
 
 # ── 6. 커밋 직전에만 의미 있는 검사 (--precommit) ───────────────────────────
