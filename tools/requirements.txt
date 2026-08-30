@@ -1,0 +1,15 @@
+# 화성잇다 배포 서버 의존성 — tools/server.py
+#
+#   pip install -r tools/requirements.txt
+#
+# ⚠ 컨테이너가 재시작되면 이 설치분이 사라집니다. /home/jovyan/work 만 영속이고
+#   conda site-packages 는 그 밖입니다(WORKFLOW.md §12). 서버가
+#   ModuleNotFoundError 로 안 뜨면 먼저 이 줄을 다시 돌리십시오.
+#
+# 버전을 고정하지 않은 이유: 셋 다 API 가 안정적이고, 재부팅마다 다시 받는
+# 환경이라 핀을 박아 두면 낡은 버전을 계속 끌어옵니다. 지금 확인된 조합은
+# 아래 주석에 적어 둡니다 — 깨지면 이 값으로 되돌리십시오.
+
+flask       # 확인: 3.1.3
+requests    # 확인: 2.34.2
+waitress    # 확인: 3.0.2  — 없으면 server.py 가 Flask 개발 서버로 떨어집니다
