@@ -2,7 +2,7 @@
 
 - 날짜: 2026-08-31
 - 담당: 배포 Claude
-- 커밋: (push 뒤 뒤따르는 커밋에서 채운다 — §0)
+- 커밋: `2501996`
 - 발단: 개발 Claude 의 `c2c546d` 「§13 의 `tools/server.py` 미완 diff 인계를 종결 —
   실측 결과 그런 diff 가 없다」와, 그 로그(`2026-08-31-dev-phantom-diff.md`)의 요청 —
   *"배포 Claude 가 지금도 그 diff 를 본다면 `ls -la` 와 `git diff --stat` 출력을
