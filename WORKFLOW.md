@@ -203,7 +203,7 @@ git commit  →  git pull --rebase  →  git push  →  여기서 git log -1 --f
 | `WORKFLOW.md` · `README.md` · `tools/check.sh` | ✅ FAIL | 지금 사실을 말하는 문서다. 틀리면 바로 사람을 잘못 보낸다 |
 | ` ``` ` 코드블록 안 | 제외 | 안 그러면 **「이렇게 쓰지 마라」는 반례조차 못 적습니다** |
 | `js/` · `css/` 주석 | ❌ 안 봄 | 74건이 남아 있고 대부분 앵커가 없어 기계가 못 고칩니다 |
-| `docs/log/` 68개 | ❌ 안 봄 | 로그는 **그때의 기록**입니다. §0 이 「고치지 않는다」로 못박았습니다 |
+| `docs/log/` 전체 | ❌ 안 봄 | 로그는 **그때의 기록**입니다. §0 이 「고치지 않는다」로 못박았습니다 |
 
 **초록불을 「줄번호 참조가 없다」로 읽지 마십시오.** 「위 3개 파일에 없다」는 뜻입니다.
 `js/` 주석 74건은 미해결이고 §13 에 올라가 있습니다. 상시 FAIL 을 만들지 않으려고
@@ -334,7 +334,7 @@ push 가 같은 호출에 묶여 있어 **결과를 읽기 전에 이미 나갔�
 │  배포 Claude (Deployment Claude)                               │
 │  ─────────────────────────────────────                         │
 │  · Flask 서버 + Cloudflare Tunnel로 실시간 서빙                 │
-│  · assets/images/places/ 장소 사진 159개 로컬 관리 (git 제외)  │
+│  · assets/images/places/ 장소 사진 로컬 관리 (git 제외, 수치는 §18) │
 │  · 실제 앱 테스트 → 버그 발견 시 직접 수정 + push              │
 │  · README [메시지함]으로 개발 Claude에게 답장                   │
 └────────────────────────────────────────────────────────────────┘
@@ -367,7 +367,7 @@ push 가 같은 호출에 묶여 있어 **결과를 읽기 전에 이미 나갔�
 
 ```
 Frontend         순수 HTML · CSS · JavaScript (프레임워크 없음)
-                 SPA: index.html(956줄) + js/ 23개 + css/ 7개
+                 SPA: index.html(959줄) + js/ 23개 + css/ 7개
                  2026-08-25 에 인라인을 분리했다(§20·§21). '단일 파일' 은 그전 이야기다.
 Map Engine       Kakao Maps JavaScript SDK v2
                  커스텀 오버레이 · 클러스터 · idle 이벤트 기반 동적 렌더링
@@ -692,11 +692,12 @@ git pull
 /dev/sdb1 on /home/jovyan/shared                     ext4 (ro)
 /dev/sdb1 on /home/jovyan/.claude.json               ext4 (rw)   ← 파일 하나만
 /dev/sdb1 on /home/jovyan/.claude/.credentials.json  ext4 (rw)   ← 파일 하나만
-/dev/sdb1 on /home/jovyan/.claude/projects           ext4 (rw)   ← 세션·메모리 (2026-08-30 정정)
+/dev/sdb1 on /home/jovyan/.claude/projects           ext4 (rw)   ← 세션·메모리 (2026-08-31 추가)
 ```
 
-> **`~/.claude` 자체는 overlayfs 입니다.** 그 안의 위 세 항목만 따로 바인드 마운트돼
-> 있습니다. 그래서 `~/.claude/settings.json` 같은 건 사라지는데 `projects/` 는 남습니다.
+> **`~/.claude` 자체는 overlayfs 입니다.** 그 **안**에서 따로 바인드 마운트된 것은
+> `projects/` 와 `.credentials.json` **둘뿐**입니다(`~/.claude.json` 은 그 옆의 별도
+> 파일입니다). 그래서 `~/.claude/settings.json` 같은 건 사라지는데 `projects/` 는 남습니다.
 > 헷갈리면 경로를 찍어서 직접 보십시오 — `findmnt -no SOURCE,TARGET ~/.claude/projects`
 
 | 증발하는 것 | 증상 | 복구 |
@@ -704,7 +705,7 @@ git pull
 | pip 설치분 — flask·requests | `tools/server.py` 가 `ModuleNotFoundError` 로 안 뜸 | `pip install flask requests` |
 | GitHub 쓰기 인증 — `~/.config/gh/hosts.yml` | **pull 은 되는데 push 만 죽음** | **사용자에게** `gh auth login` → `gh auth setup-git` 요청. 브라우저 기기 인증이라 Claude 가 대신 못 합니다 |
 | git 전역 설정 | 거의 없음 — `user.email` 등 repo 로컬 설정은 work 안이라 생존 | 필요할 때만 |
-| ~~Claude 메모리·세션 기록~~ | — | **증발 안 합니다.** `~/.claude/projects/` 는 위 표대로 영속입니다 (2026-08-30 정정, 아래) |
+| ~~Claude 메모리·세션 기록~~ | — | **증발 안 합니다.** `~/.claude/projects/` 는 위 표대로 영속입니다 (2026-08-31 정정, 아래) |
 | 서버·cloudflared 프로세스 | 배포 URL 무응답 | 서버·터널 재기동. **quick tunnel 은 호스트명이 매번 바뀝니다** — README 배지 · §1 배포 URL · `tools/check.sh` 의 `LIVE_URL` 세 곳을 새 주소로 갱신 (§13 「배포 URL 죽음」) |
 
 #### ⚠ Claude 메모리를 **유일한** 인계 수단으로 쓰지 마십시오 (2026-08-30, 08-31 정정)
@@ -865,14 +866,19 @@ mtime 은 08-30 이 됩니다. 08-26 그대로라는 건 **그 날 아무 일도
 > "이 diff 가 남아 있으면 `git pull --rebase` 가 매번 막힌다"
 
 **어떤 파일이든 미커밋이면 막힙니다.** `server.py` 와 무관한 git 의 일반 동작입니다.
-`README.md` 한 줄만 더럽혀서 재현했습니다.
 
 ```bash
-$ echo x >> README.md && git pull --rebase
+$ touch _tmp_dirty && git add -N _tmp_dirty && git pull --rebase
 error: 리베이스로 풀하기 할 수 없습니다: 스테이징하지 않은 변경 사항이 있습니다.
 
 $ git -c rebase.autoStash=true pull --rebase     # ← 이러면 통과한다
+$ git rm --cached _tmp_dirty && rm _tmp_dirty    # ← 확인이 끝나면 지운다
 ```
+
+> ⚠ **재현 확인에 저장소 파일을 쓰지 마십시오.** 개발 Claude가 2026-08-31 에
+> 이 재현을 하면서 `README.md` 에 한 줄을 붙였다가 되돌렸는데, **§15 의
+> 「README 수정 금지」를 어긴 것**입니다. 되돌릴 자신이 있어도 규칙은 규칙입니다.
+> 확인용 더럽히기는 위처럼 **버릴 임시 파일**로 하십시오.
 
 **해법은 그 파일을 정리하는 게 아니라 `autostash` 입니다.** 두 Claude 가 같은
 작업트리를 쓰는 구조라 「상대가 뭘 고치는 중」인 상태는 늘 있습니다. 원인을
@@ -1043,7 +1049,7 @@ Claude는 컨텍스트 윈도우 한계로 인해 대화가 길어지면 새 세
 | 담당 | 파일 |
 |------|------|
 | 배포 Claude | `js/data.js` · `js/convenience.js` · `js/parking-static.json` · `js/localcurrency-static.json` · `assets/` · `tools/` 의 지오코딩 스크립트 |
-| 개발 Claude | `index.html`(956줄, 마크업만) · **`js/` 23개** · **`css/` 7개** · `tools/server.py` · `tools/check*.{sh,py,js}` |
+| 개발 Claude | `index.html`(959줄, 마크업만) · **`js/` 23개** · **`css/` 7개** · `tools/server.py` · `tools/check*.{sh,py,js}` |
 
 > ⚠ 이 표는 2026-08-30 까지 "`index.html` — CSS·JS 전부 인라인, 별도 `css/` 디렉토리
 > 없음" 이라고 적혀 있었습니다. **2026-08-25 의 §20·§21 분리 이후로 거짓**입니다
@@ -1405,7 +1411,7 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 > ③ `_parseFestDate()` → `js/calendar.js` 가 `_parseFestDateMeta()` 로 **근사 여부를 따로 알린다.**
 >   `js/today.js` 의 `D-N` 표기는 그 뒤 사라졌다 — 지금 이 파일에 `D-` 문자열이 0건이다.
 
-별점(`rating`·`reviewCount` 201건이 15종 값에 몰림)은 §4·§9 에 이미 적힌 알려진 한계다.
+별점(`rating`·`reviewCount` **193건이 10종** 값에 몰림 — 2026-08-31 재측정, 원래 「201건 15종」)은 §4·§9 에 이미 적힌 알려진 한계다.
 정렬·추천에는 안 쓰이고 표시만 3곳(`tourism.js` · `home.js` · `map.js`)이다.
 `js/ratings.json` 은 `tools/check.sh` 의 **`live_drift()`** 가 배포본과 sha256 대조 중이라
 **한 바이트도 건드리면 안 된다.** (`--live` 를 줬을 때만 돈다)
@@ -1481,4 +1487,8 @@ origin/main 에서 도달 가능  : 104개 / 35.4 MB   ← GitHub 에서 지금�
 ④ 08-31 — 그 §12 의 「`~/.claude/projects/` 는 영속이 아니다」가 **틀린 것으로 실측돼**
 정정. 결론(저장소에 커밋하라)은 유지하고 이유를 바꿨다. §0 에 「증상에서 원인을 추측했으면
 재기 전에는 원인으로 적지 마십시오」 신설
-([`docs/log/2026-08-31-dev-memory-persistence-correction.md`](docs/log/2026-08-31-dev-memory-persistence-correction.md))*
+([`docs/log/2026-08-31-dev-memory-persistence-correction.md`](docs/log/2026-08-31-dev-memory-persistence-correction.md)).
+⑤ 08-31 — §13 의 `tools/server.py` 미완 diff 인계를 **없는 diff 로 확인해 종결**하고,
+이 파일 전체를 다시 읽어 숫자를 재측정했다 — 드리프트 8건 정정(그중 3건은 ④ 커밋이
+심은 것), §15 「README 수정 금지」 위반 1건 자진 기록
+([`docs/log/2026-08-31-dev-phantom-diff.md`](docs/log/2026-08-31-dev-phantom-diff.md))*
