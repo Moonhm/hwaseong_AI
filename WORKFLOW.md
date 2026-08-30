@@ -585,6 +585,56 @@ git status
 git pull
 ```
 
+### 컨테이너가 재부팅됐다면 — 배포 환경 (2026-08-30 신설)
+
+배포 Claude 컨테이너는 **재부팅이 잦습니다** — 2026-08-30 하루에 세 번 겪었습니다
+(뒤의 둘은 08:07·14:05). 경위는
+[`docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md`](docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md).
+
+살아남는 것은 `mount` 로 확인한 **아래 네 경로뿐**입니다. 나머지는 전부 overlayfs 라
+컨테이너와 함께 사라집니다.
+
+```
+/dev/sdb1 on /home/jovyan/work                       ext4 (rw)   ← 저장소가 여기
+/dev/sdb1 on /home/jovyan/shared                     ext4 (ro)
+/dev/sdb1 on /home/jovyan/.claude.json               ext4 (rw)   ← 파일 하나만
+/dev/sdb1 on /home/jovyan/.claude/.credentials.json  ext4 (rw)   ← 파일 하나만
+```
+
+| 증발하는 것 | 증상 | 복구 |
+|---|---|---|
+| pip 설치분 — flask·requests | `tools/server.py` 가 `ModuleNotFoundError` 로 안 뜸 | `pip install flask requests` |
+| GitHub 쓰기 인증 — `~/.config/gh/hosts.yml` | **pull 은 되는데 push 만 죽음** | **사용자에게** `gh auth login` → `gh auth setup-git` 요청. 브라우저 기기 인증이라 Claude 가 대신 못 합니다 |
+| git 전역 설정 | 거의 없음 — `user.email` 등 repo 로컬 설정은 work 안이라 생존 | 필요할 때만 |
+| **Claude 메모리·세션 기록 — `~/.claude/projects/`** | 이전 세션이 무엇을 하던 중이었는지 **한 줄도 안 남음** | **복구 불가.** 아래를 보십시오 |
+| 서버·cloudflared 프로세스 | 배포 URL 무응답 | 서버·터널 재기동. **quick tunnel 은 호스트명이 매번 바뀝니다** — README 배지 · §1 배포 URL · `tools/check.sh` 의 `LIVE_URL` 세 곳을 새 주소로 갱신 (§13 「배포 URL 죽음」) |
+
+#### ⚠ Claude 메모리는 인계 수단이 아닙니다 (2026-08-30 확인)
+
+`~/.claude/` 에서 영속인 것은 위 표의 **파일 두 개뿐**이고, 메모리와 세션 기록이 들어가는
+`~/.claude/projects/` 는 **영속이 아닙니다.** 08-30 오전 세션이 재부팅에 대비해 메모리 3건을
+남겼는데, 14:05 재부팅 뒤 그 디렉터리는 **비어 있었습니다.**
+
+그러니 "다음 세션이 이어받게 기록해 두라" 는 지시를 **메모리로만 처리하지 마십시오.**
+남는 곳은 저장소뿐입니다 — 규칙·현재 상태는 이 파일, 경위는 `docs/log/`, 그리고
+**커밋과 push 까지** 해야 진짜로 남습니다. (Claude Code 로그인 자체는 `.credentials.json`
+이 영속이라 유지되므로, 재부팅 뒤에도 세션은 바로 열립니다.)
+
+순서는 이렇게 하십시오.
+
+```bash
+git status && git stash list   # 1. 끊긴 작업부터 — 커밋 안 된 diff 가 곧 중단 지점이다
+git push --dry-run             # 2. '쓰기' 를 확인 — 읽기 확인으로는 안 잡힌다
+pip install flask requests     # 3. 그 다음에야 서버·터널
+```
+
+**`git fetch` 가 된다고 "깃 정상" 이라고 보고하지 마십시오.** 공개 저장소는 읽기가
+무인증이라, 인증이 통째로 증발해도 fetch·pull·ls-remote 는 전부 통과합니다.
+push 에서야 터집니다. 쓰기는 `git push --dry-run` 으로 따로 확인해야 합니다.
+
+토큰을 `work/` 나 저장소에 옮겨 영속시키지 마십시오 — **공개 저장소입니다.**
+재부팅마다 사용자가 한 번 로그인하는 것이 맞는 비용입니다.
+
 ### 이 프로젝트에서 반드시 지켜야 할 규칙
 
 | 규칙 | 내용 |
@@ -664,6 +714,7 @@ python tools/server.py --port 8080
 | 작은섬1·2, 양지팬션·리조텔 | **수정 금지.** 같은 부지라 좌표·주소가 원래 같다 — §17 인계표 참조 |
 | 음식점 3754건 미표시 | ⏸ **보류** (사용자 판단 2026-08-30 — *"잠깐 미뤄두자"*). 사양·데이터는 준비됨. **재개 지시가 올 때까지 착수 금지** — §13-R |
 | 배포 URL 죽음 | `https://culture-reed-dee-rug.trycloudflare.com` 이 2026-08-30 현재 응답 없음. README 배지·§1·`check.sh` `LIVE_URL` 셋 다 이 주소다. **배포 Claude 담당** — 터널을 다시 띄우고 새 호스트명으로 세 곳을 갱신해야 한다 |
+| `tools/server.py` 최적화 중단 diff | 2026-08-30 재부팅이 작업을 초입에서 끊었다. 작업트리에 **docstring 계획 5건 + import 4건뿐인 미완 diff(+19줄, 구현 0줄)** 가 커밋 안 된 채 있다. docstring 이 참조하는 `tools/requirements.txt` 와 `docs/log/2026-08-30-deploy-server-optimize-deploy.md` 는 **존재하지 않는다** — 이대로 커밋 금지. §17 상 개발 Claude 파일이라 완성/되돌림/인계 여부는 **사용자 판단 대기** — 경위는 `docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md`. **커밋만 막는 게 아니다**: 이 diff 가 남아 있으면 `git pull --rebase` 가 「스테이징하지 않은 변경 사항이 있습니다」로 **거부된다**(14:10 확인). 개발 Claude 가 push 한 뒤 그걸 받으려면 이 건을 먼저 정리하거나 `git stash` 해야 한다 |
 
 > 해결된 항목은 §14 규칙대로 **지웁니다.** 2026-08-30 에 취소선으로 남아 있던 3건
 > (`id:41` 주소 · `id:102` 송산포도축제 · `convenience.js` 좌표)과, "(Session 4에서
@@ -1254,4 +1305,7 @@ origin/main 에서 도달 가능  : 104개 / 35.4 MB   ← GitHub 에서 지금�
 
 *최종 업데이트: 2026년 8월 30일 — 문서 전수 감사. 코드와 어긋난 현황 11건 정정,
 끝난 인계 7건 종결 표시, 「끝난 판단은 WORKFLOW.md 로」 규칙 신설.
-자세한 것은 [`docs/log/2026-08-30-dev-workflow-drift-audit.md`](docs/log/2026-08-30-dev-workflow-drift-audit.md)*
+자세한 것은 [`docs/log/2026-08-30-dev-workflow-drift-audit.md`](docs/log/2026-08-30-dev-workflow-drift-audit.md).
+같은 날 재부팅을 세 번 겪고 §12 「컨테이너가 재부팅됐다면」 신설 — 영속 경로 네 개,
+「Claude 메모리는 인계 수단이 아니다」, §13 에 `tools/server.py` 중단 diff 항목 추가
+([`docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md`](docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md))*
