@@ -835,13 +835,55 @@ python tools/server.py --port 8080
 | 작은섬1·2, 양지팬션·리조텔 | **수정 금지.** 같은 부지라 좌표·주소가 원래 같다 — §17 인계표 참조 |
 | 음식점 3754건 미표시 | ⏸ **보류** (사용자 판단 2026-08-30 — *"잠깐 미뤄두자"*). 사양·데이터는 준비됨. **재개 지시가 올 때까지 착수 금지** — §13-R |
 | 배포 URL 죽음 | `https://culture-reed-dee-rug.trycloudflare.com` 이 2026-08-30 현재 응답 없음. README 배지·§1·`check.sh` `LIVE_URL` 셋 다 이 주소다. **배포 Claude 담당** — 터널을 다시 띄우고 새 호스트명으로 세 곳을 갱신해야 한다 |
-| `tools/server.py` 최적화 중단 diff | 2026-08-30 재부팅이 작업을 초입에서 끊었다. 작업트리에 **docstring 계획 5건 + import 4건뿐인 미완 diff(+19줄, 구현 0줄)** 가 커밋 안 된 채 있다. docstring 이 참조하는 `tools/requirements.txt` 와 `docs/log/2026-08-30-deploy-server-optimize-deploy.md` 는 **존재하지 않는다** — 이대로 커밋 금지. §17 상 개발 Claude 파일이라 완성/되돌림/인계 여부는 **사용자 판단 대기** — 경위는 `docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md`. **커밋만 막는 게 아니다**: 이 diff 가 남아 있으면 `git pull --rebase` 가 「스테이징하지 않은 변경 사항이 있습니다」로 **거부된다**(14:10 확인). 개발 Claude 가 push 한 뒤 그걸 받으려면 이 건을 먼저 정리하거나 `git stash` 해야 한다 |
+| ~~`tools/server.py` 최적화 중단 diff~~ | **종결 — 그런 diff 가 없습니다** (2026-08-31 실측). 아래 「없는 diff 를 찾지 마십시오」를 보십시오. 판단(완성/되돌림/인계)은 **필요 없습니다** |
 | `js/`·`css/` 주석의 줄번호 참조 74건 | 문서·`tools/` 는 2026-08-30 에 정리했으나 **코드 주석은 남아 있다.** 확실히 죽은 것은 0건이지만 표본 확인 결과 밀린 것이 맞다. **대부분 주석 안에 앵커가 없어 기계가 못 고친다** — 사람이 한 건씩 '원래 뭘 가리키려 했나' 를 복원해야 하고, 확인 없이 일괄 치환하면 *틀린 참조를 자신 있는 틀린 참조로* 바꾼다. `check.sh` line-ref 검사 대상에서도 일부러 뺐다(상시 FAIL 방지). 경위·정규식: [`docs/log/2026-08-30-dev-line-ref-guard.md`](docs/log/2026-08-30-dev-line-ref-guard.md) §5–§6 |
 
 > 해결된 항목은 §14 규칙대로 **지웁니다.** 2026-08-30 에 취소선으로 남아 있던 3건
 > (`id:41` 주소 · `id:102` 송산포도축제 · `convenience.js` 좌표)과, "(Session 4에서
 > 수정 완료)" 라고 적힌 채 미해결 표에 남아 있던 「비ISO 날짜 축제 캘린더」를 지웠습니다.
 > 무엇을 어떻게 고쳤는지는 `docs/log/2026-08-26-deploy-data-quality-fix.md` 에 있습니다.
+
+### ⚠ 없는 diff 를 찾지 마십시오 — `tools/server.py` 건 종결 (2026-08-31)
+
+08-30 에 「작업트리에 커밋 안 된 `tools/server.py` 미완 diff(+19줄)가 있으니
+완성/되돌림/인계를 판단해 달라」는 인계가 올라왔습니다. **그런 diff 는 없습니다.**
+
+| 확인한 것 | 결과 |
+|---|---|
+| `git status` · `git diff -- tools/server.py` | 둘 다 **비어 있음** |
+| `git stash list` | 없음 |
+| **파일 mtime** | **08-26 13:30** — 08-30 에 아무도 안 건드렸다 |
+| 마지막으로 이 파일을 바꾼 커밋 | `02aebda` (08-26 13:25) |
+| `git log 889bcaf..HEAD -- tools/server.py` | 비어 있음 — 누가 쓸어 담은 것도 아니다 |
+| 저장소 사본 | `/home/jovyan/work/hwaseong_AI` **하나뿐** (`find` 로 확인) |
+
+**mtime 이 결정적입니다.** 08-30 에 누가 쓰고 `git checkout` 으로 되돌렸더라도
+mtime 은 08-30 이 됩니다. 08-26 그대로라는 건 **그 날 아무 일도 없었다**는 뜻입니다.
+
+#### 딸려 온 인과도 틀렸습니다
+
+> "이 diff 가 남아 있으면 `git pull --rebase` 가 매번 막힌다"
+
+**어떤 파일이든 미커밋이면 막힙니다.** `server.py` 와 무관한 git 의 일반 동작입니다.
+`README.md` 한 줄만 더럽혀서 재현했습니다.
+
+```bash
+$ echo x >> README.md && git pull --rebase
+error: 리베이스로 풀하기 할 수 없습니다: 스테이징하지 않은 변경 사항이 있습니다.
+
+$ git -c rebase.autoStash=true pull --rebase     # ← 이러면 통과한다
+```
+
+**해법은 그 파일을 정리하는 게 아니라 `autostash` 입니다.** 두 Claude 가 같은
+작업트리를 쓰는 구조라 「상대가 뭘 고치는 중」인 상태는 늘 있습니다. 원인을
+한 파일로 지목하면 엉뚱한 파일을 되돌리게 됩니다.
+
+> 08-30 14:10 에 실제로 rebase 를 막고 있던 것은 **개발 Claude 의 line-ref 작업
+> 11개 파일**이었습니다. 지금은 전부 커밋·push 됐습니다.
+
+이 건은 §0 의 「증상에서 원인을 추측했으면 재기 전에는 원인으로 적지 마십시오」가
+같은 날 두 번째로 걸린 사례입니다 — `~/.claude/projects` 건과 판박이입니다.
+경위: [`docs/log/2026-08-31-dev-phantom-diff.md`](docs/log/2026-08-31-dev-phantom-diff.md)
 
 ---
 
