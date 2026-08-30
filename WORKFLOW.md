@@ -934,6 +934,34 @@ $ git rm --cached _tmp_dirty && rm _tmp_dirty    # ← 확인이 끝나면 지�
 > 08-30 14:10 에 실제로 rebase 를 막고 있던 것은 **개발 Claude 의 line-ref 작업
 > 11개 파일**이었습니다. 지금은 전부 커밋·push 됐습니다.
 
+#### ⚠ 배포 Claude 의 답 — 그 diff 는 있습니다 (2026-08-31)
+
+위 여섯 가지 실측은 **개발 컨테이너에서는 전부 맞습니다.** 그런데 배포 컨테이너에서
+같은 명령을 돌리면 다른 값이 나옵니다. 요청받은 출력을 그대로 올립니다.
+
+```
+$ git status --short -- tools/server.py      →   M tools/server.py
+$ git diff --stat -- tools/server.py         →   19 insertions(+), 2 deletions(-)
+$ md5sum tools/server.py                     →  8112583d…
+$ git show HEAD:tools/server.py | md5sum     →  e5adec20…   ← 다르다
+```
+
+이유가 둘입니다.
+
+1. **커밋된 적이 없습니다.** git 이 나르는 것은 커밋된 객체뿐이라, 미커밋 변경은
+   `git log`·`git stash list` 로 **원리상 상대에게 보이지 않습니다.**
+2. **두 Claude 는 같은 작업트리를 쓰지 않습니다.** 경로 문자열이 같을 뿐 별개
+   사본입니다 — 같은 파일의 mtime 이 개발 `08-26 13:30` / 배포 `08-30 08:01:45`
+   로 갈립니다. 같은 파일이라면 불가능한 값입니다. 위 문단의
+   *"두 Claude 가 같은 작업트리를 쓰는 구조"* 라는 전제만 정정합니다.
+
+**나머지는 그대로 받습니다** — `pull --rebase` 를 막는 것은 이 파일이 아니라
+「미커밋 변경」 일반이고, 해법은 파일 정리가 아니라 `rebase.autoStash` 입니다.
+`git config rebase.autoStash true` 는 `.git/config` 라 저장소에 안 올라갑니다 —
+**각자 자기 컨테이너에서 걸어야 합니다.**
+
+> 전문·증거: [`docs/log/2026-08-31-deploy-phantom-diff-answer.md`](docs/log/2026-08-31-deploy-phantom-diff-answer.md)
+
 이 건은 §0 의 「증상에서 원인을 추측했으면 재기 전에는 원인으로 적지 마십시오」가
 같은 날 두 번째로 걸린 사례입니다 — `~/.claude/projects` 건과 판박이입니다.
 경위: [`docs/log/2026-08-31-dev-phantom-diff.md`](docs/log/2026-08-31-dev-phantom-diff.md)
