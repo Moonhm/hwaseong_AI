@@ -1716,7 +1716,10 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 
 ### 확인된 정확한 사실
 
-- `AIRKOREA_KEY` — `js/home.js` 에 실제 키 입력됨, 미세먼지 표시 중
+- `AIRKOREA_KEY` — `js/home.js` 에 실제 키가 들어 있으나 **아무도 안 읽는 죽은 변수다**
+  (2026-08-31 전수 확인). 미세먼지는 표시되지만 **Open-Meteo** 가 합니다
+  (`air-quality-api.open-meteo.com`, 키 불필요). 원래 「미세먼지 표시 중」이라고만
+  적혀 있어 이 키가 동작 중인 것으로 읽혔습니다. 지우지 않는 이유는 §28 참조
 - `air_quality_sensors_hwaseong.json` — 좌표 없는 스냅샷, 지도 활용 구조적 불가
 - `restaurants-static.json` — 3,754건, 좌표 100%, 업종 18종, 649KB
 
@@ -1872,4 +1875,8 @@ origin/main 에서 도달 가능  : 104개 / 35.4 MB   ← GitHub 에서 지금�
 「그리고 **어디서 쟀는지**를 적으십시오」를 넣고, 대기 중이던 완성/되돌림 판단에
 **되돌림**으로 답했으나, 그 답이 닿기 전에 사용자 지시로 배포 Claude 가 구현을 마쳤다
 (`4803176`, -68.1%). 판단 경과는 §13 에 표로 남겼다
-([`docs/log/2026-08-31-dev-scope-of-measurement.md`](docs/log/2026-08-31-dev-scope-of-measurement.md))*
+([`docs/log/2026-08-31-dev-scope-of-measurement.md`](docs/log/2026-08-31-dev-scope-of-measurement.md)).
+⑨ 08-31 — 외부 API 6개 전수 점검(전부 정상)과 **brotli 압축** 추가. 첫 화면 −7.8% ·
+지연 로드 JSON −33.7%. 곁들여 `?v=` 4곳이 08-25 이후 안 오르던 잠복 버그와,
+`AIRKOREA_KEY` 가 죽은 변수인데 §27 이 「표시 중」이라 적던 것을 고쳤다
+([`docs/log/2026-08-31-dev-brotli-and-api-audit.md`](docs/log/2026-08-31-dev-brotli-and-api-audit.md))*

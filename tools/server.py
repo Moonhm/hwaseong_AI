@@ -28,6 +28,15 @@ docs/log/2026-08-31-deploy-server-optimize.md
   ④ waitress WSGI (스레드 8) — 31개 동시 6 요청 209ms → 110ms. 개발 서버는 --dev 로만
   ⑤ 기동 시 상류 프리워밍 → 첫 방문자가 상류 응답을 기다리지 않는다
 
+2026-08-31 추가 (개발 Claude) — 근거·실측은
+docs/log/2026-08-31-dev-brotli-and-api-audit.md
+  ⑥ brotli 압축 (품질 9). gzip 과 함께 캐시하고 클라이언트가 br 을 받으면 그쪽을 준다.
+       첫 화면 31개          279,886 B → 258,083 B  (-7.8%)
+       지연 로드 지역화폐 JSON  836,985 B → 554,929 B  (-33.7%)
+     Cloudflare Quick Tunnel 은 무료라 zone 설정이 없어 **edge 가 br 을 안 해 준다**
+     (Accept-Encoding: br 을 보내도 gzip 이 오는 것으로 실측). 원본이 해야 한다.
+     brotli 모듈이 없으면 예전처럼 gzip 만 쓴다 — waitress 와 같은 방식이다.
+
 ⚠ 위 숫자는 전부 이 서버를 띄워 실제로 잰 값입니다. 처음 이 docstring 에 적혀
   있던 "6.46MB → 1.28MB (80%)" 는 **재지 않고 쓴 값**이었습니다 — 4.2MB 짜리
   지연 로드 JSON 을 첫 화면 몫으로 세고 있었습니다. 고칠 때는 다시 재십시오.
@@ -42,7 +51,20 @@ import time
 import requests
 import warnings
 
-warnings.filterwarnings("ignore")
+# 상류 주차장 API(smartparking.hscity.go.kr)가 **중간 인증서를 안 딸려 보낸다.**
+# 그래서 아래 두 곳이 verify=False 다. 2026-08-31 실측 —
+#   curl → SSL certificate problem: unable to get local issuer certificate
+# verify=True 로 "고치면" 주차장이 통째로 사라진다. 되돌리기 전에 먼저 재라.
+# 위험은 낮다: 받는 것이 공개 주차 현황이고 우리가 보내는 비밀이 없다.
+#
+# ⚠ 전에는 filterwarnings("ignore") 로 **모든 경고**를 껐다. 그러면 이 건과
+#   무관한 Deprecation·Runtime 경고까지 같이 삼켜 진짜 문제가 조용해진다.
+#   끄려던 것 하나만 정확히 끈다.
+try:
+    from urllib3.exceptions import InsecureRequestWarning
+    warnings.filterwarnings("ignore", category=InsecureRequestWarning)
+except ImportError:                      # pragma: no cover
+    warnings.filterwarnings("ignore", message=".*[Uu]nverified HTTPS.*")
 
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -254,10 +276,27 @@ _GZIP_MIN     = 1024                 # 이보다 작으면 헤더 오버헤드�
 _GZIP_LEVEL   = 6                    # 9 는 눈에 띄게 느린데 몇 % 더 줄 뿐이다
 _GZ_CACHE_MAX = 64 * 1024 * 1024     # 압축본 보관 상한
 
-_gz_cache = {}                       # ETag -> 압축 바이트
+# ── brotli (2026-08-31 개발 Claude 추가) ──────────────────────────────────
+# 없어도 돌아간다. 못 부르면 gzip 만 쓰던 예전 동작 그대로다 — waitress 와 같은 방식.
+try:
+    import brotli as _brotli
+except ImportError:                  # pragma: no cover
+    try:
+        import brotlicffi as _brotli
+    except ImportError:
+        _brotli = None
+
+# 품질 9 를 고른 근거(이 저장소 파일로 실측, 2026-08-31):
+#   첫 화면 31개   gzip-6 279,886 B → br-9 258,083 B  (-7.8%)   파일당 최대 31ms
+#   지역화폐 4.2MB gzip-6 836,985 B → br-9 554,929 B  (-33.7%)  407ms
+# q11 은 같은 4.2MB 에 13.9초가 걸려 쓸 수 없다. q6 은 빠르지만 첫 화면 -3.8% 에 그친다.
+# 압축본을 ETag 로 캐시하므로 이 시간은 파일당 1회다 — 그래서 q9 가 감당된다.
+_BR_QUALITY = 9
+
+_gz_cache = {}                       # (ETag, 인코딩) -> 압축 바이트
 _gz_bytes = 0
 _gz_lock  = threading.Lock()
-_gz_stat  = {"hit": 0, "miss": 0, "skip": 0}
+_gz_stat  = {"hit": 0, "miss": 0, "skip": 0, "br": 0, "gzip": 0}
 
 
 def _gzip_bytes(raw):
@@ -268,10 +307,51 @@ def _gzip_bytes(raw):
     return buf.getvalue()
 
 
-def _apply_gzip(resp, gz):
-    resp.set_data(gz)
-    resp.headers["Content-Encoding"] = "gzip"
-    resp.headers["Content-Length"]   = str(len(gz))
+def _accepted(header):
+    """Accept-Encoding 을 토큰 집합으로. `br;q=0` 은 '거부' 라서 빼야 한다.
+
+    예전 코드는 `"gzip" not in header` 로 봤는데, 그러면 `gzip;q=0`(명시적 거부)을
+    허용으로 읽는다. 실제 브라우저가 그렇게 보내는 일은 드물지만, 여기서 틀리면
+    **클라이언트가 못 푸는 인코딩을 보내 화면이 통째로 깨진다.** 값싸게 정확히 한다.
+    """
+    out = set()
+    for part in (header or "").split(","):
+        tok, _, params = part.strip().partition(";")
+        tok = tok.strip().lower()
+        if not tok:
+            continue
+        q = 1.0
+        for p in params.split(";"):
+            k, _, v = p.strip().partition("=")
+            if k.strip().lower() == "q":
+                try:
+                    q = float(v)
+                except ValueError:
+                    q = 0.0
+        if q > 0:
+            out.add(tok)
+    return out
+
+
+def _pick_encoding(accept):
+    """br 을 우선한다. 클라이언트가 못 받거나 모듈이 없으면 gzip."""
+    if _brotli is not None and ("br" in accept or "*" in accept):
+        return "br"
+    if "gzip" in accept or "*" in accept:
+        return "gzip"
+    return None
+
+
+def _compress_bytes(raw, enc):
+    if enc == "br":
+        return _brotli.compress(raw, quality=_BR_QUALITY)
+    return _gzip_bytes(raw)
+
+
+def _apply_encoding(resp, body, enc):
+    resp.set_data(body)
+    resp.headers["Content-Encoding"] = enc
+    resp.headers["Content-Length"]   = str(len(body))
     vary = resp.headers.get("Vary") or ""
     if "Accept-Encoding" not in vary:
         resp.headers["Vary"] = (vary + ", Accept-Encoding").lstrip(", ")
@@ -279,29 +359,36 @@ def _apply_gzip(resp, gz):
 
 @app.after_request
 def _compress(resp):
-    """텍스트 응답만 gzip 으로 내보낸다.
+    """텍스트 응답을 brotli(없으면 gzip)로 내보낸다.
 
     ⚠ **ETag 를 바꾸지 않는다.** 압축본에 `-gz` 를 붙이는 구현이 흔한데, 그러면
       브라우저가 보낸 `If-None-Match` 와 어긋나 **304 가 영영 안 나온다.**
       `index.html` 은 `?v=` 가 없어 `no-cache` 로 나가므로 재방문마다 재검증하는데,
       그 304 를 깨면 02aebda 가 줄여 놓은 왕복이 되살아난다. 대신 `Vary:
       Accept-Encoding` 을 붙여 캐시가 인코딩별로 나눠 갖게 한다.
+
+    ⚠ **캐시 키에 인코딩을 넣는다.** br 을 더하면서 키를 ETag 하나로 두면 br 로
+      압축한 바이트를 gzip 클라이언트에 그대로 보내게 된다 — 화면이 통째로 깨지고
+      원인이 안 보인다. 키는 `(ETag, 인코딩)` 이다.
     """
     if resp.status_code != 200 or resp.headers.get("Content-Encoding"):
         return resp
     ctype = (resp.headers.get("Content-Type") or "").split(";")[0].strip()
     if ctype not in _GZIP_TYPES:
         return resp                      # 이미지·폰트는 다시 압축해 봐야 커지기만 한다
-    if "gzip" not in (request.headers.get("Accept-Encoding") or ""):
+    enc = _pick_encoding(_accepted(request.headers.get("Accept-Encoding")))
+    if enc is None:
         return resp
 
     etag = resp.headers.get("ETag")      # 정적 파일에만 있다. API 응답에는 없다
+    key  = (etag, enc)
     if etag:
         with _gz_lock:
-            hit = _gz_cache.get(etag)
+            hit = _gz_cache.get(key)
         if hit is not None:
             _gz_stat["hit"] += 1
-            _apply_gzip(resp, hit)
+            _gz_stat[enc] += 1
+            _apply_encoding(resp, hit, enc)
             return resp
 
     resp.direct_passthrough = False      # 파일 래퍼를 실제 바이트로 바꾼다
@@ -309,19 +396,20 @@ def _compress(resp):
     if len(raw) < _GZIP_MIN:
         _gz_stat["skip"] += 1
         return resp
-    gz = _gzip_bytes(raw)
-    if len(gz) >= len(raw):              # 이미 압축된 내용이면 그대로 보낸다
+    body = _compress_bytes(raw, enc)
+    if len(body) >= len(raw):            # 이미 압축된 내용이면 그대로 보낸다
         _gz_stat["skip"] += 1
         return resp
 
     _gz_stat["miss"] += 1
+    _gz_stat[enc] += 1
     if etag:
         global _gz_bytes
         with _gz_lock:
-            if _gz_bytes + len(gz) <= _GZ_CACHE_MAX:
-                _gz_cache[etag] = gz
-                _gz_bytes += len(gz)
-    _apply_gzip(resp, gz)
+            if _gz_bytes + len(body) <= _GZ_CACHE_MAX:
+                _gz_cache[key] = body
+                _gz_bytes += len(body)
+    _apply_encoding(resp, body, enc)
     return resp
 
 
@@ -458,12 +546,13 @@ def healthz():
         up = {k: {"age": round(now - v["at"], 1), "n": len(v["data"])}
               for k, v in _UP_CACHE.items()}
     with _gz_lock:
-        gz = dict(_gz_stat, entries=len(_gz_cache), bytes=_gz_bytes)
+        gz = dict(_gz_stat, entries=len(_gz_cache), bytes=_gz_bytes,
+                  brotli=("q%d" % _BR_QUALITY) if _brotli else "미설치(gzip 만)")
     return jsonify({
         "ok": True,
         "uptime": round(now - _STARTED, 1),
         "upstream": up,
-        "gzip": gz,
+        "compress": gz,      # 2026-08-31 br 추가로 "gzip" → "compress" 로 이름을 맞췄다
     }), 200, HEADERS
 
 

@@ -76,7 +76,7 @@ function renderNearbyResult(myLat, myLng, gen) {
 
   /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
   if (!parks.length) {
-    fetch('js/parking-static.json?v=2026082502').then(function (r) { return r.json(); }).then(function (d) {
+    fetch('js/parking-static.json?v=20260826159').then(function (r) { return r.json(); }).then(function (d) {
       if (gen != null && gen !== _nearbyGen) return;
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
       if (parkingData.length) renderNearbyResult(myLat, myLng, gen);
@@ -182,10 +182,17 @@ function renderNearbyResult(myLat, myLng, gen) {
 
 /* ══════════════════════════════════════════════════
    홈 날씨·미세먼지 바
-   날씨: Open-Meteo API (무료, API 키 불필요)
-   미세먼지: 에어코리아 getMsrstnAcctoRltmMesureDnsty
-             data.go.kr 에서 '한국환경공단_에어코리아_대기오염정보' 활용신청(무료)
-             발급받은 키를 AIRKOREA_KEY에 입력하면 동탄 측정소 PM2.5 표시
+   날씨    : Open-Meteo   api.open-meteo.com            (키 불필요)
+   미세먼지: Open-Meteo   air-quality-api.open-meteo.com (키 불필요) — renderWeatherBar 참조
+
+   ⚠ 아래 AIRKOREA_KEY 는 **아무도 안 읽는 죽은 변수다** (2026-08-31 전수 확인).
+     에어코리아 연동을 계획하다가 키가 필요 없는 Open-Meteo 로 갈아탔고, 선언만 남았다.
+     지우지 않는 이유는 §28 이다 — 이 값은 이미 공개 히스토리에 들어가 있어
+     HEAD 에서 지워도 회수되지 않는다. 지우면 보안은 그대로고 나중 연동용 값만 잃는다.
+     쓰려면 data.go.kr '한국환경공단_에어코리아_대기오염정보' 의
+     getMsrstnAcctoRltmMesureDnsty 를 부르면 된다(동탄 측정소).
+     **`WORKFLOW.md` §27 이 「미세먼지 표시 중」이라고 적고 있었는데 틀렸다** —
+     표시는 되지만 이 키가 아니라 Open-Meteo 가 한다. 08-31 에 고쳤다.
 ══════════════════════════════════════════════════ */
 var AIRKOREA_KEY = 'zH1Ajghx0euybdD9BbPBYpBTNTpGscQcGPFtoHSWV9ZmP3KnpVhJxfVO01seBplRXgMefHYZvm/VxSeNfoRtNQ==';
 

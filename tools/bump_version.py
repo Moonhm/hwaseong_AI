@@ -46,6 +46,15 @@ PAT = re.compile(r"\?v=(\d+)")
 DL_TARGET = ROOT / "js" / "datalab.js"
 DL_PAT = re.compile(r"(DL_VER\s*=\s*')(\d+)(')")
 
+# js/*.js 안에 직접 박힌 ?v= 도 올린다 (2026-08-31 개발 Claude 추가).
+#   fetch('js/parking-static.json?v=20260825') 처럼 JS 가 JSON 을 받을 때 붙이는 값이다.
+#   이 스크립트가 index.html 만 보고 있어서 **2026-08-25 이후 한 번도 안 올랐다** —
+#   boot.js·parking.js·ui.js 가 20260825, home.js 가 2026082502 로 갈려 있었다.
+#   지금까지 사고가 안 난 것은 그 두 JSON 이 그 뒤로 안 바뀌었기 때문이지
+#   구조가 안전해서가 아니다. 배포 Claude 가 parking-static.json 을 갱신하는 순간
+#   재방문자는 최대 1시간(서버가 .json 에 주는 max-age) 낡은 값을 본다.
+JS_DIR = ROOT / "js"
+
 
 def main():
     ap = argparse.ArgumentParser(description="index.html 의 ?v= 를 올린다")
@@ -86,6 +95,21 @@ def main():
             print("   js/datalab.js DL_VER → %d" % nxt)
         else:
             print("⚠ js/datalab.js 의 DL_VER 를 %d곳 찾았습니다(1곳이어야 함) — 손으로 확인하십시오." % cnt)
+
+    # js/*.js 안에 박힌 ?v= 동기화
+    if JS_DIR.is_dir():
+        touched = 0
+        for f in sorted(JS_DIR.glob("*.js")):
+            s = f.read_text(encoding="utf-8")
+            if not PAT.search(s):
+                continue
+            s2, c = PAT.subn("?v=%d" % nxt, s)
+            if c:
+                f.write_text(s2, encoding="utf-8")
+                print("   %s ?v= %d곳 → %d" % (f.relative_to(ROOT), c, nxt))
+                touched += c
+        if touched:
+            print("   js/ 안의 ?v= %d곳 갱신" % touched)
 
     # 쓴 뒤 다시 읽어 확인한다 — sed 사고의 재발을 막는 핵심이다.
     back = TARGET.read_text(encoding="utf-8")
