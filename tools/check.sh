@@ -92,7 +92,7 @@ if [ $HAVE_NODE = 1 ] && [ $HAVE_GIT = 1 ]; then
   run "편의정보 캐시 버전 (conv-cache)" node tools/check_cache.js
 else
   skip "편의정보 캐시 버전 (conv-cache)" \
-    "node 또는 git 이 없다 — js/convenience.js 를 고치고 CONV_CACHE_VER(js/conv_map.js:74)를 \
+    "node 또는 git 이 없다 — js/convenience.js 를 고치고 js/conv_map.js 의 CONV_CACHE_VER 를 \
 안 올린 경우를 못 본다. 재방문 사용자에게 옛 데이터가 계속 나가도 아무 흔적이 안 남는다."
 fi
 
@@ -220,6 +220,46 @@ log_hash_guard() {
   echo "  i     '- 커밋:' 머리줄 ${head}/${all}개 — 나머지는 규칙 이전 파일이라 소급 안 함(§0)"
   return $bad
 }
+
+# ── 5-b. 문서의 `파일:줄` 참조 (git 불필요) ─────────────────────────────────
+# log-hash 와 같은 종류의 함정인데 이쪽이 더 자주 터진다. 해시는 amend·rebase 를
+# 해야 바뀌지만, 줄번호는 남이 그 파일 위쪽에 한 줄만 넣어도 밀린다. 그리고 밀려도
+# 여전히 '존재하는 줄' 을 가리키므로 없는 참조로는 안 걸린다 — 엉뚱한 코드를
+# 자신 있게 가리키는 상태가 된다. 사람 눈으로는 절대 안 걸린다.
+#   2026-08-30 실측: 오전에 전수 감사로 맞춘 참조가 같은 날 오후 배포 커밋
+#   (calendar.js +24줄 등) 하나로 5건 밀렸다. 반나절이다.
+# 그래서 값이 맞는지를 보지 않고 '줄번호로 가리키는 것' 자체를 막는다.
+# 인용해야 하면 백틱 밖에 평문으로 적으면 된다 — 백틱은 '지금 거기 있다' 는 표기다.
+line_ref_guard() {
+  local bad=0 seen=0 f ln body ref path num total
+  for f in WORKFLOW.md README.md tools/check.sh; do
+    [ -f "$f" ] || continue
+    # ``` 로 감싼 블록은 건너뛴다. 예시·프로그램 출력을 그대로 붙이는 자리라
+    # '이렇게 쓰지 마라' 는 반례까지 걸려서 규칙을 적는 것이 불가능해진다.
+    while IFS=: read -r ln body; do
+      for ref in $(printf '%s' "$body" \
+            | grep -oE '`[^`]*([A-Za-z0-9_/-]\.[a-z]{1,6}|\.gitignore):[0-9]+[^`]*`' | tr -d '`'); do
+        path=${ref%%:*}; num=${ref##*:}; num=${num%%[!0-9]*}
+        [ -n "$num" ] || continue
+        case "$path" in *[!A-Za-z0-9_./-]*) continue ;; esac
+        seen=$((seen + 1))
+        echo "  FAIL $f:$ln  \`$path:$num\` — 줄번호로 가리켰다"
+        if [ -f "$path" ]; then
+          total=$(wc -l < "$path")
+          echo "         지금 $path:$num 에 있는 것: $(sed -n "${num}p" "$path" | sed 's/^[[:space:]]*//' | cut -c1-60)"
+          echo "         (총 ${total}줄. 맞아 보여도 남이 위에 한 줄만 넣으면 밀린다)"
+        else
+          echo "         그런 파일이 없다 — 이동했거나 이름이 바뀌었다"
+        fi
+        echo "         식별자로 바꿔라:  \`$path\` 의 \`함수명\`   (§0 「줄번호로 가리키지 마십시오」)"
+        bad=1
+      done
+    done < <(awk '/^ *```/ {fence = !fence; next} !fence && /`/ {print NR": "$0}' "$f" | sed 's/: /:/')
+  done
+  [ $bad = 0 ] && echo '  i     문서가 줄번호로 가리키는 곳 0건 — 전부 식별자 참조다 (``` 코드블록은 제외)'
+  return $bad
+}
+run "문서의 줄번호 참조 (line-ref)" line_ref_guard
 
 if [ $HAVE_GIT = 1 ]; then
   run "캐시 버스팅 이력 (version-guard)" version_guard

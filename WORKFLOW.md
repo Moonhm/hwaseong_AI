@@ -149,6 +149,53 @@ git commit  →  git pull --rebase  →  git push  →  여기서 git log -1 --f
 > *지난 기록을 덧쓰거나 다시 쓰지 말라*는 뜻이지, 틀린 사실을 그대로 두라는 뜻이
 > 아닙니다. 가리키는 커밋이 없는 해시는 §0 이 세운 목적 자체를 무너뜨립니다.
 
+#### ⚠ 줄번호로 가리키지 마십시오 — `파일:줄` 은 남이 고치면 조용히 밀립니다 (2026-08-30 신설)
+
+커밋 해시와 **똑같은 종류의 함정**인데, 이쪽이 더 자주 터집니다.
+해시는 amend·rebase 를 해야 바뀌지만, **줄번호는 남이 그 파일 위쪽에 한 줄만 넣어도 밀립니다.**
+게다가 밀린 줄번호는 여전히 **존재하는 줄**을 가리키므로 「없는 참조」로 안 걸립니다.
+엉뚱한 코드를 자신 있게 가리키는 상태가 됩니다.
+
+바로 그날 실측된 예입니다.
+
+```
+08-30 오전  개발 Claude 가 전수 감사로 문서를 코드에 맞춤 — 줄번호 그대로 적음
+08-30 오후  배포 Claude 가 축제 숨김 작업 (calendar.js +24줄, home/tourism/living/index.html)
+08-30 저녁  같은 날 안에 5건이 밀었다 ↓
+```
+
+| 문서가 가리킨 곳 | 실제로 그게 있는 곳 | 밀린 자리에 있던 것 |
+|---|---|---|
+| `js/calendar.js` 264 (`hasFest`) | 288 | `removeChild` 루프 |
+| `js/tourism.js` 244 (스태거 `0.045s`) | 323 | 주석 |
+| `js/home.js` 189 (`AIRKOREA_KEY`) | 190 | 주석 구분선 |
+| `js/parking.js` 292 (`ℹ`) | 366 | — |
+| `index.html` 136 (`©`) | 202 | `</div>` |
+
+**하루입니다.** 감사로 맞춰 놓은 것이 반나절 만에 어긋났습니다.
+
+##### 그래서 이렇게 씁니다
+
+```
+✗  `js/calendar.js:288` 이 has-event 를 붙인다
+✓  `js/calendar.js` 가 `hasFest` 로 has-event 를 붙인다
+```
+
+**식별자(함수명·변수명·문자열)로 가리키십시오.** 남이 위에 줄을 넣어도 안 밀리고,
+`grep -rn "hasFest" js/` 한 번이면 찾아집니다. 줄번호보다 오히려 빠릅니다.
+
+지난 일을 서술할 때도 마찬가지입니다 — 「그때 140번째 줄이 `},,` 였다」는
+지금 140번째 줄과 아무 상관이 없어서 읽는 사람을 헷갈리게 합니다.
+**그 자리에 무엇이 있었는지**(`id:227` 항목)를 적으십시오.
+
+`tools/check.sh` 의 **line-ref** 검사가 이제 이것을 잡습니다 — 백틱으로 감싼
+`파일:줄` 을 전부 FAIL 로 막습니다. 규칙만 두면 어떻게 되는지는 바로 위 표가 보여 줍니다.
+§27-H 는 2026-08-30 오전에 이미 「줄번호로 가리키지 말고 함수명으로」라고
+적어 두었는데, **검사가 없어서 같은 날 오후에 5건이 밀렸습니다.**
+
+> 예외는 없습니다. 줄번호를 꼭 인용해야 하면 **백틱 밖에** 평문으로 적으십시오
+> (예: `tools/check.sh` 의 187번째 줄). 백틱은 '지금 거기 있다'는 표기입니다.
+
 기준은 「나중에 누가 **왜 그랬는지 궁금해할 것인가**」입니다.
 `'통합 정보' → '통합 정보 플랫폼'` 에는 궁금할 '왜'가 없습니다 — 커밋 메시지면 충분합니다.
 반면 `화면 전환을 전체 폭이 아니라 18% 로 한 이유` 는 적어 두지 않으면 다음 사람이
@@ -202,7 +249,7 @@ bash tools/check.sh; echo "exit: $?"
 ```
 
 **`tools/check.sh` 를 push 와 같은 호출에 묶지 마십시오.** 두 번째 사고 때
-`check.sh` 는 제 몫을 했습니다(`FAIL 2 문법 오류 @datalab.js:23`). 그런데
+`check.sh` 는 제 몫을 했습니다(`datalab.js` 문법 오류를 FAIL 2 로 찍었습니다). 그런데
 push 가 같은 호출에 묶여 있어 **결과를 읽기 전에 이미 나갔습니다.**
 검사는 판정을 보고 사람이 다음 단계를 정하라고 있는 것입니다.
 
@@ -352,8 +399,8 @@ AI Workflow      Claude Sonnet 4.6 × 2 인스턴스 (개발 + 배포)
 | 문자 | 어디 | 왜 그대로 두나 |
 |------|------|---------------|
 | `♥` 6곳 | `favorites.js` `map.js` `parking.js` `localcurrency.js` | `'♥ 저장됨' : '♡ 저장'` **짝**입니다. ♥ 에만 붙이면 빨간 하트가 되고 ♡ 는 흑백으로 남아 대비가 깨집니다 |
-| `ℹ` 1곳 | `parking.js:292` | 인라인 `color:#6366F1` 이 걸려 있습니다. 텍스트 글리프라서 CSS 색이 먹는 것이고, 컬러 이모지가 되면 그 지정이 무시됩니다 |
-| `©` 1곳 | `index.html:136` | 저작권 표기 문장 안입니다. 컬러로 만들 이유가 없습니다 |
+| `ℹ` 1곳 | `js/parking.js` 의 `feeNote` 줄 | 인라인 `color:#6366F1` 이 걸려 있습니다. 텍스트 글리프라서 CSS 색이 먹는 것이고, 컬러 이모지가 되면 그 지정이 무시됩니다 |
+| `©` 1곳 | `index.html` 푸터 `데이터 출처:` | 저작권 표기 문장 안입니다. 컬러로 만들 이유가 없습니다 |
 | `⚠` 3곳 | `home.js` `ui.js` `20-map.css` | **전부 코드 주석**입니다. 화면에 안 나옵니다 |
 
 ##### 확인 방법
@@ -496,7 +543,7 @@ python3 tools/bump_version.py && bash tools/check.sh; echo $?
 | 별점 데이터 | 알고리즘 생성 (Selenium 환경 없음) | Kakao Place API 실제 별점 연동 |
 | 장소 사진 | git 추적 제외 완료 — 로컬·배포 서버에만 보관 (섹션 11 참고) | CDN 적용 또는 Cloudflare Images |
 | ~~Geocoder 캐싱~~ | ✅ **해결** — `js/conv_map.js` 가 `CONV_CACHE_VER` 로 localStorage 캐싱 중 | — |
-| ~~달력 날짜 연동~~ | ✅ **해결** — `js/calendar.js:264` 가 `hasFest` 로 `has-event` 를 동적 마킹 | — |
+| ~~달력 날짜 연동~~ | ✅ **해결** — `js/calendar.js` 가 `hasFest` 로 `has-event` 를 동적 마킹 | — |
 | 맛집 지도 칩 | 데이터는 `js/restaurants-static.json` 3,754건으로 있으나 **읽는 코드가 없다** | ⏸ **보류** (2026-08-30 사용자 판단). 사양은 §13-R |
 
 ---
@@ -549,7 +596,7 @@ python3 tools/bump_version.py && bash tools/check.sh; echo $?
 
 ## 11. assets/ 이미지 관리 정책
 
-`assets/images/` 는 **git 추적 제외** — `.gitignore:7` 에 등록됨.
+`assets/images/` 는 **git 추적 제외** — `.gitignore` 의 `assets/` 줄에 등록됨.
 현황 수치(773개 · 32MB)는 §28 이, 사진 장수는 §18 이 갖습니다 — 여기 또 적으면 또 어긋납니다.
 사진 파일은 **로컬 및 배포 서버에만 보관**하며, git push 대상이 아닙니다.
 
@@ -661,7 +708,7 @@ push 에서야 터집니다. 쓰기는 `git push --dry-run` 으로 따로 확인
 
 | 항목 | 값 |
 |------|----|
-| CONV_CACHE_VER | `v7` (`js/conv_map.js:92`) |
+| CONV_CACHE_VER | `v7` — `js/conv_map.js` 의 `var CONV_CACHE_VER` |
 | 관광지 | 151개 — 2026-08-26 영화관 8곳을 편의정보로 옮겼다(id 40·159~165 제거) |
 | 문화재 | 42개 (id: 234–275, 2026-08-26 추가) |
 | 축제 | 50개 (id: 42–133, 276–277, 2026-08-26 연등음악축제·뱃놀이축제 추가) |
@@ -688,7 +735,7 @@ push 에서야 터집니다. 쓰기는 `git push --dry-run` 으로 따로 확인
 전문은 [`docs/log/2026-08-25-dev-server-scope.md`](docs/log/2026-08-25-dev-server-scope.md) 머리에 있습니다.
 
 > **왜 여기 적어 두는가** — 2026-08-24 감사가 "폐기·재발급 권고"로 올렸고
-> (`docs/log/2026-08-24-both-session5.md:82`), 그 뒤 사용자가 종결했는데 **결론이
+> (`docs/log/2026-08-24-both-session5.md` 의 「Kakao REST API 키 평문 노출」), 그 뒤 사용자가 종결했는데 **결론이
 > 로그에만 남아** 2026-08-30 감사가 같은 건을 다시 심각 항목으로 올렸습니다.
 > 로그는 시간순이라 나중 결론이 앞 기록을 덮어 주지 않습니다. **끝난 판단은
 > `WORKFLOW.md` 로 올려야** 다음 사람이 같은 왕복을 반복하지 않습니다.
@@ -897,7 +944,7 @@ Claude는 컨텍스트 윈도우 한계로 인해 대화가 길어지면 새 세
 
 문제는 구조 작업에 취향 결정이 딸려 온다는 점입니다. 실제로 개발 Claude가 임의로 정한 값들이 있습니다 —
 화면 전환 `0.26s`·이동 거리 `18%`(`css/00-base.css`), 눌림 `scale(0.90)`/`(0.96)`(`css/90-misc.css`),
-스태거 간격 `0.045s`(`js/tourism.js:244`). 전부 근거는 있지만 **정답은 아닙니다.**
+스태거 간격 `0.045s`(`js/tourism.js` 의 `itemHtml()`). 전부 근거는 있지만 **정답은 아닙니다.**
 
 그래서 이렇게 합니다.
 
@@ -1040,7 +1087,7 @@ Kakao Local API 5종(keyword / address / coord2address / coord2regioncode / cate
 
 ### ⚠ 쉼표를 두 번 찍지 마십시오 — 문법 오류가 아니라서 아무도 못 잡습니다
 
-2026-08-26 `js/data.js:140` 이 `},,` 로 끝나 **앱 절반이 죽어 있었습니다.**
+2026-08-26 `js/data.js` 의 `id:227` 항목이 `},,` 로 끝나 **앱 절반이 죽어 있었습니다.**
 발견 경위와 실측은 [`docs/log/2026-08-26-dev-heritage-wiring-emoji.md`](docs/log/2026-08-26-dev-heritage-wiring-emoji.md).
 
 ```js
@@ -1190,7 +1237,7 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 
 ### 확인된 정확한 사실
 
-- `AIRKOREA_KEY` — `js/home.js:189`에 실제 키 입력됨, 미세먼지 표시 중
+- `AIRKOREA_KEY` — `js/home.js` 에 실제 키 입력됨, 미세먼지 표시 중
 - `air_quality_sensors_hwaseong.json` — 좌표 없는 스냅샷, 지도 활용 구조적 불가
 - `restaurants-static.json` — 3,754건, 좌표 100%, 업종 18종, 649KB
 
@@ -1219,7 +1266,7 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 축제 사진 44장은 축제 카드가 CSS 배너를 써서 화면에 안 나온다.
 
 > ✅ **둘 다 처리됨** (2026-08-30 확인).
-> `tools/build_photo_index.py:39,59-80` 이 `js/convenience.js` 를 읽어 인덱스에 넣습니다
+> `tools/build_photo_index.py` 의 `CONV_JS` 가 `js/convenience.js` 를 읽어 인덱스에 넣습니다
 > (지금 `byName` 에 캠핑 9·호텔 8). 축제 상세는 `js/tourism.js` 의 `fd-hero--photo` 로
 > 실사진을 띄웁니다 — 축제 50건 중 **47건이 사진 보유**이고, 없을 때만 CSS 그라데이션
 > (`IMG_CLASSES_FD`)으로 떨어집니다.
@@ -1228,7 +1275,7 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 
 `address:"경기도 화성시"` 로 시(市) 단위에서 끊긴 관광지 31건 + 구 누락 1건을 읍면동까지 채웠다.
 `address:""` 는 애초에 0건이었다 — 앞선 배포 보고가 틀렸다.
-`js/home.js:101` 이 '경기도 화성시' 접두어를 정규식으로 떼면서 문자열이 통째로 비어
+`js/home.js` 의 `tAddr` 이 '경기도 화성시' 접두어를 정규식으로 떼면서 문자열이 통째로 비어
 빈 값처럼 보였을 뿐이다.  **시 단위에서 끊긴 주소 32 → 0건**
 
 **개발 Claude가 '데이터 쪽'이라며 넘긴 3건은 실측 결과 셋 다 코드 쪽이다:**
@@ -1237,23 +1284,24 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 |------|------|
 | 지역화폐 좌표 74.8% 중복 | **정상 데이터.** 20,489건 중 19,379건이 같은 좌표+같은 주소(같은 건물). 241건 최다점은 카림에비뉴 한 건물이다. 좌표는 맞고, 마커가 겹치는 렌더링 문제다 |
 | 축제 `status` 50건 `upcoming` | **죽은 필드.** `'ongoing'` 을 읽는 분기가 둘 있으나 데이터에 `'ongoing'` 이 0건이라 안 탄다. 수집 시점 값을 굳히는 구조가 문제라 `date` 로 런타임 계산해야 한다 |
-| 미확정 날짜 11건 '1일' 고정 | **파서 버그.** `js/calendar.js:17-24` `_parseFestDate()` 가 `"2026년 10월 중"` 을 `2026-10-01` 로 바꾸고 근사임을 안 알려, `js/today.js:141` 이 없는 `D-36` 을 찍는다 |
+| 미확정 날짜 11건 '1일' 고정 | **파서 버그.** `js/calendar.js` 의 `_parseFestDate()` 가 `"2026년 10월 중"` 을 `2026-10-01` 로 바꾸고 근사임을 안 알려, `js/today.js` 가 없는 `D-36` 을 찍는다 |
 
 > ✅ **셋 다 처리됨** (2026-08-30 확인).
 > ① 지역화폐 마커 겹침 → `fd71dd4` 로 해소 (`docs/log/2026-08-26-dev-lc-marker-cluster.md`).
-> ② 축제 `status` → `js/calendar.js:45` `festStatus(place, now)` 가 `date` 로 런타임 계산한다.
+> ② 축제 `status` → `js/calendar.js` 의 `festStatus(place, now)` 가 `date` 로 런타임 계산한다.
 >   `data.js` 의 `status:"upcoming"` 50건은 이제 **아무도 안 읽는 죽은 필드**다(데이터 쪽 정리 건).
 >   여러 날 축제 `date` 에 범위(`~`)가 든 것이 10건 들어와 있다.
-> ③ `_parseFestDate()` → `js/calendar.js:21-22` 가 `_parseFestDateMeta()` 로 **근사 여부를 따로 알린다.**
+> ③ `_parseFestDate()` → `js/calendar.js` 가 `_parseFestDateMeta()` 로 **근사 여부를 따로 알린다.**
+>   `js/today.js` 의 `D-N` 표기는 그 뒤 사라졌다 — 지금 이 파일에 `D-` 문자열이 0건이다.
 
 별점(`rating`·`reviewCount` 201건이 15종 값에 몰림)은 §4·§9 에 이미 적힌 알려진 한계다.
 정렬·추천에는 안 쓰이고 표시만 3곳(`tourism.js` · `home.js` · `map.js`)이다.
 `js/ratings.json` 은 `tools/check.sh` 의 **`live_drift()`** 가 배포본과 sha256 대조 중이라
 **한 바이트도 건드리면 안 된다.** (`--live` 를 줬을 때만 돈다)
 
-> 2026-08-30 정정 — 원래 `tools/check.sh:187` 이라고 적혀 있었습니다. `9fae4be` 시점에는
-> 맞았지만 그 뒤 검사가 늘면서 밀렸습니다. **검사 스크립트는 줄번호로 가리키지 말고
-> 함수명으로 가리키십시오** — `docs/log` 의 `index.html:3891` 류가 같은 이유로 죽었습니다.
+> 2026-08-30 정정 — 원래 tools/check.sh 의 187번째 줄이라고 적혀 있었습니다. `9fae4be`
+> 시점에는 맞았지만 그 뒤 검사가 늘면서 밀렸습니다. **줄번호로 가리키지 마십시오.**
+> 규칙 전문과 검사는 §0 의 「줄번호로 가리키지 마십시오」를 보십시오.
 
 
 ## 27-I. 행정구역(4개 구)별 지도 보기 · 검색 → [`docs/log/2026-08-26-dev-district.md`](docs/log/2026-08-26-dev-district.md)
@@ -1268,7 +1316,7 @@ NFC 문자열과 **눈으로는 같아 보이지만 문자열 비교가 실패**
 | `data/raw-large/` git 추적 | **0건** (사진 zip 72MB 보관) |
 | git 추적 중인 이미지 전체 | 5개 — 전부 `img/` (파비콘·로고, UI 자산) |
 
-`.gitignore:7 assets/` · `:15 data/raw-large/` 가 실제로 걸린 것을 `git check-ignore` 로 확인했다.
+`.gitignore` 의 `assets/` · `data/raw-large/` 가 실제로 걸린 것을 `git check-ignore` 로 확인했다.
 
 ### 다만 과거 것이 히스토리에 남아 있다
 
@@ -1309,9 +1357,12 @@ origin/main 에서 도달 가능  : 104개 / 35.4 MB   ← GitHub 에서 지금�
 
 ---
 
-*최종 업데이트: 2026년 8월 30일 — 문서 전수 감사. 코드와 어긋난 현황 11건 정정,
-끝난 인계 7건 종결 표시, 「끝난 판단은 WORKFLOW.md 로」 규칙 신설.
-자세한 것은 [`docs/log/2026-08-30-dev-workflow-drift-audit.md`](docs/log/2026-08-30-dev-workflow-drift-audit.md).
-같은 날 재부팅을 세 번 겪고 §12 「컨테이너가 재부팅됐다면」 신설 — 영속 경로 네 개,
-「Claude 메모리는 인계 수단이 아니다」, §13 에 `tools/server.py` 중단 diff 항목 추가
+*최종 업데이트: 2026년 8월 30일 — ① 문서 전수 감사. 코드와 어긋난 현황 11건 정정,
+끝난 인계 7건 종결 표시, 「끝난 판단은 WORKFLOW.md 로」 규칙 신설
+([`docs/log/2026-08-30-dev-workflow-drift-audit.md`](docs/log/2026-08-30-dev-workflow-drift-audit.md)).
+② 그 감사가 맞춰 놓은 줄번호가 같은 날 오후 5건 밀려, 「줄번호로 가리키지 마십시오」 규칙과
+`check.sh` 의 line-ref 검사를 신설
+([`docs/log/2026-08-30-dev-line-ref-guard.md`](docs/log/2026-08-30-dev-line-ref-guard.md)).
+③ 같은 날 재부팅을 세 번 겪고 §12 「컨테이너가 재부팅됐다면」 신설 — 영속 경로,
+§13 에 `tools/server.py` 중단 diff 항목 추가
 ([`docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md`](docs/log/2026-08-30-deploy-reboot-recovery-push-auth.md))*
