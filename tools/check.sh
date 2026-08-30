@@ -297,6 +297,34 @@ line_ref_guard() {
 }
 run "문서·주석의 줄번호 참조 (line-ref)" line_ref_guard
 
+# ── 5-c. 배포 URL 이 네 곳에서 같은가 (git·네트워크 불필요) ────────────────
+# Quick Tunnel 은 재시작마다 호스트명이 랜덤으로 바뀐다. 그때 고쳐야 할 자리가
+# 네 곳인데(README 배지·README 본문·WORKFLOW §1·이 파일의 LIVE_URL), 손으로
+# 고치면 반드시 하나가 빠진다. 실제로 08-30 에 셋 다 죽은 주소를 가리킨 채였다.
+#   --live 의 live_drift() 는 LIVE_URL 만 보므로 이 어긋남을 못 잡는다.
+#   README 가 죽은 주소를 가리켜도 --live 는 초록불이다. 그래서 따로 본다.
+# docs/log/ 는 제외한다 — 로그의 주소는 '그때의 기록' 이라 갱신 대상이 아니다(§0).
+url_consistency() {
+  local bad=0 f n found
+  local live="${LIVE_URL#https://}"; live="${live%%/*}"
+  found=$(grep -rhoE '[a-z0-9-]+\.trycloudflare\.com' \
+            README.md WORKFLOW.md tools/check.sh 2>/dev/null | sort -u)
+  for n in $found; do
+    [ "$n" = "$live" ] && continue
+    echo "  FAIL 배포 주소가 어긋난다 — $n (LIVE_URL 은 $live)"
+    for f in README.md WORKFLOW.md tools/check.sh; do
+      grep -n "$n" "$f" 2>/dev/null | sed "s|^|         $f:|" | cut -c1-110
+    done
+    bad=1
+  done
+  if [ $bad = 0 ]; then
+    n=$(grep -rhoE '[a-z0-9-]+\.trycloudflare\.com' README.md WORKFLOW.md tools/check.sh 2>/dev/null | wc -l)
+    echo "  i     배포 주소 ${n}곳 전부 $live 로 일치 (docs/log 는 '그때의 기록' 이라 제외)"
+  fi
+  return $bad
+}
+run "배포 주소 일관성 (url-sync)" url_consistency
+
 if [ $HAVE_GIT = 1 ]; then
   run "캐시 버스팅 이력 (version-guard)" version_guard
   run "자산·추적 상태 (asset-guard)" asset_guard

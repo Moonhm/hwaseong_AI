@@ -758,7 +758,7 @@ git pull
 | GitHub 쓰기 인증 — `~/.config/gh/hosts.yml` | **pull 은 되는데 push 만 죽음** | **사용자에게** `gh auth login` → `gh auth setup-git` 요청. 브라우저 기기 인증이라 Claude 가 대신 못 합니다 |
 | git 전역 설정 | 거의 없음 — `user.email` 등 repo 로컬 설정은 work 안이라 생존 | 필요할 때만 |
 | ~~Claude 메모리·세션 기록~~ | — | **증발 안 합니다.** `~/.claude/projects/` 는 위 표대로 영속입니다 (2026-08-31 정정, 아래) |
-| 서버·cloudflared 프로세스 | 배포 URL 무응답 | 서버·터널 재기동. **quick tunnel 은 호스트명이 매번 바뀝니다** — README 배지 · §1 배포 URL · `tools/check.sh` 의 `LIVE_URL` 세 곳을 새 주소로 갱신 (§13 「배포 URL 죽음」) |
+| 서버·cloudflared 프로세스 | 배포 URL 무응답 | 서버·터널 재기동. **quick tunnel 은 호스트명이 매번 바뀝니다** — README 2곳 · §1 배포 URL · `tools/check.sh` 의 `LIVE_URL` **네 곳**을 새 주소로 갱신. 하나라도 빠뜨리면 `check.sh` 의 **url-sync** 가 잡습니다 |
 
 #### ⚠ Claude 메모리를 **유일한** 인계 수단으로 쓰지 마십시오 (2026-08-30, 08-31 정정)
 
@@ -823,8 +823,31 @@ cloudflared  ──터널──▶  localhost:8080  ──▶  Flask (tools/serv
 공개 주소(`*.trycloudflare.com`)는 **`cloudflared` 프로세스에 붙어 있습니다.**
 Flask 만 껐다 켜면 몇 초 502 뒤 정상으로 돌아오고 **주소는 그대로**입니다.
 `cloudflared` 를 끄면 그 주소는 **영구히 사라지고** 새 랜덤 주소가 발급됩니다 —
-README 배지 · §1 배포 URL · `tools/check.sh` 의 `LIVE_URL` 세 곳이 한꺼번에 죽고,
-**카카오 개발자 콘솔의 웹 도메인(네 번째 자리)도 어긋나 지도가 통째로 죽습니다**(§12 「Kakao API」).
+저장소 안 **네 곳**과 저장소 **밖 한 곳**, 모두 **다섯 자리**가 한꺼번에 죽습니다.
+
+| # | 고쳐야 할 곳 | 무엇 | 검사 |
+|---|---|---|---|
+| 1 | `README.md` 배지 | `[![Live Demo]…]( )` 의 링크 | ✅ `url-sync` |
+| 2 | `README.md` 본문 | `**[Try the live app →]( )**` | ✅ `url-sync` |
+| 3 | `WORKFLOW.md` §1 | `- **배포 URL**:` | ✅ `url-sync` |
+| 4 | `tools/check.sh` | `LIVE_URL=` 기본값 | ✅ `url-sync` |
+| 5 | **Kakao Developers 웹 도메인** | 콘솔 설정 — **git 밖** | ❌ **어떤 검사도 못 봅니다** |
+
+**1~4 는 `check.sh` 의 `url-sync` 가 셉니다.** 하나라도 다르면 FAIL 이 나고 파일:줄을
+찍습니다. 네트워크도 git 도 필요 없어 터널이 죽은 상태에서도 돕니다.
+(원래 「세 곳」이라 적혀 있었습니다 — `README.md` 에 두 군데가 있는데 하나로 세고
+있었습니다. 이런 목록은 반드시 어긋나므로 사람이 세지 말고 검사에 맡기십시오.)
+
+**5 번이 진짜 함정입니다.** git 밖이라 grep 도 검사도 닿지 않습니다.
+2026-08-31 에 1~4 를 정확히 고치고도 **지도만 조용히 죽었고 `check.sh --live` 는
+exit 0** 이었습니다. JS 앱 키에 도메인 제한이 걸려 있어 새 주소에서 SDK 가 401
+(`domain mismatched!`)을 냅니다. 자세한 것은 §12 「Kakao API」.
+
+> **`--live` 로는 1~5 어느 것도 못 잡습니다.** `live_drift()` 는 `LIVE_URL` 하나만 보고
+> `index.html` 바이트를 대조할 뿐이라, README 가 죽은 주소를 가리켜도 · 지도가 통째로
+> 죽어도 초록불입니다. **「검사가 통과했다」와 「기능이 산다」는 다릅니다.**
+> `docs/log/` 는 `url-sync` 대상에서 뺐습니다 — 로그의 주소는 **그때의 기록**이라
+> 갱신 대상이 아닙니다(§0).
 
 기동은 **주최 측 공식 매뉴얼**(「AI화성 챌린지」 · cloudflared 외부 공개)을 따릅니다.
 매뉴얼 3.1 이 **tmux 를 권장**합니다 — 콘솔을 다시 볼 수 있어야 URL 을 잃지 않습니다.
