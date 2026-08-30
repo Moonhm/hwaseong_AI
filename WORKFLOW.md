@@ -914,6 +914,7 @@ sleep 8 && grep -oE 'https://[a-zA-Z0-9-]+\.trycloudflare\.com' ~/work/logs/tunn
 | 주차장 | 131개 |
 | 제부도 숙박 | 115개 (lat/lng 하드코딩, convenience.js) |
 | 편의정보 | 모범음식점 94(88좌표이식), 관광식당 35, 호텔 10, 캠핑 17, 템플스테이 1, **관광편의시설 10(신규)**, **영화상영관 13** (2026-08-26: 공식 CSV 전건. PLACES 에만 있던 3곳을 건져 올렸다) |
+| 메뉴 외부 링크 3곳 | 화성시청 홈페이지 · **화성in**(`live.saharax.io` — 화성시청 공식 AI 상담) · 네이버 공식 블로그. 셋 다 `<a target="_blank" rel="noopener noreferrer">` **링크**이고 스크립트·iframe·fetch 가 아니다(`grep` 로 확인 — `index.html` 에 `saharax` 는 1회, 전부 href). `1772804`(개발 Claude, 2026-08-26)에서 들어왔고 `docs/log/2026-08-26-dev-readme-demo-script.md` 가 시연 대본 사실 확인에 넣어 뒀다. **2026-08-31 에 「출처 불명 제3자 위젯 아닌가」로 다시 올라와** 여기 적는다 — §0 대로 끝난 확인은 이 파일이 갖는다 |
 | 음식점 데이터 | 3754건 — `js/restaurants-static.json` (649KB, `{n,c,a,t,x,y}`) — **현재 어떤 코드도 읽지 않는다.** `js/restaurants.js` 가 지워지고 지도 칩 `data-cat="restaurant"` 도 없다. 햄버거 메뉴 '음식점 전체' 는 2026-08-26 에 '준비 중' 토스트로 바꿨다 (되살리려면 로더 + 지도 칩 두 개가 필요) |
 
 ### Kakao API
