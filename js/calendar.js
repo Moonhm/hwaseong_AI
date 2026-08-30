@@ -86,6 +86,30 @@ function festBadge(place) {
   return { cls: 'badge-upcoming', text: '예정' };
 }
 
+/* ── 끝난 축제를 '둘러보는 목록'에서 뺀다 (2026-08-30 사용자 지시) ────────────
+   ⚠ 데이터는 지우지 않는다. PLACES 에 그대로 두고 화면에서만 감춘다.
+     2026-08-30 기준 종료 4건 — id:276(5.16) · 277(5.22~25) · 86(8.22) · 84(8.29).
+     276·277 은 2026-08-26 에 추가될 때 이미 3개월 지난 것이었다(§4 파이프라인의
+     '과거 행사 제거' 가 안 지켜진 건이다).
+
+   거르는 곳 — 시간 범위가 이름에 없는 '둘러보는 목록':
+     · 추천 탭 축제 목록   (js/tourism.js  'festival-only')
+     · 소식 탭 「행사 전체」 (js/living.js  _festAllSorted)
+     · 홈 대표 축제 카드    (js/home.js    renderHomeFestival)
+
+   그대로 두는 곳 — 범위가 이름에 박혀 있어 '지난 것도 그 범위의 소식'인 곳:
+     · 「이번 주 소식」 (js/living.js renderNewsSection — D+N 으로 지났음을 밝힌다)
+     · 「이번 달 축제」 (js/home.js  _getFestsInMonth 기반 캐러셀)
+     · 축제 캘린더     (아래 _getFestDays — 지난 날짜에 마킹이 없으면 그게 더 이상하다)
+
+   지도는 애초에 축제를 안 그린다(js/map.js buildOverlays, 2026-08-26 결정).
+
+   ⚠ 'unknown'(날짜를 못 읽은 것)은 남긴다 — 끝났다는 근거가 없다.
+     'ended' 하나만 거른다. approx('8월 중')는 그 달이 지나야 ended 가 된다. */
+function festBrowsable(place, now) {
+  return festStatus(place, now) !== 'ended';
+}
+
 /* 축제 날짜 Set 반환 — 날짜 범위("YYYY-MM-DD ~ YYYY-MM-DD") 전체 처리 */
 var _festDaysCache = {};
 function _getFestDays(year, month) {

@@ -267,7 +267,11 @@ function renderTourismList(theme, expanded) {
   if (!list || typeof PLACES === 'undefined' || typeof CATEGORY_CONFIG === 'undefined') return;
   let items;
   if (theme === 'festival-only') {
-    items = PLACES.filter(p => p.category === 'festival');
+    /* 끝난 축제는 뺀다 (2026-08-30 사용자 지시 — js/calendar.js festBrowsable).
+     * 이 경로는 옛 링크(tab='festival')로만 닿는 잔존 분기지만, 닿았을 때
+     * 종료된 것이 섞여 나오면 안 되는 건 축제의 새 집(소식 탭)과 같다. */
+    items = PLACES.filter(p => p.category === 'festival'
+      && ((typeof festBrowsable === 'function') ? festBrowsable(p) : true));
   } else if (theme === 'tourist-only') {
     items = PLACES.filter(p => p.category === 'tourist');
   } else if (theme === 'heritage-only') {

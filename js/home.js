@@ -1091,7 +1091,11 @@ function renderHomeTourism() {
    * 배열 순서는 수집 순서라 이미 끝난 축제가 맨 앞에 올 수 있고, 실제로
    * 홈 대표 카드에 '종료' 배지가 뜬다. 진행 중 → 예정(가까운 순) 으로 골라
    * 소식 탭 '행사 전체' 의 정렬 기준과 맞춘다(js/living.js _festAllSorted). */
-  const _festAll = PLACES.filter(p => p.category === 'festival');
+  /* 끝난 축제는 뺀다 (2026-08-30 사용자 지시 — js/calendar.js festBrowsable).
+   * 아래 정렬만으로도 ended 는 맨 뒤라 [0] 에 잘 안 오지만, 전부 끝난 상황에서는
+   * 대표 카드가 '종료' 로 뜬다. 그때는 카드를 비우는(emptyCard) 편이 맞다. */
+  const _festAll = PLACES.filter(p => p.category === 'festival'
+    && ((typeof festBrowsable === 'function') ? festBrowsable(p) : true));
   const _festRank = { ongoing: 0, upcoming: 1, unknown: 2, ended: 3 };
   const festivals = _festAll.slice().sort((a, b) => {
     const sa = (typeof festStatus === 'function') ? festStatus(a) : 'unknown';

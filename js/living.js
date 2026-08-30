@@ -354,7 +354,14 @@ function _festAllSorted() {
   /* 상태별 정렬 가중치. 같은 상태 안에서는 날짜로 다시 세운다. */
   var RANK = { ongoing: 0, upcoming: 1, unknown: 2, ended: 3 };
 
-  return PLACES.filter(function (p) { return p.category === 'festival'; })
+  return PLACES.filter(function (p) {
+      if (p.category !== 'festival') return false;
+      /* 끝난 축제는 뺀다 (2026-08-30 사용자 지시 — js/calendar.js festBrowsable).
+       * 여기는 시간 범위가 이름에 없는 '둘러보는 목록'이다. 바로 위 「이번 주 소식」
+       * (renderNewsSection)은 그대로 둔다 — 거기선 이번 주에 끝난 것도 이번 주의 소식이다.
+       * 아래 RANK 의 ended:3 은 이 필터가 걷히면 되살아나도록 남겨 둔다. */
+      return (typeof festBrowsable === 'function') ? festBrowsable(p, now) : true;
+    })
     .map(function (p) {
       var st = (typeof festStatus === 'function') ? festStatus(p, now) : 'unknown';
       var dm = (typeof _parseFestDateMeta === 'function')
