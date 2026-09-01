@@ -339,7 +339,7 @@ push 가 같은 호출에 묶여 있어 **결과를 읽기 전에 이미 나갔�
 - **앱 이름**: 화성잇다 (Hwaseong-itda)
 - **목표**: 경기도 화성특례시 통합 관광 정보 모바일 웹앱
 - **저장소**: https://github.com/Moonhm/hwaseong_AI
-- **배포 URL**: https://news-appliances-tap-cab.trycloudflare.com
+- **배포 URL**: https://checks-sciences-palestinian-cottages.trycloudflare.com
 - **팀**: 문형민, 서교연 + Claude Sonnet 4.6 (AI 개발 에이전트 2인 체계)
 - **기간**: 2026년 8월 18~19일 (해커톤 당일 집중 개발)
 

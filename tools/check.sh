@@ -52,7 +52,7 @@ done
 
 # 실서비스 URL — Quick Tunnel 은 재시작할 때마다 호스트명이 랜덤으로 바뀐다.
 # 바뀌면 여기를 갱신하라. (--live 에서만 쓴다)
-LIVE_URL="${HW_LIVE_URL:-https://news-appliances-tap-cab.trycloudflare.com}"
+LIVE_URL="${HW_LIVE_URL:-https://checks-sciences-palestinian-cottages.trycloudflare.com}"
 
 FAILED=(); SKIPPED=()
 run() {                       # run <이름> <명령...>
