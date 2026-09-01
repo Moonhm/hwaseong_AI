@@ -649,15 +649,32 @@ var _npMode = null; /* { onBack, touristOv, parkOv, backBtn } */
  * '확대된 빈 지도' 가 됐다 — 칩을 직접 다시 눌러야만 복구됐다. */
 var _npPrevCats = [];
 
+/* NP 진입 직전의 카메라. _npRestoreCats 가 부르는 setFilter 는 마지막에 fitPlaces
+ * (편의정보는 showConvCat → _fitConv, js/conv_map.js)로 카메라를 카테고리 전체
+ * bounds 까지 끌고 간다 — 관광지 151곳이면 화성시 전역·레벨 9 다. 이 함수가 할 일은
+ * '칩과 레이어 복구' 뿐이고 화면은 NP 로 들어가기 전 그대로여야 한다. */
+var _npPrevView = null;
+
 function _npRestoreCats() {
-  var cats = _npPrevCats;
+  var cats = _npPrevCats, view = _npPrevView;
   _npPrevCats = [];
+  _npPrevView = null;
   if (!cats.length) return;
   /* 주차장을 먼저 — setFilter 는 주차장 칩만은 건드리지 않고 보존한다. */
   if (cats.indexOf('parking') >= 0 && typeof activateParking === 'function') activateParking();
   cats.forEach(function (c) {
     if (c !== 'parking' && typeof setFilter === 'function') setFilter(c);
   });
+  /* setFilter 가 옮겨 놓은 카메라를 NP 진입 직전으로 되돌린다.
+   * 안 되돌리면 ← 로 나온 화면이 레벨 9 가 되는데, touristOverlayMap 은
+   * TK_PIN_LEVEL 이하에서만 채워지므로(showTkClusters 는 안 채운다) 뒤이어
+   * exitNearestParkMode 가 부르는 onPinClick 이 강조를 걸 대상 자체를 못 찾았다.
+   * fitPlaces·_fitConv 의 150ms 클램프는 레벨 9 '초과'일 때만 도므로
+   * 여기서 먼저 낮춰 두면 그 타이머가 무효가 된다. */
+  if (view && kakaoMap && typeof kakao !== 'undefined') {
+    kakaoMap.setLevel(view.level);
+    kakaoMap.setCenter(view.center);
+  }
 }
 
 /* ── 공통 핵심 로직 ── */
@@ -687,6 +704,10 @@ function _goNPCore(placeLat, placeLng, label, icon, onBack) {
       document.querySelectorAll('#map-chips .chip.active'),
       function (c) { return c.dataset.cat || null; }
     ).filter(Boolean);
+    /* 칩과 같은 가드 안에서 카메라도 함께 잡아 둔다 — 아래 setBounds 로 두 핀에
+     * 맞추기 '전' 값이라야 ← 로 돌아왔을 때 원래 보던 화면이 된다. */
+    _npPrevView = (kakaoMap && typeof kakao !== 'undefined')
+      ? { center: kakaoMap.getCenter(), level: kakaoMap.getLevel() } : null;
   }
   _exitNpMode(false);
   closePlaceSlide();
@@ -784,14 +805,21 @@ function goNearestParkingConv(placeLat, placeLng, convCat, convName) {
   });
 }
 
-/* ── 지역화폐 가맹점 핀에서 호출 ── */
-function goNearestParkingLc(placeLat, placeLng, lcName) {
-  _goNPCore(placeLat, placeLng, lcName, '🏪', function () {
+/* ── 지역화폐 가맹점 핀에서 호출 ──
+ * ⚠ 돌아올 때 되찾는 건 이름이 아니라 id 다. 가맹점 27,374건 중 이름이 겹치는
+ *   항목이 2,086건(904종) 있어(김밥천국 11곳·아모레카운셀러 23곳 …)
+ *   x.n === lcName 으로 찾으면 배열의 첫 동명 지점이 잡혔다 — 동탄 김밥천국에서
+ *   ← 로 돌아오면 병점 지점 카드가 열리고 showLcSlide 의 _panPinAboveSlide 가
+ *   지도까지 그리로 옮겼다. 이름이 같아 카드가 바뀐 줄도 몰랐다.
+ * lcName 은 NP 하이라이트 핀의 이름표로만 쓴다 — lcData 지연 로드가 아직인
+ *   순간에도 이름표는 제대로 나와야 한다. */
+function goNearestParkingLc(placeLat, placeLng, lcId, lcName) {
+  _goNPCore(placeLat, placeLng, lcName || '가맹점', '🏪', function () {
     var chip = document.querySelector('#map-chips .chip[data-cat="localcurrency"]');
     if (chip) chip.classList.add('active');
     if (typeof setLcVisible === 'function') setLcVisible(true);
     var p = (typeof lcData !== 'undefined' ? lcData : [])
-      .find(function (x) { return x.n === lcName; });
+      .find(function (x) { return x.id === lcId; });
     if (p && typeof showLcSlide === 'function') showLcSlide(p);
   });
 }
@@ -1096,7 +1124,17 @@ function findNearby(lat, lng, _retried) {
    * 없다고 말하기 전에 받아 온다. _retried 는 로드 실패 시 무한 재귀 방지용. */
   if ((typeof lcData === 'undefined' || !lcData.length) && !_retried
       && typeof _loadLcData === 'function') {
-    _loadLcData(function () { findNearby(lat, lng, true); });
+    _loadLcData(function () {
+      /* ⚠ 4.2MB 를 받는 사이 사용자가 다른 탭으로 갔을 수 있다. 그대로 재진입하면
+       * 소식·홈 화면에 '반경 500m 내 가맹점 N곳' 토스트가 뜨고(#toast 는 .page 바깥),
+       * closePlaceSlide + activateLc(= setFilter('localcurrency')) 까지 몰래 돌아
+       * 보고 있던 카드가 닫히고 켠 적 없는 지역화폐 칩이 켜진 채 남았다.
+       * .page.active 가 현재 화면의 유일한 진실 소스다(js/nav.js go).
+       * goMapNearbyLc(js/mapnav.js)는 go('map') 뒤 350ms 에 부르므로 안 걸린다. */
+      var mapPage = document.getElementById('page-map');
+      if (!mapPage || !mapPage.classList.contains('active')) return;
+      findNearby(lat, lng, true);
+    });
     return;
   }
   var pool = (typeof lcData !== 'undefined' && lcData.length)
@@ -1280,6 +1318,7 @@ function resetMapPage() {
    *    go() 의 정리(js/nav.js)는 page!=='map' 일 때만 돌아서 재클릭은 지금 전혀 커버되지 않는다. */
   if (typeof exitNpModeOnly === 'function') exitNpModeOnly();
   _npPrevCats = [];                     /* 전부 끄는 자리다 — 되살릴 것도 없다 */
+  _npPrevView = null;                   /* 아래 ⑨ 가 홈 화면 카메라로 확정한다 */
 
   /* ② 슬라이드 카드 + 딤 + 선택 핀 강조 + selectedId=null (closePlaceSlide 본문) */
   if (typeof closePlaceSlide === 'function') closePlaceSlide();

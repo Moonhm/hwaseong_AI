@@ -20,7 +20,7 @@
  *   쓰는 방식(showCalendar/hideCalendar)과 동일하다.
  * ========================================================================== */
 
-var DL_VER   = '20260826159';
+var DL_VER   = '20260826160';
 var _dlCache = {};      /* 파일명 → 파싱된 JSON. 한 번 받으면 다시 안 받는다 */
 var _dlLoading = {};    /* 같은 파일을 동시에 두 번 요청하지 않게 하는 잠금 */
 
@@ -53,13 +53,21 @@ function _dlSkeleton(n) {
 function _dlEmpty(msg) {
   return '<div class="dl-empty">' + msg + '</div>';
 }
-/* 이름이 곧 관광지일 때 지도로 보낸다. PLACES 에 있으면 그 핀으로, 없으면 검색만. */
+/* ── 이름 정규화 — dlGoPlace·_dlCanGo·_dlFindCinema 가 함께 쓴다 ──
+ * (여기 있던 "없으면 검색만" 한 줄은 dlGoPlace 로 옮겨 가기 전의 낡은 문구라 걷어냈다.
+ *  실제 동작은 dlGoPlace 바로 위 주석이 맞다 — 검색 기능은 없다.) */
 /* 데이터랩 이름과 우리 데이터의 공백 표기가 다르다
  * (예: "율암온천숯가마 테마파크" vs "율암온천숯가마테마파크"). 공백을 지우고 비교한다. */
 /* 공백뿐 아니라 슬래시·가운뎃점도 지운다. 내비랭킹의 'hub_spots' 는
  * "롯데시네마/향남" 처럼 슬래시로 브랜드와 지점을 나눠 적는데, 공백만 지우면
  * 그 10건이 전부 '지도에 등록되지 않은 곳이에요' 로 떨어진다(2026-08-26 감사). */
-function _dlNorm(s) { return (s || '').replace(/[\s\/·]/g, ''); }
+/* 대소문자도 지운다. 데이터랩은 '발리오스CC' 로 적고 우리 PLACES 는 '발리오스cc' 라
+ * 이 한 건이 대소문자 때문에만 끊겼다(2026-09-01 전수 대조: 데이터랩 이름 2,829건 중
+ * 소문자화로 판정이 바뀌는 것은 이 하나뿐이고, PLACES 243건을 정규화해도 충돌은 0건이라
+ * 엉뚱한 핀으로 갈 위험이 없다).
+ * ⚠ js/data.js 쪽 이름을 고쳐서 맞추면 js/photos.js 의 byName 키가 끊겨 사진이 사라진다.
+ *   반드시 이 정규화 함수를 고칠 것. */
+function _dlNorm(s) { return (s || '').replace(/[\s\/·]/g, '').toLowerCase(); }
 
 /* 영화관은 2026-08-26 에 PLACES → CONVENIENCE.cinemas 로 옮겼다(사용자 지시).
  * 내비랭킹 상위에 영화관이 10곳이나 있어서, 그대로 두면 누를 때마다
@@ -112,6 +120,24 @@ function dlGoPlace(name) {
     showToast('지도에 등록되지 않은 곳이에요 — ' + name);
   }
 }
+
+/* 그 줄이 실제로 지도로 갈 수 있는지 미리 본다 — dlGoPlace 의 조회부와 같은 규칙이다.
+ * 규칙을 두 벌로 갈라 두면 언젠가 어긋나므로 같은 순서(PLACES → 영화관)를 그대로 쓴다.
+ *
+ * 왜 필요한가: 갈 수 없는 줄에도 onclick 을 붙여 놓아서, 눌러도
+ * '지도에 등록되지 않은 곳이에요' 토스트만 떴다. 특히 '맛집' 은 업소명이라
+ * PLACES(관광지 243곳)·영화관 어디에도 없어 400줄이 전건 실패였다
+ * (리포트 맛집 순위 외지인·현지인·전체 각 100 + 인기 맛집 100, 2026-09-01 실측 0/400).
+ * .dl-list-item 은 cursor:pointer + :active 배경이라 눌리는 것처럼 보이는 게 더 나빴다.
+ * 판정이 false 면 onclick 을 빼고, 같은 화면의 '방문 분석' 유입/유출 목록(_dlViewReport
+ * 안 relList)이 이미 쓰는 style="cursor:default" 로 맞춘다. */
+function _dlCanGo(name) {
+  var nq = _dlNorm(name);
+  if (typeof PLACES !== 'undefined' &&
+      PLACES.some(function (p) { return p.name === name || _dlNorm(p.name) === nq; })) return true;
+  return !!_dlFindCinema(nq);
+}
+
 function _dlAttr(s) { return String(s == null ? '' : s).replace(/'/g, ''); }
 
 /* 같은 곳이 분류 체계만 달리해 두 번 들어 있다 — 데이터랩이 서로 다른 분류
@@ -329,15 +355,34 @@ function _dlBackLabel() {
   return i ? i.label : '‹ 추천';
 }
 
+/* 데이터랩 화면 상태를 통째로 비운다. js/nav.js 의 go() 가 추천 탭으로 들어오면서
+ * #view-datalab 을 display:none 으로 내릴 때 함께 부른다 — display 만 내리고 이 값들을
+ * 남기면, 다음에 goDatalab 을 거치지 않는 진입점(dlShowCourse — 추천 탭 '투어'
+ * 서브탭의 코스 카드)으로 데이터랩을 열었을 때 옛 '‹ 홈' 라벨과 옛 뒤로가기가
+ * 되살아난다(홈 → 전체 순위 보기 → 소식 탭 → 추천 탭 → 코스 카드).
+ * 상태의 주인은 이 파일이다 — nav.js 에서 전역을 직접 지우면 필드가 늘 때 또 어긋난다.
+ *
+ * ⚠ js/tourism.js 의 showFestivalDetail·showCalendar 에서는 부르지 마라. 그 둘은
+ *   데이터랩 위에 축제 화면을 겹쳐 놓고 뒤로가기로 데이터랩을 되살리므로
+ *   (_festViewDl, _returnFromFestView) _dlFrom 이 살아 있어야 한다. _dlView 만 내린다. */
+function resetDatalabView() {
+  _dlView = null;
+  _dlFrom = null;
+  _dlFromScroll = 0;
+}
+
 /* 데이터랩으로 가는 공용 진입점. openFestView 와 같은 구조다. */
 function goDatalab(kind) {
   var cur  = document.querySelector('.page.active');
   var from = cur ? cur.id : null;
-  _dlFrom       = (from && from !== 'page-tourism') ? from : null;
-  _dlFromScroll = (_dlFrom && cur) ? cur.scrollTop : 0;
+  var f    = (from && from !== 'page-tourism') ? from : null;
+  var sc   = (f && cur) ? cur.scrollTop : 0;   /* go() 로 화면이 바뀌기 전에 읽는다 */
   /* ⚠ go() 뒤에 setTimeout 금지 — 추천 탭 목록이 한 프레임 번쩍인다.
-   * go() 는 뷰 교체와 목록 렌더까지 동기로 끝낸다(js/nav.js). */
-  if (_dlFrom) go('tourism');
+   * go() 는 뷰 교체와 목록 렌더까지 동기로 끝낸다(js/nav.js).
+   * ⚠ _dlFrom 대입은 반드시 go() '뒤' 다 — go() 의 tourism 분기가
+   *   resetDatalabView() 를 부르므로, 앞에 두면 방금 넣은 값을 그 자리에서 지운다. */
+  if (f) go('tourism');
+  _dlFrom = f; _dlFromScroll = sc;
   showDatalab(kind);
 }
 
@@ -529,7 +574,11 @@ function _dlViewPopular(el) {
       '</div>' +
       (rows.length
         ? '<div class="dl-list">' + rows.map(function (r, i) {
-            return '<div class="dl-list-item" onclick="dlGoPlace(\'' + _dlAttr(r.name) + '\')">' +
+            /* 갈 수 없는 줄은 눌러도 토스트만 뜬다 — _dlCanGo 참고 ('인기 맛집' 100줄 전건) */
+            var canGo = _dlCanGo(r.name);
+            return '<div class="dl-list-item"' +
+                     (canGo ? ' onclick="dlGoPlace(\'' + _dlAttr(r.name) + '\')"'
+                            : ' style="cursor:default"') + '>' +
                      '<div class="dl-list-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
                      '<div class="dl-list-main">' +
                        '<div class="dl-list-name">' + r.name + '</div>' +
@@ -567,7 +616,11 @@ function _dlViewAge(el) {
       '</div>' +
       (byAge && byAge[_dlAge] && byAge[_dlAge].length
         ? '<div class="dl-list">' + byAge[_dlAge].map(function (r, i) {
-            return '<div class="dl-list-item" onclick="dlGoPlace(\'' + _dlAttr(r['관심지점명']) + '\')">' +
+            /* 갈 수 없는 줄은 눌러도 토스트만 뜬다 — _dlCanGo 참고 */
+            var canGo = _dlCanGo(r['관심지점명']);
+            return '<div class="dl-list-item"' +
+                     (canGo ? ' onclick="dlGoPlace(\'' + _dlAttr(r['관심지점명']) + '\')"'
+                            : ' style="cursor:default"') + '>' +
                      '<div class="dl-list-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
                      '<div class="dl-list-main">' +
                        '<div class="dl-list-name">' + r['관심지점명'] + '</div>' +
@@ -763,7 +816,11 @@ function _dlViewReport(el) {
         (rows.length
           ? '<div class="dl-list">' + rows.map(function (r, i) {
               var p = _dlPct(r['성장율']);
-              return '<div class="dl-list-item" onclick="dlGoPlace(\'' + _dlAttr(r['관심지점명']) + '\')">' +
+              /* 갈 수 없는 줄은 눌러도 토스트만 뜬다 — _dlCanGo 참고 */
+              var canGo = _dlCanGo(r['관심지점명']);
+              return '<div class="dl-list-item"' +
+                       (canGo ? ' onclick="dlGoPlace(\'' + _dlAttr(r['관심지점명']) + '\')"'
+                              : ' style="cursor:default"') + '>' +
                        '<div class="dl-list-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
                        '<div class="dl-list-main">' +
                          '<div class="dl-list-name">' + r['관심지점명'] + '</div>' +
@@ -791,7 +848,11 @@ function _dlViewReport(el) {
         '</div>' +
         (rows2.length
           ? '<div class="dl-list">' + rows2.map(function (r, i) {
-              return '<div class="dl-list-item" onclick="dlGoPlace(\'' + _dlAttr(r['업소명']) + '\')">' +
+              /* 업소명은 PLACES(관광지)에도 영화관에도 없어 300줄이 전건 실패였다 — _dlCanGo 참고 */
+              var canGo = _dlCanGo(r['업소명']);
+              return '<div class="dl-list-item"' +
+                       (canGo ? ' onclick="dlGoPlace(\'' + _dlAttr(r['업소명']) + '\')"'
+                              : ' style="cursor:default"') + '>' +
                        '<div class="dl-list-no' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</div>' +
                        '<div class="dl-list-main">' +
                          '<div class="dl-list-name">' + r['업소명'] + '</div>' +

@@ -312,7 +312,9 @@ function _renderCalendar() {
         renderCalEventList(list, label,
           '<div style="padding:20px 0;text-align:center;color:var(--text-muted);font-size:13px;line-height:1.7">' +
             '이 날은 예정된 축제가 없어요<br>' +
-            '<span style="font-size:12px;color:#b8c2cc">날짜를 한 번 더 누르면 이 달 전체를 볼 수 있어요</span>' +
+            /* 색은 var(--text-muted). 날 hex #b8c2cc 는 흰 바탕에서 명암비 1.81:1 로
+               사실상 안 읽혔다(2026-09-01 접근성 감사). 토큰을 쓰면 4.83:1 이라 WCAG AA 를 넘는다. */
+            '<span style="font-size:12px;color:var(--text-muted)">날짜를 한 번 더 누르면 이 달 전체를 볼 수 있어요</span>' +
           '</div>');
         document.getElementById('calendar-event-list').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       });

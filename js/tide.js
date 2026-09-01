@@ -245,7 +245,7 @@ function _renderTide() {
     '</div>' +
     /* 출처 고지 — '오늘의 화성 날씨' 와 같은 양식(.td-src)을 쓴다.
      * 2026-08-26 사용자 요청. 앱의 다른 문구는 해요체지만 고지문만 격식체다
-     * (사용자 지시, WORKFLOW §3). meta.source 를 그대로 인용해 출처를 못 박는다. */
+     * (사용자 지시, WORKFLOW §15). meta.source 를 그대로 인용해 출처를 못 박는다. */
     '<div class="td-src">' +
       '<div class="td-src-head">데이터 출처 및 유의사항</div>' +
       '<p class="td-src-body">본 시간표는 <strong>' + src + '</strong>를 기반으로 합니다. ' +

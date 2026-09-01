@@ -104,10 +104,21 @@ function _convCacheKey(cat) { return 'hwaseong_conv_' + CONV_CACHE_VER + '_' + c
 
 /* 해당 카테고리 칩이 켜져 있는지.
  * 주차장 칩은 다른 칩과 동시에 active 가 될 수 있고 DOM 순서상 가장 앞이라,
- * querySelector('.chip.active') 로 판단하면 항상 parking 이 잡힌다. */
+ * querySelector('.chip.active') 로 판단하면 항상 parking 이 잡힌다.
+ *
+ * ⚠ 칩이 DOM 에 아예 없는 카테고리(touristfacility — index.html 에서 주석 처리됐다)는
+ *   '꺼진 것' 이 아니라 '칩으로 켜고 끌 수 없는 것' 이다. 여기서 false 를 돌리면
+ *   홈 통합검색(js/home.js 의 conv2 → js/mapnav.js goMapConv)으로 들어온 첫
+ *   활성화에서 _geocodeCat 의 _finish 가 _buildOverlays 를 건너뛰어 카드만 열리고
+ *   핀이 0개가 됐다 — 같은 항목을 두 번 눌러야 CONV_STATUS='done' 분기로 핀이 나왔다.
+ *   touristFacilities 는 10건 전부 좌표를 갖고 있어 _finish 가 동기로 끝나므로,
+ *   js/map.js resetMapPage 의 '완료 콜백이 칩 상태를 다시 확인한다' 계약과 부딪히지
+ *   않는다. 좌표 없는 항목을 이 카테고리에 넣으면 비동기가 되어 그 계약이 깨지니
+ *   그때 여기를 다시 볼 것. */
 function _isConvCatActive(cat) {
   var chip = document.querySelector('#map-chips .chip[data-cat="' + cat + '"]');
-  return !!(chip && chip.classList.contains('active'));
+  if (!chip) return true;
+  return chip.classList.contains('active');
 }
 
 /* 캐시에서 좌표 로드 시도 → 성공하면 true */
@@ -214,15 +225,32 @@ function _geocodeCat(cat) {
                 (why === 'timeout' ? ' (타임아웃)' : why === 'nosdk' ? ' (위치 변환 불가)' : ''));
       /* ⚠ 사용자가 그 사이 지도를 움직였으면 카메라를 건드리지 않는다.
        * 지오코딩은 최대 10초가 걸리는데, 그동안 맞춰 둔 화면이 완료 순간
-       * 화성시 전역으로 툭 되돌아갔다 — 열어 둔 카드의 핀까지 화면 밖으로 나갔다. */
-      if (!_userMoved) _fitConv(cat);
+       * 화성시 전역으로 툭 되돌아갔다 — 열어 둔 카드의 핀까지 화면 밖으로 나갔다.
+       * ⚠ 카드가 열려 있으면 지도를 만진 적이 없어도 건드리지 않는다 —
+       *   생활 탭 목록·홈 통합검색에서 한 곳을 고르면(js/mapnav.js goConvItem·
+       *   goMapConv) 그쪽이 먼저 카메라를 그 한 곳에 맞추고 카드를 여는데,
+       *   뒤이어 배치가 끝나면 _userMoved 가 false 라(사용자는 목록을 눌렀다)
+       *   카테고리 전체 bounds 로 끌려갔다.
+       *   판정은 전역 플래그가 아니라 DOM 으로 한다(js/parking.js 의
+       *   _openParkingCardId 와 같은 방식). 칩으로 켠 정상 경로에서는
+       *   js/map.js setFilter 가 맨 앞에서 closePlaceSlide 를 부르므로
+       *   카드가 닫혀 있어 첫 _fitConv 가 그대로 산다. */
+      var _sl = document.getElementById('place-slide');
+      if (!_userMoved && !(_sl && _sl.classList.contains('open'))) _fitConv(cat);
     }
   }
 
   /* 사용자가 직접 지도를 만졌는지만 본다. 카카오 이벤트(dragend·zoom_changed)는
    * 프로그램이 옮겨도 뜨므로 구분이 안 된다 — 입력 장치 쪽에서 잡는다. */
   var _userMoved = false;
-  var _watchEls  = [document.getElementById('kakao-map'), document.getElementById('zoom-track')];
+  /* ⚠ #zoom-track 이 아니라 그 부모인 #map-controls 를 본다. index.html 구조상
+   * #btn-mylocation·#zoom-in-btn·#zoom-out-btn 은 #map-controls 안이고
+   * #kakao-map 의 자손이 아니라, 트랙만 감시하면 ＋/－ 버튼이나 '내 위치' 로
+   * 맞춘 화면이 지오코딩 완료 순간 _fitConv 로 되돌아갔다.
+   * input 도 버블하므로 슬라이더 감시는 그대로 살아 있다.
+   * ⚠ #map-chips 는 넣지 마라 — 주차장 칩은 카메라를 안 옮기는데도 _userMoved 만
+   *   세워서 정상적인 첫 _fitConv 가 사라진다. */
+  var _watchEls  = [document.getElementById('kakao-map'), document.getElementById('map-controls')];
   var _onUserMove = function () { _userMoved = true; };
   var _WATCH_EV = ['mousedown', 'touchstart', 'wheel', 'input'];
   function _unwatchUser() {
@@ -572,7 +600,10 @@ function _showJebuSlide() {
     '<div style="background:#F0F9FF;border-radius:10px;padding:8px 4px"><div style="font-size:18px;font-weight:900;color:#0284C7">' + ((s.minbak_nearby || 0) + (s.nearby || 0)) + '</div><div style="font-size:10px;color:#6b7280">인근</div></div>' +
     '</div>' +
     '<div class="sl-actions">' +
-    '<button class="sl-btn" onclick="openRoute(37.1578,126.5764,\'제부도\')">🗺️ 길찾기</button>' +
+    /* ⚠ 좌표를 다시 박지 마라. 여기 있던 37.1578,126.5764 는 실제 제부도에서
+     * 4.5km 서쪽 바다였다 — 이 파일 위쪽 JEBU_LAT 주석이 이미 교정해 둔 값을
+     * 이 레거시 카드만 안 따라오고 있었다. 값은 한 곳(JEBU_LAT/JEBU_LNG)에서만 온다. */
+    '<button class="sl-btn" onclick="openRoute(' + JEBU_LAT + ',' + JEBU_LNG + ',\'제부도\')">🗺️ 길찾기</button>' +
     '</div>' +
     _section('🏖️ 관광펜션', j.pension_outside) +
     _section('🏨 제부도 내 숙박', j.inside) +

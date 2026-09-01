@@ -534,9 +534,11 @@
     .wk-note  { padding-top: 6px; }
 
     /* 오늘의 화성 날씨 · 출처 고지 (2026-08-26)
-     * 홈 탭 .home-data-notice 와 같은 성격이라 색·크기를 맞췄다.
-     * 본문보다 확실히 뒤로 물러나 있어야 한다 — 읽을 사람은 읽고
-     * 안 읽을 사람은 걸리지 않게. */
+     * 홈 탭 .home-data-notice 와 같은 성격이라 색·크기를 맞췄다 — 그쪽 색을 바꾸면 여기도 같이.
+     * 뒤로 물러난 느낌은 font-size(11px)·여백·.td-src 바탕으로 만들고 색으로는 만들지 않는다
+     * (2026-09-01). 예전엔 본문이 #a0aec0 이라 var(--bg) 바탕에서 2.09:1 이었다 — 물러난 게
+     * 아니라 안 읽혔다. 지금은 var(--text-sub) 9.53:1 · strong var(--text) 16.4:1 이다.
+     * var(--text-muted) 는 이 바탕에서 4.47:1 이라 AA 4.5:1 에 미치지 못해 쓰지 않았다. */
     .td-src {
       margin: 18px var(--px) 0; padding: 14px 14px 12px;
       background: var(--bg); border: 1px solid var(--border);
@@ -548,10 +550,10 @@
     }
     .td-src-body {
       margin: 0 0 6px; font-size: 11px; line-height: 1.75;
-      color: #a0aec0; word-break: keep-all;
+      color: var(--text-sub); word-break: keep-all;
     }
     .td-src-body:last-child { margin-bottom: 0; }
-    .td-src-body strong { color: #718096; font-weight: 700; }
+    .td-src-body strong { color: var(--text); font-weight: 700; }
     /* ── 시티투어 코스 상세 (js/datalab.js _dlViewCourse) ────────────────
        축제 상세(.fd-hero)와 같은 얼개다. 코스마다 색이 달라 히어로 배경은
        인라인 그라데이션으로 받고, 사진이 있으면 그 위를 덮는다. */

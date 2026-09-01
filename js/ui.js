@@ -181,16 +181,23 @@ var _lcCallbacks = [];
 function _loadLcData(callback, silent) {
   if (typeof lcData !== 'undefined' && lcData.length) { if (callback) callback(); return; }
   if (callback) _lcCallbacks.push(callback);
-  if (_lcLoading) return; /* 이미 fetch 중 — 중복 요청 방지 */
-  _lcLoading = true;
   /* 4.2MB / 27,374건이라 저사양 기기에서 파싱 중 1초 가까이 메인스레드가 멈춘다.
    * 최소한 무반응 구간임을 알린다. */
   /* silent — 배경에서 미리 받을 때는 토스트를 띄우지 않는다. 사용자가 검색창에
    * 글자를 치는 도중에 '불러오는 중이에요' 가 뜨면 자기가 누른 적 없는 안내다.
-   * 기존 호출부 4곳(home.js·living.js·localcurrency.js·map.js)은 인자를 안
-   * 넘기므로 동작이 그대로다. */
+   * 호출부(home.js·living.js·localcurrency.js·map.js)는 인자를 안 넘기므로
+   * 동작이 그대로다.
+   * ⚠ 이 줄은 반드시 아래 _lcLoading 조기 return 보다 위에 있어야 한다.
+   *   js/home.js 의 검색 프리페치(_uniPrefetchLc)가 silent 로 fetch 를 먼저 걸어 두면,
+   *   그 뒤 사용자가 명시적으로 부른 호출 — 홈 '생활' 토글(switchHomeTab) 등 — 이
+   *   조기 return 에 걸려 안내가 한 줄도 안 뜬다. 그 사이 홈 '생활' 은 lcData 가 비어
+   *   '준비 중이에요' 만 띄우므로, 받는 중인 것을 '없는 기능' 이라고 말하게 된다.
+   *   '이미 다 받아 놓은 경우' 는 위 lcData.length 조기 return 이 먼저 잡으므로
+   *   이 자리로 옮겨도 다 받은 뒤에는 뜨지 않는다. */
   if (!silent && typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중이에요...');
-  fetch('js/localcurrency-static.json?v=20260826159').then(function(r) { return r.json(); }).then(function(d) {
+  if (_lcLoading) return; /* 이미 fetch 중 — 중복 요청 방지 (안내는 위에서 이미 냈다) */
+  _lcLoading = true;
+  fetch('js/localcurrency-static.json?v=20260826160').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     /* 소식 탭 통계 4칸(#stat-currency)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.
      * 로드가 끝나면 아래 콜백이 renderLivingCatList('currency') 를 다시 부른다. */

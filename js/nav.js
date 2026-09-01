@@ -145,6 +145,12 @@ function go(page) {
     if (_fd) _fd.style.display = 'none';
     if (_cv) _cv.style.display = 'none';
     if (_dl) _dl.style.display = 'none';
+    /* display 만 내리면 '어느 탭에서 열었나'(_dlFrom)·'어느 화면인가'(_dlView)가 남아,
+     * 다음에 goDatalab 을 거치지 않는 진입점(dlShowCourse — '투어' 서브탭의 코스 카드)
+     * 으로 데이터랩을 열었을 때 옛 '‹ 홈' 라벨과 옛 뒤로가기가 되살아난다.
+     * 상태의 주인은 js/datalab.js 라 그쪽 함수를 부른다.
+     * ⚠ goDatalab 은 이 리셋 '뒤'에 _dlFrom 을 넣는다 — 순서를 되돌리지 말 것. */
+    if (typeof resetDatalabView === 'function') resetDatalabView();
     if (_vl) _vl.style.display = 'block';
     var sub = _tourismSub || 'all';
     /* 서브탭 복원을 switchTourismSub 하나로 통일한다 (2026-08-26).

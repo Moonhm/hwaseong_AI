@@ -69,7 +69,9 @@
       from { opacity: 0; transform: translateY(28px); }
       to   { opacity: 1; transform: none; }
     }
-    .quiz-step-label { font-size: 12px; color: #94A3B8; font-weight: 600; margin-bottom: 10px; }
+    /* #94A3B8 은 .quiz-card 흰 바탕에서 2.56:1 이라 진행 표시('1 / 5')가 안 읽혔다
+     * (2026-09-01). var(--text-muted) 는 흰 바탕 4.83:1 로 AA 를 넘긴다. */
+    .quiz-step-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px; }
     .quiz-progress-track {
       height: 6px; background: #E2E8F0; border-radius: 3px;
       margin-bottom: 20px; overflow: hidden;
@@ -153,7 +155,10 @@
     }
     .rec-result-emoji { font-size: 54px; margin-bottom: 14px; display: block; }
     .rec-result-title { font-size: 21px; font-weight: 900; color: #1B2A5C; margin-bottom: 8px; }
-    .rec-result-sub { font-size: 13px; color: #94A3B8; line-height: 1.55; }
+    /* 이 줄만 카드가 아니라 #quiz-overlay 바탕(#F0F2F8) 위에 놓인다 — 흰 바탕이 아니다.
+     * 그 바탕에서 #94A3B8 은 2.29:1, var(--text-muted) 도 4.32:1 로 AA 4.5:1 에 못 미쳐
+     * var(--text-sub)(9.21:1)를 쓴다 (2026-09-01). */
+    .rec-result-sub { font-size: 13px; color: var(--text-sub); line-height: 1.55; }
     /* 카드 */
     .rec-card {
       background: #fff; border-radius: 20px;
@@ -211,7 +216,8 @@
     .rec-card-body { padding: 16px 16px 18px; }
     .rec-card-name { font-size: 17px; font-weight: 900; color: #1B2A5C; margin-bottom: 4px; }
     .rec-card.rank-1 .rec-card-name { font-size: 19px; }
-    .rec-card-addr { font-size: 12px; color: #94A3B8; margin-bottom: 10px; }
+    /* .rec-card 흰 바탕 기준 #94A3B8 2.56:1 → var(--text-muted) 4.83:1 (2026-09-01) */
+    .rec-card-addr { font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
     .rec-card-desc {
       font-size: 13px; color: #4a5568; line-height: 1.6;
       margin-bottom: 12px;

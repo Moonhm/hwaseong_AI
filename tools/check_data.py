@@ -51,6 +51,14 @@ FLOOR = {
                                           # 데이터는 그대로라 이 FLOOR 로 건수를 계속 지킨다 —
                                           # 칩을 되살릴 때 이 주석도 고쳐라.
     "CONVENIENCE.cinemas":           13,   # 지도 🎬 영화상영관 칩 (2026-08-26: 10 → 공식 CSV 전건 13)
+    # 2026-09-01: js/ 의 나머지 JSON 4개는 하한도 파싱 검사도 없었다.
+    #   파일째 지워도 「총 28191건 대조 / FAIL 0」 이 그대로 나왔다(실측). 값은 같은 날 실측.
+    "jebu_tide_2026.json":          365,   # schedule — 하루 1건 × 365일 (js/tide.js)
+    "citytour_courses_hwaseong.json": 10,  # courses (js/datalab.js DL_TOUR)
+    "datalab_naviranking_hwaseong_2026.json": 468,
+                                          # 최상위 순위 리스트 7종 합 (js/datalab.js DL_NAVI)
+    "datalab_tourism_stats.json":  2629,   # 인기관광지720+핫플209+맛집1500+AI분석100+관심관광지100
+                                          # (js/datalab.js DL_STATS — 구·연령대로 중첩돼 있다)
 }
 # templeStay(용주사) 는 배열이 아니라 객체 1건이라 건수가 아니라 '존재 여부'로 본다 (check_counts 참조)
 
@@ -193,7 +201,10 @@ def check_counts():
     src_c  = strip_js_comments(open(p_conv, encoding="utf-8").read())
     # cinemas 를 2026-08-26 에 넣었다 — 그전에는 FLOOR 에만 있고 여기서 값을 안 채워
     # '죽은 항목' 이었다. 영화관 13곳이 통째로 사라져도 검사가 초록불이었다.
-    for k in ("restaurants", "touristRestaurants", "hotels", "camping", "cinemas"):
+    # touristFacilities 도 똑같이 죽어 있었다(2026-09-01). 지도 칩은 없어졌지만
+    # js/home.js 의 통합검색 목록과 js/conv_map.js 의 getItems 가 아직 읽는다.
+    for k in ("restaurants", "touristRestaurants", "hotels", "camping", "cinemas",
+              "touristFacilities"):
         got["CONVENIENCE." + k] = array_len(
             src_c, k, "js/convenience.js",
             "js/mapnav.js goConvItem 의 `CONVENIENCE[srcMap[convCat]]` 가 undefined 를 받아 목록이 빈다")
@@ -205,14 +216,54 @@ def check_counts():
     if not re.search(r"(?m)^\s*templeStay\s*:\s*\{", src_c):
         fail("js/convenience.js  templeStay(용주사, 1건) 가 사라졌다")
 
-    for key, fn in (("parking-static.json", "js/parking-static.json"),
-                    ("localcurrency-static.json", "js/localcurrency-static.json"),
-                    ("ratings.json", "js/ratings.json")):
+    # dict 로 된 파일은 최상위 len 이 무의미하다(키가 2~10개뿐이다).
+    # 앱이 실제로 읽는 레코드 배열을 센다. load_json 을 거치므로
+    # '파일이 잘렸다' 검사(파싱 실패 FAIL)가 함께 붙는다.
+    def _n_rows(d):    return len(d["rows"])
+    def _n_sched(d):   return len(d["schedule"])
+    def _n_courses(d): return len(d["courses"])
+    def _n_lists(d):   return sum(len(v) for v in d.values() if isinstance(v, list))
+    def _n_deep(d):
+        # tourism_stats 는 구·연령대로 2~3단 중첩이다. 최상위만 세면
+        # 720건짜리 '인기관광지' 가 통째로 비어도 통과한다. leaf 배열까지 센다.
+        if isinstance(d, list):
+            return len(d) + sum(_n_deep(x) for x in d if isinstance(x, (list, dict)))
+        if isinstance(d, dict):
+            return sum(_n_deep(v) for v in d.values() if isinstance(v, (list, dict)))
+        return 0
+
+    for key, fn, count in (
+            ("parking-static.json",       "js/parking-static.json",       len),
+            ("localcurrency-static.json", "js/localcurrency-static.json", len),
+            ("ratings.json",              "js/ratings.json",              len),
+            ("restaurants-static.json",   "js/restaurants-static.json",   _n_rows),
+            ("jebu_tide_2026.json",       "js/jebu_tide_2026.json",       _n_sched),
+            ("citytour_courses_hwaseong.json",
+             "js/citytour_courses_hwaseong.json", _n_courses),
+            ("datalab_naviranking_hwaseong_2026.json",
+             "js/datalab_naviranking_hwaseong_2026.json", _n_lists),
+            ("datalab_tourism_stats.json",
+             "js/datalab_tourism_stats.json", _n_deep)):
         d = load_json(fn)
-        got[key] = -1 if d is None else len(d)
+        if d is None:
+            got[key] = -1                             # load_json 이 이미 FAIL 을 냈다
+            continue
+        try:
+            got[key] = count(d)
+        except Exception as e:
+            fail("%s  건수를 셀 수 없다 (%s) — 최상위 구조가 바뀌었다. "
+                 "이 파일을 세는 방법(check_counts)도 함께 고쳐라" % (fn, type(e).__name__))
+            got[key] = -1
 
     for k, base in FLOOR.items():
-        g = got.get(k, -1)
+        # FLOOR 에만 있고 check_counts 가 값을 안 채우는 키는 '죽은 하한' 이다.
+        # 예전에는 그것도 -1 이라 아래 `g < 0` 이 조용히 넘겼고, 실제로
+        # cinemas·touristFacilities·restaurants-static 이 그렇게 방치돼 있었다.
+        if k not in got:
+            fail("FLOOR 에 %s 가 있는데 check_counts 가 값을 안 채운다 — 이 하한선은 죽어 있다. "
+                 "이 데이터는 통째로 사라져도 검사가 초록불이다" % k)
+            continue
+        g = got[k]
         if g < 0:      continue                       # 위에서 이미 FAIL 처리됨
         elif g < base: fail("%-32s 기준선 %6d → 지금 %6d  (%d건 사라졌다)" % (k, base, g, base - g))
         elif g > base: info("%-32s 기준선 %6d → 지금 %6d  (+%d) — 기준선을 갱신하라"
@@ -666,6 +717,44 @@ def check_quote_safety():
                  % (fname, len(smart_outside), len(smart_outside) - 5))
 
 
+# ─── 8. PLACES.address 의 읍·면·동이 살아 있는 지명인가 ──────────────────────
+# 2026-09-01: 관광지 37건의 address 가 좌표와 다른 동네를 말하고 있었다.
+#   상세 카드의 주소 줄은 눌러서 복사(js/ui.js copyAddress)하라고 내놓는 값이라
+#   그대로 내비에 넣으면 최대 20km 떨어진 곳으로 간다. 게다가
+#   js/district.js guOf() 가 좌표(bbox)보다 주소를 먼저 읽어 구 검색까지 뒤집힌다.
+#   그중 3건은 2001년에 없어진 '태안읍' 이었다 — 이런 죽은 지명은 기계가 잡을 수 있다.
+# 좌표와의 거리 대조는 여기서 못 한다(경계 데이터가 저장소에 없다. js/district.js 참조).
+#   대신 값싸고 오탐이 없는 것만 본다: 주소 머리의 읍·면·동이 DONG_TO_GU 어휘 안에 있는가.
+def check_address_vocab():
+    p_dist = os.path.join(ROOT, "js/district.js")
+    p_data = os.path.join(ROOT, "js/data.js")
+    if not (os.path.exists(p_dist) and os.path.exists(p_data)):
+        return
+    m = re.search(r"var DONG_TO_GU = \{(.*?)\};", open(p_dist, encoding="utf-8").read(), re.S)
+    if not m:
+        fail("js/district.js  DONG_TO_GU 를 못 찾았다 — 주소 어휘 대조를 할 수 없다")
+        return
+    vocab = set(re.findall(r"'([^']+)'\s*:", m.group(1)))
+    if len(vocab) < 20:
+        fail("js/district.js  DONG_TO_GU 키가 %d개뿐이다 — 파싱이 깨졌다" % len(vocab))
+        return
+    src = open(p_data, encoding="utf-8").read()
+    bad = 0
+    for pm in re.finditer(r'\{ id:(\d+), name:"([^"]+)",[^\n]*? address:"([^"]*)"', src):
+        a = re.sub(r"^\s*경기(?:도)?\s*화성시\s*", "", pm.group(3))
+        a = re.sub(r"^(만세구|효행구|병점구|동탄구)\s*", "", a)
+        t = re.match(r"^([가-힣]{2,6}[읍면동])(?![가-힣])", a)
+        if t and t.group(1) not in vocab:
+            bad += 1
+            if bad <= 10:
+                fail("js/data.js  id=%s %s  address 의 '%s' 는 js/district.js DONG_TO_GU 에 없는 "
+                     "지명이다 — 없어진 옛 이름이거나 오타다. guOf 가 구를 못 정하고, "
+                     "눌러서 복사한 주소가 내비에서 엉뚱한 곳으로 간다"
+                     % (pm.group(1), pm.group(2), t.group(1)))
+    if not bad:
+        info("js/data.js  PLACES 주소의 읍·면·동이 전부 현행 지명이다 (js/district.js DONG_TO_GU 대조)")
+
+
 def main():
     print("── 데이터 손실 검사 (tools/check_data.py) ─────────────────────────")
     got, total = check_counts()
@@ -675,6 +764,7 @@ def main():
     check_photos()
     check_cachebust()
     check_quote_safety()
+    check_address_vocab()
 
     for m in INFO: print("  i   " + m)
     for m in WARN: print("  WARN " + m)

@@ -98,37 +98,56 @@ def main():
     others = [f for f in sorted(src.iterdir())
               if f.is_file() and f.suffix.lower() not in IMG_EXTS and not f.name.startswith(".")]
 
-    hit_exact, hit_near, miss, skipped = [], [], [], []
+    hit_exact, hit_near, hit_desc, miss, skipped = [], [], [], [], []
     for f in files:
         stem = nfc(f.stem)
         ext = f.suffix.lower()
         out_ext = ".jpg" if ext in TO_JPG else ext
         target = exact.get(stem) or loose.get(key(stem))
+        out_stem = target
+        if not target:
+            # {장소명}_{설명}.ext — tools/build_photo_index.py 의 build() 가 '규칙 2' 로
+            # 정식 지원하는 형식이고, 지금 인덱스 376장 중 133장이 이 모양이다.
+            # 여기서 반려하면 한 장소에 두 번째 사진을 넣을 방법 자체가 없어진다.
+            # load_names() 가 길이 내림차순이라 '전곡항' 이 '전곡' 보다 먼저 걸린다.
+            target = next((n for n in names if stem.startswith(n + "_")), None)
+            # ⚠ 출력 이름은 target 이 아니라 원본 stem 그대로여야 한다. target 으로
+            #   줄이면 같은 장소의 사진끼리 이름이 겹쳐 한 장만 남는다.
+            out_stem = stem
         if not target:
             miss.append(f.name)
             continue
-        out = DST / (target + out_ext)
-        (hit_exact if target == stem else hit_near).append((f.name, out.name))
+        out = DST / (out_stem + out_ext)
+        if out_stem != target:
+            hit_desc.append((f.name, out.name, target))
+        else:
+            (hit_exact if target == stem else hit_near).append((f.name, out.name))
         if a.check:
             continue
-        # ⚠ 확장자만 다른 같은 장소 파일이 이미 있으면 복사하지 않는다.
+        # ⚠ 확장자만 다른 **같은 파일**이 이미 있으면 복사하지 않는다.
         #   out.exists() 만 보면 '새싹동산 청려수련원.jpg' 가 있는데도
         #   원본이 .png 라 out 이 '….png' 가 되어 그냥 복사된다. 그 뒤
         #   optimize_images 는 대상(.jpg)이 이미 있어 변환을 건너뛰므로
         #   **두 벌이 나란히 남고** 인덱스에도 2장으로 잡힌다(실제로 그랬다).
-        existing = list(DST.glob(target + ".*"))
+        #   ⚠ target 이 아니라 out_stem 으로 본다. target 으로 보면 '국화도.jpg' 가
+        #     있다는 이유로 '국화도_노을.jpg' 까지 막혀 장소당 한 장에 갇힌다.
+        existing = list(DST.glob(out_stem + ".*"))
         if existing:
             skipped.append(existing[0].name)
             continue
         shutil.copy2(f, out)
 
     print("소스 %s" % src)
-    print("  이미지 %d장 (정확 %d · 이름교정 %d · 미매칭 %d)"
-          % (len(files), len(hit_exact), len(hit_near), len(miss)))
+    print("  이미지 %d장 (정확 %d · 이름교정 %d · 이름_설명 %d · 미매칭 %d)"
+          % (len(files), len(hit_exact), len(hit_near), len(hit_desc), len(miss)))
     if hit_near:
         print("\n  이름을 교정해 반입한 것 — data.js 의 name 이 정답이다:")
         for a_, b_ in hit_near:
             print("    %s  →  %s" % (a_, b_))
+    if hit_desc:
+        print("\n  {장소명}_{설명} 으로 붙인 것 — 파일명은 그대로 둔다(장소당 여러 장):")
+        for a_, b_, t_ in hit_desc:
+            print("    %s  →  %s   (장소: %s)" % (a_, b_, t_))
     if miss:
         print("\n  ⚠ 매칭 실패 — 반입하지 않았다. 이름을 확인하십시오:")
         for m in miss:

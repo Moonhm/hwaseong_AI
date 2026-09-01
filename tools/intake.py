@@ -288,6 +288,28 @@ def rel(path):
     return os.path.relpath(path, ROOT)
 
 
+def uniq(dirpath, stamp, sub, base):
+    """겹치지 않는 저장 경로를 만든다. (겹치면 원본이 조용히 사라진다)
+
+    · 하위 폴더 이름을 접두사로 녹인다  받은자료/2024/list.csv → 20260101_받은자료_2024_list.csv
+    · 그래도 겹치면 _2, _3 을 붙인다. 확장자는 반드시 지킨다.
+      ⚠ basename 만 쓰면 받은자료/2024/list.csv 와 받은자료/2025/list.csv 가 같은 이름이 되어
+        뒤엣것이 앞엣것을 덮어쓴다. 그 뒤 main() 끝의 정리가 원본 폴더를 통째로 지우므로
+        한쪽이 영구 소실된다. 카탈로그에는 2행이 남아 둘 다 들어온 것처럼 보인다.
+    · .gz 사본도 함께 본다 — 경량화 분기는 out 을 gzip 한 뒤 지우므로,
+      이름만 보면 비어 있는 것처럼 보여 지난 경량본을 덮어쓴다.
+    """
+    pre = re.sub(r"\W+", "_", sub).strip("_")[:40]
+    name = "%s_%s_%s" % (stamp, pre, base) if pre else "%s_%s" % (stamp, base)
+    tgt = os.path.join(dirpath, name)
+    stem, ext = os.path.splitext(tgt)
+    i = 2
+    while os.path.exists(tgt) or os.path.exists(tgt + ".gz"):
+        tgt = "%s_%d%s" % (stem, i, ext)
+        i += 1
+    return tgt
+
+
 def append_catalog(entries):
     if not entries:
         return
@@ -337,7 +359,8 @@ def main():
 
     stamp = time.strftime("%Y%m%d")
     entries, cleanup = [], []
-    work_files = []                                    # (경로, 원본표시)
+    work_files = []                                    # (경로, 원본표시, 상대경로 기준 루트)
+    preserved = set()                                  # 실제로 어딘가에 보존이 끝난 원본 경로
 
     # 1) 압축 먼저 푼다
     for p in items:
@@ -345,7 +368,7 @@ def main():
         if os.path.isdir(p):
             for r, _, fs in os.walk(p):
                 for f in fs:
-                    work_files.append((os.path.join(r, f), base + "/"))
+                    work_files.append((os.path.join(r, f), base + "/", args.dir))
             cleanup.append(p)
             continue
         if any(base.lower().endswith(e) for e in ARCH_EXT):
@@ -355,23 +378,36 @@ def main():
                 got, memo = unpack(p, dest)
                 print("   %s → %d개" % (memo, len(got)))
                 for g in got:
-                    work_files.append((g, base + " 안"))
-                cleanup.append(p)
+                    # 해제된 파일은 dest 아래에 상대경로가 살아 있다. 기준 루트도 dest 다.
+                    work_files.append((g, base + " 안", dest))
+                if got:
+                    cleanup.append(p)      # 내용이 data/raw 에 남았으니 원본 압축은 지워도 된다
+                else:
+                    # 한 개도 못 풀었는데 지우면 원본이 통째로 사라진다.
+                    print("   ⚠ 해제된 파일이 없습니다 — 원본을 work/ 에 그대로 둡니다")
             else:
                 with_zip = zipfile.ZipFile(p).namelist()[:6] if base.lower().endswith(".zip") else []
                 print("   해제 예정%s" % ("  예: " + ", ".join(fix_cp949(x) for x in with_zip) if with_zip else ""))
             continue
-        work_files.append((p, ""))
+        work_files.append((p, "", args.dir))
         cleanup.append(p)
 
     # 2) 파일별 처리
-    for p, origin in work_files:
+    for p, origin, sroot in work_files:
         base = os.path.basename(p)
         try:
             size = os.path.getsize(p)
         except OSError:
             continue
         low = base.lower()
+        # 저장 이름에 녹일 하위 폴더. 같은 이름의 파일이 폴더만 달리해 들어오는 일이
+        # 공공데이터 배포에서 흔한데, basename 만 쓰면 한 개만 남는다.
+        try:
+            sub = os.path.dirname(os.path.relpath(p, sroot))
+        except ValueError:
+            sub = ""
+        if sub.startswith(".."):
+            sub = ""
 
         if low.endswith(TEXT_EXT):
             blocks = split_memo(p)
@@ -390,22 +426,37 @@ def main():
                         print("      ↳ %s" % h)
                     time.sleep(0.3)
                 if probes:
-                    out = os.path.join(SRC, "%s_%s.json" % (stamp, re.sub(r"\W+", "_", base)[:30]))
+                    out = uniq(SRC, stamp, sub, "%s.json" % re.sub(r"\W+", "_", base)[:30])
                     json.dump({"file": base, "blocks": blocks, "probes": probes},
                               open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
                     print("   → 출처 기록: %s" % os.path.relpath(out, ROOT))
             if args.apply:
-                shutil.copy2(p, os.path.join(DESC, "%s_%s" % (stamp, base)))
+                dtgt = uniq(DESC, stamp, sub, base)
+                shutil.copy2(p, dtgt)
+                preserved.add(p)
                 entries.append({"name": base, "cat": "desc", "state": "parsed",
                                 "count": len(blocks), "raw": "-",
-                                "out": "data/descriptions/%s_%s" % (stamp, base),
+                                "out": rel(dtgt),
                                 "source": "사용자 메모", "note": "URL %d개" % len(urls)})
             continue
 
         if low.endswith(TABLE_EXT):
             rows, memo = read_rows(p)
             if rows is None:
-                print("\n❌ %s — %s" % (base, memo))
+                # ⚠ 여기서 그냥 continue 하면 아무 데도 복사하지 않은 채 아래 정리가
+                #   원본을 지운다 — work/ 에 올라온 것은 유일본이라 영구 소실이다.
+                #   읽지 못한 것은 '분류를 못 한 것' 이지 '버려도 되는 것' 이 아니다.
+                #   아래 '그 밖의 파일' 분기와 같은 정책으로 보관하고 hold 로 남긴다.
+                print("\n❌ %s%s (%s) — %s. 분류는 못 했지만 보관합니다"
+                      % (origin, base, human(size), memo))
+                if args.apply:
+                    tgt = uniq(raw_dir_for(size), stamp, sub, base)
+                    shutil.copy2(p, tgt)
+                    preserved.add(p)
+                    entries.append({"name": base, "cat": "misc", "state": "hold", "count": "-",
+                                    "raw": rel(tgt), "out": "-",
+                                    "source": origin or "사용자 제공",
+                                    "note": "읽기 실패: %s" % memo})
                 continue
             cols = [c for c in rows[0].keys() if c] if rows else []
             print("\n📊 %s%s (%s) — %d행 / 컬럼 %d개 / %s"
@@ -422,13 +473,14 @@ def main():
             if args.apply:
                 stem = re.sub(r"\W+", "_", os.path.splitext(base)[0])[:40]
                 if size > BIG:
-                    out = os.path.join(PROC, "%s_%s.min.json" % (stamp, stem))
+                    out = uniq(PROC, stamp, sub, "%s.min.json" % stem)
                     n, nb, out = compact(rows, out)
                     out = maybe_gzip(out, size)
                     nb = os.path.getsize(out)
                     if nb < size:
                         print("   경량화: %s → %s (%.0f%% 감소), 원본 삭제"
                               % (human(size), human(nb), (1 - nb / size) * 100))
+                        preserved.add(p)      # 경량본이 원본을 대신한다 (원본 삭제가 설계다)
                         entries.append({"name": base, "cat": cat, "state": "processed", "count": n,
                                         "raw": "삭제(경량화)",
                                         "out": "data/processed/%s" % os.path.basename(out),
@@ -437,16 +489,18 @@ def main():
                     else:
                         # 경량화가 이득이 없다 — 원본을 남긴다
                         os.remove(out)
-                        tgt = os.path.join(raw_dir_for(size), "%s_%s" % (stamp, base))
+                        tgt = uniq(raw_dir_for(size), stamp, sub, base)
                         shutil.copy2(p, tgt)
+                        preserved.add(p)
                         print("   경량화 이득 없음(%s → %s) — 원본을 그대로 보관합니다"
                               % (human(size), human(nb)))
                         entries.append({"name": base, "cat": cat, "state": "parsed", "count": len(rows),
                                         "raw": rel(tgt), "out": "-",
                                         "source": origin or "사용자 제공", "note": "경량화 이득 없어 원본 유지"})
                 else:
-                    tgt = os.path.join(raw_dir_for(size), "%s_%s" % (stamp, base))
+                    tgt = uniq(raw_dir_for(size), stamp, sub, base)
                     shutil.copy2(p, tgt)
+                    preserved.add(p)
                     entries.append({"name": base, "cat": cat, "state": "parsed", "count": len(rows),
                                     "raw": rel(tgt), "out": "-",
                                     "source": origin or "사용자 제공", "note": ", ".join(map(str, cols[:5]))})
@@ -455,20 +509,40 @@ def main():
         # 그 밖의 파일 — 버리지 않고 보관
         print("\n📁 %s%s (%s) — 표·메모 아님. 보관합니다" % (origin, base, human(size)))
         if args.apply:
-            tgt = os.path.join(raw_dir_for(size), "%s_%s" % (stamp, base))
+            tgt = uniq(raw_dir_for(size), stamp, sub, base)
             shutil.copy2(p, tgt)
+            preserved.add(p)
             entries.append({"name": base, "cat": "misc", "state": "hold", "count": "-",
                             "raw": rel(tgt), "out": "-",
                             "source": origin or "사용자 제공", "note": "미분류 보관"})
 
     if args.apply:
         append_catalog(entries)
+        # ⚠ cleanup 은 '처리하기 전' 에 채워진다. 그래서 중간에 어떤 이유로든 보존이
+        #   빠지면 유일본이 그대로 사라진다. 지우기 직전에 '원본 수 == 보존된 수' 를
+        #   맞춰 보고, 하나라도 어긋나면 그 항목은 지우지 않고 알린다.
+        #   압축 해제분(sroot != args.dir)은 data/raw 아래 사본이 이미 남으므로 제외한다.
+        unsaved = [q for q, _o, sroot in work_files
+                   if sroot == args.dir and q not in preserved and os.path.exists(q)]
+        kept = 0
         for p in cleanup:
+            blocked = [q for q in unsaved if q == p or q.startswith(p + os.sep)]
+            if blocked:
+                kept += 1
+                print("  ⚠ 보존하지 못한 파일이 있어 원본을 지우지 않습니다: %s" % p)
+                for q in blocked[:5]:
+                    print("      · %s" % q)
+                continue
             try:
                 shutil.rmtree(p) if os.path.isdir(p) else os.remove(p)
             except OSError as e:
                 print("  ⚠ 정리 실패 %s: %s" % (p, e))
-        print("\n✅ 카탈로그 %d건 추가 · work/ 정리 완료" % len(entries))
+        if kept:
+            # '정리 완료' 만 찍으면 남은 것을 아무도 안 본다. 숫자를 같이 낸다.
+            print("\n⚠ 카탈로그 %d건 추가 · work/ 에 %d개를 남겼습니다 (위 경고를 확인하십시오)"
+                  % (len(entries), kept))
+        else:
+            print("\n✅ 카탈로그 %d건 추가 · work/ 정리 완료" % len(entries))
         print("   data/CATALOG.md 를 확인하십시오.")
     else:
         print("\n(계획만 출력했습니다. --apply 를 붙이면 실행합니다)")

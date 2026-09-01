@@ -339,7 +339,7 @@ fi
 # ── 6. 커밋 직전에만 의미 있는 검사 (--precommit) ───────────────────────────
 # 편집 중에 돌리면 정상 상태에서도 걸리므로 기본에서 뺐다.
 precommit_guard() {
-  local bad=0 last v f
+  local bad=0 cur base kinds
   # (a) js/ 를 고쳤는데 index.html 의 ?v= 를 안 올렸나
   if [ -n "$(git status --porcelain -- js/ 2>/dev/null | grep -E '\.js$')" ] \
      && [ -z "$(git status --porcelain -- index.html 2>/dev/null)" ]; then
@@ -347,19 +347,31 @@ precommit_guard() {
     git status --porcelain -- js/ | sed 's/^/         /'
     bad=1
   fi
-  # (b) ?v= 날짜가 그 파일의 마지막 커밋 날짜보다 뒤처졌나
-  #     ※ 같은 날 두 번째 수정은 이 비교로 못 잡는다(미탐). 날짜 단위의 한계다.
-  while read -r f v; do
-    [ -z "${v:-}" ] && continue
-    last=$(git log -1 --format=%cd --date=format:%Y%m%d -- "$f" 2>/dev/null) || continue
-    [ -z "$last" ] && continue
-    if [ "$last" -gt "$v" ]; then
-      echo "  FAIL $f 는 $last 에 바뀌었는데 index.html 의 ?v=$v 는 그대로다 — 옛 파일이 캐시에서 나간다"
-      bad=1
-    fi
-  done < <(grep -oE '(src|href)="(js|css)/[A-Za-z0-9_.-]+\.(js|css)\?v=[0-9]+"' index.html \
-           | sed -E 's/^(src|href)="//;s/"$//;s/\?v=/ /')
-  [ $bad = 0 ] && echo "  i     ?v= 캐시 버스팅 일관"
+  # (b) js/·css/ 를 고쳤는데 index.html 의 ?v= 값이 HEAD 와 같나
+  #     날짜가 아니라 '값' 을 본다. 예전에는 파일의 마지막 커밋 날짜(%Y%m%d, 8자리)와
+  #     ?v= 값을 숫자로 비교했는데, tools/bump_version.py 가 ?v= 를 날짜가 아니라
+  #     '현재 최대값 + 1' 일련번호(지금 11자리)로 올린다. 8자리가 11자리보다 클 수 없어
+  #     이 분기는 산술적으로 영원히 거짓이었고 30개 태그 전부에서 한 건도 못 잡으면서
+  #     '일관' 을 찍고 있었다. 값 비교로 바꾸면 '같은 날 두 번째 수정' 미탐도 없어진다.
+  kinds=$(grep -oE '\?v=[0-9]+' index.html | sed 's/.*=//' | sort -u | wc -l)
+  if [ "$kinds" -gt 1 ]; then
+    echo "  FAIL index.html 의 ?v= 가 $kinds 종류다 — sed 로 일부만 치환한 상태다(f7d7e84 사고와 같은 모양)"
+    grep -oE '\?v=[0-9]+' index.html | sort | uniq -c | sed 's/^/         /'
+    echo "        python3 tools/bump_version.py 로 전부 통일하라."
+    bad=1
+  fi
+  cur=$(grep -oE '\?v=[0-9]+' index.html | sed 's/.*=//' | sort -rn | head -1)
+  base=$(git show HEAD:index.html 2>/dev/null | grep -oE '\?v=[0-9]+' | sed 's/.*=//' | sort -rn | head -1)
+  if [ -n "$cur" ] && [ -n "$base" ] \
+     && [ -n "$(git status --porcelain -- js/ css/ 2>/dev/null)" ] \
+     && [ "$cur" -le "$base" ]; then
+    echo "  FAIL js/·css/ 를 고쳤는데 index.html 의 ?v=$cur 가 HEAD($base)보다 올라가지 않았다 — 옛 파일이 캐시에서 나간다"
+    git status --porcelain -- js/ css/ | sed 's/^/         /'
+    echo "        서버가 ?v= 를 1년 immutable 로 내보낸다. python3 tools/bump_version.py 를 돌려라"
+    echo "        (손으로 sed 하지 마라 — 0건 치환하고 조용히 성공한다)"
+    bad=1
+  fi
+  [ $bad = 0 ] && echo "  i     ?v= 1종류($cur) — js/·css/ 변경이 있으면 HEAD($base)보다 올라 있다"
   return $bad
 }
 if [ $PRECOMMIT = 1 ]; then

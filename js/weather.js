@@ -19,7 +19,7 @@
  * ========================================================================== */
 
 var _wkData = null;      /* 받아 둔 7일치 응답 */
-var _wkKey  = null;      /* 그 응답을 받은 좌표. 좌표가 바뀌면 다시 받는다 */
+var _wkKey  = null;      /* 그 응답을 받은 좌표+날짜. 좌표가 바뀌거나 날이 바뀌면 다시 받는다 */
 var _wkOpen = 0;         /* 펼쳐 둔 날짜 인덱스. 기본은 오늘(0) */
 var _wkBusy = false;
 
@@ -65,7 +65,13 @@ function renderWeeklyWeather() {
   if (!el) return;
   if (typeof _hwLat === 'undefined') { el.innerHTML = ''; return; }
 
-  var key = _hwLat + ',' + _hwLon;
+  /* 캐시 키에 날짜를 섞는다. 좌표만으로 잡으면 탭을 열어 둔 채 자정을 넘겼을 때
+   * 어제 응답을 그대로 다시 그린다 — daily.time[0] 은 어제인데 _wkDayLabel 이
+   * i===0 에 무조건 '오늘' 을 붙여, 같은 패널의 td-date(오늘)와 날짜가 어긋난다.
+   * 펼친 3시간 예보의 '지금' 강조도 어제 데이터 위에 찍힌다.
+   * 홈 바(js/home.js initWeatherBar)처럼 시간 TTL 을 두지는 않는다 — 만료될 때마다
+   * 이미 그려 둔 주를 '불러오는 중' 으로 지우고 _wkOpen 을 0 으로 되돌리게 된다. */
+  var key = _hwLat + ',' + _hwLon + ',' + new Date().toDateString();
   if (_wkData && _wkKey === key) { _renderWeekly(); return; }
 
   el.innerHTML = '<div class="td-card td-empty">주간 예보를 불러오는 중이에요…</div>';

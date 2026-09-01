@@ -45,7 +45,17 @@ function _applyRealtime(data) {
   var _open = _openParkingCardId();
   if (_open != null) {
     var _cur = parkingData.find(function (x) { return x.id === _open; });
-    if (_cur) showParkingSlide(_cur);
+    /* ⚠ innerHTML 을 통째로 갈면 스크롤 주체인 #slide-inner(css/20-map.css 의 .slide-inner
+     * 는 overflow-y:auto) 의 scrollTop 이 0 으로 잘린다 — 요금 안내를 보려고 내려 둔 카드가
+     * 60초마다 저 혼자 맨 위로 튀고, 누르려던 버튼 자리에 다른 것이 올라온다.
+     * 같은 요소의 '내용' 만 바뀌므로 대입 뒤 되돌리면 된다.
+     * quiet=true 는 '사용자가 새로 연 게 아니다' 라는 뜻이다 — showParkingSlide 주석 참고. */
+    if (_cur) {
+      var _si = document.getElementById('slide-inner');
+      var _sy = _si ? _si.scrollTop : 0;
+      showParkingSlide(_cur, true);
+      if (_si) _si.scrollTop = _sy;
+    }
   }
 }
 
@@ -54,7 +64,7 @@ function fetchParkingAll() {
   /* DOMContentLoaded에서 이미 static JSON을 로드했으면 재사용 */
   var staticP = parkingData.length
     ? Promise.resolve(null)
-    : fetch('js/parking-static.json?v=20260826159').then(function (r) { return r.json(); });
+    : fetch('js/parking-static.json?v=20260826160').then(function (r) { return r.json(); });
 
   staticP
     .then(function (list) {
@@ -384,29 +394,36 @@ function _openParkingCardId() {
  * 예전에는 onclick="refreshParking();showToast('새로고침 완료')" 였다.
  * ① 응답을 기다리지 않아 서버가 죽어 있어도 늘 '완료' 라고 말했고,
  * ② refreshParking() 은 핀만 다시 그려서 열려 있는 카드의 '현재 여유'·진행 막대·
- *    숫자 색은 옛 값 그대로 남았다 — 뒤의 핀과 앞의 카드가 서로 다른 값을 보였다. */
+ *    숫자 색은 옛 값 그대로 남았다 — 뒤의 핀과 앞의 카드가 서로 다른 값을 보였다.
+ *    이제는 _applyRealtime 이 열린 카드까지 (스크롤을 지키며) 다시 그린다. */
 function refreshParkingSlide() {
   fetch('/api/parking/realtime')
     .then(function (r) { return r.json(); })
     .then(function (res) {
       if (!res || !res.ok || !Array.isArray(res.data)) throw new Error('bad');
+      /* 여기서 카드를 한 번 더 그리면 안 된다 — _applyRealtime 이 이미 스크롤을
+       * 지키며 그렸는데, 덧그리면 '🔄 새로고침' 을 누른 사람의 스크롤만 튄다. */
       _applyRealtime(res);
-      var id = _openParkingCardId();
-      var p  = id != null ? parkingData.find(function (x) { return x.id === id; }) : null;
-      if (p) showParkingSlide(p);            /* 카드도 새 값으로 다시 그린다 */
       showToast('새로고침 완료');
     })
     .catch(function () { showToast('지금은 실시간 정보를 받지 못했어요'); });
 }
 
-function showParkingSlide(p) {
+function showParkingSlide(p, quiet) {
   /* '최근 본' 기록 지점 (js/home.js pushRecent). 관광지는 js/map.js showPlaceSlide 가 건다.
-   * 주차장 id 는 관광지 id 와 60개가 겹치므로 종류를 반드시 함께 넘긴다. */
-  if (typeof pushRecent === 'function') pushRecent(p, 'parking');
+   * 주차장 id 는 관광지 id 와 60개가 겹치므로 종류를 반드시 함께 넘긴다.
+   * quiet = 자동 갱신에서 온 재렌더. 이미 목록 맨 앞에 있는 항목을 60초마다 다시 쓰고
+   * renderRecentSection() 으로 홈 DOM 을 재생성하는 헛일을 막는다.
+   * 기존 호출부(onParkingClick·js/map.js·js/mapnav.js)는 인자를 안 넘기므로 그대로다. */
+  if (!quiet && typeof pushRecent === 'function') pushRecent(p, 'parking');
   if (p && p.id != null) _pkSelect(p.id);   /* 선택 핀 강조 — 위 _pkSelect 주석 참고 */
 
   var color   = pinColorCached(p);
-  var avail   = p.open ? p.avail : '-';
+  /* 상류(smartparking)가 초과 주차 구간에서 CURRENT_CNT 를 음수로 보낸다(2026-08-31 실측).
+   * 핀은 statusText 가 '만차' 라고 쓰는데 카드만 '-10' 을 찍으면 같은 데이터의 앞뒤가
+   * 서로 다른 말을 한다. 표시 문자열만 핀과 맞춘다 — p.avail 자체는 건드리지 않는다.
+   * 총 면수보다 많은 값은 핀과 카드가 이미 일치하므로 상한을 두지 않는다(깎으면 오히려 어긋난다). */
+  var avail   = !p.open ? '-' : (p.avail < 0 ? '만차' : p.avail);
   var ratio   = (p.open && p.total > 0) ? Math.max(0, Math.round((p.avail / p.total) * 100)) : 0;
   var freeTag = p.free
     ? '<span style="background:#DCFCE7;color:#16A34A;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">무료</span>'

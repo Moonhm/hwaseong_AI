@@ -76,7 +76,7 @@ function renderNearbyResult(myLat, myLng, gen) {
 
   /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
   if (!parks.length) {
-    fetch('js/parking-static.json?v=20260826159').then(function (r) { return r.json(); }).then(function (d) {
+    fetch('js/parking-static.json?v=20260826160').then(function (r) { return r.json(); }).then(function (d) {
       if (gen != null && gen !== _nearbyGen) return;
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
       if (parkingData.length) renderNearbyResult(myLat, myLng, gen);
@@ -356,6 +356,13 @@ function renderHomePage() {
 ══════════════════════════════════════════════════ */
 var _srTimer = null;
 
+/* ⚠ 좌표는 저장소가 이미 가진 값과 맞춰 둔다 — 이 표는 js/data.js PLACES 와 별개
+ *   사본이라 조용히 어긋난다. 예전에 '서신'(37.1549/126.5757)과 '제부도'
+ *   (37.1578/126.5764)가 서로 330m 안에 붙은 채, 실제 위치에서 4~9km 서쪽
+ *   바다를 가리키고 있었다 — 눌러도 육지도 핀도 없는 화면이 떴다.
+ *   근거: 제부도·공룡알화석지는 js/data.js PLACES(id:1·id:8)와 같은 값,
+ *   서신은 js/localcurrency-static.json 의 서신면 가맹점 514건 좌표 중앙값
+ *   (= 면 소재지 일대. 옛 lng 126.5757 서쪽에는 가맹점이 0건이다). */
 var _REGIONS = [
   { name: '동탄',   lat: 37.2004, lng: 127.0781, level: 6 },
   { name: '병점',   lat: 37.2266, lng: 127.0483, level: 6 },
@@ -371,11 +378,11 @@ var _REGIONS = [
   { name: '반월',   lat: 37.2315, lng: 127.0527, level: 6 },
   { name: '진안',   lat: 37.2436, lng: 126.9968, level: 6 },
   { name: '장안',   lat: 37.0870, lng: 126.8628, level: 6 },
-  { name: '서신',   lat: 37.1549, lng: 126.5757, level: 7 },
+  { name: '서신',   lat: 37.1688, lng: 126.6752, level: 7 },
   { name: '송산',   lat: 37.2152, lng: 126.6774, level: 6 },
   { name: '화성',   lat: 37.1996, lng: 126.8316, level: 9 },
-  { name: '제부도', lat: 37.1578, lng: 126.5764, level: 7 },
-  { name: '공룡알화석지', lat: 37.2441, lng: 126.7498, level: 5 },
+  { name: '제부도', lat: 37.1696176, lng: 126.6228376, level: 7 },
+  { name: '공룡알화석지', lat: 37.26235, lng: 126.74706, level: 5 },
   { name: '화성행궁', lat: 37.2844, lng: 127.0130, level: 5 },
 ];
 
@@ -387,6 +394,17 @@ var _REGIONS = [
  *   초기화(로드 시점 평가)에서 ReferenceError 가 났다.
  *   js/favorites.js 는 _favCfg() 안(런타임)에서 읽으므로 순서와 무관하다. */
 var LC_ICON_HTML = '<img src="img/gyeonggi_currency_logo.png" alt="경기지역화폐" style="width:18px;height:18px;object-fit:contain;vertical-align:middle">';
+
+/* 검색 결과 행은 innerHTML 로 그린다(renderHomeSearchResults). 거기에 **사용자가 친
+ * 글자**가 그대로 들어가는 자리가 딱 하나 있다 — 가맹점 미로드 안내행의 name 이다.
+ * 이스케이프가 없어서 `<img src=x onerror=…>` 를 붙여넣으면 결과 목록에서 실행됐다.
+ * ⚠ 이 헬퍼는 반드시 이 파일 안에 둔다 — home.js 는 로드 4번째라 뒤 파일에 두면
+ *   load 시점에 못 읽는다(위 LC_ICON_HTML 주석의 전례).
+ * ⚠ r.em 에는 절대 걸지 마라. LC_ICON_HTML 로고가 의도된 HTML 이다. */
+function _srEsc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
 
 var _CAT_STYLE = {
   tourist:      { bg: '#EEF2FF', em: '🎡' },
@@ -466,7 +484,10 @@ var _CAT_SYN = {
 /* ⑤ 먹고 자고 놀기 — CONVENIENCE 8종.
  * go 는 결과를 눌렀을 때 어느 경로로 보낼지다.
  *   'conv'  → goConvItem(cat, idx)  (목록 인덱스로 가는 것)
- *   'conv2' → goMapConv(cat, lat, lng)  (좌표를 가진 것) */
+ *   'conv2' → goMapConv(cat, lat, lng)  (좌표를 가진 것)
+ * pre 는 addr 앞에 붙일 접두어다 — 구 필터가 guFromAddress(js/district.js)로
+ * 구를 읽어내려면 '화성시' 와 읍면 이름이 있어야 하는데 원본 addr 에는 없다.
+ * 제부도 숙박은 js/conv_map.js CONV_CAT_CFG.jebu.getFullAddr 과 같은 접두어를 쓴다. */
 function _CONV_SETS() {
   if (typeof CONVENIENCE === 'undefined') return [];
   var C = CONVENIENCE;
@@ -485,7 +506,7 @@ function _CONV_SETS() {
     { arr: temple,               cat: 'temple',      go: 'conv',  label: '템플스테이',   em: '🛕', bg: '#FEF3C7' },
     { arr: C.touristFacilities,  cat: 'touristfacility', go: 'conv2', label: '관광편의시설', em: '🎫', bg: '#F1F5F9' },
     { arr: C.cinemas,            cat: 'cinema',      go: 'conv2', label: '영화상영관',   em: '🎬', bg: '#FCE7F3' },
-    { arr: jebu,                 cat: 'jebu',        go: 'conv2', label: '제부도 숙박',  em: '⛱️', bg: '#E0F2FE' }
+    { arr: jebu,                 cat: 'jebu',        go: 'conv2', label: '제부도 숙박',  em: '⛱️', bg: '#E0F2FE', pre: '경기도 화성시 서신면 ' }
   ];
 }
 
@@ -736,6 +757,19 @@ function doHomeSearch(q, where) {
         var aux = (p.addr || '') + ' ' + (p.cuisine || '') + ' ' + (p.area || '');
         var sc  = score(nm, _CAT_SYN[cs.cat] || '', aux, nm.replace(/\s+/g, '').toLowerCase());
         if (sc < 0) return;
+        /* 구를 지정했으면 그 구가 아닌 것을 뺀다. ③·④ 는 _inGu() 로 이미 하는데
+         * 여기만 빠져 있어서, 결과 맨 위에 '지도에서 이 동네만 봐요' 라고 적어 놓고
+         * 바로 아래 칸에 다른 구의 가게를 늘어놓았다('동탄구 캠핑' → 서신면 3건).
+         * ⚠ _inGu(p) 를 그냥 쓰면 안 된다 — CONVENIENCE 의 addr 은 '노작로 161
+         *   (반송동)' 처럼 시 접두어가 없어 _GU_RE 의 '화성시' 가 안 맞고, 관광식당
+         *   0/35 · 호텔 0/10 · 캠핑 0/17 은 좌표도 없어 bbox 폴백까지 막힌다
+         *   (295건 중 165건이 null 이 되어 필터가 통째로 헛돈다).
+         *   cs.pre 접두어를 붙이면 DONG_TO_GU 가 살아나 미분류가 28건으로 준다.
+         * 그래서 '구를 알아냈는데 요청한 구와 다를 때' 만 뺀다 — 남은 28건은 잃지 않는다. */
+        var _g5 = (_gu && typeof guOf === 'function')
+          ? guOf({ address: (cs.pre || '경기도 화성시 ') + (p.addr || ''), lat: p.lat, lng: p.lng })
+          : null;
+        if (_g5 && _g5 !== _gu) return;
         var o = { type: cs.go, name: nm, sub: cs.label + (p.addr ? ' · ' + p.addr : ''),
                   em: cs.em, bg: cs.bg, convCat: cs.cat, idx: i, _sc: sc };
         if (p.lat && p.lng) { o.lat = p.lat; o.lng = p.lng; }
@@ -782,6 +816,12 @@ function doHomeSearch(q, where) {
           if (fn0.indexOf(tk) < 0 && fc0.indexOf(tk) < 0 && fa0.indexOf(tk) < 0) { okAll = false; break; }
         }
         if (!okAll) continue;
+        /* 구 필터. 주소(a)에 구가 98% 들어 있으므로 27,374건에 guOf() 를 돌리지 않고
+         * 통과한 행만 문자열로 본다. hasLatin 소문자 사본에도 한글 구 이름은 그대로
+         * 남아 indexOf 가 통한다.
+         * ⚠ 버킷을 채우기 '전' 에 건다 — CAP 20 이 다른 구 항목으로 먼저 차면
+         *   요청한 구의 가맹점이 한 곳도 안 남는다. */
+        if (_gu && fa0.indexOf(_gu) < 0) continue;
         lcTotal++;
         var t0  = hasLatin ? toks[0] : _qtToks[0];
         var key = (fn0 === t0) ? 0 : (fn0.indexOf(t0) === 0 ? 1 : 2);
@@ -798,8 +838,10 @@ function doHomeSearch(q, where) {
         });
       });
     } else {
-      /* 미로드 — 조용히 0건으로 두지 않는다. 그게 지금 가장 큰 거짓말이다. */
-      push(7, { type: 'lcload', name: '가맹점 27,374곳에서 \u0027' + _qt + '\u0027 찾기',
+      /* 미로드 — 조용히 0건으로 두지 않는다. 그게 지금 가장 큰 거짓말이다.
+       * ⚠ _srEsc 를 빼지 마라. name 은 renderHomeSearchResults 에서 innerHTML 로
+       *   들어가는데, 검색어가 그리로 흘러가는 자리는 이 한 줄뿐이다. */
+      push(7, { type: 'lcload', name: '가맹점 27,374곳에서 \u0027' + _srEsc(_qt) + '\u0027 찾기',
                 sub: '눌러서 불러오기 · 약 0.8MB', em: LC_ICON_HTML, bg: '#F0FDF4', _sc: 0 });
     }
   }
@@ -831,14 +873,17 @@ function _uniPrefetchLc(qt) {
 var _UNI_CAP  = { 1: 3, 2: 2, 3: 4, 4: 3, 5: 3, 6: 2, 7: 3 };
 var _UNI_TOTAL = 12;
 function _uniBudget(rows) {
-  var by = {};
+  var by = {}, totals = {};
   rows.forEach(function (r) { (by[r._sec] = by[r._sec] || []).push(r); });
   Object.keys(by).forEach(function (k) {
     by[k].sort(function (a, b) {
       if (b._sc !== a._sc) return b._sc - a._sc;
       return String(a.name).length - String(b.name).length;
     });
-    by[k]._total = by[k].length;
+    /* ⚠ 개수를 배열에 expando 로 붙이지 마라 — 바로 아래 slice 가 새 배열을 만들어
+     * 그 프로퍼티가 사라진다. 그래서 _secTotal 이 늘 undefined 였고
+     * 'N건 모두 보기 ›' 배지가 어떤 검색어로도 한 번도 안 그려졌다. */
+    totals[k] = by[k].length;
     by[k] = by[k].slice(0, _UNI_CAP[k] || 3);
   });
   var secs = Object.keys(by).map(Number).sort(function (a, b) { return a - b; });
@@ -854,7 +899,15 @@ function _uniBudget(rows) {
   }
   var out = [];
   secs.forEach(function (k) {
-    by[k].forEach(function (r, i) { r._first = (i === 0); r._secTotal = by[k]._total; out.push(r); });
+    by[k].forEach(function (r, i) {
+      r._first = (i === 0);
+      /* ⑦ 가맹점은 CAP 20 + break 때문에 push 자체가 끊겨 totals 가 실제 걸린 건수보다
+       * 작다. 그 섹션은 각 행이 이미 들고 있는 _lcTotal(진짜 걸린 건수)을 쓴다. */
+      r._secTotal = (r._lcTotal != null) ? r._lcTotal : totals[k];
+      /* 비교 기준은 CAP 이 아니라 실제로 그린 행수다 — 위 예산 깎기로 CAP 미만이 될 수 있다. */
+      r._secShown = by[k].length;
+      out.push(r);
+    });
   });
   return out;
 }
@@ -902,7 +955,7 @@ function renderHomeSearchResults(results, q) {
   el.innerHTML = results.map(function (r, idx) {
     var head = '';
     if (r._first) {
-      var more = (r._secTotal > _UNI_CAP[r._sec])
+      var more = (r._secTotal > (r._secShown || _UNI_CAP[r._sec]))
         ? '<span class="sr-sec-more">' + r._secTotal + '건 모두 보기 ›</span>' : '';
       head = '<div class="sr-sec" onclick="_srSecClick(' + r._sec + ')">'
            + '<span>' + (_UNI_SEC_NAME[r._sec] || '') + '</span>' + more + '</div>';
@@ -982,10 +1035,19 @@ function _srClick(idx) {
   /* 가맹점 미로드 안내행 — 여기서만 4.2MB 를 받는다(사용자가 눌렀을 때만).
    * ⚠ clearHomeSearch 를 부르면 안 된다. 받은 뒤 같은 검색어로 다시 그려야 한다. */
   if (r.type === 'lcload') {
-    var _q = _srEl(_srWhere, 'input');
+    /* ⚠ 4.2MB 가 도착하기까지 수 초가 걸린다. 그 사이 사용자는 ✕ 를 누르거나
+     * 다른 검색창으로 옮길 수 있다. 창(_srWhere)을 콜백 시점에 읽으면
+     * '입력창엔 궁평, 목록엔 카페' 가 되고, 검색어를 안 보면 이미 닫은 결과가
+     * 혼자 되살아난다 — closeHomeSearch 가 디바운스 쪽에서 막아 둔 것과 같은 사고다.
+     * 창과 검색어를 지금 값으로 붙잡아 두고, 도착 시점에도 그대로일 때만 다시 그린다. */
+    var _w  = _srWhere;
+    var _q  = _srEl(_w, 'input');
     var _qv = _q ? _q.value : '';
     if (typeof _loadLcData === 'function') {
-      _loadLcData(function () { if (_qv) doHomeSearch(_qv, _srWhere); });
+      _loadLcData(function () {
+        var cur = _srEl(_w, 'input');
+        if (_qv && cur && cur.value === _qv) doHomeSearch(_qv, _w);
+      });
     }
     return;
   }

@@ -216,19 +216,34 @@
       font-size: 10.5px; font-weight: 800; color: var(--text-muted);
       letter-spacing: 0.7px; text-transform: uppercase; margin: 0 0 10px;
     }
+    /* 색 대비 (2026-09-01) — 바탕은 위 .home-data-notice 의 var(--bg) #F5F6F8 이다.
+     *   고친 값들: .dn-body #a0aec0 2.09:1 · .dn-copy #b8c2cc 1.67:1 · strong #718096 3.71:1.
+     *   '공식 앱이 아니다' 라는 고지와 개발자 문의 메일이 이 블록에 들어 있는데
+     *   밝은 화면·야외에서 글자가 바탕에 묻혀 안 읽혔다.
+     *   var(--text-muted) 로 올리는 것으로는 모자란다 — 그 토큰은 흰 바탕에선 4.83:1 이지만
+     *   이 회색 바탕에서는 4.47:1 이라 AA 본문 기준 4.5:1 에 0.03 못 미친다(토큰 값 자체는
+     *   앱 전역에 걸려 있어 여기서 개별로 올리지 않는다). 그래서 바탕이 var(--bg) 인 이
+     *   블록은 한 단계 진한 var(--text-sub) 를 쓴다.
+     *   지금 값: 본문 var(--text-sub) 9.53:1 · strong var(--text) 16.4:1 · 메일 #C2410C 4.79:1.
+     *   '뒤로 물러난' 느낌은 색이 아니라 font-size(10~11px)와 여백으로 만든다 —
+     *   색으로 만들면 고지문 자체가 안 읽힌다. 되돌리기 전에 이 수치를 먼저 다시 재 볼 것. */
     .dn-body {
-      font-size: 11px; color: #a0aec0; line-height: 1.8; margin: 0 0 7px;
+      font-size: 11px; color: var(--text-sub); line-height: 1.8; margin: 0 0 7px;
     }
-    .dn-body strong { color: #718096; font-weight: 700; }
+    .dn-body strong { color: var(--text); font-weight: 700; }
     .dn-copy {
-      font-size: 10px; color: #b8c2cc; line-height: 1.6;
+      font-size: 10px; color: var(--text-sub); line-height: 1.6;
       margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--border);
     }
     .dn-dev {
       border-top: none; padding-top: 3px; margin-top: 3px;
-      color: #a0aec0; font-weight: 600;
+      color: var(--text-sub); font-weight: 600;
     }
-    .dn-mail { color: var(--orange); text-decoration: none; }
+    /* var(--orange) 는 이 바탕에서 2.59:1 이라 메일 주소가 읽히지 않았다.
+     * #C2410C 는 4.79:1 이고 css/10-content.css 가 이미 쓰는 값이라 새 색이 아니다.
+     * 밑줄은 색만으로 링크를 구분하지 않기 위한 것이다 — #C2410C 와 주변 본문
+     * var(--text-sub) 의 휘도 대비는 1.99:1 이라 색상 차이만 남으면 WCAG 1.4.1 위반이다. */
+    .dn-mail { color: #C2410C; text-decoration: underline; }
     .home-bottom-pad { height: 24px; }
 
     /* ── 눌림 피드백 보강 (2026-08-25, 개발 Claude) ─────────────────────────

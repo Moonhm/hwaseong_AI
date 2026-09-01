@@ -17,11 +17,25 @@ function getFavs() {
 function isFav(id) {
   return getFavs().some(function(f) { return f.id === id; });
 }
+/* 쓰기도 실패할 수 있다. 크롬 '모든 쿠키 차단' · 사파리 프라이빗 · 저장소를 끈 인앱
+ * 웹뷰에서는 setItem 이 예외를 던진다. 읽기(getFavs)만 감싸 둔 탓에 '♡ 저장' 을 누르면
+ * 예외가 toggleFav 밖으로 새어, 호출자 toggleFavBtn 의 버튼 글자 갱신까지 통째로
+ * 건너뛰었다 — 토스트도 없어 '눌러도 아무 반응 없는 버튼' 이 됐다.
+ * js/home.js 의 pushRecent·clearRecent 와 같은 규약이다: 저장만 try 로 감싸고
+ * 화면 갱신은 try 밖에서 부른다(렌더 함수의 예외까지 삼키면 안 된다). */
+function _favWrite(favs) {
+  try { localStorage.setItem(_FAV_KEY, JSON.stringify(favs)); return true; }
+  catch (e) { return false; }
+}
 function toggleFav(fav) {
   var favs = getFavs();
   var idx = favs.findIndex(function(f) { return f.id === fav.id; });
   if (idx >= 0) favs.splice(idx, 1); else favs.unshift(fav);
-  localStorage.setItem(_FAV_KEY, JSON.stringify(favs));
+  if (!_favWrite(favs)) {
+    /* 저장이 안 됐는데 UI 만 저장된 척하면 안 된다. 아무 말 없이 죽는 것보다는 이유를 알린다. */
+    if (typeof showToast === 'function') showToast('이 브라우저에서는 즐겨찾기를 저장할 수 없어요');
+    return;
+  }
   _refreshFavUi();
 }
 function toggleFavBtn(btn) {
@@ -43,12 +57,12 @@ function toggleFavBtn(btn) {
   btn.classList.toggle('saved', saved);
 }
 function removeFav(id) {
-  localStorage.setItem(_FAV_KEY, JSON.stringify(getFavs().filter(function(f) { return f.id !== id; })));
+  _favWrite(getFavs().filter(function(f) { return f.id !== id; }));
   _refreshFavUi();
 }
 function clearFavs() {
   if (!confirm('즐겨찾기를 모두 삭제할까요?')) return;
-  localStorage.removeItem(_FAV_KEY);
+  try { localStorage.removeItem(_FAV_KEY); } catch (e) {}
   _refreshFavUi();
 }
 function _refreshFavUi() {

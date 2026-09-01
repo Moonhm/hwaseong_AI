@@ -242,7 +242,18 @@ def _cache_headers(resp):
       3) 로컬 직접 접근은 예외다.
          앱의 30개 태그는 항상 ?v= 를 달고 있어 개발 중 새로고침이 100%
          이 경로를 탄다. 두 Claude 가 파일을 고치고 확인하는 흐름이 막힌다.
+
+      4) 오류 응답(4xx·5xx)에는 freshness 를 붙이지 않는다 (2026-09-01).
+         404 는 RFC 9110 §15.5.5 상 기본 캐시 대상이라 max-age 를 달아 보내면
+         브라우저가 저장하고 재요청조차 하지 않는다. 배포는 워킹트리에서
+         git pull 이고 checkout 은 경로순이라 index.html 이 js/ 보다 먼저 쓰인다
+         — 새 <script src="js/새파일.js?v=…"> 가 들어간 배포 도중 방문한 사용자가
+         그 URL 에 404 + immutable 을 받으면, 파일이 다 내려온 뒤에도 그 화면만
+         조용히 죽는다(전역 함수 부재 → index.html 의 typeof 가드가 삼킨다).
+         304(조건부 GET)·206(Range) 은 정상 흐름이라 그대로 둔다.
     """
+    if resp.status_code >= 400:
+        return resp                      # 조건 4 — 오류 응답은 캐시 대상이 아니다
     host = (request.host or "").split(":")[0]
     if host in ("127.0.0.1", "localhost", "0.0.0.0", "::1"):
         return resp                      # 조건 3 — 개발 중에는 캐시하지 않는다

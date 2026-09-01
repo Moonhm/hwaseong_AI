@@ -50,6 +50,14 @@ function _renderToday() {
   var date = (now.getMonth() + 1) + '월 ' + now.getDate() + '일 (' + dow + ')';
 
   /* ── 날씨·미세먼지 — 홈 상단 바가 이미 채워 둔 값을 읽는다 ── */
+  /* ⚠ '값이 있는지' 로 판정하면 안 된다 — index.html 의 #hwb-temp 초기값이 '—°C' 라
+   *   _tdText 의 '—'·'-' 필터를 그대로 통과한다. 그러면 아래 (temp || desc) 가 늘 참이 돼
+   *   폴백 안내가 영영 안 뜨고 '—°C' 와 빈 설명줄만 남는다(로딩 중인지 고장인지 알 수 없다).
+   *   js/home.js 의 _renderWeather() 는 성공했을 때만 마지막 줄에서 display:flex 를 주고
+   *   초기값은 index.html 의 display:none 이므로, 그것을 '채워짐' 신호로 쓴다. */
+  var _wbar    = document.getElementById('home-weather-bar');
+  var _wFilled = !!(_wbar && _wbar.style.display === 'flex');
+
   var temp  = _tdText('hwb-temp');
   var desc  = _tdText('hwb-desc');
   var range = _tdText('hwb-range');
@@ -57,7 +65,7 @@ function _renderToday() {
   var pm25  = _tdText('hwb-pm25-val');
   var icon  = _tdText('hwb-icon', '🌡️');
 
-  var weather = (temp || desc)
+  var weather = (_wFilled && (temp || desc))
     ? '<div class="td-card">' +
         '<div class="td-w-main">' +
           '<span class="td-w-icon">' + icon + '</span>' +
@@ -87,7 +95,7 @@ function _renderToday() {
     '<div id="today-weekly"></div>' +
     /* 2026-08-26 사용자 지시로 '내 주변 추천 받기' 버튼을 빼고 출처 고지를 넣었다.
      * 홈 탭의 '데이터 출처 및 유의사항' 과 같은 성격이라 문체도 그쪽을 따른다 —
-     * 앱의 다른 문구는 해요체지만 고지문만 격식체다(사용자 지시, WORKFLOW §3).
+     * 앱의 다른 문구는 해요체지만 고지문만 격식체다(사용자 지시, WORKFLOW §15).
      * 실제 호출하는 엔드포인트만 적는다:
      *   api.open-meteo.com/v1/forecast          기온·강수·주간 예보
      *   air-quality-api.open-meteo.com/v1/...   PM2.5

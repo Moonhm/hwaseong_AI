@@ -54,19 +54,40 @@ function scrollLcFilter(dir) {
 (function () {
   var el = document.getElementById('lc-filter-scroll');
   if (!el) return;
-  el.addEventListener('scroll', updateLcArrows, { passive: true });
   var down = false, startX = 0, scrollLeft = 0;
+  /* 드래그 스크롤은 잡은 칩이 커서를 그대로 따라오므로(배율 1.0) mousedown/mouseup
+   * 대상이 같은 .lc-fchip 이 되고 브라우저가 click 을 쏜다 — 밀기만 하려던 사람의
+   * 업종 필터가 바뀌어 지도 핀이 통째로 갈린다. 바로 아래 #map-chips 와 같은 사고인데
+   * 그때 이쪽을 함께 고치지 않았다.
+   * 칩이 인라인 onclick="setLcFilter(...)" 이라 캡처 단계에서 막아야 도달하지 않는다.
+   * 임계값 5px 은 #map-chips 와 같은 값이다 — 두 바의 체감이 달라지면 안 된다. */
+  var moved = 0;
+  el.addEventListener('click', function (e) {
+    if (moved <= 5) return;
+    e.stopPropagation(); e.preventDefault();
+  }, true);
+  el.addEventListener('scroll', updateLcArrows, { passive: true });
   el.addEventListener('mousedown', function (e) {
-    down = true; el.classList.add('dragging');
+    down = true; moved = 0; el.classList.add('dragging');
     startX = e.pageX - el.getBoundingClientRect().left;
     scrollLeft = el.scrollLeft;
   });
   document.addEventListener('mouseup', function () {
-    if (!down) return; down = false; el.classList.remove('dragging'); updateLcArrows();
+    if (!down) return;
+    down = false; el.classList.remove('dragging'); updateLcArrows();
+    /* click 은 mouseup 다음 프레임에 온다 — 그 뒤에 초기화해야 위 가드가 본다 */
+    setTimeout(function () { moved = 0; }, 0);
+  });
+  /* 커서를 창 밖으로 빼고 버튼을 떼면 mouseup 이 안 와 down 이 true 로 굳는다. */
+  document.addEventListener('mouseleave', function () {
+    if (!down) return;
+    down = false; el.classList.remove('dragging'); updateLcArrows();
   });
   el.addEventListener('mousemove', function (e) {
     if (!down) return; e.preventDefault();
-    el.scrollLeft = scrollLeft - (e.pageX - el.getBoundingClientRect().left - startX);
+    var x = e.pageX - el.getBoundingClientRect().left;
+    moved = Math.max(moved, Math.abs(x - startX));
+    el.scrollLeft = scrollLeft - (x - startX);   /* 배율 1.0 유지 — 기존 감도를 바꾸지 않는다 */
   });
 })();
 
@@ -133,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (_nb0 && typeof _homeNearbyInitHtml !== 'undefined') _homeNearbyInitHtml = _nb0.innerHTML;
 
   /* 주차장 데이터 사전 로드 (76KB) — 홈·가까운관광지 즉시 표시용 */
-  fetch('js/parking-static.json?v=20260826159').then(function(r) { return r.json(); }).then(function(d) {
+  fetch('js/parking-static.json?v=20260826160').then(function(r) { return r.json(); }).then(function(d) {
     if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
     /* 소식 탭 통계 4칸(#stat-parking)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.
      * 건수는 카테고리를 고르면 목록 머리(#living-list-count)가 보여 준다. */

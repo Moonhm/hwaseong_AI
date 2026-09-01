@@ -382,8 +382,13 @@ function showLcSlide(p) {
     + '<div class="sl-actions">'
     + '<button class="sl-btn primary" onclick="openRoute('
     + p.lat + ',' + p.lng + ',\'' + (p.n || '').replace(/'/g, '') + '\')">🗺️ 길찾기</button>'
+    /* ⚠ id 를 함께 넘긴다. 이름만 넘기면 NP 모드에서 ← 로 돌아올 때
+     * js/map.js goNearestParkingLc 가 이름으로 되찾아 **동명의 다른 지점**을 연다 —
+     * 27,374건 중 이름이 겹치는 항목이 2,086건(904종)이다(김밥천국 11곳).
+     * 이 저장소 규약대로 장소 참조는 이름이 아니라 id 로 건다.
+     * 이름은 NP 하이라이트 핀의 이름표용으로만 계속 넘긴다. */
     + '<button class="sl-btn" style="background:#EFF6FF;color:#2563EB;border-color:#BFDBFE;font-weight:700" onclick="goNearestParkingLc('
-    + p.lat + ',' + p.lng + ',\'' + (p.n || '').replace(/'/g, '') + '\')">🅿️ 가장 가까운<br>공영주차장 찾기</button>'
+    + p.lat + ',' + p.lng + ',' + p.id + ',\'' + (p.n || '').replace(/'/g, '') + '\')">🅿️ 가장 가까운<br>공영주차장 찾기</button>'
     + (function() {
         var fid = 'lc-' + p.id;
         var saved = typeof isFav !== 'undefined' && isFav(fid);
