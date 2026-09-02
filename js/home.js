@@ -82,7 +82,7 @@ function renderNearbyResult(myLat, myLng, gen) {
 
   /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
   if (!parks.length) {
-    fetch('js/parking-static.json?v=20260826162').then(function (r) { return r.json(); }).then(function (d) {
+    fetch('js/parking-static.json?v=20260826163').then(function (r) { return r.json(); }).then(function (d) {
       if (gen != null && gen !== _nearbyGen) return;
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
       if (parkingData.length) renderNearbyResult(myLat, myLng, gen);
