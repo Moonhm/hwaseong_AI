@@ -125,7 +125,7 @@ const PLACES = [
   { id:212, name:"배혜정도가", category:"tourist", lat:37.1494401, lng:126.9607597, address:"경기도 화성시 정남면 문학리", tags: ["문화","체험","이색"], rating:3.9, reviewCount:76, desc:"화성시 배혜정도가" },
   { id:213, name:"발리오스 승마클럽", category:"tourist", lat:37.1113606, lng:126.8661029, address:"경기도 화성시 팔탄면", tags: ["체험","이색","가족"], rating:4.2, reviewCount:235, desc:"화성시 발리오스 승마클럽" },
   { id:214, name:"에이원 승마클럽", category:"tourist", lat:37.193027, lng:126.9471505, address:"경기도 화성시 봉담읍", tags: ["체험","이색","가족"], rating:3.9, reviewCount:76, desc:"화성시 에이원 승마클럽" },
-  { id:215, name:"말달리자 승마클럽", category:"tourist", lat:37.1995372, lng:126.8314774, address:"경기도 화성시 남양읍 남양리", tags: ["체험","이색","가족"], rating:4.0, reviewCount:76, desc:"화성시 말달리자 승마클럽" },
+  { id:215, name:"말달리자 승마클럽", category:"tourist", lat:37.2477395, lng:126.92809, address:"경기도 화성시 매송면 원평리 48-5", tags: ["체험","이색","가족"], rating:4.0, reviewCount:76, desc:"화성시 말달리자 승마클럽" },
   { id:216, name:"원평허브농원", category:"tourist", lat:37.2462634, lng:126.923538, address:"경기도 화성시 매송면 원평리", tags: ["꽃","자연","힐링","체험"], rating:3.9, reviewCount:76, desc:"화성시 원평허브농원" },
   { id:217, name:"경기도사격테마파크", category:"tourist", lat:37.0939313, lng:126.9565682, address:"경기도 화성시 양감면 사격장길 142", tags: ["체험","이색","가족"], rating:4.2, reviewCount:235, desc:"화성시 경기도사격테마파크" },
   { id:218, name:"화성종합경기타운", category:"tourist", lat:37.137544, lng:126.9245817, address:"경기도 화성시 향남읍 도이리 668", tags: ["체험","가족","스포츠"], rating:3.9, reviewCount:76, desc:"화성시 화성종합경기타운" },
