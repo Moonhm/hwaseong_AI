@@ -91,7 +91,19 @@ function _recFbEmoji(tags) {
 /* 태그 교집합으로 TOP3 추천 */
 function _computeRec(userTags) {
   if (typeof PLACES === 'undefined') return [];
-  var spots = PLACES.filter(function(p) { return p.category === 'tourist'; });
+  /* 문화재 42건도 후보에 넣는다 (2026-09-01).
+   * 예전엔 tourist 만 봤다. 그런데 문화재도 tags 가 전건 있고(`역사`·`전통`·`문화`)
+   * _getSpotTags 가 그대로 뽑아내므로, '역사' 를 고른 사용자에게 **문화재가 한 건도
+   * 안 나오는** 상태였다 — 정작 가장 맞는 답이 빠져 있었다.
+   *
+   * ⚠ 축제(festival)는 일부러 뺀다. 두 가지 이유다.
+   *   · 좌표: 50건 중 21건이 화성시청 폴백이고 37건이 서로 겹친다. 이 카드에는
+   *     「길찾기」 버튼이 붙어 있어 그대로 넣으면 시청으로 안내한다.
+   *   · 날짜: 축제는 기간이 있어 끝난 것을 추천하면 안 된다(festBrowsable 축).
+   *   축제는 소식 탭·캘린더·추천 목록·상세에서 이미 사진과 함께 나온다. */
+  var spots = PLACES.filter(function(p) {
+    return p.category === 'tourist' || p.category === 'heritage';
+  });
   var scored = spots.map(function(p) {
     var pTags = _getSpotTags(p);
     var score = userTags.reduce(function(acc, t) {

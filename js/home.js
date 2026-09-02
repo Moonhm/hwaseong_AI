@@ -63,8 +63,14 @@ function renderNearbyResult(myLat, myLng, gen) {
   var sec = document.getElementById('nearby-section');
   if (!sec) return;
 
-  /* 가장 가까운 관광지 */
-  var tourists = PLACES.filter(function (p) { return p.category === 'tourist'; });
+  /* 가장 가까운 볼거리 — 관광지 + 문화재 (2026-09-01)
+   * 문화재 42건은 좌표가 폴백 0건·중복 0건으로 셋 중 가장 깨끗한데도 빠져 있었다.
+   * 바로 옆 문화재를 두고 멀리 있는 관광지를 「가장 가까운」 이라고 답하던 셈이다.
+   * 라벨은 아래에서 실제 분류로 찍는다 — 문화재를 '관광지' 라고 부르지 않기 위해서다.
+   * ⚠ 축제는 뺀다 — 50건 중 21건이 시청 폴백 좌표라 「길찾기」가 시청으로 간다(js/quiz.js 와 같은 이유). */
+  var tourists = PLACES.filter(function (p) {
+    return p.category === 'tourist' || p.category === 'heritage';
+  });
   var nearestTourist = null, minTDist = Infinity;
   tourists.forEach(function (p) {
     var d = _distKm(myLat, myLng, p.lat, p.lng);
@@ -76,7 +82,7 @@ function renderNearbyResult(myLat, myLng, gen) {
 
   /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
   if (!parks.length) {
-    fetch('js/parking-static.json?v=20260826161').then(function (r) { return r.json(); }).then(function (d) {
+    fetch('js/parking-static.json?v=20260826162').then(function (r) { return r.json(); }).then(function (d) {
       if (gen != null && gen !== _nearbyGen) return;
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
       if (parkingData.length) renderNearbyResult(myLat, myLng, gen);
@@ -153,8 +159,10 @@ function renderNearbyResult(myLat, myLng, gen) {
     + '<div class="nearby-photo-overlay"></div>'
     + '<div class="nearby-dist-badge"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11" fill="#fff" style="vertical-align:middle;margin-right:3px"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>' + _distLabel(minTDist) + '</div>'
     + '<div class="nearby-photo-info">'
-    /* ⚠ ★ 는 지도 핀 전용 기호다. 여기는 목록이라 🎡 다(WORKFLOW.md §3). */
-    + '<div class="nearby-photo-cat">🎡 가장 가까운 관광지</div>'
+    /* ⚠ ★ 는 지도 핀 전용 기호다. 여기는 목록이라 🎡 다(WORKFLOW.md §15).
+     * 문화재가 뽑혔으면 '관광지' 라고 부르지 않는다 — CATEGORY_CONFIG 의 라벨을 그대로 쓴다. */
+    + '<div class="nearby-photo-cat">' + (nearestTourist.category === 'heritage'
+        ? '🏛️ 가장 가까운 문화재' : '🎡 가장 가까운 관광지') + '</div>'
     + '<div class="nearby-photo-name">' + tName + '</div>'
     + '</div>'
     + '</div>'
