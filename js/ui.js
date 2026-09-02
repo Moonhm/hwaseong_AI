@@ -197,7 +197,7 @@ function _loadLcData(callback, silent) {
   if (!silent && typeof showToast === 'function') showToast('지역화폐 가맹점을 불러오는 중이에요...');
   if (_lcLoading) return; /* 이미 fetch 중 — 중복 요청 방지 (안내는 위에서 이미 냈다) */
   _lcLoading = true;
-  fetch('js/localcurrency-static.json?v=20260826160').then(function(r) { return r.json(); }).then(function(d) {
+  fetch('js/localcurrency-static.json?v=20260826161').then(function(r) { return r.json(); }).then(function(d) {
     lcData = d;
     /* 소식 탭 통계 4칸(#stat-currency)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.
      * 로드가 끝나면 아래 콜백이 renderLivingCatList('currency') 를 다시 부른다. */

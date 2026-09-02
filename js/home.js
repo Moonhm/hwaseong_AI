@@ -76,7 +76,7 @@ function renderNearbyResult(myLat, myLng, gen) {
 
   /* 주차장 데이터 없으면 직접 로드 후 재렌더 */
   if (!parks.length) {
-    fetch('js/parking-static.json?v=20260826160').then(function (r) { return r.json(); }).then(function (d) {
+    fetch('js/parking-static.json?v=20260826161').then(function (r) { return r.json(); }).then(function (d) {
       if (gen != null && gen !== _nearbyGen) return;
       if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
       if (parkingData.length) renderNearbyResult(myLat, myLng, gen);
@@ -362,24 +362,38 @@ var _srTimer = null;
  *   바다를 가리키고 있었다 — 눌러도 육지도 핀도 없는 화면이 떴다.
  *   근거: 제부도·공룡알화석지는 js/data.js PLACES(id:1·id:8)와 같은 값,
  *   서신은 js/localcurrency-static.json 의 서신면 가맹점 514건 좌표 중앙값
- *   (= 면 소재지 일대. 옛 lng 126.5757 서쪽에는 가맹점이 0건이다). */
+ *   (= 면 소재지 일대. 옛 lng 126.5757 서쪽에는 가맹점이 0건이다).
+ *
+ * ⚠ 좌표를 고칠 때는 「그 읍·면 안에 떨어지는가」로 검산한다. 거리만 보면 안 걸린다.
+ *   판정법: 그 점 반경 2km 안 가맹점 중 해당 읍·면 비율이 과반인가 + 최근접 가맹점이
+ *   그 읍·면인가. 2026-09-01 에 이 검산으로 네 곳이 **다른 읍·면에 떨어지는 것**을 잡았다 —
+ *   팔탄은 반경 2km 안 648곳 중 팔탄이 4곳(1%)뿐이고 최근접이 향남이라, '팔탄' 을 눌러도
+ *   향남이 떴다. 우정→장안 · 비봉→팔탄 · 마도→남양 도 같은 증상이었다.
+ *   전부 해당 읍·면 가맹점 좌표 중앙값으로 교체했고 교체 뒤 비율은 75~100% 다.
+ *
+ * full: 검색 별칭이다. 이것이 없으면 '봉담읍' 처럼 **접미사를 붙여 친 검색이 0건**이 된다
+ *   (_tokScore 는 이름이 토큰으로 시작하는지를 보므로 '봉담'.indexOf('봉담읍') 가 -1 이다).
+ *   13읍면은 사용자가 '면'·'읍' 까지 붙여 치는 것이 자연스러워서 전부 달아 뒀다. */
 var _REGIONS = [
   { name: '동탄',   lat: 37.2004, lng: 127.0781, level: 6 },
   { name: '병점',   lat: 37.2266, lng: 127.0483, level: 6 },
-  { name: '봉담',   lat: 37.2119, lng: 126.9248, level: 6 },
-  { name: '향남',   lat: 37.0835, lng: 126.9072, level: 6 },
-  { name: '남양',   lat: 37.1996, lng: 126.8219, level: 6 },
-  { name: '우정',   lat: 37.0638, lng: 126.8290, level: 6 },
-  { name: '비봉',   lat: 37.1912, lng: 126.8631, level: 6 },
-  { name: '마도',   lat: 37.1637, lng: 126.7897, level: 6 },
-  { name: '팔탄',   lat: 37.1361, lng: 126.9397, level: 6 },
-  { name: '양감',   lat: 37.1052, lng: 126.9733, level: 6 },
-  { name: '정남',   lat: 37.1669, lng: 127.0007, level: 6 },
+  /* ── 13읍면 (2026-09-01 전건 검산) ── */
+  { name: '매송', full: '매송면', lat: 37.249635, lng: 126.923605, level: 6 },
+  { name: '봉담', full: '봉담읍', lat: 37.2119,   lng: 126.9248,   level: 6 },
+  { name: '향남', full: '향남읍', lat: 37.0835,   lng: 126.9072,   level: 6 },
+  { name: '남양', full: '남양읍', lat: 37.1996,   lng: 126.8219,   level: 6 },
+  { name: '우정', full: '우정읍', lat: 37.083703, lng: 126.817283, level: 6 },
+  { name: '비봉', full: '비봉면', lat: 37.236712, lng: 126.871244, level: 6 },
+  { name: '마도', full: '마도면', lat: 37.201181, lng: 126.776409, level: 6 },
+  { name: '팔탄', full: '팔탄면', lat: 37.160652, lng: 126.890443, level: 6 },
+  { name: '양감', full: '양감면', lat: 37.1052,   lng: 126.9733,   level: 6 },
+  { name: '정남', full: '정남면', lat: 37.1669,   lng: 127.0007,   level: 6 },
+  { name: '장안', full: '장안면', lat: 37.0870,   lng: 126.8628,   level: 6 },
+  { name: '서신', full: '서신면', lat: 37.1688,   lng: 126.6752,   level: 7 },
+  { name: '송산', full: '송산면', lat: 37.2152,   lng: 126.6774,   level: 6 },
+  /* ── 그 밖 ── */
   { name: '반월',   lat: 37.2315, lng: 127.0527, level: 6 },
   { name: '진안',   lat: 37.2436, lng: 126.9968, level: 6 },
-  { name: '장안',   lat: 37.0870, lng: 126.8628, level: 6 },
-  { name: '서신',   lat: 37.1688, lng: 126.6752, level: 7 },
-  { name: '송산',   lat: 37.2152, lng: 126.6774, level: 6 },
   { name: '화성',   lat: 37.1996, lng: 126.8316, level: 9 },
   { name: '제부도', lat: 37.1696176, lng: 126.6228376, level: 7 },
   { name: '공룡알화석지', lat: 37.26235, lng: 126.74706, level: 5 },
@@ -702,9 +716,12 @@ function doHomeSearch(q, where) {
   }
   if (!_guOnly) {
     _REGIONS.forEach(function (r) {
-      var sc = score(r.name, '', '', r.name.replace(/\s+/g, ''));
+      /* full('봉담읍')을 별칭으로 넘긴다 — 없으면 접미사를 붙여 친 검색이 0건이 된다.
+       * 표시도 full 이 있으면 그쪽을 쓴다: '봉담 지역' 보다 '봉담읍' 이 정확하다. */
+      var sc = score(r.name, r.full || '', '', r.name.replace(/\s+/g, ''));
       if (sc < 0) return;
-      push(2, { type: 'region', name: r.name + ' 지역', sub: '지도에서 보기',
+      push(2, { type: 'region', name: r.full || (r.name + ' 지역'),
+                sub: r.full ? '이 읍·면을 지도에서 봐요' : '지도에서 보기',
                 em: '📍', bg: '#F3F4F6', lat: r.lat, lng: r.lng, level: r.level, _sc: sc });
     });
   }
