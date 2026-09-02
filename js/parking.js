@@ -29,6 +29,46 @@ function initParking(map) {
 }
 
 /* ── 실시간 데이터 적용 (공통 헬퍼) ── */
+/* ── 실시간 값이 '지금 값' 인지 '상류가 죽어서 내주는 낡은 값' 인지 ──────────
+ *
+ * tools/server.py 의 _serve_upstream() 이 모든 응답에 헤더를 붙인다.
+ *   X-Cache: fresh  상류에서 방금 받았다
+ *          : cache  TTL(45초) 안이라 캐시를 준다 — 충분히 새 값이다
+ *          : stale  **상류가 죽어서 낡은 값을 준다**
+ *   X-Cache-Age: 초
+ *
+ * ⚠ `stale` 일 때만 화면에 알린다. `cache` 는 최대 45초라 알릴 값이 아니다.
+ *   §1 이 「낡은 값을 새 값인 척 보여주지 않는다」를 규칙으로 두고 있고, 이 앱에서
+ *   주차 실시간은 틀리면 사용자가 헛걸음하는 핵심 기능이라 그 구분이 중요하다.
+ *
+ * ⚠ age 만 보고 판단하지 마라. 캐시는 요청이 올 때만 갱신하는 지연 방식이라
+ *   방문자가 없으면 age 는 계속 늘어난다 — 그건 장애가 아니라 트래픽 지표다
+ *   (2026-09-02 배포 Claude 실측). 건강 판정은 X-Cache 로 한다. */
+var _rtStale = false;   /* 마지막 응답이 stale 이었나 */
+var _rtAge   = 0;       /* 그때의 X-Cache-Age (초) */
+
+/* 세 곳(fetchParkingAll·refreshParking·refreshParkingSlide)이 같은 응답을 다르게
+ * 읽고 있었다. 헤더를 살리려면 r.json() 앞에서 가로채야 해서 한 곳으로 모은다. */
+function _fetchRealtime() {
+  return fetch('/api/parking/realtime').then(function (r) {
+    var c = r.headers.get('X-Cache');
+    var a = parseFloat(r.headers.get('X-Cache-Age'));
+    return r.json().then(function (j) {
+      _rtStale = (c === 'stale');
+      _rtAge   = isFinite(a) ? a : 0;
+      return j;
+    });
+  });
+}
+
+/* '5시간 전 기준' 처럼 사람이 읽는 말로. stale 이 아니면 빈 문자열이다. */
+function _staleNote() {
+  if (!_rtStale) return '';
+  var m = Math.round(_rtAge / 60);
+  var when = m < 1 ? '방금 전' : (m < 60 ? m + '분 전' : Math.round(m / 60) + '시간 전');
+  return when;
+}
+
 function _applyRealtime(data) {
   if (!data || !data.ok || !Array.isArray(data.data)) return;
   var rtMap = {};
@@ -64,14 +104,12 @@ function fetchParkingAll() {
   /* DOMContentLoaded에서 이미 static JSON을 로드했으면 재사용 */
   var staticP = parkingData.length
     ? Promise.resolve(null)
-    : fetch('js/parking-static.json?v=20260826166').then(function (r) { return r.json(); });
+    : fetch('js/parking-static.json?v=20260826167').then(function (r) { return r.json(); });
 
   staticP
     .then(function (list) {
       if (list) { mergeParkingData(list, []); updateParkingCount(); }
-      return fetch('/api/parking/realtime')
-        .then(function (r) { return r.json(); })
-        .catch(function () { return null; });
+      return _fetchRealtime().catch(function () { return null; });
     })
     .then(function (res) { _applyRealtime(res); })
     .catch(function (e) { console.warn('[주차장]', e); });
@@ -84,8 +122,7 @@ function refreshParking() {
   if (document.hidden) return;
   var mapPage = document.getElementById('page-map');
   if (!mapPage || !mapPage.classList.contains('active')) return;
-  fetch('/api/parking/realtime')
-    .then(function (r) { return r.json(); })
+  _fetchRealtime()
     .then(function (res) { _applyRealtime(res); })
     .catch(function () {});
 }
@@ -397,8 +434,7 @@ function _openParkingCardId() {
  *    숫자 색은 옛 값 그대로 남았다 — 뒤의 핀과 앞의 카드가 서로 다른 값을 보였다.
  *    이제는 _applyRealtime 이 열린 카드까지 (스크롤을 지키며) 다시 그린다. */
 function refreshParkingSlide() {
-  fetch('/api/parking/realtime')
-    .then(function (r) { return r.json(); })
+  _fetchRealtime()
     .then(function (res) {
       if (!res || !res.ok || !Array.isArray(res.data)) throw new Error('bad');
       /* 여기서 카드를 한 번 더 그리면 안 된다 — _applyRealtime 이 이미 스크롤을
@@ -440,9 +476,17 @@ function showParkingSlide(p, quiet) {
     + '<div class="sl-addr" style="margin-bottom:12px" data-addr="' + (p.address || '').replace(/"/g, '&quot;') + '" onclick="copyAddress(this.dataset.addr)">' + (p.address || '') + '</div>'
     + '<div style="background:#F9FAFB;border-radius:10px;padding:12px;margin-bottom:12px">'
     + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">'
-    + '<span style="font-size:13px;color:var(--text-sub)">현재 여유</span>'
+    /* 상류가 죽어 낡은 값을 내주는 중이면 '현재' 라고 말하지 않는다.
+     * 이 앱에서 주차 실시간은 틀리면 사용자가 헛걸음하는 핵심 기능이라(§1),
+     * 「빈자리 12면」과 「5시간 전 기준 12면」을 같은 얼굴로 보여주면 안 된다. */
+    + '<span style="font-size:13px;color:var(--text-sub)">' + (_rtStale ? '여유' : '현재 여유') + '</span>'
     + '<span style="font-size:22px;font-weight:900;color:' + color + '">' + avail
     + '<span style="font-size:13px;font-weight:500;color:var(--text-muted)"> / ' + p.total + '면</span></span></div>'
+    + (_rtStale
+        ? '<div style="font-size:12px;color:#B45309;background:#FEF3C7;border-radius:6px;padding:6px 8px;margin-bottom:8px">'
+          + '⚠️ 실시간 정보를 받지 못해 <b>' + _staleNote() + ' 기준</b> 값을 보여 드려요. 가시기 전에 전화로 확인해 주세요.'
+          + '</div>'
+        : '')
     + '<div style="height:6px;background:#E5E7EB;border-radius:3px;overflow:hidden">'
     + '<div style="height:100%;width:' + ratio + '%;background:' + color + ';border-radius:3px;transition:width 0.4s ease"></div>'
     + '</div></div>'
