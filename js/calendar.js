@@ -1,7 +1,7 @@
 /* ============================================================================
  * js/calendar.js — 축제 달력 — 날짜 파싱·월별 렌더
  *
- * 왜 따로 있나: 날짜 계산이 까다로워(비ISO '2026년 N월 중' 형식 11건) 한 곳에 모은다. _festDaysCache 로 월별 결과를 캐시한다.
+ * 왜 따로 있나: 날짜 계산이 까다로워(비ISO '2026년 N월 중' 형식 8건 + '미정' 1건, 그리고 일까지 적혔지만 출처가 미확정이라 한 dateApprox 4건) 한 곳에 모은다. _festDaysCache 로 월별 결과를 캐시한다.
  * 함께 볼 것:   _parseFestDate() 는 js/data.js 의 date 필드 형식에 의존한다. 형식이 늘면 여기만 고치면 된다.
  *
  * index.html 인라인 <script> 3613~3779줄에서 분리 (2026-08-25, 개발 Claude).
@@ -24,11 +24,24 @@ function _parseFestDate(str) {
   return m ? m.ymd : null;
 }
 
-/* { ymd:[Y,M,D], approx:true|false } — approx=true 면 '월만 아는' 미확정 일정이다. */
-function _parseFestDateMeta(str) {
+/* { ymd:[Y,M,D], approx:true|false } — approx=true 면 확정이 아닌 일정이다.
+ *
+ * approx 가 되는 경우는 둘이다.
+ *   ① '2026년 10월 중' 처럼 **일(日)을 모르는** 표기 — 문자열만 보고 판정한다.
+ *   ② 일까지 적혀 있지만 **출처가 미확정이라고 밝힌 것** — 문자열로는 알 수 없다.
+ *      그래서 호출부가 `place.dateApprox` 를 두 번째 인자로 넘긴다.
+ *
+ * ②를 놓치면 어떻게 되는지 실측이 있다(2026-09-02). 공식 표가 「8. 22.(토)(미확정)」
+ * 이라 적은 것을 `date:"2026-08-22"` 로 넣어 두었더니, 파서가 ①에만 해당하는 줄 알고
+ * approx=false 를 내서 **화면에 D-17·D-53·D-66 이 확정 일정처럼 찍혔다**(id 95·113·126).
+ * 상세 화면에만 '(미확정)' 글자가 남아 있어 서로 어긋났다.
+ *
+ * ⚠ `date` 문자열에 '?' 같은 표식을 붙이는 방법은 쓰지 않았다 — `p.date` 를 직접
+ *   파싱하는 곳이 여럿이라 그쪽이 조용히 깨진다. 데이터에 필드를 하나 두는 편이 안전하다. */
+function _parseFestDateMeta(str, approxHint) {
   str = (str || '').trim();
   var iso = str.split('-');
-  if (iso.length === 3 && /^\d{4}$/.test(iso[0])) return { ymd: iso, approx: false };
+  if (iso.length === 3 && /^\d{4}$/.test(iso[0])) return { ymd: iso, approx: !!approxHint };
   var m = str.match(/(\d{4})년\s*(\d{1,2})월/);
   if (m) return { ymd: [m[1], ('0' + m[2]).slice(-2), '01'], approx: true };
   return null;
@@ -55,13 +68,13 @@ function festStatus(place, now) {
   today.setHours(0, 0, 0, 0);
 
   var seg = String(raw).split('~');
-  var a = _parseFestDateMeta(seg[0].trim());
+  var a = _parseFestDateMeta(seg[0].trim(), place.dateApprox);
   if (!a) return 'unknown';
   var start = new Date(+a.ymd[0], +a.ymd[1] - 1, +a.ymd[2]); start.setHours(0, 0, 0, 0);
 
   var end = start;
   if (seg.length > 1) {
-    var b = _parseFestDateMeta(seg[1].trim());
+    var b = _parseFestDateMeta(seg[1].trim(), place.dateApprox);
     if (b) { end = new Date(+b.ymd[0], +b.ymd[1] - 1, +b.ymd[2]); end.setHours(0, 0, 0, 0); }
   }
 
@@ -81,7 +94,7 @@ function festBadge(place) {
   if (st === 'ongoing') return { cls: 'badge-ongoing',  text: '진행중' };
   if (st === 'ended')   return { cls: 'badge-ended',    text: '종료' };
   if (st === 'unknown') return { cls: 'badge-upcoming', text: '일정 미정' };
-  var meta = _parseFestDateMeta(String(place.date || '').split('~')[0].trim());
+  var meta = _parseFestDateMeta(String(place.date || '').split('~')[0].trim(), place.dateApprox);
   if (meta && meta.approx) return { cls: 'badge-upcoming', text: '예정' };
   return { cls: 'badge-upcoming', text: '예정' };
 }
@@ -125,7 +138,7 @@ function _getFestDays(year, month) {
        * (실측 10건). 근사면 날짜 칸에서 뺀다 — 목록에는 그대로 나오고
        * 배지가 '예정' 으로 알려 준다. 2026-08-26 감사. */
       var _sm = (typeof _parseFestDateMeta === 'function')
-        ? _parseFestDateMeta(ranges[0]) : null;
+        ? _parseFestDateMeta(ranges[0], p.dateApprox) : null;
       if (_sm && _sm.approx) return;
       var sp      = _parseFestDate(ranges[0]);
       var ep      = _parseFestDate(ranges[1] || ranges[0]);

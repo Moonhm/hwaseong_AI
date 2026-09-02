@@ -154,7 +154,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (_nb0 && typeof _homeNearbyInitHtml !== 'undefined') _homeNearbyInitHtml = _nb0.innerHTML;
 
   /* 주차장 데이터 사전 로드 (76KB) — 홈·가까운관광지 즉시 표시용 */
-  fetch('js/parking-static.json?v=20260826163').then(function(r) { return r.json(); }).then(function(d) {
+  fetch('js/parking-static.json?v=20260826164').then(function(r) { return r.json(); }).then(function(d) {
     if (typeof mergeParkingData === 'function' && !parkingData.length) mergeParkingData(d, []);
     /* 소식 탭 통계 4칸(#stat-parking)은 2026-08-26 에 없앴다 — 갱신할 대상이 없다.
      * 건수는 카테고리를 고르면 목록 머리(#living-list-count)가 보여 준다. */

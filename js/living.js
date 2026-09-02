@@ -251,7 +251,8 @@ function resetLivingPage() {
    탭 이름이 '생활' → '소식' 이 되면서 시간에 민감한 것을 맨 위로 올렸다.
    PLACES 의 축제만 읽는다 — 새 데이터도 fetch 도 없다.
    날짜 파싱은 js/calendar.js 의 _parseFestDate() 를 재사용한다.
-   "2026년 8월 중" 같은 비ISO 형식이 11건 있어 직접 Date 로 넘기면 안 된다.
+   "2026년 8월 중" 같은 비ISO 형식이 9건 있어 직접 Date 로 넘기면 안 된다.
+   여기에 더해 일까지 적혔지만 출처가 「미확정」이라 한 dateApprox 4건도 확정으로 다루면 안 된다.
 ══════════════════════════════════════════════════ */
 function renderNewsSection() {
   var el = document.getElementById('living-news');
@@ -274,7 +275,7 @@ function renderNewsSection() {
     /* ⚠ '2026년 10월 중' 같은 미확정 일정은 1일로 채워지는 근사값이다.
      * 그대로 D-day 를 찍으면 없는 확정 일정처럼 보인다(감사에서 'D-36' 실측).
      * 근사 여부를 함께 받아 배지 문구를 바꾼다. */
-    var _dm = (typeof _parseFestDateMeta === 'function') ? _parseFestDateMeta(String(p.date).split('~')[0].trim()) : null;
+    var _dm = (typeof _parseFestDateMeta === 'function') ? _parseFestDateMeta(String(p.date).split('~')[0].trim(), p.dateApprox) : null;
     var d = _dm ? _dm.ymd : null;
     if (!d) return;
     /* ⚠ '2026년 8월 중' 같은 근사 일정은 1일로 채워진 값이다. 주 단위로 특정할 수
@@ -365,7 +366,7 @@ function _festAllSorted() {
     .map(function (p) {
       var st = (typeof festStatus === 'function') ? festStatus(p, now) : 'unknown';
       var dm = (typeof _parseFestDateMeta === 'function')
-        ? _parseFestDateMeta(String(p.date || '').split('~')[0].trim()) : null;
+        ? _parseFestDateMeta(String(p.date || '').split('~')[0].trim(), p.dateApprox) : null;
       var t = dm ? new Date(dm.ymd[0], dm.ymd[1] - 1, dm.ymd[2]).getTime() : null;
       return { p: p, st: st, t: t };
     })

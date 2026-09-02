@@ -440,7 +440,7 @@ function showFestivalDetail(id) {
    *   실제로 없는 확정 일정처럼 보인다(2026-08-26 감사에서 'D-36' 오표시 확인). */
   let ddayHtml = '';
   const _dm = (typeof _parseFestDateMeta === 'function')
-    ? _parseFestDateMeta(String(place.date || '').split('~')[0].trim()) : null;
+    ? _parseFestDateMeta(String(place.date || '').split('~')[0].trim(), place.dateApprox) : null;
   if (_dm && !_dm.approx) {
     const _t0 = new Date(); _t0.setHours(0, 0, 0, 0);
     const _when = new Date(_dm.ymd[0], _dm.ymd[1] - 1, _dm.ymd[2]);
